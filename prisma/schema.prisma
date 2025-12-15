@@ -40,6 +40,8 @@ model Admin {
   conversationsAsP1     Conversation[] @relation("ConversationParticipant1")
   conversationsAsP2     Conversation[] @relation("ConversationParticipant2")
   website               Website?
+  companyBalance        Float          @default(0)
+  transactions          Transaction[]
 
   @@map("admins")
 }
@@ -73,6 +75,8 @@ model Customer {
   calories          Int      @default(2000)
   deliveryDays      String?
   autoOrdersEnabled Boolean  @default(true)
+  balance           Float    @default(0)
+  transactions      Transaction[]
 
   orders            Order[]
 
@@ -244,4 +248,28 @@ model DailyCookingPlan {
   updatedAt  DateTime @updatedAt
 
   @@map("daily_cooking_plans")
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  amount      Float
+  type        TransactionType
+  description String?
+  category    String? // e.g. "MANUAL_ADJUSTMENT", "ORDER_PAYMENT", "COMPANY_FUNDS"
+  createdAt   DateTime @default(now())
+  
+  adminId     String?
+  admin       Admin?   @relation(fields: [adminId], references: [id])
+  
+  customerId  String?
+  customer    Customer? @relation(fields: [customerId], references: [id])
+  
+  @@map("transactions")
+  @@index([adminId])
+  @@index([customerId])
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
 }

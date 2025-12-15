@@ -50,7 +50,8 @@ import {
   CalendarDays,
   MapPin,
   Edit,
-  Globe
+  Globe,
+  DollarSign
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -66,7 +67,9 @@ import { TrialStatus } from '@/components/admin/TrialStatus'
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal'
 import { ChatTab } from '@/components/chat/ChatTab'
 import { TodaysMenu } from '@/components/admin/TodaysMenu'
+import { TodaysMenu } from '@/components/admin/TodaysMenu'
 import { WarehouseTab } from '@/components/admin/WarehouseTab'
+import { FinanceTab } from '@/components/admin/FinanceTab'
 
 interface Admin {
   id: string
@@ -1652,7 +1655,7 @@ export default function MiddleAdminPage() {
         </div>
 
         <Tabs defaultValue="orders" className="space-y-6" onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-8 h-auto gap-2 p-1 bg-muted/50 backdrop-blur-sm rounded-xl">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-9 h-auto gap-2 p-1 bg-muted/50 backdrop-blur-sm rounded-xl">
             <TabsTrigger
               value="orders"
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
@@ -1704,6 +1707,13 @@ export default function MiddleAdminPage() {
             >
               <Package className="w-4 h-4 mr-2" />
               Склад
+            </TabsTrigger>
+            <TabsTrigger
+              value="finance"
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
+            >
+              <DollarSign className="w-4 h-4 mr-2" />
+              Финансы
             </TabsTrigger>
           </TabsList>
 
@@ -3119,6 +3129,11 @@ export default function MiddleAdminPage() {
               </CardContent>
             </Card>
           </TabsContent >
+
+          {/* Finance Tab */}
+          <TabsContent value="finance" className="space-y-6">
+            <FinanceTab />
+          </TabsContent>
 
           {/* Order Details Modal */}
           < Dialog open={isOrderDetailsModalOpen} onOpenChange={setIsOrderDetailsModalOpen} >

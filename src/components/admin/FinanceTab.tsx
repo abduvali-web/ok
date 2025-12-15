@@ -1,0 +1,610 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Slider } from '@/components/ui/slider';
+import {
+    DollarSign,
+    TrendingUp,
+    TrendingDown,
+    Search,
+    Filter,
+    ArrowUpRight,
+    ArrowDownLeft,
+    Wallet,
+    History,
+    Users,
+    Plus,
+    Minus,
+    Loader2
+} from 'lucide-react';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { toast } from 'sonner';
+
+interface FinanceTabProps {
+    className?: string;
+}
+
+interface Client {
+    id: string;
+    name: string;
+    phone: string;
+    balance: number;
+}
+
+interface Transaction {
+    id: string;
+    amount: number;
+    type: 'INCOME' | 'EXPENSE';
+    description: string;
+    category: string;
+    createdAt: string;
+    admin?: { name: string };
+    customer?: { name: string; phone: string };
+}
+
+export function FinanceTab({ className }: FinanceTabProps) {
+    const [activeSubTab, setActiveSubTab] = useState('clients');
+    const [companyBalance, setCompanyBalance] = useState(0);
+    const [clients, setClients] = useState<Client[]>([]);
+    const [history, setHistory] = useState<Transaction[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Filters
+    const [searchQuery, setSearchQuery] = useState('');
+    const [balanceFilter, setBalanceFilter] = useState<'all' | 'positive' | 'negative' | 'zero'>('all');
+
+    // Modals
+    const [isCompanyFundsModalOpen, setIsCompanyFundsModalOpen] = useState(false);
+    const [isClientBalanceModalOpen, setIsClientBalanceModalOpen] = useState(false);
+
+    // Form Data
+    const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+    const [transactionAmount, setTransactionAmount] = useState('');
+    const [transactionDescription, setTransactionDescription] = useState('');
+    const [transactionType, setTransactionType] = useState<'INCOME' | 'EXPENSE'>('INCOME');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        fetchCompanyFinance();
+        fetchClients();
+    }, []);
+
+    useEffect(() => {
+        if (activeSubTab === 'clients') {
+            fetchClients();
+        } else if (activeSubTab === 'history') {
+            fetchCompanyFinance(); // Refresh history
+        }
+    }, [activeSubTab, balanceFilter]); // Re-fetch when filter changes
+
+    const fetchCompanyFinance = async () => {
+        try {
+            const response = await fetch('/api/admin/finance/company?limit=50&type=all');
+            if (response.ok) {
+                const data = await response.json();
+                setCompanyBalance(data.companyBalance);
+                setHistory(data.history);
+            }
+        } catch (error) {
+            console.error('Error fetching company finance:', error);
+            toast.error('Ошибка загрузки данных финансов');
+        }
+    };
+
+    const fetchClients = async () => {
+        setIsLoading(true);
+        try {
+            const params = new URLSearchParams();
+            if (searchQuery) params.append('search', searchQuery);
+            if (balanceFilter !== 'all') params.append('filter', balanceFilter);
+
+            const response = await fetch(`/api/admin/finance/clients?${params.toString()}`);
+            if (response.ok) {
+                const data = await response.json();
+                setClients(data);
+            }
+        } catch (error) {
+            console.error('Error fetching clients:', error);
+            toast.error('Ошибка загрузки списка клиентов');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        fetchClients();
+    };
+
+    const handleTransactionSubmit = async (isCompany: boolean) => {
+        if (!transactionAmount || parseFloat(transactionAmount) <= 0) {
+            toast.error('Введите корректную сумму');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const payload = {
+                amount: parseFloat(transactionAmount),
+                type: transactionType,
+                description: transactionDescription,
+                customerId: isCompany ? undefined : selectedClient?.id,
+                category: isCompany ? 'COMPANY_FUNDS' : 'MANUAL_ADJUSTMENT'
+            };
+
+            const response = await fetch('/api/admin/finance/transaction', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                toast.success('Транзакция успешно выполнена');
+                setIsCompanyFundsModalOpen(false);
+                setIsClientBalanceModalOpen(false);
+
+                // Reset form
+                setTransactionAmount('');
+                setTransactionDescription('');
+                setTransactionType('INCOME');
+                setSelectedClient(null);
+
+                // Refresh data
+                fetchCompanyFinance();
+                fetchClients();
+            } else {
+                toast.error('Ошибка выполнения транзакции');
+            }
+        } catch (error) {
+            console.error('Error submitting transaction:', error);
+            toast.error('Ошибка соединения с сервером');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const openClientBalanceModal = (client: Client) => {
+        setSelectedClient(client);
+        setTransactionAmount('');
+        setTransactionDescription('');
+        setTransactionType('INCOME'); // Default to Add
+        setIsClientBalanceModalOpen(true);
+    };
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('ru-RU', {
+            style: 'currency',
+            currency: 'UZS',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amount);
+    };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    return (
+        <div className={`space-y-6 ${className}`}>
+            {/* Top Stats Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="glass-card border-none bg-gradient-to-br from-indigo-50 to-blue-50">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-blue-900">
+                            Баланс компании
+                        </CardTitle>
+                        <Wallet className="h-4 w-4 text-blue-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-blue-700">{formatCurrency(companyBalance)}</div>
+                        <div className="flex items-center justify-between mt-4">
+                            <p className="text-xs text-blue-600/80">
+                                Текущие средства
+                            </p>
+                            <Button
+                                size="sm"
+                                className="h-7 bg-blue-600 hover:bg-blue-700"
+                                onClick={() => {
+                                    setTransactionAmount('');
+                                    setTransactionDescription('');
+                                    setTransactionType('INCOME');
+                                    setIsCompanyFundsModalOpen(true);
+                                }}
+                            >
+                                <Plus className="w-3 h-3 mr-1" />
+                                Управление
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="glass-card border-none">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                            Общий долг клиентов
+                        </CardTitle>
+                        <TrendingDown className="h-4 w-4 text-red-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-red-600">
+                            {formatCurrency(clients.reduce((sum, c) => c.balance < 0 ? sum + c.balance : sum, 0))}
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                            Сумма отрицательных балансов
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card className="glass-card border-none">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                            Предоплата клиентов
+                        </CardTitle>
+                        <TrendingUp className="h-4 w-4 text-green-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-green-600">
+                            {formatCurrency(clients.reduce((sum, c) => c.balance > 0 ? sum + c.balance : sum, 0))}
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                            Сумма положительных балансов
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-4">
+                <TabsList>
+                    <TabsTrigger value="clients" className="flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        Балансы клиентов
+                    </TabsTrigger>
+                    <TabsTrigger value="history" className="flex items-center gap-2">
+                        <History className="w-4 h-4" />
+                        История операций
+                    </TabsTrigger>
+                </TabsList>
+
+                {/* CLIENTS TAB */}
+                <TabsContent value="clients" className="space-y-4">
+                    <Card className="border-none shadow-sm">
+                        <CardHeader className="pb-3">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <CardTitle className="text-lg font-medium">Список клиентов</CardTitle>
+                                <div className="flex items-center gap-2 w-full sm:w-auto">
+                                    <form onSubmit={handleSearch} className="relative flex-1 sm:w-64">
+                                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
+                                        <Input
+                                            placeholder="Поиск по имени или телефону..."
+                                            className="pl-9"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                        />
+                                    </form>
+                                    <Select
+                                        value={balanceFilter}
+                                        onValueChange={(val: any) => setBalanceFilter(val)}
+                                    >
+                                        <SelectTrigger className="w-[180px]">
+                                            <Filter className="w-4 h-4 mr-2" />
+                                            <SelectValue placeholder="Фильтр" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Все балансы</SelectItem>
+                                            <SelectItem value="positive">Положительные (+)</SelectItem>
+                                            <SelectItem value="negative">Должники (-)</SelectItem>
+                                            <SelectItem value="zero">Нулевые (0)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="rounded-md border">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Клиент</TableHead>
+                                            <TableHead>Телефон</TableHead>
+                                            <TableHead className="text-right">Баланс</TableHead>
+                                            <TableHead className="text-right">Действия</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {isLoading ? (
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="h-24 text-center">
+                                                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-slate-400" />
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : clients.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="h-24 text-center text-slate-500">
+                                                    Клиенты не найдены
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            clients.map((client) => (
+                                                <TableRow key={client.id}>
+                                                    <TableCell className="font-medium">{client.name}</TableCell>
+                                                    <TableCell>{client.phone}</TableCell>
+                                                    <TableCell className="text-right">
+                                                        <span className={`font-semibold ${client.balance > 0 ? 'text-green-600' :
+                                                                client.balance < 0 ? 'text-red-600' : 'text-slate-600'
+                                                            }`}>
+                                                            {formatCurrency(client.balance)}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => openClientBalanceModal(client)}
+                                                        >
+                                                            <DollarSign className="w-4 h-4 mr-2" />
+                                                            Изменить
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                {/* HISTORY TAB */}
+                <TabsContent value="history">
+                    <Card className="border-none shadow-sm">
+                        <CardHeader>
+                            <CardTitle className="text-lg font-medium">История финансовых операций</CardTitle>
+                            <CardDescription>
+                                Все транзакции компании и изменения балансов клиентов
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="rounded-md border">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Дата</TableHead>
+                                            <TableHead>Тип</TableHead>
+                                            <TableHead>Категория</TableHead>
+                                            <TableHead>Описание</TableHead>
+                                            <TableHead>Связан с</TableHead>
+                                            <TableHead className="text-right">Сумма</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {history.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={6} className="h-24 text-center text-slate-500">
+                                                    История пуста
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            history.map((tx) => (
+                                                <TableRow key={tx.id}>
+                                                    <TableCell className="text-xs text-slate-500">
+                                                        {formatDate(tx.createdAt)}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge variant={tx.type === 'INCOME' ? 'outline' : 'secondary'} className={
+                                                            tx.type === 'INCOME' ? 'text-green-600 border-green-200 bg-green-50' : 'text-red-600 bg-red-50'
+                                                        }>
+                                                            {tx.type === 'INCOME' ? 'Поступление' : 'Списание'}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-xs font-medium">
+                                                        {tx.category}
+                                                    </TableCell>
+                                                    <TableCell className="max-w-[200px] truncate" title={tx.description}>
+                                                        {tx.description || '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-sm">
+                                                        {tx.customer ? (
+                                                            <div className="flex flex-col">
+                                                                <span className="font-medium">{tx.customer.name}</span>
+                                                                <span className="text-xs text-slate-400">Клиент</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-slate-500">Компания</span>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className={`text-right font-medium ${tx.type === 'INCOME' ? 'text-green-600' : 'text-red-600'
+                                                        }`}>
+                                                        {tx.type === 'INCOME' ? '+' : '-'}{formatCurrency(tx.amount)}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
+
+            {/* COMPANY FUNDS MODAL */}
+            <Dialog open={isCompanyFundsModalOpen} onOpenChange={setIsCompanyFundsModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Управление балансом компании</DialogTitle>
+                        <DialogDescription>
+                            Внесите или спишите средства с баланса компании.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label className="text-right">Тип</Label>
+                            <div className="col-span-3 flex gap-2">
+                                <Button
+                                    type="button"
+                                    variant={transactionType === 'INCOME' ? 'default' : 'outline'}
+                                    onClick={() => setTransactionType('INCOME')}
+                                    className={transactionType === 'INCOME' ? 'bg-green-600 hover:bg-green-700' : ''}
+                                >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Пополнить
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant={transactionType === 'EXPENSE' ? 'default' : 'outline'}
+                                    onClick={() => setTransactionType('EXPENSE')}
+                                    className={transactionType === 'EXPENSE' ? 'bg-red-600 hover:bg-red-700' : ''}
+                                >
+                                    <Minus className="w-4 h-4 mr-2" />
+                                    Списать
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="amount" className="text-right">
+                                Сумма ({transactionType === 'INCOME' ? '+' : '-'})
+                            </Label>
+                            <Input
+                                id="amount"
+                                type="number"
+                                min="0"
+                                value={transactionAmount}
+                                onChange={(e) => setTransactionAmount(e.target.value)}
+                                className="col-span-3"
+                                placeholder="0"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="description" className="text-right">
+                                Описание
+                            </Label>
+                            <Input
+                                id="description"
+                                value={transactionDescription}
+                                onChange={(e) => setTransactionDescription(e.target.value)}
+                                className="col-span-3"
+                                placeholder="Например: Инвестиции, Закупка..."
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsCompanyFundsModalOpen(false)}>Отмена</Button>
+                        <Button onClick={() => handleTransactionSubmit(true)} disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                            Подтвердить
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* CLIENT BALANCE MODAL */}
+            <Dialog open={isClientBalanceModalOpen} onOpenChange={setIsClientBalanceModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Баланс клиента: {selectedClient?.name}</DialogTitle>
+                        <DialogDescription>
+                            Текущий баланс: <span className="font-semibold text-slate-900">{selectedClient && formatCurrency(selectedClient.balance)}</span>
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label className="text-right">Действие</Label>
+                            <div className="col-span-3 flex gap-2">
+                                <Button
+                                    type="button"
+                                    variant={transactionType === 'INCOME' ? 'default' : 'outline'}
+                                    onClick={() => setTransactionType('INCOME')}
+                                    className={transactionType === 'INCOME' ? 'bg-green-600 hover:bg-green-700' : ''}
+                                >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Пополнить
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant={transactionType === 'EXPENSE' ? 'default' : 'outline'}
+                                    onClick={() => setTransactionType('EXPENSE')}
+                                    className={transactionType === 'EXPENSE' ? 'bg-red-600 hover:bg-red-700' : ''}
+                                >
+                                    <Minus className="w-4 h-4 mr-2" />
+                                    Списать
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="c-amount" className="text-right">
+                                Сумма
+                            </Label>
+                            <Input
+                                id="c-amount"
+                                type="number"
+                                min="0"
+                                value={transactionAmount}
+                                onChange={(e) => setTransactionAmount(e.target.value)}
+                                className="col-span-3"
+                                placeholder="0"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="c-description" className="text-right">
+                                Комментарий
+                            </Label>
+                            <Input
+                                id="c-description"
+                                value={transactionDescription}
+                                onChange={(e) => setTransactionDescription(e.target.value)}
+                                className="col-span-3"
+                                placeholder="Например: Оплата наличными"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsClientBalanceModalOpen(false)}>Отмена</Button>
+                        <Button onClick={() => handleTransactionSubmit(false)} disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                            Подтвердить
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
+    );
+}
+
+// Ensure default export if needed, or stick to named export and import accordingly.
+// Existing pages seem to use named imports for components.
