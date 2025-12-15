@@ -78,11 +78,22 @@ export async function POST(request: NextRequest) {
         if (!deliveryDays[dayOfWeek]) continue
 
         // Check if order already exists
+        // Check if order already exists
         const existing = await db.order.findFirst({
           where: { customerId: c.id, deliveryDate: { gte: dayStart, lte: dayEnd } },
-          select: { id: true }
+          select: { id: true, adminId: true }
         })
-        if (existing) continue
+        if (existing) {
+          // Self-healing: If order exists but belongs to Super Admin (default) while client has a specific creator,
+          // update the order to belong to the client's creator so it becomes visible to the Middle Admin.
+          if (existing.adminId === defaultAdmin.id && c.createdBy && c.createdBy !== defaultAdmin.id) {
+            await db.order.update({
+              where: { id: existing.id },
+              data: { adminId: c.createdBy }
+            })
+          }
+          continue
+        }
 
         const lastOrder = await db.order.findFirst({ orderBy: { orderNumber: 'desc' }, select: { orderNumber: true } })
         const nextOrderNumber = lastOrder ? lastOrder.orderNumber + 1 : 1
@@ -91,7 +102,7 @@ export async function POST(request: NextRequest) {
           data: {
             orderNumber: nextOrderNumber,
             customerId: c.id,
-            adminId: defaultAdmin.id,
+            adminId: c.createdBy || defaultAdmin.id,
             deliveryAddress: c.address,
             deliveryDate: new Date(dayStart),
             deliveryTime: defaultDeliveryTime(),
