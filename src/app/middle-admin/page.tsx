@@ -1460,11 +1460,12 @@ export default function MiddleAdminPage() {
     try {
       toast.info('Запуск создания автоматических заказов...')
 
-      const response = await fetch('/api/admin/clients/run-auto-orders', {
+      const response = await fetch('/api/admin/auto-orders/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({ targetDate: new Date() })
       })
 
       if (response.ok) {

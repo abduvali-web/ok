@@ -49,24 +49,35 @@ export async function POST(request: NextRequest) {
       const dayStart = startOfDay(processDate)
       const dayEnd = endOfDay(processDate)
 
-      // Filter clients eligible for THIS specific day
-      const eligible = customers.filter(c => isEligibleByPattern(c.orderPattern, processDate))
+      const dayOfWeek = processDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
 
-      for (const c of eligible) {
-        // specific check for deliveryDays if it exists (JSON field)
-        // Note: orderPattern is legacy? or parallel? 
-        // Let's check logic: isEligibleByPattern checks even/odd/daily.
-        // We should also check deliveryDays matches the day of week if strictly needed.
-        // But for now, relying on isEligibleByPattern as per existing code, 
-        // assuming deliveryDays is handled there or this overrides it.
-        // Wait, existing code used isEligibleByPattern. 
-        // AND client has deliveryDays in schema. 
-        // Let's refine isEligibleByPattern to check deliveryDays if present?
-        // The previous code ONLY used isEligibleByPattern. 
-        // The user complained it only generates for 1 day. 
-        // I will trust isEligibleByPattern for now, but I should probably check if I need to update it.
-        // View schema showed `deliveryDays` string? No, `deliveryDays` String? (JSON probably).
+      for (const c of customers) {
+        // Check eligibility based on deliveryDays
+        let deliveryDays: any = {
+          monday: true,
+          tuesday: true,
+          wednesday: true,
+          thursday: true,
+          friday: true,
+          saturday: true,
+          sunday: true
+        }
 
+        if ((c as any).deliveryDays) {
+          try {
+            // Handle if it's already an object or a string
+            deliveryDays = typeof (c as any).deliveryDays === 'string'
+              ? JSON.parse((c as any).deliveryDays)
+              : (c as any).deliveryDays
+          } catch (e) {
+            // Fallback to defaults or log error
+          }
+        }
+
+        // Skip if this day is not enabled
+        if (!deliveryDays[dayOfWeek]) continue
+
+        // Check if order already exists
         const existing = await db.order.findFirst({
           where: { customerId: c.id, deliveryDate: { gte: dayStart, lte: dayEnd } },
           select: { id: true }
