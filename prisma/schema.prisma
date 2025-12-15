@@ -103,7 +103,7 @@ model Order {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  customer  Customer @relation(fields: [customerId], references: [id])
+  customer  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   admin     Admin    @relation("OrderAdmin", fields: [adminId], references: [id])
   courier   Admin?   @relation("OrderCourier", fields: [courierId], references: [id])
 
