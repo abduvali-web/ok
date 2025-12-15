@@ -45,27 +45,29 @@ export interface DailyMenu {
 
 // Get image URL for a dish
 export function getDishImageUrl(dishNumber: number): string {
-  return `https://wsrv.nl/?url=github.com/FreedoomForm/hi/blob/main/${dishNumber}.png?raw=true&w=400&output=webp&q=80`;
+  // Fix: Dish 57 (Sharlotka) has incorrect image (duplicate of 56), use 67 (Medovik) as fallback
+  const imageId = dishNumber === 57 ? 67 : dishNumber;
+  return `https://wsrv.nl/?url=github.com/FreedoomForm/hi/blob/main/${imageId}.png?raw=true&w=400&output=webp&q=80`;
 }
 
 // Calculate menu number for a given date
 export function getMenuNumber(date: Date): number {
   const startDate = new Date(MENU_START_DATE);
   startDate.setHours(0, 0, 0, 0);
-  
+
   const targetDate = new Date(date);
   targetDate.setHours(0, 0, 0, 0);
-  
+
   const diffTime = targetDate.getTime() - startDate.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  
+
   if (diffDays < 0) {
     // Before start date, calculate backwards
     const positiveDays = Math.abs(diffDays);
     const menuDay = MENU_CYCLE_DAYS - (positiveDays % MENU_CYCLE_DAYS);
     return menuDay === MENU_CYCLE_DAYS ? 21 : menuDay;
   }
-  
+
   return (diffDays % MENU_CYCLE_DAYS) + 1;
 }
 
@@ -89,7 +91,7 @@ export function scaleIngredients(
   portionCount: number = 1
 ): Ingredient[] {
   const multipliers = CALORIE_MULTIPLIERS[calories] || CALORIE_MULTIPLIERS[1200];
-  
+
   let multiplier = 1;
   switch (mealType) {
     case 'BREAKFAST':
@@ -107,7 +109,7 @@ export function scaleIngredients(
       multiplier = multipliers.snack;
       break;
   }
-  
+
   return ingredients.map(ing => ({
     ...ing,
     amount: Math.round(ing.amount * multiplier * portionCount * 10) / 10,
@@ -1253,9 +1255,56 @@ export const MENUS: DailyMenu[] = [
   },
 ];
 
+// Extra dishes for 6th meal (2500/3000 kcal)
+const EXTRA_DISHES: Dish[] = [
+  {
+    id: 106,
+    name: "Go'sht va garnir",
+    mealType: 'SIXTH_MEAL',
+    ingredients: [
+      { name: "Mol go'shti", amount: 100, unit: 'gr' },
+      { name: 'Garnir', amount: 100, unit: 'gr' },
+    ],
+  },
+  {
+    id: 107,
+    name: "Tovuq va garnir",
+    mealType: 'SIXTH_MEAL',
+    ingredients: [
+      { name: "Tovuq go'shti", amount: 120, unit: 'gr' },
+      { name: 'Garnir', amount: 100, unit: 'gr' },
+    ],
+  },
+  {
+    id: 108,
+    name: "Baliq va garnir",
+    mealType: 'SIXTH_MEAL',
+    ingredients: [
+      { name: 'Baliq', amount: 120, unit: 'gr' },
+      { name: 'Garnir', amount: 100, unit: 'gr' },
+    ],
+  },
+];
+
+// Get 6th dish based on menu number (rotation)
+function getSixthDish(menuNumber: number): Dish {
+  // Pattern: Meat (106), Chicken (107), Fish (108)
+  const index = (menuNumber - 1) % 3;
+  return EXTRA_DISHES[index];
+}
+
 // Get menu by number (1-21)
 export function getMenu(menuNumber: number): DailyMenu | undefined {
-  return MENUS.find(m => m.menuNumber === menuNumber);
+  const menu = MENUS.find(m => m.menuNumber === menuNumber);
+  if (!menu) return undefined;
+
+  // Add 6th meal dynamically based on rotation
+  const sixthDish = getSixthDish(menuNumber);
+
+  return {
+    ...menu,
+    dishes: [...menu.dishes, sixthDish]
+  };
 }
 
 // Get today's menu
@@ -1276,24 +1325,24 @@ export function calculateIngredientsForMenu(
 ): Map<string, { amount: number; unit: string }> {
   const menu = getMenu(menuNumber);
   if (!menu) return new Map();
-  
+
   const totalIngredients = new Map<string, { amount: number; unit: string }>();
-  
+
   for (const dish of menu.dishes) {
     const dishQty = dishQuantities?.[dish.id] ?? 1;
     if (dishQty === 0) continue;
-    
+
     for (const [calorieStr, clientCount] of Object.entries(clientsByCalorie)) {
       const calories = parseInt(calorieStr);
       if (clientCount === 0) continue;
-      
+
       const scaledIngredients = scaleIngredients(
         dish.ingredients,
         calories,
         dish.mealType,
         dishQty * clientCount
       );
-      
+
       for (const ing of scaledIngredients) {
         const existing = totalIngredients.get(ing.name);
         if (existing) {
@@ -1304,7 +1353,7 @@ export function calculateIngredientsForMenu(
       }
     }
   }
-  
+
   return totalIngredients;
 }
 
@@ -1314,7 +1363,7 @@ export function calculateShoppingList(
   remainingInventory: Record<string, number>
 ): Map<string, { amount: number; unit: string }> {
   const shoppingList = new Map<string, { amount: number; unit: string }>();
-  
+
   for (const [name, { amount, unit }] of expectedIngredients) {
     const remaining = remainingInventory[name] || 0;
     const needed = amount - remaining;
@@ -1322,7 +1371,7 @@ export function calculateShoppingList(
       shoppingList.set(name, { amount: Math.round(needed * 10) / 10, unit });
     }
   }
-  
+
   return shoppingList;
 }
 
@@ -1334,6 +1383,11 @@ export function getAllIngredients(): string[] {
       for (const ing of dish.ingredients) {
         ingredients.add(ing.name);
       }
+    }
+  }
+  for (const dish of EXTRA_DISHES) {
+    for (const ing of dish.ingredients) {
+      ingredients.add(ing.name);
     }
   }
   return Array.from(ingredients).sort();
