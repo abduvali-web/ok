@@ -1,16 +1,15 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { auth } from '@/auth';
 
 export async function GET() {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session || !['SUPER_ADMIN', 'MIDDLE_ADMIN'].includes(session.user.role)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const items = await prisma.warehouseItem.findMany({
+        const items = await db.warehouseItem.findMany({
             orderBy: { name: 'asc' },
         });
 
@@ -29,7 +28,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session || !['SUPER_ADMIN', 'MIDDLE_ADMIN'].includes(session.user.role)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -39,14 +38,14 @@ export async function POST(request: Request) {
 
         // Use transaction to update all items
         const updates = Object.entries(inventory).map(([name, amount]) => {
-            return prisma.warehouseItem.upsert({
+            return db.warehouseItem.upsert({
                 where: { name },
                 update: { amount },
                 create: { name, amount },
             });
         });
 
-        await prisma.$transaction(updates);
+        await db.$transaction(updates);
 
         return NextResponse.json({ success: true, count: updates.length });
     } catch (error) {

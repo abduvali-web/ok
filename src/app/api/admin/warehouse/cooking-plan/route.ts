@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { auth } from '@/auth';
 
 export async function GET(request: Request) {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session || !['SUPER_ADMIN', 'MIDDLE_ADMIN'].includes(session.user.role)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -20,7 +19,7 @@ export async function GET(request: Request) {
         const date = new Date(dateStr);
 
         // Find plan for this date
-        const plan = await prisma.dailyCookingPlan.findFirst({
+        const plan = await db.dailyCookingPlan.findFirst({
             where: {
                 date: {
                     gte: new Date(date.setHours(0, 0, 0, 0)),
@@ -42,7 +41,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session || !['SUPER_ADMIN', 'MIDDLE_ADMIN'].includes(session.user.role)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -57,7 +56,7 @@ export async function POST(request: Request) {
         const targetDate = new Date(date);
 
         // Upsert the plan based on date
-        const plan = await prisma.dailyCookingPlan.upsert({
+        const plan = await db.dailyCookingPlan.upsert({
             where: {
                 date: targetDate,
             },
