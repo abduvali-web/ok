@@ -87,9 +87,9 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             setDishQuantities(initialQuantities);
         }
 
-        // Load saved data from localStorage
-        loadSavedData();
-    }, []);
+        // Fetch data from API
+        fetchData();
+    }, [tomorrowMenuNumber]);
 
     // Fetch client calorie distribution from database
     const fetchClientCalories = useCallback(async () => {
@@ -133,19 +133,35 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         fetchClientCalories();
     }, [fetchClientCalories]);
 
-    const loadSavedData = () => {
+    const fetchData = async () => {
         try {
-            const savedInventory = localStorage.getItem('warehouse_inventory');
-            const savedQuantities = localStorage.getItem('warehouse_quantities');
-
-            if (savedInventory) {
-                setInventory(JSON.parse(savedInventory));
+            // Fetch inventory
+            const invResponse = await fetch('/api/admin/warehouse/inventory');
+            if (invResponse.ok) {
+                const data = await invResponse.json();
+                setInventory(data);
             }
-            if (savedQuantities) {
-                setDishQuantities(JSON.parse(savedQuantities));
+
+            // Fetch cooking plan for tomorrow (based on tomorrowMenuNumber and date)
+            // We need the date for tomorrow. getTomorrowsMenuNumber() implies +1 day from today roughly, 
+            // but let's be precise. The menu cycle starts Dec 4.
+            // Actually, we can just save/load by date.
+            // Let's assume tomorrow's date for the query.
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(today.getDate() + 1);
+            const dateStr = tomorrow.toISOString().split('T')[0];
+
+            const planResponse = await fetch(`/api/admin/warehouse/cooking-plan?date=${dateStr}`);
+            if (planResponse.ok) {
+                const data = await planResponse.json();
+                if (data.dishes) {
+                    setDishQuantities(data.dishes);
+                }
             }
         } catch (error) {
-            console.error('Error loading saved data:', error);
+            console.error('Error fetching warehouse data:', error);
+            toast.error('Ошибка загрузки данных склада');
         }
     };
 
@@ -179,18 +195,30 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            // Save to localStorage
-            localStorage.setItem('warehouse_inventory', JSON.stringify(inventory));
-            localStorage.setItem('warehouse_quantities', JSON.stringify(dishQuantities));
+            // Save Inventory
+            const invPromise = fetch('/api/admin/warehouse/inventory', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(inventory),
+            });
 
-            // TODO: Save to database via API
-            // await fetch('/api/admin/warehouse', {
-            //   method: 'POST',
-            //   headers: { 'Content-Type': 'application/json' },
-            //   body: JSON.stringify({ inventory, dishQuantities }),
-            // });
+            // Save Cooking Plan
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(today.getDate() + 1);
 
-            toast.success('Данные сохранены');
+            const planPromise = fetch('/api/admin/warehouse/cooking-plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    date: tomorrow.toISOString(),
+                    menuNumber: tomorrowMenuNumber,
+                    dishes: dishQuantities
+                }),
+            });
+
+            await Promise.all([invPromise, planPromise]);
+            toast.success('Данные успешно сохранены в базе');
         } catch (error) {
             console.error('Error saving:', error);
             toast.error('Ошибка сохранения');
