@@ -43,15 +43,38 @@ export interface DailyMenu {
   dishes: Dish[];
 }
 
+// Dish Image Mapping (ID -> Filename)
+const DISH_IMAGE_MAP: Record<number, string> = {
+  56: '57.png', // Kesadilya -> Achma placeholder
+  57: '58.png', // Sharlotka
+  58: '93.png', // Bulg'ur palov -> Tovuksay placeholder
+  // 6-Taom (6th Meal) mappings
+  106: '2.png',
+  107: '74.png',
+  108: '2.png',
+  109: '85.png',
+  110: '2.png',
+  111: '74.png',
+  112: '49.png',
+  113: '74.png',
+  114: '2.png',
+  115: '74.png',
+  116: '15.png',
+  117: '74.png',
+  118: '2.png',
+  119: '85.png',
+  120: '2.png',
+  121: '33.png',
+  122: '74.png',
+  123: '2.png',
+  124: '74.png',
+  125: '2.png',
+};
+
 // Get image URL for a dish
 export function getDishImageUrl(dishNumber: number): string {
-  // Fix: Image 58 is actually Sharlotka, so use it for Dish 57
-  if (dishNumber === 57) return `https://wsrv.nl/?url=github.com/FreedoomForm/hi/blob/main/58.png?raw=true&w=400&output=webp&q=80`;
-
-  // Fix: Dish 58 (Bulg'ur palov) image is wrong (it's Sharlotka), so use Image 93 (Tovuksay + Bulg'ur) as substitute
-  if (dishNumber === 58) return `https://wsrv.nl/?url=github.com/FreedoomForm/hi/blob/main/93.png?raw=true&w=400&output=webp&q=80`;
-
-  return `https://wsrv.nl/?url=github.com/FreedoomForm/hi/blob/main/${dishNumber}.png?raw=true&w=400&output=webp&q=80`;
+  const filename = DISH_IMAGE_MAP[dishNumber] || `${dishNumber}.png`;
+  return `https://wsrv.nl/?url=github.com/FreedoomForm/hi/blob/main/${filename}?raw=true&w=400&output=webp&q=80`;
 }
 
 // Calculate menu number for a given date

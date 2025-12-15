@@ -28,7 +28,7 @@ const dishesData = [
   { name: 'Shakshuka (Pomidorli tuxum)', mealType: MEAL_TYPES.BREAKFAST, img: '46.png' },
   { name: 'Pshenka kasha (Tariq)', mealType: MEAL_TYPES.BREAKFAST, img: '51.png' },
   { name: 'Achma (Tvorog va pishloqli)', mealType: MEAL_TYPES.BREAKFAST, img: '57.png' },
-  { name: 'Kesadilya (Lavashda pishloq va sabzavot)', mealType: MEAL_TYPES.BREAKFAST, img: null }, // No specific image found in list (maybe missed)
+  { name: 'Kesadilya (Lavashda pishloq va sabzavot)', mealType: MEAL_TYPES.BREAKFAST, img: '57.png' }, // Placeholder (Achma) until real image found
   { name: "Bug'doy kasha (Pshenichnaya)", mealType: MEAL_TYPES.BREAKFAST, img: '62.png' },
   { name: 'Tvorogli nonushta (Smetana bilan)', mealType: MEAL_TYPES.BREAKFAST, img: '70.png' },
   { name: "Shokoladli kasha (Kakao qo'shilgan)", mealType: MEAL_TYPES.BREAKFAST, img: '72.png' },
@@ -123,22 +123,23 @@ const dishesData = [
   // { name: "Pishloqli sho'rva", mealType: MEAL_TYPES.DINNER, img: null },
 
   // --- 6-TAOM (SIXTH_MEAL) ---
-  { name: "Mol go'shti va Guruch (Oddiy qaynatma/dimlama)", mealType: MEAL_TYPES.SIXTH_MEAL, img: null },
-  { name: "Tovuq filesi va Makaron", mealType: MEAL_TYPES.SIXTH_MEAL, img: null },
-  { name: "Mol go'shti va Grechka", mealType: MEAL_TYPES.SIXTH_MEAL, img: null },
-  { name: "Tovuq kotleti va Non (Sendvich)", mealType: MEAL_TYPES.SIXTH_MEAL, img: null },
-  { name: "Mol go'shti va Bulg'ur", mealType: MEAL_TYPES.SIXTH_MEAL, img: null },
-  { name: "Tovuq filesi va Sabzavotlar (Dimlama)", mealType: MEAL_TYPES.SIXTH_MEAL, img: null },
-  { name: "Go'shtli teftel va Guruch", mealType: MEAL_TYPES.SIXTH_MEAL, img: null },
-  { name: "Tovuq filesi va Karam (Dimlama)", mealType: MEAL_TYPES.SIXTH_MEAL, img: null },
-  // { name: "Mol go'shti va Grechka", mealType: MEAL_TYPES.SIXTH_MEAL, img: null }, // Duplicate name
-  { name: "Tovuq filesi va Yasmiq (Garnir)", mealType: MEAL_TYPES.SIXTH_MEAL, img: null },
-  { name: "Mol go'shti va Sabzavotli ragu", mealType: MEAL_TYPES.SIXTH_MEAL, img: null },
-  { name: "Tovuq filesi va Guruch", mealType: MEAL_TYPES.SIXTH_MEAL, img: null },
-  { name: "Mol go'shti va Makaron", mealType: MEAL_TYPES.SIXTH_MEAL, img: null },
-  { name: "Tovuq kotleti va Grechka", mealType: MEAL_TYPES.SIXTH_MEAL, img: null },
-  { name: "Mol go'shti va Sabzavotlar", mealType: MEAL_TYPES.SIXTH_MEAL, img: null },
-  { name: "Tovuq filesi va Perlovka", mealType: MEAL_TYPES.SIXTH_MEAL, img: null },
+  // --- 6-TAOM (SIXTH_MEAL) ---
+  { name: "Mol go'shti va Guruch (Oddiy qaynatma/dimlama)", mealType: MEAL_TYPES.SIXTH_MEAL, img: '2.png' },
+  { name: "Tovuq filesi va Makaron", mealType: MEAL_TYPES.SIXTH_MEAL, img: '74.png' },
+  { name: "Mol go'shti va Grechka", mealType: MEAL_TYPES.SIXTH_MEAL, img: '2.png' },
+  { name: "Tovuq kotleti va Non (Sendvich)", mealType: MEAL_TYPES.SIXTH_MEAL, img: '85.png' },
+  { name: "Mol go'shti va Bulg'ur", mealType: MEAL_TYPES.SIXTH_MEAL, img: '2.png' },
+  { name: "Tovuq filesi va Sabzavotlar (Dimlama)", mealType: MEAL_TYPES.SIXTH_MEAL, img: '74.png' },
+  { name: "Go'shtli teftel va Guruch", mealType: MEAL_TYPES.SIXTH_MEAL, img: '49.png' },
+  { name: "Tovuq filesi va Karam (Dimlama)", mealType: MEAL_TYPES.SIXTH_MEAL, img: '74.png' },
+  // { name: "Mol go'shti va Grechka", mealType: MEAL_TYPES.SIXTH_MEAL, img: '2.png' }, // Duplicate name
+  { name: "Tovuq filesi va Yasmiq (Garnir)", mealType: MEAL_TYPES.SIXTH_MEAL, img: '74.png' },
+  { name: "Mol go'shti va Sabzavotli ragu", mealType: MEAL_TYPES.SIXTH_MEAL, img: '15.png' },
+  { name: "Tovuq filesi va Guruch", mealType: MEAL_TYPES.SIXTH_MEAL, img: '74.png' },
+  { name: "Mol go'shti va Makaron", mealType: MEAL_TYPES.SIXTH_MEAL, img: '2.png' },
+  { name: "Tovuq kotleti va Grechka", mealType: MEAL_TYPES.SIXTH_MEAL, img: '85.png' },
+  { name: "Mol go'shti va Sabzavotlar", mealType: MEAL_TYPES.SIXTH_MEAL, img: '2.png' },
+  { name: "Tovuq filesi va Perlovka", mealType: MEAL_TYPES.SIXTH_MEAL, img: '33.png' },
   // Repeats found in list, skipping duplicates to keep unique names or appending suffix if distinct
 ];
 
