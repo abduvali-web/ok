@@ -67,7 +67,7 @@ import { TrialStatus } from '@/components/admin/TrialStatus'
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal'
 import { ChatTab } from '@/components/chat/ChatTab'
 import { TodaysMenu } from '@/components/admin/TodaysMenu'
-import { TodaysMenu } from '@/components/admin/TodaysMenu'
+
 import { WarehouseTab } from '@/components/admin/WarehouseTab'
 import { FinanceTab } from '@/components/admin/FinanceTab'
 
