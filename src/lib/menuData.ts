@@ -1260,40 +1260,35 @@ export const MENUS: DailyMenu[] = [
 ];
 
 // Extra dishes for 6th meal (2500/3000 kcal)
+// Extra dishes for 6th meal (2500/3000 kcal)
 const EXTRA_DISHES: Dish[] = [
-  {
-    id: 106,
-    name: "Go'sht va garnir",
-    mealType: 'SIXTH_MEAL',
-    ingredients: [
-      { name: "Mol go'shti", amount: 100, unit: 'gr' },
-      { name: 'Garnir', amount: 100, unit: 'gr' },
-    ],
-  },
-  {
-    id: 107,
-    name: "Tovuq va garnir",
-    mealType: 'SIXTH_MEAL',
-    ingredients: [
-      { name: "Tovuq go'shti", amount: 120, unit: 'gr' },
-      { name: 'Garnir', amount: 100, unit: 'gr' },
-    ],
-  },
-  {
-    id: 108,
-    name: "Baliq va garnir",
-    mealType: 'SIXTH_MEAL',
-    ingredients: [
-      { name: 'Baliq', amount: 120, unit: 'gr' },
-      { name: 'Garnir', amount: 100, unit: 'gr' },
-    ],
-  },
+  { id: 106, name: "Mol go'shti va Guruch (Oddiy qaynatma/dimlama)", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 107, name: "Tovuq filesi va Makaron", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 108, name: "Mol go'shti va Grechka", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 109, name: "Tovuq kotleti va Non (Sendvich)", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 110, name: "Mol go'shti va Bulg'ur", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 111, name: "Tovuq filesi va Sabzavotlar (Dimlama)", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 112, name: "Go'shtli teftel va Guruch", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 113, name: "Tovuq filesi va Karam (Dimlama)", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 114, name: "Mol go'shti va Grechka (Takroriy)", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 115, name: "Tovuq filesi va Yasmiq (Garnir)", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 116, name: "Mol go'shti va Sabzavotli ragu", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 117, name: "Tovuq filesi va Guruch", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 118, name: "Mol go'shti va Makaron", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 119, name: "Tovuq kotleti va Grechka", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 120, name: "Mol go'shti va Sabzavotlar", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 121, name: "Tovuq filesi va Perlovka", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 122, name: "Tovuq filesi va Guruch (Takroriy)", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 123, name: "Mol go'shti va Grechka (Takroriy)", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 124, name: "Tovuq filesi va Sabzavotlar (Takroriy)", mealType: 'SIXTH_MEAL', ingredients: [] },
+  { id: 125, name: "Mol go'shti va Guruch (Takroriy)", mealType: 'SIXTH_MEAL', ingredients: [] },
 ];
 
 // Get 6th dish based on menu number (rotation)
 function getSixthDish(menuNumber: number): Dish {
-  // Pattern: Meat (106), Chicken (107), Fish (108)
-  const index = (menuNumber - 1) % 3;
+  // 20 dishes in list, cycle through them
+  // menuNumber is 1-based. (1-1) % 20 = 0.
+  const index = (menuNumber - 1) % EXTRA_DISHES.length;
   return EXTRA_DISHES[index];
 }
 

@@ -274,3 +274,16 @@ enum TransactionType {
   INCOME
   EXPENSE
 }
+
+model Dish {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  mealType    String
+  ingredients Json     // [{ name: string, amount: number, unit: string }]
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("dishes")
+}

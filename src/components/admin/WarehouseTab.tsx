@@ -17,7 +17,8 @@ import {
     Calendar,
     ChefHat,
     Loader2,
-    RefreshCw
+    RefreshCw,
+    Utensils
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -33,6 +34,8 @@ import {
     type DailyMenu,
     type Dish,
 } from '@/lib/menuData';
+import { DishesManager } from './warehouse/DishesManager';
+import { IngredientsManager } from './warehouse/IngredientsManager';
 
 interface WarehouseTabProps {
     className?: string;
@@ -340,18 +343,26 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                 </CardHeader>
                 <CardContent>
                     <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-                        <TabsList className="grid w-full grid-cols-3 mb-6">
+                        <TabsList className="grid w-full grid-cols-5 mb-6">
                             <TabsTrigger value="cooking" className="flex items-center gap-2">
                                 <ChefHat className="w-4 h-4" />
-                                Готовка на завтра
+                                <span className="hidden sm:inline">Готовка</span>
                             </TabsTrigger>
                             <TabsTrigger value="inventory" className="flex items-center gap-2">
                                 <Package className="w-4 h-4" />
-                                Остатки
+                                <span className="hidden sm:inline">Остатки</span>
                             </TabsTrigger>
                             <TabsTrigger value="calculator" className="flex items-center gap-2">
                                 <Calculator className="w-4 h-4" />
-                                Калькулятор
+                                <span className="hidden sm:inline">Калькулятор</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="dishes" className="flex items-center gap-2">
+                                <Utensils className="w-4 h-4" />
+                                <span className="hidden sm:inline">Блюда</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="ingredients-catalog" className="flex items-center gap-2">
+                                <Package className="w-4 h-4" />
+                                <span className="hidden sm:inline">Справочник</span>
                             </TabsTrigger>
                         </TabsList>
 
@@ -582,6 +593,16 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                     )}
                                 </div>
                             </div>
+                        </TabsContent>
+
+                        {/* NEW: Dishes Management Tab */}
+                        <TabsContent value="dishes">
+                            <DishesManager />
+                        </TabsContent>
+
+                        {/* NEW: Ingredients Catalog Tab */}
+                        <TabsContent value="ingredients-catalog">
+                            <IngredientsManager />
                         </TabsContent>
                     </Tabs>
                 </CardContent>
