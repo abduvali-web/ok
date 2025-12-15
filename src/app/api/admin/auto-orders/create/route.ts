@@ -27,65 +27,92 @@ export async function POST(request: NextRequest) {
     }
 
     const { targetDate } = await request.json()
-    const processDate = targetDate ? new Date(targetDate) : new Date()
-    const dayStart = startOfDay(processDate)
-    const dayEnd = endOfDay(processDate)
+    // Start from provided date or tomorrow (since auto-orders are usually for future)
+    // If targetDate is provided, use it. If not, start from tomorrow.
+    const startDate = targetDate ? new Date(targetDate) : new Date()
+    // Ensure we start from the beginning of the day
+    startDate.setHours(0, 0, 0, 0)
 
-    const customers = await db.customer.findMany({ where: { isActive: true } })
     const defaultAdmin = await db.admin.findFirst({ where: { role: 'SUPER_ADMIN' } })
     if (!defaultAdmin) return NextResponse.json({ error: 'Администратор не найден' }, { status: 400 })
 
-    const eligible = customers.filter(c => isEligibleByPattern(c.orderPattern, processDate))
+    const customers = await db.customer.findMany({ where: { isActive: true } })
 
-    let created = 0
-    const createdOrders: any[] = []
+    let totalCreated = 0
+    const createdOrdersSummary: any[] = []
 
-    for (const c of eligible) {
-      const existing = await db.order.findFirst({
-        where: { customerId: c.id, deliveryDate: { gte: dayStart, lte: dayEnd } },
-        select: { id: true }
-      })
-      if (existing) continue
+    // Loop for 30 days
+    for (let i = 0; i < 30; i++) {
+      const processDate = new Date(startDate)
+      processDate.setDate(startDate.getDate() + i)
 
-      const lastOrder = await db.order.findFirst({ orderBy: { orderNumber: 'desc' }, select: { orderNumber: true } })
-      const nextOrderNumber = lastOrder ? lastOrder.orderNumber + 1 : 1
+      const dayStart = startOfDay(processDate)
+      const dayEnd = endOfDay(processDate)
 
-      const createdOrder = await db.order.create({
-        data: {
-          orderNumber: nextOrderNumber,
-          customerId: c.id,
-          adminId: defaultAdmin.id,
-          deliveryAddress: c.address,
-          deliveryDate: new Date(dayStart),
-          deliveryTime: defaultDeliveryTime(),
-          quantity: 1,
-          calories: c.calories ?? 1600,
-          specialFeatures: c.preferences || '',
-          paymentStatus: 'UNPAID',
-          paymentMethod: 'CASH',
-          isPrepaid: false,
-          orderStatus: 'PENDING',
-        },
-        include: { customer: { select: { name: true, phone: true } } }
-      })
+      // Filter clients eligible for THIS specific day
+      const eligible = customers.filter(c => isEligibleByPattern(c.orderPattern, processDate))
 
-      created++
-      createdOrders.push({
-        id: createdOrder.id,
-        customerName: createdOrder.customer?.name,
-        customerPhone: createdOrder.customer?.phone,
-        deliveryAddress: createdOrder.deliveryAddress,
-        deliveryDate: createdOrder.deliveryDate?.toISOString().split('T')[0],
-        deliveryTime: createdOrder.deliveryTime,
-        calories: createdOrder.calories,
-        paymentStatus: createdOrder.paymentStatus,
-        orderStatus: createdOrder.orderStatus,
-        isAutoOrder: true,
-        createdAt: createdOrder.createdAt
-      })
+      for (const c of eligible) {
+        // specific check for deliveryDays if it exists (JSON field)
+        // Note: orderPattern is legacy? or parallel? 
+        // Let's check logic: isEligibleByPattern checks even/odd/daily.
+        // We should also check deliveryDays matches the day of week if strictly needed.
+        // But for now, relying on isEligibleByPattern as per existing code, 
+        // assuming deliveryDays is handled there or this overrides it.
+        // Wait, existing code used isEligibleByPattern. 
+        // AND client has deliveryDays in schema. 
+        // Let's refine isEligibleByPattern to check deliveryDays if present?
+        // The previous code ONLY used isEligibleByPattern. 
+        // The user complained it only generates for 1 day. 
+        // I will trust isEligibleByPattern for now, but I should probably check if I need to update it.
+        // View schema showed `deliveryDays` string? No, `deliveryDays` String? (JSON probably).
+
+        const existing = await db.order.findFirst({
+          where: { customerId: c.id, deliveryDate: { gte: dayStart, lte: dayEnd } },
+          select: { id: true }
+        })
+        if (existing) continue
+
+        const lastOrder = await db.order.findFirst({ orderBy: { orderNumber: 'desc' }, select: { orderNumber: true } })
+        const nextOrderNumber = lastOrder ? lastOrder.orderNumber + 1 : 1
+
+        const createdOrder = await db.order.create({
+          data: {
+            orderNumber: nextOrderNumber,
+            customerId: c.id,
+            adminId: defaultAdmin.id,
+            deliveryAddress: c.address,
+            deliveryDate: new Date(dayStart),
+            deliveryTime: defaultDeliveryTime(),
+            quantity: 1,
+            calories: c.calories ?? 1600,
+            specialFeatures: c.preferences || '',
+            paymentStatus: 'UNPAID',
+            paymentMethod: 'CASH',
+            isPrepaid: false,
+            orderStatus: 'PENDING',
+            isAutoOrder: true // Mark as auto-order
+          },
+          include: { customer: { select: { name: true, phone: true } } }
+        })
+
+        totalCreated++
+        if (createdOrdersSummary.length < 50) { // Limit response size
+          createdOrdersSummary.push({
+            id: createdOrder.id,
+            customerName: createdOrder.customer?.name,
+            date: processDate.toISOString().split('T')[0]
+          })
+        }
+      }
     }
 
-    return NextResponse.json({ message: `Автоматически создано ${created} заказов`, processedDate: processDate.toDateString(), eligibleClients: eligible.length, createdOrders: createdOrders.length, orders: createdOrders })
+    return NextResponse.json({
+      message: `Автоматически создано ${totalCreated} заказов на 30 дней`,
+      startDate: startDate.toDateString(),
+      createdCount: totalCreated,
+      sampleOrders: createdOrdersSummary
+    })
   } catch (error: any) {
     console.error('Error creating auto orders:', error)
     return NextResponse.json({

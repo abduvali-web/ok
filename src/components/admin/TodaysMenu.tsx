@@ -79,91 +79,66 @@ export function TodaysMenu({ className }: TodaysMenuProps) {
 
     return (
         <Card className={`glass-card border-none ${className}`}>
-            <CardHeader className="pb-4">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <div>
-                        <CardTitle className="flex items-center gap-2 text-xl">
-                            <Utensils className="w-5 h-5 text-primary" />
+            <CardHeader className="pb-3 pt-4 px-4">
+                <div className="flex flex-row justify-between items-center gap-2">
+                    <div className="flex items-center gap-2">
+                        <Utensils className="w-4 h-4 text-primary" />
+                        <CardTitle className="text-base font-semibold">
                             Сегодняшнее меню
                         </CardTitle>
-                        <CardDescription className="mt-1">
-                            Блюда для доставки сегодня
-                        </CardDescription>
+                        <Badge variant="outline" className="ml-2 px-2 py-0.5 h-6 bg-primary/5 text-xs font-normal">
+                            День {menuNumber} / 21
+                        </Badge>
                     </div>
-                    <Badge variant="outline" className="flex items-center gap-1 px-3 py-1.5 bg-primary/5">
-                        <Calendar className="w-4 h-4" />
-                        <span className="font-semibold">День {menuNumber}</span>
-                        <span className="text-muted-foreground">из 21</span>
-                    </Badge>
                 </div>
             </CardHeader>
-            <CardContent>
-                <div className="space-y-6">
+            <CardContent className="px-4 pb-4">
+                <div className="flex overflow-x-auto pb-2 gap-3 scrollbar-hide -mx-1 px-1">
                     {Object.entries(MEAL_TYPES).map(([key, label]) => {
                         const mealKey = key as keyof typeof MEAL_TYPES;
                         const dishes = dishesByMealType[mealKey];
 
                         if (!dishes || dishes.length === 0) return null;
 
-                        return (
-                            <div key={key} className="space-y-3">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-lg">{mealTypeIcons[mealKey]}</span>
-                                    <Badge
-                                        variant="outline"
-                                        className={`${mealTypeColors[mealKey]} font-medium`}
-                                    >
-                                        {label}
-                                    </Badge>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                                    {dishes.map((dish) => (
-                                        <div
-                                            key={dish.id}
-                                            className="group relative bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
-                                        >
-                                            <div className="aspect-[4/3] relative bg-gradient-to-br from-slate-100 to-slate-50 overflow-hidden">
-                                                {!imageErrors.has(dish.id) ? (
-                                                    <img
-                                                        src={getDishImageUrl(dish.id)}
-                                                        alt={dish.name}
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                        onError={() => handleImageError(dish.id)}
-                                                        loading="lazy"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-slate-100 to-slate-200">
-                                                        {mealTypeIcons[dish.mealType]}
-                                                    </div>
-                                                )}
-                                                <div className="absolute top-2 right-2">
-                                                    <Badge className="bg-black/60 text-white text-xs backdrop-blur-sm border-0">
-                                                        #{dish.id}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                            <div className="p-3">
-                                                <h4 className="font-medium text-sm text-slate-900 line-clamp-2 min-h-[2.5rem]">
-                                                    {dish.name}
-                                                </h4>
-                                                <div className="mt-2 space-y-1">
-                                                    {dish.ingredients.slice(0, 3).map((ing, idx) => (
-                                                        <div key={idx} className="text-xs text-slate-500 truncate">
-                                                            • {ing.name}: {ing.amount} {ing.unit}
-                                                        </div>
-                                                    ))}
-                                                    {dish.ingredients.length > 3 && (
-                                                        <div className="text-xs text-slate-400">
-                                                            +{dish.ingredients.length - 3} ингредиентов
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
+                        return dishes.map((dish) => (
+                            <div
+                                key={dish.id}
+                                className="flex-none w-[200px] group relative bg-white rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-row h-20"
+                            >
+                                <div className="w-20 h-full relative bg-slate-100 flex-shrink-0">
+                                    {!imageErrors.has(dish.id) ? (
+                                        <img
+                                            src={getDishImageUrl(dish.id)}
+                                            alt={dish.name}
+                                            className="w-full h-full object-cover"
+                                            onError={() => handleImageError(dish.id)}
+                                            loading="lazy"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-xl bg-slate-100">
+                                            {mealTypeIcons[dish.mealType]}
                                         </div>
-                                    ))}
+                                    )}
+                                </div>
+                                <div className="p-2 flex flex-col justify-between flex-1 min-w-0">
+                                    <div>
+                                        <div className="flex items-center gap-1 mb-1">
+                                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">
+                                                {label}
+                                            </span>
+                                        </div>
+                                        <h4 className="font-medium text-xs text-slate-900 leading-tight line-clamp-2" title={dish.name}>
+                                            {dish.name}
+                                        </h4>
+                                    </div>
+                                    <div className="flex items-center gap-1 mt-1">
+                                        <div className="text-[10px] text-slate-500 truncate" title={dish.ingredients.map(i => i.name).join(', ')}>
+                                            {dish.ingredients.length} ингр.
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        );
+                        ));
                     })}
                 </div>
             </CardContent>
