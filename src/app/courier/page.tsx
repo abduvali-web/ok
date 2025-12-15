@@ -70,6 +70,7 @@ export default function CourierPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isOrderOpen, setIsOrderOpen] = useState(false)
   const [isOrderPaused, setIsOrderPaused] = useState(false)
+  const [amountReceived, setAmountReceived] = useState('')
 
   useEffect(() => {
     // Check authentication and load courier data
@@ -210,11 +211,13 @@ export default function CourierPage() {
     setSelectedOrder(order)
     setIsOrderOpen(true)
     setIsOrderPaused(order.orderStatus === 'PAUSED')
+    setAmountReceived('')
   }
 
   const handleCloseOrderDetailSheet = () => {
     setIsOrderOpen(false)
     setSelectedOrder(null)
+    setAmountReceived('')
   }
 
   const handleStartDelivery = async () => {
@@ -258,7 +261,10 @@ export default function CourierPage() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ action: 'complete_delivery' })
+        body: JSON.stringify({
+          action: 'complete_delivery',
+          amountReceived: amountReceived ? parseFloat(amountReceived) : null
+        })
       })
 
       if (response.ok) {
@@ -629,6 +635,25 @@ export default function CourierPage() {
               </div>
 
               <div className="mt-auto p-6 bg-slate-50 border-t border-slate-100 space-y-3">
+
+                {(selectedOrder.orderStatus === 'IN_DELIVERY' || selectedOrder.orderStatus === 'PAUSED') && (
+                  <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm mb-2">
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">
+                      Получено от клиента
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={amountReceived}
+                        onChange={(e) => setAmountReceived(e.target.value)}
+                        placeholder="0"
+                        className="w-full h-10 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      />
+                      <span className="absolute right-3 top-2.5 text-slate-400 text-sm">сум</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     variant="outline"

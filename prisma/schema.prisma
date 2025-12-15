@@ -106,6 +106,7 @@ model Order {
   deletedAt       DateTime?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
+  amountReceived  Float?
 
   customer  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   admin     Admin    @relation("OrderAdmin", fields: [adminId], references: [id])

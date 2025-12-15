@@ -90,8 +90,17 @@ export async function PATCH(
         if (!hasRole(user, ['COURIER'])) {
           return NextResponse.json({ error: 'Только курьер может завершить доставку' }, { status: 403 })
         }
+
+        const { amountReceived } = body
         updateData.orderStatus = 'DELIVERED'
         updateData.deliveredAt = new Date()
+
+        if (amountReceived !== undefined && amountReceived !== null) {
+          const parsedAmount = parseFloat(amountReceived)
+          if (!isNaN(parsedAmount)) {
+            updateData.amountReceived = parsedAmount
+          }
+        }
         break
       case 'update_details':
         if (!hasRole(user, ['MIDDLE_ADMIN', 'SUPER_ADMIN'])) {
