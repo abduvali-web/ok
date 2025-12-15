@@ -7,9 +7,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Pencil, Trash2, Plus, Search, Loader2, X } from 'lucide-react';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Pencil, Trash2, Plus, Search, Loader2, X, Check, ChevronsUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { MEAL_TYPES } from '@/lib/menuData';
+import { cn } from "@/lib/utils";
 
 interface IngredientRef {
     name: string;
@@ -30,6 +33,85 @@ interface WarehouseItem {
     id: string;
     name: string;
     unit: string;
+}
+
+function IngredientSelector({
+    value,
+    onChange,
+    items
+}: {
+    value: string;
+    onChange: (val: string, unit?: string) => void;
+    items: WarehouseItem[]
+}) {
+    const [open, setOpen] = useState(false);
+    const [search, setSearch] = useState("");
+
+    // Filter items based on search if needed, or rely on Command's internal filtering.
+    // To support "Create", we need to know if there's a match.
+    // Standard Command automatically hides non-matches.
+    // We'll trust Command for filtering, but check if we should show "Create".
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="w-full justify-between font-normal h-8"
+                >
+                    {value || "Select ingredient..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[300px] p-0">
+                <Command>
+                    <CommandInput
+                        placeholder="Search or type new..."
+                        value={search}
+                        onValueChange={setSearch}
+                    />
+                    <CommandList>
+                        <CommandEmpty>
+                            <Button
+                                variant="ghost"
+                                className="w-full justify-start text-xs font-normal"
+                                onClick={() => {
+                                    onChange(search); // Create new
+                                    setOpen(false);
+                                }}
+                            >
+                                Use "{search}"
+                            </Button>
+                        </CommandEmpty>
+                        <CommandGroup>
+                            {items.map((item) => (
+                                <CommandItem
+                                    key={item.id}
+                                    value={item.name}
+                                    onSelect={(currentValue) => {
+                                        // Look up the original item to get exact casing or data
+                                        const original = items.find(i => i.name.toLowerCase() === currentValue.toLowerCase());
+                                        onChange(original ? original.name : currentValue, original?.unit);
+                                        setOpen(false);
+                                    }}
+                                >
+                                    <Check
+                                        className={cn(
+                                            "mr-2 h-4 w-4",
+                                            value === item.name ? "opacity-100" : "opacity-0"
+                                        )}
+                                    />
+                                    {item.name}
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
+    );
 }
 
 export function DishesManager() {
@@ -136,15 +218,18 @@ export function DishesManager() {
         setCurrentDish(prev => {
             const newIngredients = [...(prev.ingredients || [])];
             newIngredients[index] = { ...newIngredients[index], [field]: value };
+            return { ...prev, ingredients: newIngredients };
+        });
+    };
 
-            // If selecting a warehouse item, auto-fill unit
-            if (field === 'name') {
-                const item = warehouseItems.find(i => i.name === value);
-                if (item) {
-                    newIngredients[index].unit = item.unit;
-                }
-            }
-
+    const handleIngredientNameChange = (index: number, name: string, unit?: string) => {
+        setCurrentDish(prev => {
+            const newIngredients = [...(prev.ingredients || [])];
+            newIngredients[index] = {
+                ...newIngredients[index],
+                name,
+                unit: unit || newIngredients[index].unit || 'gr'
+            };
             return { ...prev, ingredients: newIngredients };
         });
     };
@@ -199,7 +284,9 @@ export function DishesManager() {
                                 <TableRow key={dish.id}>
                                     <TableCell>
                                         {dish.imageUrl && (
-                                            <img src={dish.imageUrl} alt={dish.name} className="w-10 h-10 object-cover rounded-md" />
+                                            <div className="w-10 h-10 rounded-md overflow-hidden bg-slate-100">
+                                                <img src={dish.imageUrl} alt={dish.name} className="w-full h-full object-cover" />
+                                            </div>
                                         )}
                                     </TableCell>
                                     <TableCell className="font-medium">{dish.name}</TableCell>
@@ -209,7 +296,7 @@ export function DishesManager() {
                                         </span>
                                     </TableCell>
                                     <TableCell className="text-sm text-slate-500 max-w-[200px] truncate">
-                                        {dish.ingredients.map(i => i.name).join(', ')}
+                                        {dish.ingredients && dish.ingredients.map(i => i.name).join(', ')}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
@@ -301,20 +388,11 @@ export function DishesManager() {
                                     <div key={idx} className="flex gap-2 items-end">
                                         <div className="flex-1 space-y-1">
                                             <Label className="text-xs">Ingredient</Label>
-                                            {/* Ideally a combobox, but Select for now */}
-                                            <Select
+                                            <IngredientSelector
                                                 value={ing.name}
-                                                onValueChange={(val) => updateIngredientRow(idx, 'name', val)}
-                                            >
-                                                <SelectTrigger className="h-8">
-                                                    <SelectValue placeholder="Select..." />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {warehouseItems.map(item => (
-                                                        <SelectItem key={item.id} value={item.name}>{item.name}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                                items={warehouseItems}
+                                                onChange={(name, unit) => handleIngredientNameChange(idx, name, unit)}
+                                            />
                                         </div>
                                         <div className="w-24 space-y-1">
                                             <Label className="text-xs">Amount</Label>

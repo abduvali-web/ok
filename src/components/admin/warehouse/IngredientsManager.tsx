@@ -116,9 +116,9 @@ export function IngredientsManager() {
                 </Button>
             </div>
 
-            <div className="bg-white rounded-lg border">
+            <div className="bg-white rounded-lg border max-h-[600px] overflow-y-auto relative">
                 <Table>
-                    <TableHeader>
+                    <TableHeader className="sticky top-0 bg-white z-10 shadow-sm">
                         <TableRow>
                             <TableHead>Name</TableHead>
                             <TableHead>Amount (In Stock)</TableHead>
