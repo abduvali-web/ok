@@ -556,6 +556,49 @@ export default function MiddleAdminPage() {
     }
   }
 
+  const handleRestoreSelectedOrders = async () => {
+    if (selectedOrders.size === 0) {
+      toast.error('Пожалуйста, выберите заказы для восстановления')
+      return
+    }
+
+    if (!confirm(`Вы уверены, что хотите восстановить ${selectedOrders.size} заказ(ов)?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/admin/orders/restore', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ orderIds: Array.from(selectedOrders) })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        toast.success(data.message || `Успешно восстановлено ${data.updatedCount} заказ(ов)`)
+        setSelectedOrders(new Set())
+        fetchBinOrders()
+        fetchData()
+      } else {
+        const data = await response.json()
+        toast.error(`Ошибка: ${data.error || 'Ошибка восстановления заказов'}`)
+      }
+    } catch (error) {
+      console.error('Restore orders error:', error)
+      toast.error('Ошибка соединения с сервером')
+    }
+  }
+
+  const handleSelectAllBinOrders = () => {
+    if (selectedOrders.size === binOrders.length) {
+      setSelectedOrders(new Set())
+    } else {
+      setSelectedOrders(new Set(binOrders.map(order => order.id)))
+    }
+  }
+
   const handleCreateAdmin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsCreating(true)
@@ -3899,10 +3942,20 @@ export default function MiddleAdminPage() {
               <TabsContent value="orders" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h2 className="text-2xl font-bold tracking-tight">Корзина заказов</h2>
-                  <Button onClick={fetchBinOrders} variant="outline">
-                    <History className="mr-2 h-4 w-4" />
-                    Обновить
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleRestoreSelectedOrders}
+                      variant="outline"
+                      disabled={selectedOrders.size === 0}
+                    >
+                      <History className="mr-2 h-4 w-4" />
+                      Восстановить ({selectedOrders.size})
+                    </Button>
+                    <Button onClick={fetchBinOrders} variant="outline">
+                      <History className="mr-2 h-4 w-4" />
+                      Обновить
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="rounded-md border">
@@ -3910,7 +3963,7 @@ export default function MiddleAdminPage() {
                     orders={binOrders}
                     selectedOrders={selectedOrders}
                     onSelectOrder={handleOrderSelect}
-                    onSelectAll={handleSelectAllOrders}
+                    onSelectAll={handleSelectAllBinOrders}
                     onDeleteSelected={handlePermanentDeleteOrders}
                     onViewOrder={(order) => {
                       setSelectedOrder(order)
