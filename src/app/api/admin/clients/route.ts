@@ -89,6 +89,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  let phone = ''
   try {
     const user = await getAuthUser(request)
     if (!user || !hasRole(user, ['LOW_ADMIN', 'MIDDLE_ADMIN', 'SUPER_ADMIN'])) {
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const {
       name,
-      phone,
+      phone: inputPhone,
       address,
       calories,
       specialFeatures,
@@ -108,6 +109,9 @@ export async function POST(request: NextRequest) {
       longitude,
       defaultCourierId
     } = body
+
+    // Assign to outer variable for error handling and usage
+    if (inputPhone) phone = inputPhone
 
     // Basic validation
     if (!name || !phone || !address) {
@@ -189,6 +193,19 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
+        const deletedClient = await db.customer.findFirst({
+          where: {
+            phone: phone,
+            deletedAt: { not: null }
+          }
+        });
+
+        if (deletedClient) {
+          return NextResponse.json({
+            error: 'Клиент с таким номером находится в корзине. Восстановите его или удалите навсегда.'
+          }, { status: 409 });
+        }
+
         return NextResponse.json({
           error: 'Клиент с таким номером телефона уже существует'
         }, { status: 409 })

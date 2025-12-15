@@ -5,7 +5,7 @@ import { getAuthUser, hasRole } from '@/lib/auth-utils'
 export async function DELETE(request: NextRequest) {
     try {
         const user = await getAuthUser(request)
-        if (!user || !hasRole(user, ['SUPER_ADMIN'])) {
+        if (!user || !hasRole(user, ['SUPER_ADMIN', 'MIDDLE_ADMIN'])) {
             return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
         }
 
