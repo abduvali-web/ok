@@ -3980,155 +3980,154 @@ export default function MiddleAdminPage() {
                 </div>
               </TabsContent>
             </Tabs>
-          </CardContent>
-        </Card>
-      </TabsContent>
 
-      {/* Warehouse Tab */}
-      <TabsContent value="warehouse" className="space-y-4">
-        <WarehouseTab />
-      </TabsContent>
-    </Tabs>
+          </TabsContent>
+
+          {/* Warehouse Tab */}
+          <TabsContent value="warehouse" className="space-y-4">
+            <WarehouseTab />
+          </TabsContent>
+        </Tabs>
       </main >
-    {/* Bulk Edit Orders Modal */ }
-    < Dialog open = { isBulkEditOrdersModalOpen } onOpenChange = { setIsBulkEditOrdersModalOpen } >
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Редактировать выбранные заказы ({selectedOrders.size})</DialogTitle>
-          <DialogDescription>
-            Измените параметры для выбранных заказов. Оставьте поля пустыми, чтобы не менять их.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-2">
-            <Label htmlFor="bulkOrderStatus" className="text-right">
-              Статус
-            </Label>
-            <select
-              id="bulkOrderStatus"
-              value={bulkOrderUpdates.orderStatus}
-              onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, orderStatus: e.target.value }))}
-              className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Не менять</option>
-              <option value="PENDING">Ожидает</option>
-              <option value="IN_DELIVERY">В доставке</option>
-              <option value="DELIVERED">Доставлен</option>
-              <option value="FAILED">Отменен</option>
-            </select>
+      {/* Bulk Edit Orders Modal */}
+      < Dialog open={isBulkEditOrdersModalOpen} onOpenChange={setIsBulkEditOrdersModalOpen} >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Редактировать выбранные заказы ({selectedOrders.size})</DialogTitle>
+            <DialogDescription>
+              Измените параметры для выбранных заказов. Оставьте поля пустыми, чтобы не менять их.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-2">
+              <Label htmlFor="bulkOrderStatus" className="text-right">
+                Статус
+              </Label>
+              <select
+                id="bulkOrderStatus"
+                value={bulkOrderUpdates.orderStatus}
+                onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, orderStatus: e.target.value }))}
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Не менять</option>
+                <option value="PENDING">Ожидает</option>
+                <option value="IN_DELIVERY">В доставке</option>
+                <option value="DELIVERED">Доставлен</option>
+                <option value="FAILED">Отменен</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-2">
+              <Label htmlFor="bulkPaymentStatus" className="text-right">
+                Оплата
+              </Label>
+              <select
+                id="bulkPaymentStatus"
+                value={bulkOrderUpdates.paymentStatus}
+                onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, paymentStatus: e.target.value }))}
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Не менять</option>
+                <option value="PAID">Оплачен</option>
+                <option value="UNPAID">Не оплачен</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-2">
+              <Label htmlFor="bulkCourier" className="text-right">
+                Курьер
+              </Label>
+              <select
+                id="bulkCourier"
+                value={bulkOrderUpdates.courierId}
+                onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, courierId: e.target.value }))}
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Не менять</option>
+                <option value="none">Снять курьера</option>
+                {couriers.map(courier => (
+                  <option key={courier.id} value={courier.id}>{courier.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-2">
+              <Label htmlFor="bulkDeliveryDate" className="text-right">
+                Дата
+              </Label>
+              <Input
+                id="bulkDeliveryDate"
+                type="date"
+                value={bulkOrderUpdates.deliveryDate}
+                onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, deliveryDate: e.target.value }))}
+                className="col-span-3"
+              />
+            </div>
           </div>
-          <div className="grid grid-cols-4 items-center gap-2">
-            <Label htmlFor="bulkPaymentStatus" className="text-right">
-              Оплата
-            </Label>
-            <select
-              id="bulkPaymentStatus"
-              value={bulkOrderUpdates.paymentStatus}
-              onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, paymentStatus: e.target.value }))}
-              className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Не менять</option>
-              <option value="PAID">Оплачен</option>
-              <option value="UNPAID">Не оплачен</option>
-            </select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-2">
-            <Label htmlFor="bulkCourier" className="text-right">
-              Курьер
-            </Label>
-            <select
-              id="bulkCourier"
-              value={bulkOrderUpdates.courierId}
-              onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, courierId: e.target.value }))}
-              className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Не менять</option>
-              <option value="none">Снять курьера</option>
-              {couriers.map(courier => (
-                <option key={courier.id} value={courier.id}>{courier.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-2">
-            <Label htmlFor="bulkDeliveryDate" className="text-right">
-              Дата
-            </Label>
-            <Input
-              id="bulkDeliveryDate"
-              type="date"
-              value={bulkOrderUpdates.deliveryDate}
-              onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, deliveryDate: e.target.value }))}
-              className="col-span-3"
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsBulkEditOrdersModalOpen(false)}>
-            Отмена
-          </Button>
-          <Button onClick={handleBulkUpdateOrders} disabled={isUpdatingBulk}>
-            {isUpdatingBulk ? 'Обновление...' : 'Обновить'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBulkEditOrdersModalOpen(false)}>
+              Отмена
+            </Button>
+            <Button onClick={handleBulkUpdateOrders} disabled={isUpdatingBulk}>
+              {isUpdatingBulk ? 'Обновление...' : 'Обновить'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
       </Dialog >
 
-    {/* Bulk Edit Clients Modal */ }
-    < Dialog open = { isBulkEditClientsModalOpen } onOpenChange = { setIsBulkEditClientsModalOpen } >
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Редактировать выбранные клиентов ({selectedClients.size})</DialogTitle>
-          <DialogDescription>
-            Измените параметры для выбранных клиентов. Оставьте поля пустыми, чтобы не менять их.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-2">
-            <Label htmlFor="bulkIsActive" className="text-right">
-              Статус
-            </Label>
-            <select
-              id="bulkIsActive"
-              value={bulkClientUpdates.isActive === undefined ? '' : bulkClientUpdates.isActive.toString()}
-              onChange={(e) => setBulkClientUpdates(prev => ({
-                ...prev,
-                isActive: e.target.value === '' ? undefined : e.target.value === 'true'
-              }))}
-              className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Не менять</option>
-              <option value="true">Активен</option>
-              <option value="false">Приостановлен</option>
-            </select>
+      {/* Bulk Edit Clients Modal */}
+      < Dialog open={isBulkEditClientsModalOpen} onOpenChange={setIsBulkEditClientsModalOpen} >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Редактировать выбранные клиентов ({selectedClients.size})</DialogTitle>
+            <DialogDescription>
+              Измените параметры для выбранных клиентов. Оставьте поля пустыми, чтобы не менять их.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-2">
+              <Label htmlFor="bulkIsActive" className="text-right">
+                Статус
+              </Label>
+              <select
+                id="bulkIsActive"
+                value={bulkClientUpdates.isActive === undefined ? '' : bulkClientUpdates.isActive.toString()}
+                onChange={(e) => setBulkClientUpdates(prev => ({
+                  ...prev,
+                  isActive: e.target.value === '' ? undefined : e.target.value === 'true'
+                }))}
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Не менять</option>
+                <option value="true">Активен</option>
+                <option value="false">Приостановлен</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-2">
+              <Label htmlFor="bulkCalories" className="text-right">
+                Калории
+              </Label>
+              <select
+                id="bulkCalories"
+                value={bulkClientUpdates.calories}
+                onChange={(e) => setBulkClientUpdates(prev => ({ ...prev, calories: e.target.value }))}
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Не менять</option>
+                <option value="1200">1200</option>
+                <option value="1600">1600</option>
+                <option value="2000">2000</option>
+                <option value="2500">2500</option>
+                <option value="3000">3000</option>
+              </select>
+            </div>
           </div>
-          <div className="grid grid-cols-4 items-center gap-2">
-            <Label htmlFor="bulkCalories" className="text-right">
-              Калории
-            </Label>
-            <select
-              id="bulkCalories"
-              value={bulkClientUpdates.calories}
-              onChange={(e) => setBulkClientUpdates(prev => ({ ...prev, calories: e.target.value }))}
-              className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Не менять</option>
-              <option value="1200">1200</option>
-              <option value="1600">1600</option>
-              <option value="2000">2000</option>
-              <option value="2500">2500</option>
-              <option value="3000">3000</option>
-            </select>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsBulkEditClientsModalOpen(false)}>
-            Отмена
-          </Button>
-          <Button onClick={handleBulkUpdateClients} disabled={isUpdatingBulk}>
-            {isUpdatingBulk ? 'Обновление...' : 'Обновить'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBulkEditClientsModalOpen(false)}>
+              Отмена
+            </Button>
+            <Button onClick={handleBulkUpdateClients} disabled={isUpdatingBulk}>
+              {isUpdatingBulk ? 'Обновление...' : 'Обновить'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
       </Dialog >
     </div >
   )
