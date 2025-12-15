@@ -5,6 +5,35 @@ import bcrypt from 'bcryptjs'
 import { passwordSchema } from '@/lib/validations'
 import { z } from 'zod'
 
+export async function GET(request: NextRequest) {
+    try {
+        const user = await getAuthUser(request)
+        if (!user || (!hasRole(user, ['COURIER']) && !hasRole(user, ['SUPER_ADMIN', 'MIDDLE_ADMIN', 'LOW_ADMIN']))) {
+            return NextResponse.json({ error: 'Доступ запрещен' }, { status: 403 })
+        }
+
+        const admin = await db.admin.findUnique({
+            where: { id: user.id },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                phone: true
+            }
+        })
+
+        if (!admin) {
+            return NextResponse.json({ error: 'Пользователь не найден' }, { status: 404 })
+        }
+
+        return NextResponse.json(admin)
+    } catch (error) {
+        console.error('Error fetching profile:', error)
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    }
+}
+
 export async function PATCH(request: NextRequest) {
     try {
         const user = await getAuthUser(request)

@@ -99,6 +99,28 @@ export async function PATCH(
           const parsedAmount = parseFloat(amountReceived)
           if (!isNaN(parsedAmount)) {
             updateData.amountReceived = parsedAmount
+
+            if (parsedAmount > 0) {
+              // Create transaction and update client balance
+              await db.$transaction([
+                db.transaction.create({
+                  data: {
+                    amount: parsedAmount,
+                    type: 'INCOME', // TransactionType.INCOME
+                    category: 'ORDER_PAYMENT',
+                    description: `Оплата за заказ #${order.orderNumber} (Курьер: ${(user as any).name || 'Unknown'})`,
+                    adminId: order.adminId, // Credit to the middle admin who owns the order
+                    customerId: order.customerId
+                  }
+                }),
+                db.customer.update({
+                  where: { id: order.customerId },
+                  data: {
+                    balance: { increment: parsedAmount }
+                  }
+                })
+              ])
+            }
           }
         }
         break
