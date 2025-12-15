@@ -45,9 +45,13 @@ export interface DailyMenu {
 
 // Get image URL for a dish
 export function getDishImageUrl(dishNumber: number): string {
-  // Fix: Dish 57 (Sharlotka) has incorrect image (duplicate of 56), use 67 (Medovik) as fallback
-  const imageId = dishNumber === 57 ? 67 : dishNumber;
-  return `https://wsrv.nl/?url=github.com/FreedoomForm/hi/blob/main/${imageId}.png?raw=true&w=400&output=webp&q=80`;
+  // Fix: Image 58 is actually Sharlotka, so use it for Dish 57
+  if (dishNumber === 57) return `https://wsrv.nl/?url=github.com/FreedoomForm/hi/blob/main/58.png?raw=true&w=400&output=webp&q=80`;
+
+  // Fix: Dish 58 (Bulg'ur palov) image is wrong (it's Sharlotka), so use Image 93 (Tovuksay + Bulg'ur) as substitute
+  if (dishNumber === 58) return `https://wsrv.nl/?url=github.com/FreedoomForm/hi/blob/main/93.png?raw=true&w=400&output=webp&q=80`;
+
+  return `https://wsrv.nl/?url=github.com/FreedoomForm/hi/blob/main/${dishNumber}.png?raw=true&w=400&output=webp&q=80`;
 }
 
 // Calculate menu number for a given date
