@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +18,9 @@ import {
     ChefHat,
     Loader2,
     RefreshCw,
-    Utensils
+    Utensils,
+    AlertTriangle,
+    Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -312,6 +314,43 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         SIXTH_MEAL: '🥗',
     };
 
+    // Calculate required ingredients for current dish quantities
+    const requiredIngredients = useMemo(() => {
+        if (!tomorrowMenu) return new Map<string, { amount: number; unit: string }>();
+        const required = new Map<string, { amount: number; unit: string }>();
+
+        for (const dish of tomorrowMenu.dishes) {
+            const qty = dishQuantities[dish.id] || 0;
+            if (qty <= 0) continue;
+
+            for (const ing of dish.ingredients) {
+                const existing = required.get(ing.name);
+                const amount = ing.amount * qty;
+                if (existing) {
+                    existing.amount = Math.round((existing.amount + amount) * 10) / 10;
+                } else {
+                    required.set(ing.name, { amount, unit: ing.unit });
+                }
+            }
+        }
+        return required;
+    }, [tomorrowMenu, dishQuantities]);
+
+    // Check which ingredients are insufficient
+    const insufficientIngredients = useMemo(() => {
+        const insufficient: Array<{ name: string; required: number; available: number; unit: string }> = [];
+        for (const [name, { amount, unit }] of requiredIngredients) {
+            const available = inventory[name] || 0;
+            if (amount > available) {
+                insufficient.push({ name, required: amount, available, unit });
+            }
+        }
+        return insufficient;
+    }, [requiredIngredients, inventory]);
+
+    const hasEnoughStock = insufficientIngredients.length === 0;
+    const totalDishesToCook = Object.values(dishQuantities).reduce((sum, qty) => sum + qty, 0);
+
     return (
         <div className={`space-y-6 ${className}`}>
             <Card className="glass-card border-none">
@@ -449,10 +488,54 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                     ))}
                                 </div>
                             )}
+                            {/* Summary and Stock Warning Section */}
+                            <div className="border rounded-lg p-4 bg-slate-50 space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <span className="font-medium">Итого блюд к готовке:</span>
+                                    <Badge variant="outline" className="text-lg px-3 py-1">
+                                        {totalDishesToCook} порций
+                                    </Badge>
+                                </div>
+
+                                {!hasEnoughStock && (
+                                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                                        <div className="flex items-center gap-2 text-red-800 font-medium mb-2">
+                                            <AlertTriangle className="w-4 h-4" />
+                                            Недостаточно ингредиентов ({insufficientIngredients.length})
+                                        </div>
+                                        <div className="text-sm text-red-700 max-h-32 overflow-y-auto space-y-1">
+                                            {insufficientIngredients.slice(0, 5).map(({ name, required, available, unit }) => (
+                                                <div key={name} className="flex justify-between">
+                                                    <span>{name}</span>
+                                                    <span className="font-mono">
+                                                        {available.toFixed(1)} / {required.toFixed(1)} {unit}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                            {insufficientIngredients.length > 5 && (
+                                                <div className="text-xs text-red-500">
+                                                    ... и ещё {insufficientIngredients.length - 5} позиций
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {hasEnoughStock && totalDishesToCook > 0 && (
+                                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2 text-green-800">
+                                        <Check className="w-4 h-4" />
+                                        Все ингредиенты в наличии
+                                    </div>
+                                )}
+                            </div>
 
                             <div className="flex justify-end pt-4 border-t gap-2">
                                 <Button
                                     onClick={async () => {
+                                        if (!hasEnoughStock) {
+                                            toast.error('Недостаточно ингредиентов на складе!');
+                                            return;
+                                        }
                                         if (!confirm('Вы уверены, что хотите списать ингредиенты для выбранных блюд? Это действие изменит остатки на складе.')) return;
 
                                         setIsSaving(true);
@@ -482,15 +565,17 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                             setIsSaving(false);
                                         }
                                     }}
-                                    disabled={isSaving}
-                                    className="gap-2 bg-amber-600 hover:bg-amber-700 text-white"
+                                    disabled={isSaving || !hasEnoughStock || totalDishesToCook === 0}
+                                    className={`gap-2 ${hasEnoughStock ? 'bg-amber-600 hover:bg-amber-700' : 'bg-red-500 hover:bg-red-600'} text-white`}
                                 >
                                     {isSaving ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : !hasEnoughStock ? (
+                                        <AlertTriangle className="w-4 h-4" />
                                     ) : (
                                         <Utensils className="w-4 h-4" />
                                     )}
-                                    Списать продукты (Готовка)
+                                    {!hasEnoughStock ? 'Недостаточно продуктов' : 'Списать продукты (Готовка)'}
                                 </Button>
 
                                 <Button onClick={handleSave} disabled={isSaving} className="gap-2">

@@ -19,19 +19,21 @@ async function main() {
           name: dish.name,
           mealType: dish.mealType,
           imageUrl: imageUrl,
-          ingredients: [],
+          ingredients: dish.ingredients || [], // Fix: Use actual ingredients
         }
       });
       console.log(`Created: ${dish.name} (Img: ${imageUrl?.split('/').pop()})`);
     } else {
-      // Update image if changed
-      if (imageUrl && existing.imageUrl !== imageUrl) {
-        await prisma.dish.update({
-          where: { id: existing.id },
-          data: { imageUrl: imageUrl }
-        });
-        console.log(`Updated Image: ${dish.name} -> ${imageUrl?.split('/').pop()}`);
-      }
+      // Update image or ingredients if changed
+      // We always update ingredients to ensure sync with menuData
+      await prisma.dish.update({
+        where: { id: existing.id },
+        data: {
+          imageUrl: imageUrl,
+          ingredients: dish.ingredients || [] // Fix: Update ingredients
+        }
+      });
+      console.log(`Updated: ${dish.name}`);
     }
   };
 
