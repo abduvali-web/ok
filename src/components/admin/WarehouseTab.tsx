@@ -96,6 +96,12 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     useEffect(() => {
         if (!tomorrowMenu) return;
         const totalClients = Object.values(clientsByCalorie).reduce((sum, count) => sum + count, 0);
+
+        // Only set quantities if clients have been loaded (totalClients > 0)
+        // If totalClients is 0, either no clients exist or data hasn't loaded yet
+        // In practice, this should update once fetchClientCalories completes
+        if (totalClients === 0) return;
+
         const initialQuantities: Record<number, number> = {};
         tomorrowMenu.dishes.forEach(dish => {
             // Default to total clients, but user can adjust
