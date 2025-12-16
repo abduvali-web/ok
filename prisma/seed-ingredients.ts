@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { MENUS, getAllIngredients, type Dish as MenuDish } from '../src/lib/menuData';
+import { MENUS, EXTRA_DISHES, getAllIngredients, type Dish as MenuDish } from '../src/lib/menuData';
 
 const prisma = new PrismaClient();
 
@@ -27,13 +27,9 @@ async function main() {
         }
     };
 
+    // Collect from both MENUS and EXTRA_DISHES
     MENUS.forEach(menu => menu.dishes.forEach(collectIngredients));
-    // Note: EXTRA_DISHES logic is internal to menuData.ts but getAllIngredients uses it.
-    // I need to access EXTRA_DISHES or just rely on what I can find.
-    // Actually, I can't import EXTRA_DISHES easily if it's not exported.
-    // checking menuData.ts exports... getAllIngredients iterates EXTRA_DISHES. 
-    // But to get units, I need access.
-    // I'll assume 'gr' for any missed via this method or check MENUS coverage.
+    EXTRA_DISHES.forEach(collectIngredients);
 
     console.log(`Extracted ${ingredientMap.size} unique ingredients with units.`);
 
@@ -55,8 +51,9 @@ async function main() {
         dishIngredientsMap.set(normalize(dish.name), dish.ingredients);
     };
 
+    // Map from both MENUS and EXTRA_DISHES
     MENUS.forEach(menu => menu.dishes.forEach(mapDish));
-    // If I can't access EXTRA_DISHES, I skip them for ingredient updates for now.
+    EXTRA_DISHES.forEach(mapDish);
 
     const dbDishes = await prisma.dish.findMany();
     let updatedCount = 0;

@@ -32,6 +32,8 @@ import {
     calculateIngredientsForMenu,
     calculateShoppingList,
     getAllIngredients,
+    scaleIngredients,
+    CALORIE_MULTIPLIERS,
     MEAL_TYPES,
     type DailyMenu,
     type Dish,
@@ -83,18 +85,24 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         const menu = getTomorrowsMenu();
         setTomorrowMenu(menu);
 
-        // Initialize dish quantities
-        if (menu) {
-            const initialQuantities: Record<number, number> = {};
-            menu.dishes.forEach(dish => {
-                initialQuantities[dish.id] = 1;
-            });
-            setDishQuantities(initialQuantities);
-        }
+        // Note: dish quantities will be set after clientsByCalorie is loaded
+        // See the effect below that depends on both menu and clientsByCalorie
 
         // Fetch data from API
         fetchData();
     }, [tomorrowMenuNumber]);
+
+    // Set default dish quantities based on total active clients
+    useEffect(() => {
+        if (!tomorrowMenu) return;
+        const totalClients = Object.values(clientsByCalorie).reduce((sum, count) => sum + count, 0);
+        const initialQuantities: Record<number, number> = {};
+        tomorrowMenu.dishes.forEach(dish => {
+            // Default to total clients, but user can adjust
+            initialQuantities[dish.id] = totalClients;
+        });
+        setDishQuantities(initialQuantities);
+    }, [tomorrowMenu, clientsByCalorie]);
 
     // Fetch client calorie distribution from database
     const fetchClientCalories = useCallback(async () => {
@@ -314,27 +322,57 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         SIXTH_MEAL: '🥗',
     };
 
-    // Calculate required ingredients for current dish quantities
+    // Calculate required ingredients with CALORIE-SCALED amounts
+    // For each dish, sum ingredients across all calorie tiers based on client distribution
     const requiredIngredients = useMemo(() => {
         if (!tomorrowMenu) return new Map<string, { amount: number; unit: string }>();
         const required = new Map<string, { amount: number; unit: string }>();
 
+        // For each dish, calculate total ingredients needed across all calorie tiers
         for (const dish of tomorrowMenu.dishes) {
-            const qty = dishQuantities[dish.id] || 0;
-            if (qty <= 0) continue;
+            const dishQty = dishQuantities[dish.id] || 0;
+            if (dishQty <= 0) continue;
 
-            for (const ing of dish.ingredients) {
-                const existing = required.get(ing.name);
-                const amount = ing.amount * qty;
-                if (existing) {
-                    existing.amount = Math.round((existing.amount + amount) * 10) / 10;
-                } else {
-                    required.set(ing.name, { amount, unit: ing.unit });
+            // Calculate proportionally based on client distribution
+            // Example: 2 clients at 1200kcal, 1 at 2000kcal = 3 total
+            // Each calorie tier gets its scaled ingredients
+            const totalClients = Object.values(clientsByCalorie).reduce((sum, c) => sum + c, 0);
+
+            if (totalClients === 0) continue;
+
+            // For each calorie tier
+            for (const [calorieStr, clientCount] of Object.entries(clientsByCalorie)) {
+                if (clientCount <= 0) continue;
+
+                const calories = parseInt(calorieStr);
+                const mealType = dish.mealType as keyof typeof MEAL_TYPES;
+
+                // Get scaled ingredients for this calorie tier
+                const scaledIngredients = scaleIngredients(
+                    dish.ingredients,
+                    calories,
+                    mealType,
+                    1 // per portion
+                );
+
+                // Calculate how many portions for this tier
+                // If dishQty matches totalClients, each tier gets clientCount portions
+                // If user overrides dishQty, distribute proportionally
+                const portionsForTier = Math.round((dishQty / totalClients) * clientCount);
+
+                for (const ing of scaledIngredients) {
+                    const existing = required.get(ing.name);
+                    const amount = ing.amount * portionsForTier;
+                    if (existing) {
+                        existing.amount = Math.round((existing.amount + amount) * 10) / 10;
+                    } else {
+                        required.set(ing.name, { amount: Math.round(amount * 10) / 10, unit: ing.unit });
+                    }
                 }
             }
         }
         return required;
-    }, [tomorrowMenu, dishQuantities]);
+    }, [tomorrowMenu, dishQuantities, clientsByCalorie]);
 
     // Check which ingredients are insufficient
     const insufficientIngredients = useMemo(() => {
