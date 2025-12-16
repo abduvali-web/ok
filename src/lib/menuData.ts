@@ -16,6 +16,53 @@ export const CALORIE_MULTIPLIERS: Record<number, { breakfast: number; lunch: num
   3000: { breakfast: 2.5, lunch: 3.0, dinner: 2.5, snack: 2.0, sixth_meal: 1.5 }, // 6th meal 1.5x
 };
 
+// Plan types and their display names
+export const PLAN_TYPES = {
+  CLASSIC: 'Классик',
+  INDIVIDUAL: 'Индивидуал',
+  DIABETIC: 'Диабет',
+} as const;
+
+// Daily pricing in sum based on plan type and calorie tier
+// Format: PLAN_PRICING[planType][calorieRange] = price in sum
+export const PLAN_PRICING: Record<string, Record<string, number>> = {
+  CLASSIC: {
+    '1200': 84000, // 1000-1200 kcal
+    '1600': 98000, // 1400-1600 kcal
+    '2000': 112000, // 1800-2000 kcal
+    '2500': 126000, // 2200-2500 kcal
+    '3000': 126000, // Use 2500 price for 3000
+  },
+  INDIVIDUAL: {
+    '1200': 98000,
+    '1600': 112000,
+    '2000': 126000,
+    '2500': 140000,
+    '3000': 140000,
+  },
+  DIABETIC: {
+    '1200': 84000,
+    '1600': 98000,
+    '2000': 112000,
+    '2500': 126000,
+    '3000': 126000,
+  },
+};
+
+// Helper function to get daily price
+export function getDailyPrice(planType: string, calories: number): number {
+  const pricing = PLAN_PRICING[planType] || PLAN_PRICING.CLASSIC;
+  // Map calories to tier
+  let tier = '1200';
+  if (calories <= 1400) tier = '1200';
+  else if (calories <= 1800) tier = '1600';
+  else if (calories <= 2200) tier = '2000';
+  else if (calories <= 2800) tier = '2500';
+  else tier = '3000';
+
+  return pricing[tier] || 84000;
+}
+
 // Meal types in Uzbek
 export const MEAL_TYPES = {
   BREAKFAST: 'Nonushta',

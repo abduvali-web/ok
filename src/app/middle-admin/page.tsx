@@ -114,6 +114,9 @@ interface Client {
   phone: string
   address: string
   calories: number
+  planType: 'CLASSIC' | 'INDIVIDUAL' | 'DIABETIC'
+  dailyPrice: number
+  notes?: string
   specialFeatures: string
   deliveryDays: {
     monday: boolean
@@ -241,6 +244,9 @@ export default function MiddleAdminPage() {
     phone: '',
     address: '',
     calories: 1200,
+    planType: 'CLASSIC' as 'CLASSIC' | 'INDIVIDUAL' | 'DIABETIC',
+    dailyPrice: 84000,
+    notes: '',
     specialFeatures: '',
     deliveryDays: {
       monday: false,
@@ -1106,6 +1112,9 @@ export default function MiddleAdminPage() {
           phone: '',
           address: '',
           calories: 1200,
+          planType: 'CLASSIC',
+          dailyPrice: 84000,
+          notes: '',
           specialFeatures: '',
           deliveryDays: {
             monday: false,
@@ -1160,6 +1169,9 @@ export default function MiddleAdminPage() {
       phone: client.phone,
       address: client.address,
       calories: client.calories,
+      planType: client.planType || 'CLASSIC',
+      dailyPrice: client.dailyPrice || 84000,
+      notes: client.notes || '',
       specialFeatures: client.specialFeatures || '',
       deliveryDays: client.deliveryDays || {
         monday: false,

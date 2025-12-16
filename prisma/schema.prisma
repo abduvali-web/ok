@@ -53,6 +53,12 @@ enum AdminRole {
   COURIER
 }
 
+enum PlanType {
+  CLASSIC
+  INDIVIDUAL
+  DIABETIC
+}
+
 model Customer {
   id                String   @id @default(cuid())
   name              String
@@ -73,6 +79,9 @@ model Customer {
   defaultCourier    Admin?   @relation("ClientDefaultCourier", fields: [defaultCourierId], references: [id])
   creator           Admin?   @relation("ClientCreator", fields: [createdBy], references: [id])
   calories          Int      @default(2000)
+  planType          PlanType @default(CLASSIC)
+  dailyPrice        Int      @default(84000) // Price in sum
+  notes             String?  // Individual requirements, excluded products, etc.
   deliveryDays      String?
   autoOrdersEnabled Boolean  @default(true)
   balance           Float    @default(0)
