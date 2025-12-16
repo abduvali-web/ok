@@ -32,7 +32,8 @@ export async function GET(request: NextRequest) {
         role: true,
         isActive: true,
         createdAt: true,
-        allowedTabs: true
+        allowedTabs: true,
+        salary: true
       },
       orderBy: { createdAt: 'desc' }
     })
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { name, email, password } = await request.json()
+    const { name, email, password, salary } = await request.json()
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -113,7 +114,8 @@ export async function POST(request: NextRequest) {
         role: 'COURIER',
         isActive: true,
         createdBy: user.id,
-        allowedTabs: null
+        allowedTabs: null,
+        salary: salary ? parseInt(salary) : 0
       },
       select: {
         id: true,
@@ -122,7 +124,8 @@ export async function POST(request: NextRequest) {
         role: true,
         isActive: true,
         createdAt: true,
-        allowedTabs: true
+        allowedTabs: true,
+        salary: true
       }
     })
 

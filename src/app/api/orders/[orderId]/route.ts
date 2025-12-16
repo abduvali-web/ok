@@ -140,6 +140,10 @@ export async function PATCH(
               db.customer.update({
                 where: { id: order.customerId },
                 data: { balance: { increment: parsedAmount } }
+              }),
+              db.admin.update({
+                where: { id: order.adminId },
+                data: { companyBalance: { increment: parsedAmount } }
               })
             )
           }

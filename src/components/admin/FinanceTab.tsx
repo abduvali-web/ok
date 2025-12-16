@@ -65,6 +65,13 @@ interface Client {
     planType?: string;
 }
 
+interface Staff {
+    id: string;
+    name: string;
+    role: string;
+    salary: number;
+}
+
 interface Transaction {
     id: string;
     amount: number;
@@ -83,22 +90,31 @@ export function FinanceTab({ className }: FinanceTabProps) {
     const [history, setHistory] = useState<Transaction[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [ingredientsList, setIngredientsList] = useState<string[]>([]);
+    const [staff, setStaff] = useState<Staff[]>([]);
 
     // Filters
     const [searchQuery, setSearchQuery] = useState('');
     const [balanceFilter, setBalanceFilter] = useState<'all' | 'positive' | 'negative' | 'zero'>('all');
+    const [categoryFilter, setCategoryFilter] = useState('all');
+    const [categories, setCategories] = useState<string[]>([]);
 
     // Modals
     const [isCompanyFundsModalOpen, setIsCompanyFundsModalOpen] = useState(false);
     const [isClientBalanceModalOpen, setIsClientBalanceModalOpen] = useState(false);
     const [isBuyIngredientsModalOpen, setIsBuyIngredientsModalOpen] = useState(false);
+    const [isPaySalaryModalOpen, setIsPaySalaryModalOpen] = useState(false);
 
     // Form Data
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [transactionAmount, setTransactionAmount] = useState('');
     const [transactionDescription, setTransactionDescription] = useState('');
+    const [transactionCategory, setTransactionCategory] = useState('');
     const [transactionType, setTransactionType] = useState<'INCOME' | 'EXPENSE'>('INCOME');
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Salary Form
+    const [selectedStaffId, setSelectedStaffId] = useState('');
+    const [salaryAmount, setSalaryAmount] = useState('');
 
     // Buy Ingredients Form
     const [purchaseItems, setPurchaseItems] = useState<{ name: string; amount: string; costPerUnit: string }[]>([
@@ -112,6 +128,9 @@ export function FinanceTab({ className }: FinanceTabProps) {
     useEffect(() => {
         fetchCompanyFinance();
         fetchClients();
+        fetchCompanyFinance();
+        fetchClients();
+        fetchStaff();
     }, []);
 
     useEffect(() => {
@@ -124,11 +143,15 @@ export function FinanceTab({ className }: FinanceTabProps) {
 
     const fetchCompanyFinance = async () => {
         try {
-            const response = await fetch('/api/admin/finance/company?limit=50&type=all');
+            const response = await fetch(`/api/admin/finance/company?limit=50&type=all&category=${categoryFilter}`);
             if (response.ok) {
                 const data = await response.json();
                 setCompanyBalance(data.companyBalance);
                 setHistory(data.history);
+
+                // Extract unique categories
+                const uniqueCategories = Array.from(new Set(data.history.map((tx: Transaction) => tx.category)));
+                setCategories(uniqueCategories as string[]);
             }
         } catch (error) {
             console.error('Error fetching company finance:', error);
@@ -156,6 +179,31 @@ export function FinanceTab({ className }: FinanceTabProps) {
         }
     };
 
+    const fetchStaff = async () => {
+        try {
+            const [lowAdminsRes, couriersRes] = await Promise.all([
+                fetch('/api/admin/low-admins'),
+                fetch('/api/admin/couriers')
+            ]);
+
+            let allStaff: Staff[] = [];
+
+            if (lowAdminsRes.ok) {
+                const lowAdmins = await lowAdminsRes.json();
+                allStaff = [...allStaff, ...lowAdmins];
+            }
+
+            if (couriersRes.ok) {
+                const couriers = await couriersRes.json();
+                allStaff = [...allStaff, ...couriers];
+            }
+
+            setStaff(allStaff);
+        } catch (error) {
+            console.error('Error fetching staff:', error);
+        }
+    };
+
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         fetchClients();
@@ -174,7 +222,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                 type: transactionType,
                 description: transactionDescription,
                 customerId: isCompany ? undefined : selectedClient?.id,
-                category: isCompany ? 'COMPANY_FUNDS' : 'MANUAL_ADJUSTMENT'
+                category: isCompany ? (transactionCategory || 'COMPANY_FUNDS') : 'MANUAL_ADJUSTMENT'
             };
 
             const response = await fetch('/api/admin/finance/transaction', {
@@ -191,6 +239,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                 // Reset form
                 setTransactionAmount('');
                 setTransactionDescription('');
+                setTransactionCategory('');
                 setTransactionType('INCOME');
                 setSelectedClient(null);
 
@@ -283,6 +332,40 @@ export function FinanceTab({ className }: FinanceTabProps) {
         }
     };
 
+    const handlePaySalarySubmit = async () => {
+        if (!selectedStaffId || !salaryAmount) {
+            toast.error('Выберите сотрудника и сумму');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const response = await fetch('/api/admin/finance/salary', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    adminId: selectedStaffId,
+                    amount: parseFloat(salaryAmount)
+                })
+            });
+
+            if (response.ok) {
+                toast.success('Зарплата выплачена');
+                setIsPaySalaryModalOpen(false);
+                setSelectedStaffId('');
+                setSalaryAmount('');
+                fetchCompanyFinance(); // Refresh balance
+            } else {
+                const data = await response.json();
+                toast.error(data.error || 'Ошибка выплаты');
+            }
+        } catch (error) {
+            toast.error('Ошибка соединения');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('ru-RU', {
             style: 'currency',
@@ -325,6 +408,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                 onClick={() => {
                                     setTransactionAmount('');
                                     setTransactionDescription('');
+                                    setTransactionCategory('');
                                     setTransactionType('INCOME');
                                     setIsCompanyFundsModalOpen(true);
                                 }}
@@ -339,6 +423,14 @@ export function FinanceTab({ className }: FinanceTabProps) {
                             >
                                 <ShoppingCart className="w-3 h-3 mr-1" />
                                 Закупка
+                            </Button>
+                            <Button
+                                size="sm"
+                                className="h-7 bg-green-600 hover:bg-green-700 ml-2"
+                                onClick={() => setIsPaySalaryModalOpen(true)}
+                            >
+                                <Users className="w-3 h-3 mr-1" />
+                                Зарплата
                             </Button>
                         </div>
                     </CardContent>
@@ -519,40 +611,42 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
-                                            history.map((tx) => (
-                                                <TableRow key={tx.id}>
-                                                    <TableCell className="text-xs text-slate-500">
-                                                        {formatDate(tx.createdAt)}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Badge variant={tx.type === 'INCOME' ? 'outline' : 'secondary'} className={
-                                                            tx.type === 'INCOME' ? 'text-green-600 border-green-200 bg-green-50' : 'text-red-600 bg-red-50'
-                                                        }>
-                                                            {tx.type === 'INCOME' ? 'Поступление' : 'Списание'}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-xs font-medium">
-                                                        {tx.category}
-                                                    </TableCell>
-                                                    <TableCell className="max-w-[200px] truncate" title={tx.description}>
-                                                        {tx.description || '-'}
-                                                    </TableCell>
-                                                    <TableCell className="text-sm">
-                                                        {tx.customer ? (
-                                                            <div className="flex flex-col">
-                                                                <span className="font-medium">{tx.customer.name}</span>
-                                                                <span className="text-xs text-slate-400">Клиент</span>
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-slate-500">Компания</span>
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell className={`text-right font-medium ${tx.type === 'INCOME' ? 'text-green-600' : 'text-red-600'
-                                                        }`}>
-                                                        {tx.type === 'INCOME' ? '+' : '-'}{formatCurrency(tx.amount)}
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))
+                                            history
+                                                .filter(tx => categoryFilter === 'all' || tx.category === categoryFilter)
+                                                .map((tx) => (
+                                                    <TableRow key={tx.id}>
+                                                        <TableCell className="text-xs text-slate-500">
+                                                            {formatDate(tx.createdAt)}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge variant={tx.type === 'INCOME' ? 'outline' : 'secondary'} className={
+                                                                tx.type === 'INCOME' ? 'text-green-600 border-green-200 bg-green-50' : 'text-red-600 bg-red-50'
+                                                            }>
+                                                                {tx.type === 'INCOME' ? 'Поступление' : 'Списание'}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="text-xs font-medium">
+                                                            {tx.category}
+                                                        </TableCell>
+                                                        <TableCell className="max-w-[200px] truncate" title={tx.description}>
+                                                            {tx.description || '-'}
+                                                        </TableCell>
+                                                        <TableCell className="text-sm">
+                                                            {tx.customer ? (
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-medium">{tx.customer.name}</span>
+                                                                    <span className="text-xs text-slate-400">Клиент</span>
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-slate-500">Компания</span>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className={`text-right font-medium ${tx.type === 'INCOME' ? 'text-green-600' : 'text-red-600'
+                                                            }`}>
+                                                            {tx.type === 'INCOME' ? '+' : '-'}{formatCurrency(tx.amount)}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
                                         )}
                                     </TableBody>
                                 </Table>
@@ -620,6 +714,30 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                 className="col-span-3"
                                 placeholder="Например: Инвестиции, Закупка..."
                             />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="category" className="text-right">
+                                Категория
+                            </Label>
+                            <div className="col-span-3 relative">
+                                <Input
+                                    id="category"
+                                    value={transactionCategory}
+                                    onChange={(e) => setTransactionCategory(e.target.value)}
+                                    placeholder="Или выберите..."
+                                    list="categories-datalist"
+                                />
+                                <datalist id="categories-datalist">
+                                    <option value="COMPANY_FUNDS" />
+                                    <option value="INVESTMENT" />
+                                    <option value="WITHDRAWAL" />
+                                    <option value="SALARY" />
+                                    <option value="INGREDIENTS" />
+                                    {categories.map(cat => (
+                                        <option key={cat} value={cat} />
+                                    ))}
+                                </datalist>
+                            </div>
                         </div>
                     </div>
                     <DialogFooter>
@@ -790,6 +908,63 @@ export function FinanceTab({ className }: FinanceTabProps) {
                             </Button>
                         </div>
                     </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* PAY SALARY MODAL */}
+            <Dialog open={isPaySalaryModalOpen} onOpenChange={setIsPaySalaryModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Выплата зарплаты</DialogTitle>
+                        <DialogDescription>
+                            Выберите сотрудника для выплаты зарплаты. Средства будут списаны с баланса компании.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label className="text-right">Сотрудник</Label>
+                            <Select
+                                value={selectedStaffId}
+                                onValueChange={(val) => {
+                                    setSelectedStaffId(val);
+                                    const staffMember = staff.find(s => s.id === val);
+                                    if (staffMember) {
+                                        setSalaryAmount(staffMember.salary?.toString() || '0');
+                                    }
+                                }}
+                            >
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue placeholder="Выберите сотрудника" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {staff.map(s => (
+                                        <SelectItem key={s.id} value={s.id}>
+                                            {s.name} ({s.role === 'COURIER' ? 'Курьер' : 'Админ'}) - ЗП: {s.salary}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="salary-amount" className="text-right">
+                                Сумма
+                            </Label>
+                            <Input
+                                id="salary-amount"
+                                type="number"
+                                value={salaryAmount}
+                                onChange={(e) => setSalaryAmount(e.target.value)}
+                                className="col-span-3"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsPaySalaryModalOpen(false)}>Отмена</Button>
+                        <Button onClick={handlePaySalarySubmit} disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                            Выплатить
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>

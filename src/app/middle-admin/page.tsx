@@ -80,6 +80,7 @@ interface Admin {
   isActive: boolean
   createdAt: string
   allowedTabs?: string[]
+  salary?: number
 }
 
 interface Order {
@@ -220,19 +221,22 @@ export default function MiddleAdminPage() {
     password: '',
     role: 'LOW_ADMIN',
     isActive: true,
-    allowedTabs: [] as string[]
+    allowedTabs: [] as string[],
+    salary: 0
   })
   const [createFormData, setCreateFormData] = useState({
     name: '',
     email: '',
     password: '',
     role: 'LOW_ADMIN',
-    allowedTabs: [] as string[]
+    allowedTabs: [] as string[],
+    salary: ''
   })
   const [courierFormData, setCourierFormData] = useState({
     name: '',
     email: '',
-    password: ''
+    password: '',
+    salary: ''
   })
   const [featureFormData, setFeatureFormData] = useState({
     name: '',
@@ -645,7 +649,8 @@ export default function MiddleAdminPage() {
       password: '',
       role: admin.role,
       isActive: admin.isActive,
-      allowedTabs: admin.allowedTabs || []
+      allowedTabs: admin.allowedTabs || [],
+      salary: admin.salary || 0
     })
     setIsEditAdminModalOpen(true)
   }
@@ -666,6 +671,7 @@ export default function MiddleAdminPage() {
           role: editAdminFormData.role,
           isActive: editAdminFormData.isActive,
           allowedTabs: editAdminFormData.allowedTabs,
+          salary: editAdminFormData.salary,
           ...(editAdminFormData.password ? { password: editAdminFormData.password } : {})
         })
       })
@@ -3474,6 +3480,19 @@ export default function MiddleAdminPage() {
                               <option value="COURIER">Курьер</option>
                             </select>
                           </div>
+                          <div className="grid grid-cols-4 items-center gap-2">
+                            <Label htmlFor="salary" className="text-right">
+                              Зарплата
+                            </Label>
+                            <Input
+                              id="salary"
+                              type="number"
+                              value={createFormData.salary || ''}
+                              onChange={(e) => setCreateFormData(prev => ({ ...prev, salary: parseInt(e.target.value) || 0 }))}
+                              className="col-span-3"
+                              placeholder="0"
+                            />
+                          </div>
                           {createFormData.role === 'LOW_ADMIN' && (
                             <div className="col-span-4 space-y-3 border-t pt-4">
                               <Label className="text-sm font-medium">Разрешенные вкладки</Label>
@@ -3871,6 +3890,19 @@ export default function MiddleAdminPage() {
                       <option value="LOW_ADMIN">Низкий администратор</option>
                       <option value="COURIER">Курьер</option>
                     </select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-salary" className="text-right">
+                      Зарплата
+                    </Label>
+                    <Input
+                      id="edit-salary"
+                      type="number"
+                      value={editAdminFormData.salary || ''}
+                      onChange={(e) => setEditAdminFormData({ ...editAdminFormData, salary: parseInt(e.target.value) || 0 })}
+                      className="col-span-3"
+                      placeholder="0"
+                    />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit-active" className="text-right">

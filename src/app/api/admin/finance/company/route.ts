@@ -36,6 +36,11 @@ export async function GET(req: Request) {
             whereClause.customerId = { not: null }
         }
 
+        const category = searchParams.get('category')
+        if (category && category !== 'all') {
+            whereClause.category = category
+        }
+
         const history = await prisma.transaction.findMany({
             where: whereClause,
             include: {

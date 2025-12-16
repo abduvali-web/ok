@@ -41,6 +41,7 @@ model Admin {
   conversationsAsP2     Conversation[] @relation("ConversationParticipant2")
   website               Website?
   companyBalance        Float          @default(0)
+  salary                Int            @default(0)
   transactions          Transaction[]
 
   @@map("admins")

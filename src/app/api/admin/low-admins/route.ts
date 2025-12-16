@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { email, password, name, role, allowedTabs } = await request.json()
+    const { email, password, name, role, allowedTabs, salary } = await request.json()
 
     if (!email || !password || !name || !role) {
       return NextResponse.json(
@@ -140,7 +140,8 @@ export async function POST(request: NextRequest) {
         role,
         isActive: true,
         createdBy: user.id,
-        allowedTabs: allowedTabs ? JSON.stringify(allowedTabs) : null
+        allowedTabs: allowedTabs ? JSON.stringify(allowedTabs) : null,
+        salary: salary ? parseInt(salary) : 0
       }
     })
 
