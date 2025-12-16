@@ -15,15 +15,22 @@ export async function GET(req: Request) {
         const search = searchParams.get('search') || ''
 
         let whereClause: any = {
-            isActive: true, // Only active clients? Or should we show all? Usually finance needs all.
-            // Let's filter by createdBy or defaultCourier related to this admin if needed
-            // Assuming Middle Admin sees all clients they manage
+            deletedAt: null // Only active clients
         }
 
-        // If middle admin is restricted to their own clients (check existing logic in clients/route.ts)
-        // For now assuming all clients visible specifically to this admin
-        // Note: The main clients route usually filters by `createdBy` or `defaultCourier`.
-        // We'll mimic that if possible, but for now let's keep it simple.
+        // Data isolation: Different isolation rules for each role
+        // For Middle Admin: see clients created by self or own low admins
+        if (session.user.role === 'MIDDLE_ADMIN') {
+            const lowAdmins = await prisma.admin.findMany({
+                where: { createdBy: session.user.id, role: 'LOW_ADMIN' },
+                select: { id: true }
+            })
+            const lowAdminIds = lowAdmins.map(a => a.id)
+            whereClause.createdBy = { in: [session.user.id, ...lowAdminIds] }
+        } else if (session.user.role === 'LOW_ADMIN') {
+            whereClause.createdBy = session.user.id
+        }
+        // Super Admin sees all
 
         // Add search filter
         if (search) {
@@ -49,6 +56,7 @@ export async function GET(req: Request) {
                 name: true,
                 phone: true,
                 balance: true,
+                dailyPrice: true,
                 createdAt: true,
             },
             orderBy: {

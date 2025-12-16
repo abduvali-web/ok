@@ -23,7 +23,7 @@ import {
     Minus,
     Loader2,
     ShoppingCart,
-    Trash2
+    Trash2,
 } from 'lucide-react';
 import {
     Table,
@@ -61,6 +61,8 @@ interface Client {
     name: string;
     phone: string;
     balance: number;
+    dailyPrice?: number;
+    planType?: string;
 }
 
 interface Transaction {
@@ -431,6 +433,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                             <TableHead>Клиент</TableHead>
                                             <TableHead>Телефон</TableHead>
                                             <TableHead className="text-right">Баланс</TableHead>
+                                            <TableHead className="text-right">Дней</TableHead>
                                             <TableHead className="text-right">Действия</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -458,6 +461,13 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                                             }`}>
                                                             {formatCurrency(client.balance)}
                                                         </span>
+                                                    </TableCell>
+                                                    <TableCell className="text-right text-sm">
+                                                        {client.dailyPrice ? (
+                                                            <span className={client.balance < 0 ? 'text-red-600' : 'text-slate-600'}>
+                                                                {Math.floor(client.balance / client.dailyPrice)} дн.
+                                                            </span>
+                                                        ) : '-'}
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         <Button
@@ -713,20 +723,22 @@ export function FinanceTab({ className }: FinanceTabProps) {
 
                         {purchaseItems.map((item, index) => (
                             <div key={index} className="flex gap-2 items-center">
-                                <div className="w-1/3">
-                                    <Select
-                                        value={item.name}
-                                        onValueChange={(val) => handlePurchaseItemChange(index, 'name', val)}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Выберите..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
+                                <div className="w-1/3 relative group">
+                                    {/* Searchable Combobox Input */}
+                                    <div className="relative">
+                                        <Input
+                                            value={item.name}
+                                            onChange={(e) => handlePurchaseItemChange(index, 'name', e.target.value)}
+                                            placeholder="Название..."
+                                            className="w-full"
+                                            list={`ingredients-list-${index}`}
+                                        />
+                                        <datalist id={`ingredients-list-${index}`}>
                                             {ingredientsList.map(ing => (
-                                                <SelectItem key={ing} value={ing}>{ing}</SelectItem>
+                                                <option key={ing} value={ing} />
                                             ))}
-                                        </SelectContent>
-                                    </Select>
+                                        </datalist>
+                                    </div>
                                 </div>
                                 <Input
                                     type="number"

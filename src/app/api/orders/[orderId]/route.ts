@@ -19,7 +19,7 @@ export async function PATCH(
 
     const order = await db.order.findUnique({
       where: { id: orderId },
-      include: { customer: { select: { name: true, phone: true } } }
+      include: { customer: { select: { name: true, phone: true, dailyPrice: true } } }
     })
 
     if (!order) {
@@ -91,37 +91,63 @@ export async function PATCH(
           return NextResponse.json({ error: 'Только курьер может завершить доставку' }, { status: 403 })
         }
 
+        if (order.orderStatus === 'DELIVERED') {
+          return NextResponse.json({ error: 'Заказ уже доставлен' }, { status: 400 })
+        }
+
         const { amountReceived } = body
         updateData.orderStatus = 'DELIVERED'
         updateData.deliveredAt = new Date()
 
+        const transactionOps = []
+
+        // 1. Deduct Daily Price (Expense)
+        const dailyPrice = (order.customer as any)?.dailyPrice || 84000
+        transactionOps.push(
+          db.transaction.create({
+            data: {
+              amount: dailyPrice,
+              type: 'EXPENSE',
+              category: 'MEAL_DEDUCTION',
+              description: `Списание за дневной рацион (Заказ #${order.orderNumber})`,
+              adminId: order.adminId,
+              customerId: order.customerId
+            }
+          }),
+          db.customer.update({
+            where: { id: order.customerId },
+            data: { balance: { decrement: dailyPrice } }
+          })
+        )
+
+        // 2. Handle Payment (Income) if received
         if (amountReceived !== undefined && amountReceived !== null) {
           const parsedAmount = parseFloat(amountReceived)
-          if (!isNaN(parsedAmount)) {
+          if (!isNaN(parsedAmount) && parsedAmount > 0) {
             updateData.amountReceived = parsedAmount
 
-            if (parsedAmount > 0) {
-              // Create transaction and update client balance
-              await db.$transaction([
-                db.transaction.create({
-                  data: {
-                    amount: parsedAmount,
-                    type: 'INCOME', // TransactionType.INCOME
-                    category: 'ORDER_PAYMENT',
-                    description: `Оплата за заказ #${order.orderNumber} (Курьер: ${(user as any).name || 'Unknown'})`,
-                    adminId: order.adminId, // Credit to the middle admin who owns the order
-                    customerId: order.customerId
-                  }
-                }),
-                db.customer.update({
-                  where: { id: order.customerId },
-                  data: {
-                    balance: { increment: parsedAmount }
-                  }
-                })
-              ])
-            }
+            transactionOps.push(
+              db.transaction.create({
+                data: {
+                  amount: parsedAmount,
+                  type: 'INCOME',
+                  category: 'ORDER_PAYMENT',
+                  description: `Оплата за заказ #${order.orderNumber} (Курьер: ${(user as any).name || 'Unknown'})`,
+                  adminId: order.adminId,
+                  customerId: order.customerId
+                }
+              }),
+              db.customer.update({
+                where: { id: order.customerId },
+                data: { balance: { increment: parsedAmount } }
+              })
+            )
           }
+        }
+
+        // Execute all balance updates transactionally
+        if (transactionOps.length > 0) {
+          await db.$transaction(transactionOps)
         }
         break
       case 'update_details':

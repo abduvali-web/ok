@@ -67,6 +67,7 @@ import { TrialStatus } from '@/components/admin/TrialStatus'
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal'
 import { ChatTab } from '@/components/chat/ChatTab'
 import { TodaysMenu } from '@/components/admin/TodaysMenu'
+import { getDailyPrice, PLAN_TYPES } from '@/lib/menuData'
 
 import { WarehouseTab } from '@/components/admin/WarehouseTab'
 import { FinanceTab } from '@/components/admin/FinanceTab'
@@ -2753,13 +2754,43 @@ export default function MiddleAdminPage() {
                               />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
+                              <Label htmlFor="clientPlanType" className="text-right">
+                                Тариф
+                              </Label>
+                              <select
+                                id="clientPlanType"
+                                value={clientFormData.planType}
+                                onChange={(e) => {
+                                  const val = e.target.value as any
+                                  setClientFormData(prev => ({
+                                    ...prev,
+                                    planType: val,
+                                    dailyPrice: getDailyPrice(val, prev.calories)
+                                  }))
+                                }}
+                                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                {Object.entries(PLAN_TYPES).map(([key, label]) => (
+                                  <option key={key} value={key}>{label}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientCalories" className="text-right">
                                 Калории
                               </Label>
                               <select
                                 id="clientCalories"
                                 value={clientFormData.calories}
-                                onChange={(e) => setClientFormData(prev => ({ ...prev, calories: parseInt(e.target.value) }))}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value)
+                                  setClientFormData(prev => ({
+                                    ...prev,
+                                    calories: val,
+                                    dailyPrice: getDailyPrice(prev.planType, val)
+                                  }))
+                                }}
                                 className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                               >
                                 <option value="1200">1200 ккал</option>
@@ -2768,6 +2799,32 @@ export default function MiddleAdminPage() {
                                 <option value="2500">2500 ккал</option>
                                 <option value="3000">3000 ккал</option>
                               </select>
+                            </div>
+
+                            <div className="grid grid-cols-4 items-center gap-2">
+                              <Label htmlFor="clientPrice" className="text-right">
+                                Цена (сум)
+                              </Label>
+                              <Input
+                                id="clientPrice"
+                                type="number"
+                                value={clientFormData.dailyPrice}
+                                onChange={(e) => setClientFormData(prev => ({ ...prev, dailyPrice: parseInt(e.target.value) }))}
+                                className="col-span-3"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-4 items-center gap-2">
+                              <Label htmlFor="clientNotes" className="text-right">
+                                Заметки
+                              </Label>
+                              <Input
+                                id="clientNotes"
+                                value={clientFormData.notes || ''}
+                                onChange={(e) => setClientFormData(prev => ({ ...prev, notes: e.target.value }))}
+                                className="col-span-3"
+                                placeholder="Индивидуальные предпочтения..."
+                              />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientSpecialFeatures" className="text-right">
