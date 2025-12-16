@@ -450,14 +450,56 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 </div>
                             )}
 
-                            <div className="flex justify-end pt-4 border-t">
+                            <div className="flex justify-end pt-4 border-t gap-2">
+                                <Button
+                                    onClick={async () => {
+                                        if (!confirm('Вы уверены, что хотите списать ингредиенты для выбранных блюд? Это действие изменит остатки на складе.')) return;
+
+                                        setIsSaving(true);
+                                        try {
+                                            const response = await fetch('/api/admin/warehouse/cook', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ dishes: dishQuantities })
+                                            });
+
+                                            if (response.ok) {
+                                                toast.success('Ингредиенты успешно списаны со склада');
+                                                // Refresh inventory
+                                                const invResponse = await fetch('/api/admin/warehouse/inventory');
+                                                if (invResponse.ok) {
+                                                    const data = await invResponse.json();
+                                                    setInventory(data);
+                                                }
+                                            } else {
+                                                const data = await response.json();
+                                                toast.error(data.error || 'Ошибка списания');
+                                            }
+                                        } catch (error) {
+                                            console.error('Error cooking:', error);
+                                            toast.error('Ошибка соединения');
+                                        } finally {
+                                            setIsSaving(false);
+                                        }
+                                    }}
+                                    disabled={isSaving}
+                                    className="gap-2 bg-amber-600 hover:bg-amber-700 text-white"
+                                >
+                                    {isSaving ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Utensils className="w-4 h-4" />
+                                    )}
+                                    Списать продукты (Готовка)
+                                </Button>
+
                                 <Button onClick={handleSave} disabled={isSaving} className="gap-2">
                                     {isSaving ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                     ) : (
                                         <Save className="w-4 h-4" />
                                     )}
-                                    Сохранить
+                                    Сохранить план
                                 </Button>
                             </div>
                         </TabsContent>

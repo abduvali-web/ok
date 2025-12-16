@@ -21,7 +21,9 @@ import {
     Users,
     Plus,
     Minus,
-    Loader2
+    Loader2,
+    ShoppingCart,
+    Trash2
 } from 'lucide-react';
 import {
     Table,
@@ -48,6 +50,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { toast } from 'sonner';
+import { getAllIngredients } from '@/lib/menuData';
 
 interface FinanceTabProps {
     className?: string;
@@ -77,6 +80,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
     const [clients, setClients] = useState<Client[]>([]);
     const [history, setHistory] = useState<Transaction[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [ingredientsList, setIngredientsList] = useState<string[]>([]);
 
     // Filters
     const [searchQuery, setSearchQuery] = useState('');
@@ -85,6 +89,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
     // Modals
     const [isCompanyFundsModalOpen, setIsCompanyFundsModalOpen] = useState(false);
     const [isClientBalanceModalOpen, setIsClientBalanceModalOpen] = useState(false);
+    const [isBuyIngredientsModalOpen, setIsBuyIngredientsModalOpen] = useState(false);
 
     // Form Data
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -92,6 +97,15 @@ export function FinanceTab({ className }: FinanceTabProps) {
     const [transactionDescription, setTransactionDescription] = useState('');
     const [transactionType, setTransactionType] = useState<'INCOME' | 'EXPENSE'>('INCOME');
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Buy Ingredients Form
+    const [purchaseItems, setPurchaseItems] = useState<{ name: string; amount: string; costPerUnit: string }[]>([
+        { name: '', amount: '', costPerUnit: '' }
+    ]);
+
+    useEffect(() => {
+        setIngredientsList(getAllIngredients());
+    }, []);
 
     useEffect(() => {
         fetchCompanyFinance();
@@ -200,6 +214,73 @@ export function FinanceTab({ className }: FinanceTabProps) {
         setIsClientBalanceModalOpen(true);
     };
 
+    const handleAddPurchaseItem = () => {
+        setPurchaseItems([...purchaseItems, { name: '', amount: '', costPerUnit: '' }]);
+    };
+
+    const handleRemovePurchaseItem = (index: number) => {
+        const newItems = [...purchaseItems];
+        newItems.splice(index, 1);
+        setPurchaseItems(newItems);
+    };
+
+    const handlePurchaseItemChange = (index: number, field: string, value: string) => {
+        const newItems = [...purchaseItems];
+        // @ts-ignore
+        newItems[index][field] = value;
+        setPurchaseItems(newItems);
+    };
+
+    const calculateTotalPurchaseCost = () => {
+        return purchaseItems.reduce((total, item) => {
+            const amount = parseFloat(item.amount) || 0;
+            const cost = parseFloat(item.costPerUnit) || 0;
+            return total + (amount * cost);
+        }, 0);
+    };
+
+    const handleBuyIngredientsSubmit = async () => {
+        // Validate
+        const itemsToBuy = purchaseItems.filter(item => item.name && item.amount && item.costPerUnit);
+        if (itemsToBuy.length === 0) {
+            toast.error('Добавьте хотя бы один ингредиент');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const payload = {
+                items: itemsToBuy.map(item => ({
+                    name: item.name,
+                    amount: parseFloat(item.amount),
+                    costPerUnit: parseFloat(item.costPerUnit),
+                    unit: 'kg' // Default assumption from UI
+                }))
+            };
+
+            const response = await fetch('/api/admin/finance/buy-ingredients', {
+                method: 'POST', // Correct method for buying ingredients
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                toast.success('Закупка успешно проведена');
+                setIsBuyIngredientsModalOpen(false);
+                setPurchaseItems([{ name: '', amount: '', costPerUnit: '' }]);
+                fetchCompanyFinance();
+            } else {
+                const data = await response.json();
+                toast.error(data.error || 'Ошибка при закупке');
+            }
+        } catch (error) {
+            console.error('Error buying ingredients:', error);
+            toast.error('Ошибка соединения');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('ru-RU', {
             style: 'currency',
@@ -248,6 +329,14 @@ export function FinanceTab({ className }: FinanceTabProps) {
                             >
                                 <Plus className="w-3 h-3 mr-1" />
                                 Управление
+                            </Button>
+                            <Button
+                                size="sm"
+                                className="h-7 bg-indigo-600 hover:bg-indigo-700 ml-2"
+                                onClick={() => setIsBuyIngredientsModalOpen(true)}
+                            >
+                                <ShoppingCart className="w-3 h-3 mr-1" />
+                                Закупка
                             </Button>
                         </div>
                     </CardContent>
@@ -365,7 +454,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                                     <TableCell>{client.phone}</TableCell>
                                                     <TableCell className="text-right">
                                                         <span className={`font-semibold ${client.balance > 0 ? 'text-green-600' :
-                                                                client.balance < 0 ? 'text-red-600' : 'text-slate-600'
+                                                            client.balance < 0 ? 'text-red-600' : 'text-slate-600'
                                                             }`}>
                                                             {formatCurrency(client.balance)}
                                                         </span>
