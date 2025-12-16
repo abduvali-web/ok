@@ -40,6 +40,7 @@ export async function PATCH(
         if (data.role) updateData.role = data.role
         if (data.isActive !== undefined) updateData.isActive = data.isActive
         if (data.allowedTabs) updateData.allowedTabs = JSON.stringify(data.allowedTabs)
+        if (data.salary !== undefined) updateData.salary = data.salary
 
         if (data.password) {
             // Validate password strength
@@ -64,7 +65,8 @@ export async function PATCH(
                 role: true,
                 isActive: true,
                 allowedTabs: true,
-                createdAt: true
+                createdAt: true,
+                salary: true
             }
         })
 
