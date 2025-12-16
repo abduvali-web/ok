@@ -704,297 +704,297 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                 </Button>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Transaction Mode Switch */}
-                    <div className="flex justify-end border-b pb-2 mb-2">
-                        <Tabs value={transactionCategory === 'SALARY' ? 'SALARY' : 'GENERAL'} onValueChange={(val) => {
-                            if (val === 'SALARY') {
-                                setTransactionCategory('SALARY');
-                                setTransactionType('EXPENSE');
+
+                        {/* Transaction Mode Switch */}
+                        <div className="flex justify-end border-b pb-2 mb-2">
+                            <Tabs value={transactionCategory === 'SALARY' ? 'SALARY' : 'GENERAL'} onValueChange={(val) => {
+                                if (val === 'SALARY') {
+                                    setTransactionCategory('SALARY');
+                                    setTransactionType('EXPENSE');
+                                } else {
+                                    setTransactionCategory('');
+                                    setTransactionType('INCOME');
+                                }
+                            }} className="w-full">
+                                <TabsList className="w-full grid grid-cols-2">
+                                    <TabsTrigger value="GENERAL">Общие</TabsTrigger>
+                                    <TabsTrigger value="SALARY">Зарплата</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+                        </div>
+
+                        {transactionCategory === 'SALARY' ? (
+                            <>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="staff" className="text-right">Сотрудник</Label>
+                                    <Select
+                                        value={selectedStaffId}
+                                        onValueChange={(val) => {
+                                            setSelectedStaffId(val);
+                                            const staffMember = staff.find(s => s.id === val);
+                                            if (staffMember) {
+                                                setTransactionAmount(staffMember.salary.toString());
+                                                setTransactionDescription(`Зарплата: ${staffMember.name}`);
+                                            }
+                                        }}
+                                    >
+                                        <SelectTrigger className="col-span-3">
+                                            <SelectValue placeholder="Выберите сотрудника" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {staff.map((s) => (
+                                                <SelectItem key={s.id} value={s.id}>
+                                                    {s.name} ({s.role === 'COURIER' ? 'Курьер' : 'Админ'}) - {formatCurrency(s.salary)}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="salary-amount" className="text-right">Сумма</Label>
+                                    <Input
+                                        id="salary-amount"
+                                        type="number"
+                                        value={transactionAmount}
+                                        onChange={(e) => setTransactionAmount(e.target.value)}
+                                        className="col-span-3"
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="amount" className="text-right">
+                                        Сумма ({transactionType === 'INCOME' ? '+' : '-'})
+                                    </Label>
+                                    <Input
+                                        id="amount"
+                                        type="number"
+                                        min="0"
+                                        value={transactionAmount}
+                                        onChange={(e) => setTransactionAmount(e.target.value)}
+                                        className="col-span-3"
+                                        placeholder="0"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="description" className="text-right">
+                                        Описание
+                                    </Label>
+                                    <Input
+                                        id="description"
+                                        value={transactionDescription}
+                                        onChange={(e) => setTransactionDescription(e.target.value)}
+                                        className="col-span-3"
+                                        placeholder="Например: Инвестиции, Закупка..."
+                                    />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="category" className="text-right">
+                                        Категория
+                                    </Label>
+                                    <div className="col-span-3 relative">
+                                        <Input
+                                            id="category"
+                                            value={transactionCategory}
+                                            onChange={(e) => setTransactionCategory(e.target.value)}
+                                            placeholder="Или выберите..."
+                                            list="categories-datalist"
+                                        />
+                                        <datalist id="categories-datalist">
+                                            <option value="COMPANY_FUNDS" />
+                                            <option value="INVESTMENT" />
+                                            <option value="WITHDRAWAL" />
+                                            <option value="SALARY" />
+                                            <option value="INGREDIENTS" />
+                                            {categories.map(cat => (
+                                                <option key={cat} value={cat} />
+                                            ))}
+                                        </datalist>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsCompanyFundsModalOpen(false)}>Отмена</Button>
+                        <Button onClick={() => {
+                            if (transactionCategory === 'SALARY') {
+                                setSalaryAmount(transactionAmount); // Sync for legacy handler check if needed, but better to call unified handler
+                                handlePaySalarySubmit();
                             } else {
-                                setTransactionCategory('');
-                                setTransactionType('INCOME');
+                                handleTransactionSubmit(true);
                             }
-                        }} className="w-full">
-                            <TabsList className="w-full grid grid-cols-2">
-                                <TabsTrigger value="GENERAL">Общие</TabsTrigger>
-                                <TabsTrigger value="SALARY">Зарплата</TabsTrigger>
-                            </TabsList>
-                        </Tabs>
-                    </div>
+                        }} disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                            Подтвердить
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
-                    {transactionCategory === 'SALARY' ? (
-                        <>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="staff" className="text-right">Сотрудник</Label>
-                                <Select
-                                    value={selectedStaffId}
-                                    onValueChange={(val) => {
-                                        setSelectedStaffId(val);
-                                        const staffMember = staff.find(s => s.id === val);
-                                        if (staffMember) {
-                                            setTransactionAmount(staffMember.salary.toString());
-                                            setTransactionDescription(`Зарплата: ${staffMember.name}`);
-                                        }
-                                    }}
+            {/* CLIENT BALANCE MODAL */}
+            <Dialog open={isClientBalanceModalOpen} onOpenChange={setIsClientBalanceModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Баланс клиента: {selectedClient?.name}</DialogTitle>
+                        <DialogDescription>
+                            Текущий баланс: <span className="font-semibold text-slate-900">{selectedClient && formatCurrency(selectedClient.balance)}</span>
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label className="text-right">Действие</Label>
+                            <div className="col-span-3 flex gap-2">
+                                <Button
+                                    type="button"
+                                    variant={transactionType === 'INCOME' ? 'default' : 'outline'}
+                                    onClick={() => setTransactionType('INCOME')}
+                                    className={transactionType === 'INCOME' ? 'bg-green-600 hover:bg-green-700' : ''}
                                 >
-                                    <SelectTrigger className="col-span-3">
-                                        <SelectValue placeholder="Выберите сотрудника" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {staff.map((s) => (
-                                            <SelectItem key={s.id} value={s.id}>
-                                                {s.name} ({s.role === 'COURIER' ? 'Курьер' : 'Админ'}) - {formatCurrency(s.salary)}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Пополнить
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant={transactionType === 'EXPENSE' ? 'default' : 'outline'}
+                                    onClick={() => setTransactionType('EXPENSE')}
+                                    className={transactionType === 'EXPENSE' ? 'bg-red-600 hover:bg-red-700' : ''}
+                                >
+                                    <Minus className="w-4 h-4 mr-2" />
+                                    Списать
+                                </Button>
                             </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="salary-amount" className="text-right">Сумма</Label>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="c-amount" className="text-right">
+                                Сумма
+                            </Label>
+                            <Input
+                                id="c-amount"
+                                type="number"
+                                min="0"
+                                value={transactionAmount}
+                                onChange={(e) => setTransactionAmount(e.target.value)}
+                                className="col-span-3"
+                                placeholder="0"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="c-description" className="text-right">
+                                Комментарий
+                            </Label>
+                            <Input
+                                id="c-description"
+                                value={transactionDescription}
+                                onChange={(e) => setTransactionDescription(e.target.value)}
+                                className="col-span-3"
+                                placeholder="Например: Оплата наличными"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsClientBalanceModalOpen(false)}>Отмена</Button>
+                        <Button onClick={() => handleTransactionSubmit(false)} disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                            Подтвердить
+                        </Button>
+                    </DialogFooter>
+                </DialogContent >
+            </Dialog >
+
+            {/* BUY INGREDIENTS MODAL */}
+            < Dialog open={isBuyIngredientsModalOpen} onOpenChange={setIsBuyIngredientsModalOpen} >
+                <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Закупка ингредиентов</DialogTitle>
+                        <DialogDescription>
+                            Добавьте купленные ингредиенты. Сумма будет списана с баланса компании, а остатки на складе увеличены.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+                        <div className="flex justify-between items-center px-1">
+                            <Label className="w-1/3">Ингредиент</Label>
+                            <Label className="w-24">Кол-во (кг)</Label>
+                            <Label className="w-24">Цена за кг</Label>
+                            <Label className="w-24">Сумма</Label>
+                            <div className="w-8"></div>
+                        </div>
+
+                        {purchaseItems.map((item, index) => (
+                            <div key={index} className="flex gap-2 items-center">
+                                <div className="w-1/3 relative group">
+                                    {/* Searchable Combobox Input */}
+                                    <div className="relative">
+                                        <Input
+                                            value={item.name}
+                                            onChange={(e) => handlePurchaseItemChange(index, 'name', e.target.value)}
+                                            placeholder="Название..."
+                                            className="w-full"
+                                            list={`ingredients-list-${index}`}
+                                        />
+                                        <datalist id={`ingredients-list-${index}`}>
+                                            {ingredientsList.map(ing => (
+                                                <option key={ing} value={ing} />
+                                            ))}
+                                        </datalist>
+                                    </div>
+                                </div>
                                 <Input
-                                    id="salary-amount"
-                                    type="number"
-                                    value={transactionAmount}
-                                    onChange={(e) => setTransactionAmount(e.target.value)}
-                                    className="col-span-3"
-                                />
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="amount" className="text-right">
-                                    Сумма ({transactionType === 'INCOME' ? '+' : '-'})
-                                </Label>
-                                <Input
-                                    id="amount"
                                     type="number"
                                     min="0"
-                                    value={transactionAmount}
-                                    onChange={(e) => setTransactionAmount(e.target.value)}
-                                    className="col-span-3"
+                                    step="0.1"
                                     placeholder="0"
+                                    className="w-24"
+                                    value={item.amount}
+                                    onChange={(e) => handlePurchaseItemChange(index, 'amount', e.target.value)}
                                 />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="description" className="text-right">
-                                    Описание
-                                </Label>
                                 <Input
-                                    id="description"
-                                    value={transactionDescription}
-                                    onChange={(e) => setTransactionDescription(e.target.value)}
-                                    className="col-span-3"
-                                    placeholder="Например: Инвестиции, Закупка..."
+                                    type="number"
+                                    min="0"
+                                    step="100"
+                                    placeholder="0"
+                                    className="w-24"
+                                    value={item.costPerUnit}
+                                    onChange={(e) => handlePurchaseItemChange(index, 'costPerUnit', e.target.value)}
                                 />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="category" className="text-right">
-                                    Категория
-                                </Label>
-                                <div className="col-span-3 relative">
-                                    <Input
-                                        id="category"
-                                        value={transactionCategory}
-                                        onChange={(e) => setTransactionCategory(e.target.value)}
-                                        placeholder="Или выберите..."
-                                        list="categories-datalist"
-                                    />
-                                    <datalist id="categories-datalist">
-                                        <option value="COMPANY_FUNDS" />
-                                        <option value="INVESTMENT" />
-                                        <option value="WITHDRAWAL" />
-                                        <option value="SALARY" />
-                                        <option value="INGREDIENTS" />
-                                        {categories.map(cat => (
-                                            <option key={cat} value={cat} />
-                                        ))}
-                                    </datalist>
+                                <div className="w-24 text-right font-medium text-sm">
+                                    {formatCurrency((parseFloat(item.amount) || 0) * (parseFloat(item.costPerUnit) || 0))}
                                 </div>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="w-8 h-8 text-red-500 hover:bg-red-50"
+                                    onClick={() => handleRemovePurchaseItem(index)}
+                                    disabled={purchaseItems.length === 1}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
                             </div>
-                        </>
-                    )}
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsCompanyFundsModalOpen(false)}>Отмена</Button>
-                    <Button onClick={() => {
-                        if (transactionCategory === 'SALARY') {
-                            setSalaryAmount(transactionAmount); // Sync for legacy handler check if needed, but better to call unified handler
-                            handlePaySalarySubmit();
-                        } else {
-                            handleTransactionSubmit(true);
-                        }
-                    }} disabled={isSubmitting}>
-                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                        Подтвердить
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                        ))}
 
-        {/* CLIENT BALANCE MODAL */ }
-    <Dialog open={isClientBalanceModalOpen} onOpenChange={setIsClientBalanceModalOpen}>
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Баланс клиента: {selectedClient?.name}</DialogTitle>
-                <DialogDescription>
-                    Текущий баланс: <span className="font-semibold text-slate-900">{selectedClient && formatCurrency(selectedClient.balance)}</span>
-                </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right">Действие</Label>
-                    <div className="col-span-3 flex gap-2">
-                        <Button
-                            type="button"
-                            variant={transactionType === 'INCOME' ? 'default' : 'outline'}
-                            onClick={() => setTransactionType('INCOME')}
-                            className={transactionType === 'INCOME' ? 'bg-green-600 hover:bg-green-700' : ''}
-                        >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Пополнить
-                        </Button>
-                        <Button
-                            type="button"
-                            variant={transactionType === 'EXPENSE' ? 'default' : 'outline'}
-                            onClick={() => setTransactionType('EXPENSE')}
-                            className={transactionType === 'EXPENSE' ? 'bg-red-600 hover:bg-red-700' : ''}
-                        >
-                            <Minus className="w-4 h-4 mr-2" />
-                            Списать
+                        <Button variant="outline" size="sm" onClick={handleAddPurchaseItem} className="w-full border-dashed">
+                            <Plus className="w-4 h-4 mr-2" /> Добавить строку
                         </Button>
                     </div>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="c-amount" className="text-right">
-                        Сумма
-                    </Label>
-                    <Input
-                        id="c-amount"
-                        type="number"
-                        min="0"
-                        value={transactionAmount}
-                        onChange={(e) => setTransactionAmount(e.target.value)}
-                        className="col-span-3"
-                        placeholder="0"
-                    />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="c-description" className="text-right">
-                        Комментарий
-                    </Label>
-                    <Input
-                        id="c-description"
-                        value={transactionDescription}
-                        onChange={(e) => setTransactionDescription(e.target.value)}
-                        className="col-span-3"
-                        placeholder="Например: Оплата наличными"
-                    />
-                </div>
-            </div>
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setIsClientBalanceModalOpen(false)}>Отмена</Button>
-                <Button onClick={() => handleTransactionSubmit(false)} disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                    Подтвердить
-                </Button>
-            </DialogFooter>
-        </DialogContent >
-    </Dialog >
 
-    {/* BUY INGREDIENTS MODAL */ }
-    < Dialog open={isBuyIngredientsModalOpen} onOpenChange={setIsBuyIngredientsModalOpen} >
-        <DialogContent className="max-w-3xl">
-            <DialogHeader>
-                <DialogTitle>Закупка ингредиентов</DialogTitle>
-                <DialogDescription>
-                    Добавьте купленные ингредиенты. Сумма будет списана с баланса компании, а остатки на складе увеличены.
-                </DialogDescription>
-            </DialogHeader>
-
-            <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto">
-                <div className="flex justify-between items-center px-1">
-                    <Label className="w-1/3">Ингредиент</Label>
-                    <Label className="w-24">Кол-во (кг)</Label>
-                    <Label className="w-24">Цена за кг</Label>
-                    <Label className="w-24">Сумма</Label>
-                    <div className="w-8"></div>
-                </div>
-
-                {purchaseItems.map((item, index) => (
-                    <div key={index} className="flex gap-2 items-center">
-                        <div className="w-1/3 relative group">
-                            {/* Searchable Combobox Input */}
-                            <div className="relative">
-                                <Input
-                                    value={item.name}
-                                    onChange={(e) => handlePurchaseItemChange(index, 'name', e.target.value)}
-                                    placeholder="Название..."
-                                    className="w-full"
-                                    list={`ingredients-list-${index}`}
-                                />
-                                <datalist id={`ingredients-list-${index}`}>
-                                    {ingredientsList.map(ing => (
-                                        <option key={ing} value={ing} />
-                                    ))}
-                                </datalist>
-                            </div>
+                    <div className="flex justify-between items-center pt-4 border-t">
+                        <div className="text-lg font-bold">
+                            Итого: {formatCurrency(calculateTotalPurchaseCost())}
                         </div>
-                        <Input
-                            type="number"
-                            min="0"
-                            step="0.1"
-                            placeholder="0"
-                            className="w-24"
-                            value={item.amount}
-                            onChange={(e) => handlePurchaseItemChange(index, 'amount', e.target.value)}
-                        />
-                        <Input
-                            type="number"
-                            min="0"
-                            step="100"
-                            placeholder="0"
-                            className="w-24"
-                            value={item.costPerUnit}
-                            onChange={(e) => handlePurchaseItemChange(index, 'costPerUnit', e.target.value)}
-                        />
-                        <div className="w-24 text-right font-medium text-sm">
-                            {formatCurrency((parseFloat(item.amount) || 0) * (parseFloat(item.costPerUnit) || 0))}
+                        <div className="flex gap-2">
+                            <Button variant="outline" onClick={() => setIsBuyIngredientsModalOpen(false)}>Отмена</Button>
+                            <Button onClick={handleBuyIngredientsSubmit} disabled={isSubmitting}>
+                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                                Подтвердить закупку
+                            </Button>
                         </div>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="w-8 h-8 text-red-500 hover:bg-red-50"
-                            onClick={() => handleRemovePurchaseItem(index)}
-                            disabled={purchaseItems.length === 1}
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </Button>
                     </div>
-                ))}
-
-                <Button variant="outline" size="sm" onClick={handleAddPurchaseItem} className="w-full border-dashed">
-                    <Plus className="w-4 h-4 mr-2" /> Добавить строку
-                </Button>
-            </div>
-
-            <div className="flex justify-between items-center pt-4 border-t">
-                <div className="text-lg font-bold">
-                    Итого: {formatCurrency(calculateTotalPurchaseCost())}
-                </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setIsBuyIngredientsModalOpen(false)}>Отмена</Button>
-                    <Button onClick={handleBuyIngredientsSubmit} disabled={isSubmitting}>
-                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                        Подтвердить закупку
-                    </Button>
-                </div>
-            </div>
-        </DialogContent>
-    </Dialog >
-    </div >
+                </DialogContent>
+            </Dialog >
+        </div >
     );
 }
 
