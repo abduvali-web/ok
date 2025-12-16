@@ -691,6 +691,95 @@ export function FinanceTab({ className }: FinanceTabProps) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* BUY INGREDIENTS MODAL */}
+            <Dialog open={isBuyIngredientsModalOpen} onOpenChange={setIsBuyIngredientsModalOpen}>
+                <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Закупка ингредиентов</DialogTitle>
+                        <DialogDescription>
+                            Добавьте купленные ингредиенты. Сумма будет списана с баланса компании, а остатки на складе увеличены.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+                        <div className="flex justify-between items-center px-1">
+                            <Label className="w-1/3">Ингредиент</Label>
+                            <Label className="w-24">Кол-во (кг)</Label>
+                            <Label className="w-24">Цена за кг</Label>
+                            <Label className="w-24">Сумма</Label>
+                            <div className="w-8"></div>
+                        </div>
+
+                        {purchaseItems.map((item, index) => (
+                            <div key={index} className="flex gap-2 items-center">
+                                <div className="w-1/3">
+                                    <Select
+                                        value={item.name}
+                                        onValueChange={(val) => handlePurchaseItemChange(index, 'name', val)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Выберите..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {ingredientsList.map(ing => (
+                                                <SelectItem key={ing} value={ing}>{ing}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <Input
+                                    type="number"
+                                    min="0"
+                                    step="0.1"
+                                    placeholder="0"
+                                    className="w-24"
+                                    value={item.amount}
+                                    onChange={(e) => handlePurchaseItemChange(index, 'amount', e.target.value)}
+                                />
+                                <Input
+                                    type="number"
+                                    min="0"
+                                    step="100"
+                                    placeholder="0"
+                                    className="w-24"
+                                    value={item.costPerUnit}
+                                    onChange={(e) => handlePurchaseItemChange(index, 'costPerUnit', e.target.value)}
+                                />
+                                <div className="w-24 text-right font-medium text-sm">
+                                    {formatCurrency((parseFloat(item.amount) || 0) * (parseFloat(item.costPerUnit) || 0))}
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="w-8 h-8 text-red-500 hover:bg-red-50"
+                                    onClick={() => handleRemovePurchaseItem(index)}
+                                    disabled={purchaseItems.length === 1}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        ))}
+
+                        <Button variant="outline" size="sm" onClick={handleAddPurchaseItem} className="w-full border-dashed">
+                            <Plus className="w-4 h-4 mr-2" /> Добавить строку
+                        </Button>
+                    </div>
+
+                    <div className="flex justify-between items-center pt-4 border-t">
+                        <div className="text-lg font-bold">
+                            Итого: {formatCurrency(calculateTotalPurchaseCost())}
+                        </div>
+                        <div className="flex gap-2">
+                            <Button variant="outline" onClick={() => setIsBuyIngredientsModalOpen(false)}>Отмена</Button>
+                            <Button onClick={handleBuyIngredientsSubmit} disabled={isSubmitting}>
+                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                                Подтвердить закупку
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
