@@ -7,12 +7,13 @@ export const MENU_START_DATE = new Date('2025-12-04T00:00:00');
 export const MENU_CYCLE_DAYS = 21;
 
 // Calorie tier multipliers (based on 1200 kcal base)
-export const CALORIE_MULTIPLIERS: Record<number, { breakfast: number; lunch: number; dinner: number; snack: number }> = {
-  1200: { breakfast: 1.0, lunch: 1.0, dinner: 1.0, snack: 1.0 },
-  1600: { breakfast: 1.4, lunch: 1.75, dinner: 1.4, snack: 1.0 },
-  2000: { breakfast: 1.6, lunch: 2.0, dinner: 1.6, snack: 1.0 },
-  2500: { breakfast: 1.6, lunch: 2.0, dinner: 1.6, snack: 1.0 }, // Same as 2000 + 6th meal
-  3000: { breakfast: 2.5, lunch: 3.0, dinner: 2.5, snack: 2.0 },
+// Calorie tier multipliers (based on 1200 kcal base)
+export const CALORIE_MULTIPLIERS: Record<number, { breakfast: number; lunch: number; dinner: number; snack: number; sixth_meal: number }> = {
+  1200: { breakfast: 1.0, lunch: 1.0, dinner: 1.0, snack: 1.0, sixth_meal: 0 },
+  1600: { breakfast: 1.4, lunch: 1.75, dinner: 1.4, snack: 1.0, sixth_meal: 0 },
+  2000: { breakfast: 1.6, lunch: 2.0, dinner: 1.6, snack: 1.0, sixth_meal: 0 },
+  2500: { breakfast: 1.6, lunch: 2.0, dinner: 1.6, snack: 1.0, sixth_meal: 1.0 }, // 6th meal base
+  3000: { breakfast: 2.5, lunch: 3.0, dinner: 2.5, snack: 2.0, sixth_meal: 1.5 }, // 6th meal 1.5x
 };
 
 // Meal types in Uzbek
@@ -239,7 +240,7 @@ export function scaleIngredients(
       multiplier = multipliers.dinner;
       break;
     case 'SIXTH_MEAL':
-      multiplier = 1.0; // Fixed portion for 6th meal
+      multiplier = multipliers.sixth_meal;
       break;
     case 'SNACK':
       multiplier = multipliers.snack;
@@ -1394,26 +1395,27 @@ export const MENUS: DailyMenu[] = [
 // Extra dishes for 6th meal (2500/3000 kcal)
 // Extra dishes for 6th meal (2500/3000 kcal)
 export const EXTRA_DISHES: Dish[] = [
-  { id: 200, name: "Mol go'shti va Guruch (Oddiy qaynatma/dimlama)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 150, unit: 'gr' }, { name: "Guruch", amount: 150, unit: 'gr' }] },
-  { id: 201, name: "Tovuq filesi va Makaron", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq filesi", amount: 150, unit: 'gr' }, { name: "Makaron", amount: 150, unit: 'gr' }] },
-  { id: 202, name: "Mol go'shti va Grechka", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 150, unit: 'gr' }, { name: "Grechka", amount: 150, unit: 'gr' }] },
-  { id: 203, name: "Tovuq kotleti va Non (Sendvich)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq go'shti", amount: 150, unit: 'gr' }, { name: "Non", amount: 100, unit: 'gr' }] },
-  { id: 204, name: "Mol go'shti va Bulg'ur", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 150, unit: 'gr' }, { name: "Bulg'ur", amount: 150, unit: 'gr' }] },
-  { id: 205, name: "Tovuq filesi va Sabzavotlar (Dimlama)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq filesi", amount: 150, unit: 'gr' }, { name: "Sabzavotlar", amount: 200, unit: 'gr' }] },
-  { id: 206, name: "Go'shtli teftel va Guruch", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 150, unit: 'gr' }, { name: "Guruch", amount: 150, unit: 'gr' }] },
-  { id: 207, name: "Tovuq filesi va Karam (Dimlama)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq filesi", amount: 150, unit: 'gr' }, { name: "Karam", amount: 200, unit: 'gr' }] },
-  { id: 208, name: "Mol go'shti va Grechka (Takroriy)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 150, unit: 'gr' }, { name: "Grechka", amount: 150, unit: 'gr' }] },
-  { id: 209, name: "Tovuq filesi va Yasmiq (Garnir)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq filesi", amount: 150, unit: 'gr' }, { name: "Yasmiq", amount: 150, unit: 'gr' }] },
-  { id: 210, name: "Mol go'shti va Sabzavotli ragu", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 150, unit: 'gr' }, { name: "Sabzavotlar", amount: 200, unit: 'gr' }] },
-  { id: 211, name: "Tovuq filesi va Guruch", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq filesi", amount: 150, unit: 'gr' }, { name: "Guruch", amount: 150, unit: 'gr' }] },
-  { id: 212, name: "Mol go'shti va Makaron", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 150, unit: 'gr' }, { name: "Makaron", amount: 150, unit: 'gr' }] },
-  { id: 213, name: "Tovuq kotleti va Grechka", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq go'shti", amount: 150, unit: 'gr' }, { name: "Grechka", amount: 150, unit: 'gr' }] },
-  { id: 214, name: "Mol go'shti va Sabzavotlar", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 150, unit: 'gr' }, { name: "Sabzavotlar", amount: 200, unit: 'gr' }] },
-  { id: 215, name: "Tovuq filesi va Perlovka", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq filesi", amount: 150, unit: 'gr' }, { name: "Perlovka", amount: 150, unit: 'gr' }] },
-  { id: 216, name: "Tovuq filesi va Guruch (Takroriy)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq filesi", amount: 150, unit: 'gr' }, { name: "Guruch", amount: 150, unit: 'gr' }] },
-  { id: 217, name: "Mol go'shti va Grechka (Takroriy)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 150, unit: 'gr' }, { name: "Grechka", amount: 150, unit: 'gr' }] },
-  { id: 218, name: "Tovuq filesi va Sabzavotlar (Takroriy)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq filesi", amount: 150, unit: 'gr' }, { name: "Sabzavotlar", amount: 200, unit: 'gr' }] },
-  { id: 219, name: "Mol go'shti va Guruch (Takroriy)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 150, unit: 'gr' }, { name: "Guruch", amount: 150, unit: 'gr' }] },
+  { id: 200, name: "Mol go'shti va Guruch (Oddiy qaynatma/dimlama)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 100, unit: 'gr' }, { name: "Guruch", amount: 40, unit: 'gr' }, { name: "Piyoz", amount: 20, unit: 'gr' }] },
+  { id: 201, name: "Tovuq filesi va Makaron", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq filesi", amount: 100, unit: 'gr' }, { name: "Makaron", amount: 40, unit: 'gr' }] },
+  { id: 202, name: "Mol go'shti va Grechka", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 100, unit: 'gr' }, { name: "Grechka", amount: 40, unit: 'gr' }] },
+  { id: 203, name: "Tovuq kotleti va Non (Sendvich)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq qiymasi", amount: 100, unit: 'gr' }, { name: "Piyoz", amount: 20, unit: 'gr' }, { name: "Non", amount: 15, unit: 'gr' }] },
+  { id: 204, name: "Mol go'shti va Bulg'ur", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 100, unit: 'gr' }, { name: "Bulg'ur", amount: 40, unit: 'gr' }] },
+  { id: 205, name: "Tovuq filesi va Sabzavotlar (Dimlama)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq filesi", amount: 100, unit: 'gr' }, { name: "Aralash sabzavotlar", amount: 100, unit: 'gr' }] },
+  { id: 206, name: "Go'shtli teftel va Guruch", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 100, unit: 'gr' }, { name: "Guruch", amount: 20, unit: 'gr' }] },
+  { id: 207, name: "Tovuq filesi va Karam (Dimlama)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq filesi", amount: 100, unit: 'gr' }, { name: "Karam", amount: 100, unit: 'gr' }] },
+  { id: 208, name: "Mol go'shti va Grechka (Takroriy)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 100, unit: 'gr' }, { name: "Grechka", amount: 40, unit: 'gr' }] },
+  { id: 209, name: "Tovuq filesi va Yasmiq (Garnir)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq filesi", amount: 100, unit: 'gr' }, { name: "Yasmiq (Chechevitsa)", amount: 40, unit: 'gr' }] },
+  { id: 210, name: "Mol go'shti va Sabzavotlar", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 100, unit: 'gr' }, { name: "Sabzavotlar (Brokkoli/Sabzi)", amount: 100, unit: 'gr' }] },
+  { id: 211, name: "Tovuq filesi va Guruch", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq filesi", amount: 100, unit: 'gr' }, { name: "Guruch", amount: 40, unit: 'gr' }] },
+  { id: 212, name: "Mol go'shti va Makaron", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 100, unit: 'gr' }, { name: "Makaron", amount: 40, unit: 'gr' }] },
+  { id: 213, name: "Tovuq kotleti va Grechka", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq qiymasi", amount: 100, unit: 'gr' }, { name: "Grechka", amount: 40, unit: 'gr' }] },
+  { id: 214, name: "Mol go'shti va Sabzavot ragu", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 100, unit: 'gr' }, { name: "Sabzavotlar (Qovoqcha/Baqlajon)", amount: 100, unit: 'gr' }] },
+  { id: 215, name: "Tovuq filesi va Perlovka", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq filesi", amount: 100, unit: 'gr' }, { name: "Perlovka", amount: 40, unit: 'gr' }] },
+  { id: 216, name: "Mol go'shti va Sabzavotlar", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 100, unit: 'gr' }, { name: "Sabzavotlar", amount: 100, unit: 'gr' }] },
+  { id: 217, name: "Tovuq filesi va Guruch (Takroriy)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq filesi", amount: 100, unit: 'gr' }, { name: "Guruch", amount: 40, unit: 'gr' }] },
+  { id: 218, name: "Mol go'shti va Grechka (Takroriy)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 100, unit: 'gr' }, { name: "Grechka", amount: 40, unit: 'gr' }] },
+  { id: 219, name: "Tovuq filesi va Sabzavotlar (Takroriy)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Tovuq filesi", amount: 100, unit: 'gr' }, { name: "Sabzavotlar", amount: 100, unit: 'gr' }] },
+  { id: 220, name: "Mol go'shti va Guruch (Takroriy)", mealType: 'SIXTH_MEAL', ingredients: [{ name: "Mol go'shti", amount: 100, unit: 'gr' }, { name: "Guruch", amount: 40, unit: 'gr' }] },
 ];
 
 // Get 6th dish based on menu number (rotation)
