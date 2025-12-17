@@ -1756,10 +1756,10 @@ export default function MiddleAdminPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-bold tracking-tight text-gradient">
-            Панель Управления
+            {t.admin.dashboard}
           </h1>
           <p className="text-muted-foreground">
-            Управляйте заказами, клиентами и администраторами
+            {t.admin.dashboardSubtitle}
           </p>
         </div>
 
@@ -4090,8 +4090,8 @@ export default function MiddleAdminPage() {
           <TabsContent value="bin" className="space-y-4">
             <Tabs defaultValue="orders" className="w-full">
               <TabsList>
-                <TabsTrigger value="orders">Удаленные заказы</TabsTrigger>
-                <TabsTrigger value="clients">Удаленные клиенты</TabsTrigger>
+                <TabsTrigger value="orders">{t.admin.deletedOrders}</TabsTrigger>
+                <TabsTrigger value="clients">{t.admin.deletedClients}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="orders" className="space-y-4">
@@ -4104,11 +4104,12 @@ export default function MiddleAdminPage() {
                       disabled={selectedOrders.size === 0}
                     >
                       <History className="mr-2 h-4 w-4" />
-                      Восстановить ({selectedOrders.size})
+                      {t.admin.restoreSelected} ({selectedOrders.size})
                     </Button>
                     <Button onClick={fetchBinOrders} variant="outline">
                       <History className="mr-2 h-4 w-4" />
-                      Обновить
+                      <History className="mr-2 h-4 w-4" />
+                      {t.common.actions}
                     </Button>
                   </div>
                 </div>
@@ -4296,10 +4297,10 @@ export default function MiddleAdminPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsBulkEditOrdersModalOpen(false)}>
-              Отмена
+              {t.common.cancel}
             </Button>
             <Button onClick={handleBulkUpdateOrders} disabled={isUpdatingBulk}>
-              {isUpdatingBulk ? 'Обновление...' : 'Обновить'}
+              {isUpdatingBulk ? t.common.loading : t.common.save}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -4354,10 +4355,10 @@ export default function MiddleAdminPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsBulkEditClientsModalOpen(false)}>
-              Отмена
+              {t.common.cancel}
             </Button>
             <Button onClick={handleBulkUpdateClients} disabled={isUpdatingBulk}>
-              {isUpdatingBulk ? 'Обновление...' : 'Обновить'}
+              {isUpdatingBulk ? t.common.loading : t.common.save}
             </Button>
           </DialogFooter>
         </DialogContent>

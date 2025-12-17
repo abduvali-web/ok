@@ -58,6 +58,7 @@ export const translations = {
         },
         admin: {
             dashboard: 'Панель управления',
+            dashboardSubtitle: 'Управляйте заказами, клиентами и администраторами',
             statistics: 'Статистика',
             orders: 'Заказы',
             clients: 'Клиенты',
@@ -304,6 +305,7 @@ export const translations = {
         },
         admin: {
             dashboard: 'Boshqaruv paneli',
+            dashboardSubtitle: 'Buyurtmalar, mijozlar va administratorlarni boshqarish',
             statistics: 'Statistika',
             orders: 'Buyurtmalar',
             clients: 'Mijozlar',
@@ -550,6 +552,7 @@ export const translations = {
         },
         admin: {
             dashboard: 'Dashboard',
+            dashboardSubtitle: 'Manage orders, clients and admins',
             statistics: 'Statistics',
             orders: 'Orders',
             clients: 'Clients',
