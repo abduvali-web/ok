@@ -1711,35 +1711,36 @@ export default function MiddleAdminPage() {
                 {currentDate || ' '}
               </div>
               <LanguageSwitcher />
-              {
-                title: t.admin.createOrder,
-              description: t.admin.manageOrdersDesc, // Using generic desc as placeholder or need specific key
-              buttonName: "+ " + t.admin.createOrder,
-              icon: <Plus className="w-5 h-5 text-primary" />
+              <UserGuide guides={[
+                {
+                  title: t.admin.createOrder,
+                  description: t.admin.manageOrdersDesc, // Using generic desc as placeholder or need specific key
+                  buttonName: "+ " + t.admin.createOrder,
+                  icon: <Plus className="w-5 h-5 text-primary" />
                 },
-              {
-                title: t.admin.createClient,
-              description: t.admin.manageClientsDesc,
-              buttonName: "+ " + t.admin.createClient,
-              icon: <User className="w-5 h-5 text-primary" />
+                {
+                  title: t.admin.createClient,
+                  description: t.admin.manageClientsDesc,
+                  buttonName: "+ " + t.admin.createClient,
+                  icon: <User className="w-5 h-5 text-primary" />
                 },
-              {
-                title: t.admin.createAutoOrders,
-              description: t.admin.manageOrdersDesc,
-              buttonName: t.admin.auto,
-              icon: <Route className="w-5 h-5 text-primary" />
+                {
+                  title: t.admin.createAutoOrders,
+                  description: t.admin.manageOrdersDesc,
+                  buttonName: t.admin.auto,
+                  icon: <Route className="w-5 h-5 text-primary" />
                 },
-              {
-                title: t.admin.delete,
-              description: t.admin.bin,
-              buttonName: t.admin.bin,
-              icon: <Trash2 className="w-5 h-5 text-primary" />
+                {
+                  title: t.admin.delete,
+                  description: t.admin.bin,
+                  buttonName: t.admin.bin,
+                  icon: <Trash2 className="w-5 h-5 text-primary" />
                 },
-              {
-                title: t.admin.history,
-              description: t.admin.history,
-              buttonName: t.admin.history,
-              icon: <History className="w-5 h-5 text-primary" />
+                {
+                  title: t.admin.history,
+                  description: t.admin.history,
+                  buttonName: t.admin.history,
+                  icon: <History className="w-5 h-5 text-primary" />
                 }
               ]} />
               <TrialStatus compact />
