@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     // For middle admin, only get admins created by them
     // For super admin, get all low admins and couriers
     const where: any = {
-      role: { in: ['LOW_ADMIN', 'COURIER'] as const }
+      role: { in: ['LOW_ADMIN', 'COURIER', 'WORKER'] as const }
     }
 
     if (user.role === 'MIDDLE_ADMIN') {
@@ -68,14 +68,22 @@ export async function POST(request: NextRequest) {
 
     const { email, password, name, role, allowedTabs, salary } = await request.json()
 
-    if (!email || !password || !name || !role) {
+    if (!email || !name || !role) {
       return NextResponse.json(
-        { error: 'Все поля обязательны' },
+        { error: 'Email, имя и роль обязательны' },
         { status: 400 }
       )
     }
 
-    if (!['LOW_ADMIN', 'COURIER'].includes(role)) {
+    // Password is required for non-WORKER roles
+    if (role !== 'WORKER' && !password) {
+      return NextResponse.json(
+        { error: 'Пароль обязателен для администраторов и курьеров' },
+        { status: 400 }
+      )
+    }
+
+    if (!['LOW_ADMIN', 'COURIER', 'WORKER'].includes(role)) {
       return NextResponse.json(
         { error: 'Неверная роль' },
         { status: 400 }
@@ -107,12 +115,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Validate password strength
-    try {
-      passwordSchema.parse(password)
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return NextResponse.json({ error: error.issues[0].message }, { status: 400 })
+    // Validate password strength if provided
+    if (password) {
+      try {
+        passwordSchema.parse(password)
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return NextResponse.json({ error: error.issues[0].message }, { status: 400 })
+        }
       }
     }
 
@@ -128,10 +138,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10)
+    // Hash password if provided
+    const hashedPassword = password ? await bcrypt.hash(password, 10) : null
 
-    // Create low admin or courier
+    // Create low admin or courier or worker
     const newAdmin = await db.admin.create({
       data: {
         email,
@@ -141,7 +151,8 @@ export async function POST(request: NextRequest) {
         isActive: true,
         createdBy: user.id,
         allowedTabs: allowedTabs ? JSON.stringify(allowedTabs) : null,
-        salary: salary ? parseInt(salary) : 0
+        salary: salary ? parseInt(salary) : 0,
+        hasPassword: !!password
       }
     })
 

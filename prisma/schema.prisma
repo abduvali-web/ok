@@ -52,6 +52,7 @@ enum AdminRole {
   MIDDLE_ADMIN
   LOW_ADMIN
   COURIER
+  WORKER
 }
 
 enum PlanType {

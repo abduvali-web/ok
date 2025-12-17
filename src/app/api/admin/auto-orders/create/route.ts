@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const defaultAdmin = await db.admin.findFirst({ where: { role: 'SUPER_ADMIN' } })
     if (!defaultAdmin) return NextResponse.json({ error: 'Администратор не найден' }, { status: 400 })
 
-    const customers = await db.customer.findMany({ where: { isActive: true } })
+    const customers = await db.customer.findMany({ where: { isActive: true, deletedAt: null } })
 
     let totalCreated = 0
     const createdOrdersSummary: any[] = []
@@ -166,7 +166,7 @@ export async function GET(request: NextRequest) {
     const tomorrow = new Date(dayStart)
     tomorrow.setDate(tomorrow.getDate() + 1)
 
-    const customers = await db.customer.findMany({ where: { isActive: true }, select: { id: true, name: true, phone: true, orderPattern: true } })
+    const customers = await db.customer.findMany({ where: { isActive: true, deletedAt: null }, select: { id: true, name: true, phone: true, orderPattern: true } })
     const tomorrowEligible = customers.filter(c => isEligibleByPattern(c.orderPattern, tomorrow))
 
     return NextResponse.json({

@@ -425,15 +425,7 @@ export default function MiddleAdminPage() {
       }
 
       // Fetch bin clients
-      const binResponse = await fetch('/api/admin/clients/bin', {
-        headers: {
-        }
-      })
-
-      if (binResponse.ok) {
-        const binData = await binResponse.json()
-        setBinClients(binData)
-      }
+      await fetchBinClients()
 
       // Fetch bin orders
       await fetchBinOrders()
@@ -459,6 +451,21 @@ export default function MiddleAdminPage() {
       }
     } catch (error) {
       console.error('Error fetching bin orders:', error)
+    }
+  }
+
+  const fetchBinClients = async () => {
+    try {
+      const response = await fetch('/api/admin/clients/bin', {
+        headers: {
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setBinClients(data)
+      }
+    } catch (error) {
+      console.error('Error fetching bin clients:', error)
     }
   }
 
@@ -607,6 +614,46 @@ export default function MiddleAdminPage() {
       setSelectedOrders(new Set())
     } else {
       setSelectedOrders(new Set(binOrders.map(order => order.id)))
+    }
+  }
+
+  const handlePermanentDeleteClients = async () => {
+    if (selectedBinClients.size === 0) {
+      toast.error('Пожалуйста, выберите клиентов для удаления')
+      return
+    }
+
+    const confirmMessage = `⚠️ ВНИМАНИЕ! Вы уверены, что хотите НАВСЕГДА удалить ${selectedBinClients.size} клиент(ов)?\n\nВместе с клиентами будут удалены ВСЕ их заказы и история.\n\nЭто действие НЕЛЬЗЯ отменить!`
+    if (!confirm(confirmMessage)) {
+      return
+    }
+
+    const doubleConfirm = confirm('Подтвердите еще раз: вы действительно хотите удалить этих клиентов навсегда?')
+    if (!doubleConfirm) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/admin/clients/permanent-delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ clientIds: Array.from(selectedBinClients) })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        toast.success(data.message || `Успешно удалено навсегда ${data.deletedClients} клиент(ов)`)
+        setSelectedBinClients(new Set())
+        fetchBinClients()
+      } else {
+        const data = await response.json()
+        toast.error(`Ошибка: ${data.error || 'Ошибка удаления клиентов'}`)
+      }
+    } catch (error) {
+      console.error('Permanent delete clients error:', error)
+      toast.error('Ошибка соединения с сервером')
     }
   }
 
@@ -3448,8 +3495,9 @@ export default function MiddleAdminPage() {
                                 type={showPassword ? "text" : "password"}
                                 value={createFormData.password}
                                 onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
-                                required
+                                required={createFormData.role !== 'WORKER'}
                                 minLength={6}
+                                placeholder={createFormData.role === 'WORKER' ? 'Необязательно' : ''}
                               />
                               <Button
                                 type="button"
@@ -3478,6 +3526,7 @@ export default function MiddleAdminPage() {
                             >
                               <option value="LOW_ADMIN">Низкий администратор</option>
                               <option value="COURIER">Курьер</option>
+                              <option value="WORKER">Работник</option>
                             </select>
                           </div>
                           <div className="grid grid-cols-4 items-center gap-2">
@@ -3595,7 +3644,7 @@ export default function MiddleAdminPage() {
                           <p className="font-medium">{admin.name}</p>
                           <p className="text-sm text-slate-500">{admin.email}</p>
                           <Badge variant={admin.isActive ? "default" : "secondary"}>
-                            {admin.role === 'COURIER' ? 'Курьер' : 'Низкий администратор'}
+                            {admin.role === 'COURIER' ? 'Курьер' : admin.role === 'WORKER' ? 'Работник' : 'Низкий администратор'}
                           </Badge>
                           <Badge variant={admin.isActive ? "default" : "secondary"} className="ml-2">
                             {admin.isActive ? "Активен" : "Приостановлен"}
@@ -3720,7 +3769,7 @@ export default function MiddleAdminPage() {
                       <CardContent className="pt-4 space-y-4">
                         <div className="flex justify-between items-center">
                           <Badge variant="outline">
-                            {admin.role === 'COURIER' ? 'Курьер' : 'Низкий администратор'}
+                            {admin.role === 'COURIER' ? 'Курьер' : admin.role === 'WORKER' ? 'Работник' : 'Низкий администратор'}
                           </Badge>
                         </div>
 
@@ -3889,6 +3938,7 @@ export default function MiddleAdminPage() {
                     >
                       <option value="LOW_ADMIN">Низкий администратор</option>
                       <option value="COURIER">Курьер</option>
+                      <option value="WORKER">Работник</option>
                     </select>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
@@ -4079,10 +4129,19 @@ export default function MiddleAdminPage() {
                   <h2 className="text-2xl font-bold tracking-tight">Корзина клиентов</h2>
                   <div className="flex gap-2">
                     {selectedBinClients.size > 0 && (
-                      <Button onClick={handleRestoreSelectedClients} variant="outline">
-                        <History className="mr-2 h-4 w-4" />
-                        Восстановить ({selectedBinClients.size})
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button onClick={handleRestoreSelectedClients} variant="outline">
+                          <History className="mr-2 h-4 w-4" />
+                          Восстановить ({selectedBinClients.size})
+                        </Button>
+                        <Button
+                          onClick={handlePermanentDeleteClients}
+                          variant="destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Удалить навсегда ({selectedBinClients.size})
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>

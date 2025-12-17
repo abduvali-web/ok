@@ -186,19 +186,19 @@ export function FinanceTab({ className }: FinanceTabProps) {
                 fetch('/api/admin/couriers')
             ]);
 
-            let allStaff: Staff[] = [];
+            const staffMap = new Map<string, Staff>();
 
             if (lowAdminsRes.ok) {
                 const lowAdmins = await lowAdminsRes.json();
-                allStaff = [...allStaff, ...lowAdmins];
+                lowAdmins.forEach((admin: Staff) => staffMap.set(admin.id, admin));
             }
 
             if (couriersRes.ok) {
                 const couriers = await couriersRes.json();
-                allStaff = [...allStaff, ...couriers];
+                couriers.forEach((courier: Staff) => staffMap.set(courier.id, courier));
             }
 
-            setStaff(allStaff);
+            setStaff(Array.from(staffMap.values()));
         } catch (error) {
             console.error('Error fetching staff:', error);
         }
@@ -745,7 +745,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                         <SelectContent>
                                             {staff.map((s) => (
                                                 <SelectItem key={s.id} value={s.id}>
-                                                    {s.name} ({s.role === 'COURIER' ? 'Курьер' : 'Админ'}) - {formatCurrency(s.salary)}
+                                                    {s.name} ({s.role === 'COURIER' ? 'Курьер' : s.role === 'WORKER' ? 'Работник' : 'Админ'}) - {formatCurrency(s.salary)}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
