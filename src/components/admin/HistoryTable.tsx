@@ -14,7 +14,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Loader2, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react"
 import { format } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { ru, uz, enUS } from 'date-fns/locale'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 import {
     Select,
@@ -50,6 +51,7 @@ interface HistoryTableProps {
 }
 
 export function HistoryTable({ role, limit = 10, compactMode = false }: HistoryTableProps) {
+    const { t, language } = useLanguage()
     const [logs, setLogs] = useState<ActionLog[]>([])
     const [users, setUsers] = useState<User[]>([])
     const [selectedUser, setSelectedUser] = useState<string>('all')
@@ -57,6 +59,8 @@ export function HistoryTable({ role, limit = 10, compactMode = false }: HistoryT
     const [page, setPage] = useState(0)
     const [total, setTotal] = useState(0)
     const [hasMore, setHasMore] = useState(false)
+
+    const dateLocale = language === 'ru' ? ru : language === 'uz' ? uz : enUS
 
     useEffect(() => {
         fetchUsers()
@@ -122,10 +126,10 @@ export function HistoryTable({ role, limit = 10, compactMode = false }: HistoryT
 
     const getRoleLabel = (role: string) => {
         switch (role) {
-            case 'SUPER_ADMIN': return 'Супер Админ'
-            case 'MIDDLE_ADMIN': return 'Средний Админ'
-            case 'LOW_ADMIN': return 'Низкий Админ'
-            case 'COURIER': return 'Курьер'
+            case 'SUPER_ADMIN': return t.admin.superAdmin
+            case 'MIDDLE_ADMIN': return t.admin.middleAdmin
+            case 'LOW_ADMIN': return t.admin.lowAdmin
+            case 'COURIER': return t.common.courier
             default: return role
         }
     }
@@ -134,19 +138,19 @@ export function HistoryTable({ role, limit = 10, compactMode = false }: HistoryT
         <Card className="glass-card border-none">
             <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 pb-4">
                 <div className="space-y-1">
-                    <CardTitle>История действий</CardTitle>
+                    <CardTitle>{t.admin.actionHistory}</CardTitle>
                     <CardDescription>
-                        Всего записей: {total}
+                        {t.admin.totalRecords}: {total}
                     </CardDescription>
                 </div>
                 <div className="flex items-center gap-2 w-full md:w-auto">
                     {users.length > 0 && (
                         <Select value={selectedUser} onValueChange={setSelectedUser}>
                             <SelectTrigger className="w-[200px]">
-                                <SelectValue placeholder="Все пользователи" />
+                                <SelectValue placeholder={t.admin.allUsers} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">Все пользователи</SelectItem>
+                                <SelectItem value="all">{t.admin.allUsers}</SelectItem>
                                 {users.map(user => (
                                     <SelectItem key={user.id} value={user.id}>
                                         {user.name} ({getRoleLabel(user.role)})
@@ -165,10 +169,10 @@ export function HistoryTable({ role, limit = 10, compactMode = false }: HistoryT
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Дата</TableHead>
-                                <TableHead>Пользователь</TableHead>
-                                <TableHead>Действие</TableHead>
-                                <TableHead>Описание</TableHead>
+                                <TableHead>{t.common.date}</TableHead>
+                                <TableHead>{t.common.user}</TableHead>
+                                <TableHead>{t.common.action}</TableHead>
+                                <TableHead>{t.common.description}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -181,14 +185,14 @@ export function HistoryTable({ role, limit = 10, compactMode = false }: HistoryT
                             ) : logs.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                                        История пуста
+                                        {t.admin.emptyHistory}
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 logs.map((log) => (
                                     <TableRow key={log.id} className={compactMode ? 'h-8' : ''}>
                                         <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                                            {format(new Date(log.createdAt), 'dd MMM HH:mm', { locale: ru })}
+                                            {format(new Date(log.createdAt), 'dd MMM HH:mm', { locale: dateLocale })}
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex flex-col">
@@ -219,7 +223,7 @@ export function HistoryTable({ role, limit = 10, compactMode = false }: HistoryT
                         </div>
                     ) : logs.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">
-                            История пуста
+                            {t.admin.emptyHistory}
                         </div>
                     ) : (
                         logs.map((log) => (
@@ -231,7 +235,7 @@ export function HistoryTable({ role, limit = 10, compactMode = false }: HistoryT
                                             <span className="text-xs text-muted-foreground">{getRoleLabel(log.admin.role)}</span>
                                         </div>
                                         <span className="text-xs text-muted-foreground">
-                                            {format(new Date(log.createdAt), 'dd MMM HH:mm', { locale: ru })}
+                                            {format(new Date(log.createdAt), 'dd MMM HH:mm', { locale: dateLocale })}
                                         </span>
                                     </div>
                                 </CardHeader>
@@ -258,10 +262,10 @@ export function HistoryTable({ role, limit = 10, compactMode = false }: HistoryT
                         disabled={page === 0 || isLoading}
                     >
                         <ChevronLeft className="h-4 w-4" />
-                        Назад
+                        {t.common.back}
                     </Button>
                     <div className="text-sm text-muted-foreground">
-                        Страница {page + 1}
+                        {t.common.page} {page + 1}
                     </div>
                     <Button
                         variant="outline"
@@ -269,7 +273,7 @@ export function HistoryTable({ role, limit = 10, compactMode = false }: HistoryT
                         onClick={() => setPage(p => p + 1)}
                         disabled={!hasMore || isLoading}
                     >
-                        Вперед
+                        {t.common.next}
                         <ChevronRight className="h-4 w-4" />
                     </Button>
                 </div>

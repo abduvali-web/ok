@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table"
 import { Trash2, Eye, Edit, Calendar, MapPin, Phone, User } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface Order {
     id: string
@@ -58,14 +59,16 @@ export function OrdersTable({
     onViewOrder,
     onEditOrder
 }: OrdersTableProps) {
+    const { t } = useLanguage()
+
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">Заказы</h2>
+                <h2 className="text-xl font-semibold">{t.admin.orders}</h2>
                 {selectedOrders.size > 0 && (
                     <Button variant="destructive" size="sm" onClick={onDeleteSelected}>
                         <Trash2 className="w-4 h-4 mr-2" />
-                        Удалить выбранные ({selectedOrders.size})
+                        {t.admin.deleteSelected} ({selectedOrders.size})
                     </Button>
                 )}
             </div>
@@ -81,18 +84,18 @@ export function OrdersTable({
                                     onCheckedChange={onSelectAll}
                                 />
                             </TableHead>
-                            <TableHead>Номер</TableHead>
-                            <TableHead>Клиент</TableHead>
-                            <TableHead>Адрес</TableHead>
-                            <TableHead>Время</TableHead>
-                            <TableHead>Тип</TableHead>
-                            <TableHead>Кол-во</TableHead>
-                            <TableHead>Калории</TableHead>
-                            <TableHead>Особенности</TableHead>
-                            <TableHead>Курьер</TableHead>
-                            <TableHead>Статус</TableHead>
-                            <TableHead>Оплата</TableHead>
-                            <TableHead className="text-right">Действия</TableHead>
+                            <TableHead>{t.admin.table.number}</TableHead>
+                            <TableHead>{t.admin.table.client}</TableHead>
+                            <TableHead>{t.admin.table.address}</TableHead>
+                            <TableHead>{t.admin.table.time}</TableHead>
+                            <TableHead>{t.admin.table.type}</TableHead>
+                            <TableHead>{t.admin.table.amount}</TableHead>
+                            <TableHead>{t.admin.table.calories}</TableHead>
+                            <TableHead>{t.admin.table.features}</TableHead>
+                            <TableHead>{t.admin.table.courier}</TableHead>
+                            <TableHead>{t.admin.table.status}</TableHead>
+                            <TableHead>{t.admin.table.payment}</TableHead>
+                            <TableHead className="text-right">{t.admin.table.actions}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -115,7 +118,7 @@ export function OrdersTable({
                                 <TableCell>{order.deliveryTime}</TableCell>
                                 <TableCell>
                                     <Badge variant="outline">
-                                        {order.isAutoOrder ? 'Авто' : 'Ручной'}
+                                        {order.isAutoOrder ? t.admin.auto : t.admin.manual}
                                     </Badge>
                                 </TableCell>
                                 <TableCell>{order.quantity}</TableCell>
@@ -155,7 +158,7 @@ export function OrdersTable({
                         {orders.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={13} className="h-24 text-center">
-                                    Нет заказов
+                                    {t.admin.noOrders}
                                 </TableCell>
                             </TableRow>
                         )}
@@ -167,7 +170,7 @@ export function OrdersTable({
             <div className="md:hidden space-y-4">
                 {orders.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
-                        Нет заказов
+                        {t.admin.noOrders}
                     </div>
                 ) : (
                     orders.map((order) => (
@@ -180,7 +183,7 @@ export function OrdersTable({
                                             onCheckedChange={() => onSelectOrder(order.id)}
                                         />
                                         <CardTitle className="text-base">
-                                            Заказ #{order.orderNumber}
+                                            {t.courier.orderNumber}{order.orderNumber}
                                         </CardTitle>
                                     </div>
                                     <Badge variant={
@@ -216,7 +219,7 @@ export function OrdersTable({
 
                                 <div className="flex justify-between items-center pt-2 border-t mt-2">
                                     <Badge variant={order.paymentStatus === 'PAID' ? 'default' : 'destructive'}>
-                                        {order.paymentStatus === 'PAID' ? 'Оплачено' : 'Не оплачено'}
+                                        {order.paymentStatus === 'PAID' ? t.common.paid : t.common.notPaid}
                                     </Badge>
                                     <div className="flex gap-1">
                                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewOrder?.(order)}>

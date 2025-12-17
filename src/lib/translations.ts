@@ -13,6 +13,8 @@ export const translations = {
             error: 'Ошибка',
             success: 'Успешно',
             connectionError: 'Ошибка соединения',
+            paid: 'Оплачено',
+            notPaid: 'Не оплачено',
             back: 'Назад',
             next: 'Вперед',
             actions: 'Действия',
@@ -23,6 +25,10 @@ export const translations = {
             quantity: 'Количество',
             calories: 'Калории',
             comments: 'Комментарии',
+            description: 'Описание',
+            page: 'Страница',
+            user: 'Пользователь',
+            action: 'Действие',
         },
         auth: {
             welcome: 'Добро пожаловать',
@@ -99,10 +105,81 @@ export const translations = {
             createOrder: 'Создать заказ',
             createClient: 'Создать клиента',
 
+            // Roles
+            superAdmin: 'Супер Админ',
+            middleAdmin: 'Средний Админ',
+            lowAdmin: 'Низкий Админ',
+
+            // History
+            actionHistory: 'История действий',
+            totalRecords: 'Всего записей',
+            allUsers: 'Все пользователи',
+            emptyHistory: 'История пуста',
+
+            // Descriptions & Guides
+            createOrderDesc: "Нажмите кнопку '+ Создать заказ' чтобы добавить новый заказ...",
+            createClientDesc: "Используйте кнопку '+ Добавить клиента' для добавления нового клиента...",
+            autoOrdersDesc: "Включите переключатель 'Автозаказы' в карточке клиента...",
+            binDesc: "Клиенты не удаляются навсегда сразу. Они перемещаются в корзину...",
+            historyDesc: "Вкладка 'История' показывает все действия администраторов...",
+
+            // Actions & Misc
+            editSelectedOrders: 'Редактировать выбранные заказы',
+            leaveEmpty: 'Оставьте пустым, чтобы не менять',
+            noChange: 'Не менять',
+            removeCourier: 'Снять курьера',
+            noClients: 'Нет клиентов',
+
+            // Menu
+            todaysMenu: 'Сегодняшнее меню',
+            day: 'День',
+
+            // Tables
+            table: {
+                number: 'Номер',
+                client: 'Клиент',
+                address: 'Адрес',
+                time: 'Время',
+                type: 'Тип',
+                amount: 'Кол-во',
+                calories: 'Калории',
+                features: 'Особенности',
+                courier: 'Курьер',
+                status: 'Статус',
+                payment: 'Оплата',
+                actions: 'Действия',
+                name: 'Имя',
+                phone: 'Телефон',
+                deliveryDays: 'Дни доставки',
+                dateAdded: 'Дата добавления',
+                role: 'Роль',
+                active: 'Активен',
+                paused: 'Приостановлен',
+                password: 'Пароль',
+            },
+
+            // Admin Management
+            manageLowAdmins: 'Управление Администраторами и Курьерами',
+            manageLowAdminsDesc: 'Добавляйте, удаляйте и управляйте низкими администраторами и курьерами',
+            add: 'Добавить',
+            worker: 'Работник',
+            pause: 'Приостановить',
+            resume: 'Активировать',
+
+            // Auto Orders
+            createAutoOrders: 'Создать авто-заказы',
+            auto: 'Авто',
+
+            // New Keys from feedback
+            allOrders: 'Все заказы',
+            allClients: 'Все клиенты',
+
             // Bin
             bin: 'Корзина',
             deletedClients: 'Удаленные клиенты',
             deletedOrders: 'Удаленные заказы',
+            noOrders: 'Нет заказов',
+            manual: 'Ручной',
 
             // Stats
             totalOrders: 'Всего заказов',
@@ -260,6 +337,8 @@ export const translations = {
             error: 'Xato',
             success: 'Muvaffaqiyatli',
             connectionError: 'Ulanish xatosi',
+            paid: 'To\'langan',
+            notPaid: 'To\'lanmagan',
             back: 'Orqaga',
             next: 'Oldinga',
             actions: 'Amallar',
@@ -270,6 +349,10 @@ export const translations = {
             quantity: 'Soni',
             calories: 'Kaloriya',
             comments: 'Izohlar',
+            description: 'Izoh',
+            page: 'Sahifa',
+            user: 'Foydalanuvchi',
+            action: 'Amal',
         },
         auth: {
             welcome: 'Xush kelibsiz',
@@ -346,10 +429,81 @@ export const translations = {
             createOrder: 'Buyurtma yaratish',
             createClient: 'Mijoz yaratish',
 
+            // Roles
+            superAdmin: 'Super Administrator',
+            middleAdmin: 'O\'rta Administrator',
+            lowAdmin: 'Kichik Administrator',
+
+            // History
+            actionHistory: 'Harakatlar tarixi',
+            totalRecords: 'Jami yozuvlar',
+            allUsers: 'Barcha foydalanuvchilar',
+            emptyHistory: 'Tarix bo\'sh',
+
+            // Descriptions & Guides
+            createOrderDesc: "\"+ Buyurtma yaratish\" tugmasini bosing...",
+            createClientDesc: "\"+ Mijoz qo'shish\" tugmasidan foydalaning...",
+            autoOrdersDesc: "Mijoz kartasida \"Avto-buyurtmalar\" ni yoqing...",
+            binDesc: "Mijozlar darhol o'chirilmaydi. Ular savatga o'tkaziladi...",
+            historyDesc: "\"Tarix\" tabida barcha administrator harakatlari ko'rsatiladi...",
+
+            // Actions & Misc
+            editSelectedOrders: 'Tanlangan buyurtmalarni tahrirlash',
+            leaveEmpty: 'O\'zgartirmaslik uchun bo\'sh qoldiring',
+            noChange: 'O\'zgartirmaslik',
+            removeCourier: 'Kuryerni olish',
+            noClients: 'Mijozlar yo\'q',
+
+            // Menu
+            todaysMenu: 'Bugungi menyu',
+            day: 'Kun',
+
+            // Tables
+            table: {
+                number: 'Raqam',
+                client: 'Mijoz',
+                address: 'Manzil',
+                time: 'Vaqt',
+                type: 'Tur',
+                amount: 'Miqdor',
+                calories: 'Kaloriya',
+                features: 'Xususiyatlar',
+                courier: 'Kuryer',
+                status: 'Holat',
+                payment: 'To\'lov',
+                actions: 'Amallar',
+                name: 'Ism',
+                phone: 'Telefon',
+                deliveryDays: 'Yetkazish kunlari',
+                dateAdded: 'Qo\'shilgan sana',
+                role: 'Rol',
+                active: 'Faol',
+                paused: 'To\'xtatilgan',
+                password: 'Parol',
+            },
+
+            // Admin Management
+            manageLowAdmins: 'Administratorlar va Kuryerlarni boshqarish',
+            manageLowAdminsDesc: 'Administratorlar va kuryerlarni qo\'shish, o\'chirish va boshqarish',
+            add: 'Qo\'shish',
+            worker: 'Xodim',
+            pause: 'To\'xtatish',
+            resume: 'Faollashtirish',
+
+            // Auto Orders
+            createAutoOrders: 'Avto-buyurtmalarni yaratish',
+            auto: 'Avto',
+
+            // New Keys
+            allOrders: 'Barcha buyurtmalar',
+            allClients: 'Barcha mijozlar',
+
             // Bin
             bin: 'Savatcha',
             deletedClients: 'O\'chirilgan mijozlar',
             deletedOrders: 'O\'chirilgan buyurtmalar',
+            noOrders: 'Buyurtmalar yo\'q',
+            manual: 'Qo\'lda',
 
             // Stats
             totalOrders: 'Jami buyurtmalar',
@@ -507,6 +661,8 @@ export const translations = {
             error: 'Error',
             success: 'Success',
             connectionError: 'Connection Error',
+            paid: 'Paid',
+            notPaid: 'Not Paid',
             back: 'Back',
             next: 'Next',
             actions: 'Actions',
@@ -517,6 +673,10 @@ export const translations = {
             quantity: 'Quantity',
             calories: 'Calories',
             comments: 'Comments',
+            description: 'Description',
+            page: 'Page',
+            user: 'User',
+            action: 'Action',
         },
         auth: {
             welcome: 'Welcome',
@@ -593,10 +753,81 @@ export const translations = {
             createOrder: 'Create Order',
             createClient: 'Create Client',
 
+            // Roles
+            superAdmin: 'Super Admin',
+            middleAdmin: 'Middle Admin',
+            lowAdmin: 'Low Admin',
+
+            // History
+            actionHistory: 'Action History',
+            totalRecords: 'Total Records',
+            allUsers: 'All Users',
+            emptyHistory: 'History is empty',
+
+            // Descriptions & Guides
+            createOrderDesc: "Click '+ Create Order' to add a new order...",
+            createClientDesc: "Use '+ Create Client' to add a new client...",
+            autoOrdersDesc: "Toggle 'Auto Orders' in client card...",
+            binDesc: "Clients are not deleted permanently immediately. They are moved to bin...",
+            historyDesc: "'History' tab shows all admin actions...",
+
+            // Actions & Misc
+            editSelectedOrders: 'Edit Selected Orders',
+            leaveEmpty: 'Leave empty to keep unchanged',
+            noChange: 'No Change',
+            removeCourier: 'Remove Courier',
+            noClients: 'No Clients',
+
+            // Menu
+            todaysMenu: 'Today\'s Menu',
+            day: 'Day',
+
+            // Tables
+            table: {
+                number: 'Number',
+                client: 'Client',
+                address: 'Address',
+                time: 'Time',
+                type: 'Type',
+                amount: 'Amount',
+                calories: 'Calories',
+                features: 'Features',
+                courier: 'Courier',
+                status: 'Status',
+                payment: 'Payment',
+                actions: 'Actions',
+                name: 'Name',
+                phone: 'Phone',
+                deliveryDays: 'Delivery Days',
+                dateAdded: 'Date Added',
+                role: 'Role',
+                active: 'Active',
+                paused: 'Paused',
+                password: 'Password',
+            },
+
+            // Admin Management
+            manageLowAdmins: 'Manage Admins and Couriers',
+            manageLowAdminsDesc: 'Add, delete and manage low admins and couriers',
+            add: 'Add',
+            worker: 'Worker',
+            pause: 'Pause',
+            resume: 'Activate',
+
+            // Auto Orders
+            createAutoOrders: 'Create Auto Orders',
+            auto: 'Auto',
+
+            // New Keys
+            allOrders: 'All Orders',
+            allClients: 'All Clients',
+
             // Bin
             bin: 'Bin',
             deletedClients: 'Deleted Clients',
             deletedOrders: 'Deleted Orders',
+            noOrders: 'No Orders',
+            manual: 'Manual',
 
             // Stats
             totalOrders: 'Total Orders',
@@ -621,7 +852,7 @@ export const translations = {
                 daily: 'Daily Customers',
                 evenDay: 'Even Days',
                 oddDay: 'Odd Days',
-                special: 'Special Features',
+                special: 'Special Preferences',
                 lowCal: '1200 kcal',
                 standard: '1600 kcal',
                 medium: '2000 kcal',
@@ -629,7 +860,9 @@ export const translations = {
                 max: '3000 kcal',
                 single: 'Single Orders',
                 multi: 'Multiple Orders',
-            }
+            },
+
+
         },
         warehouse: {
             title: 'Warehouse Management',

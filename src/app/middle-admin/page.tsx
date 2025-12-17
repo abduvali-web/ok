@@ -1711,36 +1711,35 @@ export default function MiddleAdminPage() {
                 {currentDate || ' '}
               </div>
               <LanguageSwitcher />
-              <UserGuide guides={[
-                {
-                  title: "Создание заказа",
-                  description: "Нажмите кнопку '+ Создать заказ' чтобы добавить новый заказ. Заполните информацию о клиенте, адрес доставки, количество еды и время доставки. Система автоматически назначит курьера.",
-                  buttonName: "+ Создать заказ",
-                  icon: <Plus className="w-5 h-5 text-primary" />
+              {
+                title: t.admin.createOrder,
+              description: t.admin.manageOrdersDesc, // Using generic desc as placeholder or need specific key
+              buttonName: "+ " + t.admin.createOrder,
+              icon: <Plus className="w-5 h-5 text-primary" />
                 },
-                {
-                  title: "Создание клиента",
-                  description: "Используйте кнопку '+ Добавить клиента' для добавления нового клиента в базу. Укажите имя, адрес, телефон и количество калорий для автоматических заказов.",
-                  buttonName: "+ Добавить клиента",
-                  icon: <User className="w-5 h-5 text-primary" />
+              {
+                title: t.admin.createClient,
+              description: t.admin.manageClientsDesc,
+              buttonName: "+ " + t.admin.createClient,
+              icon: <User className="w-5 h-5 text-primary" />
                 },
-                {
-                  title: "Автоматические заказы",
-                  description: "Включите переключатель 'Автозаказы' в карточке клиента. Система будет автоматически создавать заказы в указанное время для этого клиента каждый день.",
-                  buttonName: "Переключатель Автозаказы",
-                  icon: <Route className="w-5 h-5 text-primary" />
+              {
+                title: t.admin.createAutoOrders,
+              description: t.admin.manageOrdersDesc,
+              buttonName: t.admin.auto,
+              icon: <Route className="w-5 h-5 text-primary" />
                 },
-                {
-                  title: "Удаление в корзину",
-                  description: "Клиенты не удаляются навсегда сразу. Они перемещаются в корзину, откуда их можно восстановить в течение 30 дней или удалить окончательно.",
-                  buttonName: "Кнопка Корзина",
-                  icon: <Trash2 className="w-5 h-5 text-primary" />
+              {
+                title: t.admin.delete,
+              description: t.admin.bin,
+              buttonName: t.admin.bin,
+              icon: <Trash2 className="w-5 h-5 text-primary" />
                 },
-                {
-                  title: "История изменений",
-                  description: "Вкладка 'История' показывает все действия администраторов: создание, изменение и удаление заказов и клиентов с указанием времени и пользователя.",
-                  buttonName: "Вкладка История",
-                  icon: <History className="w-5 h-5 text-primary" />
+              {
+                title: t.admin.history,
+              description: t.admin.history,
+              buttonName: t.admin.history,
+              icon: <History className="w-5 h-5 text-primary" />
                 }
               ]} />
               <TrialStatus compact />
@@ -4108,7 +4107,6 @@ export default function MiddleAdminPage() {
                     </Button>
                     <Button onClick={fetchBinOrders} variant="outline">
                       <History className="mr-2 h-4 w-4" />
-                      <History className="mr-2 h-4 w-4" />
                       {t.common.actions}
                     </Button>
                   </div>
@@ -4168,11 +4166,11 @@ export default function MiddleAdminPage() {
                               }}
                             />
                           </th>
-                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Имя</th>
-                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Телефон</th>
-                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Адрес</th>
-                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Удален</th>
-                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Кем удален</th>
+                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{t.admin.table.name}</th>
+                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{t.admin.table.phone}</th>
+                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{t.admin.table.address}</th>
+                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{t.common.date}</th>
+                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{t.admin.table.role}</th>
                         </tr>
                       </thead>
                       <tbody className="[&_tr:last-child]:border-0">
@@ -4196,7 +4194,7 @@ export default function MiddleAdminPage() {
                             <td className="p-4 align-middle">{client.phone}</td>
                             <td className="p-4 align-middle">{client.address}</td>
                             <td className="p-4 align-middle">
-                              {client.deletedAt ? new Date(client.deletedAt).toLocaleDateString('ru-RU') : '-'}
+                              {client.deletedAt ? new Date(client.deletedAt).toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US') : '-'}
                             </td>
                             <td className="p-4 align-middle">{client.deletedBy || '-'}</td>
                           </tr>
@@ -4204,7 +4202,7 @@ export default function MiddleAdminPage() {
                         {binClients.length === 0 && (
                           <tr>
                             <td colSpan={6} className="p-4 text-center text-muted-foreground">
-                              Нет удаленных клиентов
+                              {t.finance.noClients}
                             </td>
                           </tr>
                         )}
