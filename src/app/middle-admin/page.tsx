@@ -176,7 +176,7 @@ interface Stats {
 }
 
 export default function MiddleAdminPage() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [activeTab, setActiveTab] = useState('statistics')
   const [currentDate, setCurrentDate] = useState('')
   const [lowAdmins, setLowAdmins] = useState<Admin[]>([])
