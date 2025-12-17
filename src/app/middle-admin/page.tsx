@@ -1769,60 +1769,64 @@ export default function MiddleAdminPage() {
               value="orders"
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
             >
-              Заказы
+              <Package className="w-4 h-4 mr-2" />
+              {t.admin.orders}
             </TabsTrigger>
             <TabsTrigger
               value="clients"
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
             >
-              Клиенты
+              <Users className="w-4 h-4 mr-2" />
+              {t.admin.clients}
             </TabsTrigger>
             <TabsTrigger
               value="admins"
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
             >
-              Админы
+              <Users className="w-4 h-4 mr-2" />
+              {t.admin.admins}
             </TabsTrigger>
             <TabsTrigger
               value="bin"
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
             >
-              Корзина
+              <Trash2 className="w-4 h-4 mr-2" />
+              {t.admin.bin}
             </TabsTrigger>
             <TabsTrigger
               value="statistics"
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
             >
               <BarChart3 className="w-4 h-4 mr-2" />
-              Статистика
+              {t.admin.statistics}
             </TabsTrigger>
             <TabsTrigger
               value="history"
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
             >
               <History className="w-4 h-4 mr-2" />
-              История
+              {t.admin.history}
             </TabsTrigger>
             <TabsTrigger
               value="profile"
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
             >
               <User className="w-4 h-4 mr-2" />
-              Профиль
+              {t.common.profile}
             </TabsTrigger>
             <TabsTrigger
               value="warehouse"
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
             >
               <Package className="w-4 h-4 mr-2" />
-              Склад
+              {t.warehouse.title}
             </TabsTrigger>
             <TabsTrigger
               value="finance"
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
             >
               <DollarSign className="w-4 h-4 mr-2" />
-              Финансы
+              {t.finance.title}
             </TabsTrigger>
           </TabsList>
 
@@ -1832,7 +1836,7 @@ export default function MiddleAdminPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Успешные заказы</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.successful}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-green-600">
@@ -1844,7 +1848,7 @@ export default function MiddleAdminPage() {
 
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Неудачные заказы</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.failed}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-red-600">
@@ -1856,7 +1860,7 @@ export default function MiddleAdminPage() {
 
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">В доставке</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.inDelivery}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-blue-600">
@@ -1868,7 +1872,7 @@ export default function MiddleAdminPage() {
 
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Ожидают</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.pending}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-orange-600">
@@ -1883,7 +1887,7 @@ export default function MiddleAdminPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Предоплаченные</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.prepaid}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-green-600">
@@ -1895,7 +1899,7 @@ export default function MiddleAdminPage() {
 
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Неоплаченные</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.unpaid}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-red-600">
@@ -1907,7 +1911,7 @@ export default function MiddleAdminPage() {
 
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Оплата картой</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.card}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-blue-600">
@@ -1919,7 +1923,7 @@ export default function MiddleAdminPage() {
 
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Оплата наличными</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.cash}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-green-600">
@@ -1934,7 +1938,7 @@ export default function MiddleAdminPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Ежедневные клиенты</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.daily}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-purple-600">
@@ -1946,7 +1950,7 @@ export default function MiddleAdminPage() {
 
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Четные дни</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.evenDay}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-indigo-600">
@@ -1958,7 +1962,7 @@ export default function MiddleAdminPage() {
 
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Нечетные дни</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.oddDay}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-pink-600">
@@ -1970,7 +1974,7 @@ export default function MiddleAdminPage() {
 
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Особые предпочтения</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.special}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-orange-600">
@@ -1985,7 +1989,7 @@ export default function MiddleAdminPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">1200 ккал</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.lowCal}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-red-600">
@@ -1997,7 +2001,7 @@ export default function MiddleAdminPage() {
 
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">1600 ккал</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.standard}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-orange-600">
@@ -2009,7 +2013,7 @@ export default function MiddleAdminPage() {
 
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">2000 ккал</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.medium}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-yellow-600">
@@ -2021,7 +2025,7 @@ export default function MiddleAdminPage() {
 
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">2500 ккал</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.high}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-green-600">
@@ -2033,7 +2037,7 @@ export default function MiddleAdminPage() {
 
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">3000 ккал</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.max}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-blue-600">
@@ -2048,7 +2052,7 @@ export default function MiddleAdminPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Одиночные заказы</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.single}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-indigo-600">
@@ -2060,7 +2064,7 @@ export default function MiddleAdminPage() {
 
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Множественные заказы</CardTitle>
+                  <CardTitle className="text-base">{t.admin.stats.multi}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-purple-600">
@@ -2080,9 +2084,9 @@ export default function MiddleAdminPage() {
               <CardHeader>
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
-                    <CardTitle className="text-xl font-semibold">Управление Заказами</CardTitle>
+                    <CardTitle className="text-xl font-semibold">{t.admin.manageOrders}</CardTitle>
                     <CardDescription>
-                      Создавайте и управляйте заказами клиентов
+                      {t.admin.manageOrdersDesc}
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
@@ -2700,9 +2704,9 @@ export default function MiddleAdminPage() {
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <div>
-                    <CardTitle>Управление Клиентами</CardTitle>
+                    <CardTitle>{t.admin.manageClients}</CardTitle>
                     <CardDescription>
-                      Создавайте, редактируйте и удаляйте клиентов
+                      {t.admin.manageClientsDesc}
                       {clientStatusFilter !== 'all' && (
                         <span className="ml-2 text-sm">
                           (Показано: {clients.filter(client => {

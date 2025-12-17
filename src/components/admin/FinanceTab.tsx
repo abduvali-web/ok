@@ -51,6 +51,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from 'sonner';
 import { getAllIngredients } from '@/lib/menuData';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface FinanceTabProps {
     className?: string;
@@ -84,6 +85,7 @@ interface Transaction {
 }
 
 export function FinanceTab({ className }: FinanceTabProps) {
+    const { t } = useLanguage();
     const [activeSubTab, setActiveSubTab] = useState('clients');
     const [companyBalance, setCompanyBalance] = useState(0);
     const [clients, setClients] = useState<Client[]>([]);
@@ -211,7 +213,11 @@ export function FinanceTab({ className }: FinanceTabProps) {
 
     const handleTransactionSubmit = async (isCompany: boolean) => {
         if (!transactionAmount || parseFloat(transactionAmount) <= 0) {
-            toast.error('Введите корректную сумму');
+            toast.error(t.finance.enterAmount);
+            return;
+        }
+        if (!transactionDescription) {
+            toast.error(t.finance.enterDescription);
             return;
         }
 
@@ -232,7 +238,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
             });
 
             if (response.ok) {
-                toast.success('Транзакция успешно выполнена');
+                toast.success(t.finance.transactionSuccess);
                 setIsCompanyFundsModalOpen(false);
                 setIsClientBalanceModalOpen(false);
 
@@ -247,11 +253,11 @@ export function FinanceTab({ className }: FinanceTabProps) {
                 fetchCompanyFinance();
                 fetchClients();
             } else {
-                toast.error('Ошибка выполнения транзакции');
+                toast.error(t.finance.transactionError);
             }
         } catch (error) {
             console.error('Error submitting transaction:', error);
-            toast.error('Ошибка соединения с сервером');
+            toast.error(t.common.connectionError);
         } finally {
             setIsSubmitting(false);
         }
@@ -294,7 +300,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
         // Validate
         const itemsToBuy = purchaseItems.filter(item => item.name && item.amount && item.costPerUnit);
         if (itemsToBuy.length === 0) {
-            toast.error('Добавьте хотя бы один ингредиент');
+            toast.error(t.warehouse.addIngredient);
             return;
         }
 
@@ -316,17 +322,17 @@ export function FinanceTab({ className }: FinanceTabProps) {
             });
 
             if (response.ok) {
-                toast.success('Закупка успешно проведена');
+                toast.success(t.finance.buySuccess);
                 setIsBuyIngredientsModalOpen(false);
                 setPurchaseItems([{ name: '', amount: '', costPerUnit: '' }]);
                 fetchCompanyFinance();
             } else {
                 const data = await response.json();
-                toast.error(data.error || 'Ошибка при закупке');
+                toast.error(data.error || t.finance.buyError);
             }
         } catch (error) {
             console.error('Error buying ingredients:', error);
-            toast.error('Ошибка соединения');
+            toast.error(t.common.connectionError);
         } finally {
             setIsSubmitting(false);
         }
@@ -334,7 +340,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
 
     const handlePaySalarySubmit = async () => {
         if (!selectedStaffId || !transactionAmount) {
-            toast.error('Выберите сотрудника и сумму');
+            toast.error(t.finance.selectStaffAndAmount);
             return;
         }
 
@@ -350,7 +356,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
             });
 
             if (response.ok) {
-                toast.success('Зарплата выплачена');
+                toast.success(t.finance.salaryPaid);
                 setIsCompanyFundsModalOpen(false); // Close the main modal instead
                 setSelectedStaffId('');
                 setTransactionAmount('');
@@ -360,7 +366,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                 fetchCompanyFinance(); // Refresh balance
             } else {
                 const data = await response.json();
-                toast.error(data.error || 'Ошибка выплаты');
+                toast.error(data.error || t.finance.paymentError);
             }
         } catch (error) {
             toast.error('Ошибка соединения');
@@ -395,7 +401,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                 <Card className="glass-card border-none bg-gradient-to-br from-indigo-50 to-blue-50">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-blue-900">
-                            Баланс компании
+                            {t.finance.companyBalance}
                         </CardTitle>
                         <Wallet className="h-4 w-4 text-blue-600" />
                     </CardHeader>
@@ -403,7 +409,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                         <div className="text-2xl font-bold text-blue-700">{formatCurrency(companyBalance)}</div>
                         <div className="flex items-center justify-between mt-4">
                             <p className="text-xs text-blue-600/80">
-                                Текущие средства
+                                {t.finance.currentFunds}
                             </p>
                             <Button
                                 size="sm"
@@ -418,7 +424,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                 }}
                             >
                                 <Plus className="w-3 h-3 mr-1" />
-                                Управление
+                                {t.finance.manageBalance}
                             </Button>
                             <Button
                                 size="sm"
@@ -426,7 +432,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                 onClick={() => setIsBuyIngredientsModalOpen(true)}
                             >
                                 <ShoppingCart className="w-3 h-3 mr-1" />
-                                Закупка
+                                {t.finance.purchase}
                             </Button>
                         </div>
                     </CardContent>
@@ -435,7 +441,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                 <Card className="glass-card border-none">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">
-                            Общий долг клиентов
+                            {t.finance.clientDebt}
                         </CardTitle>
                         <TrendingDown className="h-4 w-4 text-red-500" />
                     </CardHeader>
@@ -444,7 +450,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                             {formatCurrency(clients.reduce((sum, c) => c.balance < 0 ? sum + c.balance : sum, 0))}
                         </div>
                         <p className="text-xs text-slate-500 mt-1">
-                            Сумма отрицательных балансов
+                            {t.finance.negativeBalanceSum}
                         </p>
                     </CardContent>
                 </Card>
@@ -452,7 +458,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                 <Card className="glass-card border-none">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">
-                            Предоплата клиентов
+                            {t.finance.clientPrepaid}
                         </CardTitle>
                         <TrendingUp className="h-4 w-4 text-green-500" />
                     </CardHeader>
@@ -461,7 +467,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                             {formatCurrency(clients.reduce((sum, c) => c.balance > 0 ? sum + c.balance : sum, 0))}
                         </div>
                         <p className="text-xs text-slate-500 mt-1">
-                            Сумма положительных балансов
+                            {t.finance.positiveBalanceSum}
                         </p>
                     </CardContent>
                 </Card>
@@ -471,11 +477,11 @@ export function FinanceTab({ className }: FinanceTabProps) {
                 <TabsList>
                     <TabsTrigger value="clients" className="flex items-center gap-2">
                         <Users className="w-4 h-4" />
-                        Балансы клиентов
+                        {t.finance.clientsBalance}
                     </TabsTrigger>
                     <TabsTrigger value="history" className="flex items-center gap-2">
                         <History className="w-4 h-4" />
-                        История операций
+                        {t.finance.history}
                     </TabsTrigger>
                 </TabsList>
 
@@ -484,12 +490,12 @@ export function FinanceTab({ className }: FinanceTabProps) {
                     <Card className="border-none shadow-sm">
                         <CardHeader className="pb-3">
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                <CardTitle className="text-lg font-medium">Список клиентов</CardTitle>
+                                <CardTitle className="text-lg font-medium">{t.finance.clientList}</CardTitle>
                                 <div className="flex items-center gap-2 w-full sm:w-auto">
                                     <form onSubmit={handleSearch} className="relative flex-1 sm:w-64">
                                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
                                         <Input
-                                            placeholder="Поиск по имени или телефону..."
+                                            placeholder={t.admin.searchPlaceholder}
                                             className="pl-9"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -501,13 +507,13 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                     >
                                         <SelectTrigger className="w-[180px]">
                                             <Filter className="w-4 h-4 mr-2" />
-                                            <SelectValue placeholder="Фильтр" />
+                                            <SelectValue placeholder={t.admin.filters} />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">Все балансы</SelectItem>
-                                            <SelectItem value="positive">Положительные (+)</SelectItem>
-                                            <SelectItem value="negative">Должники (-)</SelectItem>
-                                            <SelectItem value="zero">Нулевые (0)</SelectItem>
+                                            <SelectItem value="all">{t.finance.filters.all}</SelectItem>
+                                            <SelectItem value="positive">{t.finance.filters.positive}</SelectItem>
+                                            <SelectItem value="negative">{t.finance.filters.negative}</SelectItem>
+                                            <SelectItem value="zero">{t.finance.filters.zero}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -518,11 +524,11 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Клиент</TableHead>
-                                            <TableHead>Телефон</TableHead>
-                                            <TableHead className="text-right">Баланс</TableHead>
-                                            <TableHead className="text-right">Дней</TableHead>
-                                            <TableHead className="text-right">Действия</TableHead>
+                                            <TableHead>{t.admin.clients}</TableHead>
+                                            <TableHead>{t.common.phone}</TableHead>
+                                            <TableHead className="text-right">{t.finance.balance}</TableHead>
+                                            <TableHead className="text-right">{t.warehouse.days}</TableHead>
+                                            <TableHead className="text-right">{t.admin.actions}</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -535,7 +541,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                         ) : clients.length === 0 ? (
                                             <TableRow>
                                                 <TableCell colSpan={4} className="h-24 text-center text-slate-500">
-                                                    Клиенты не найдены
+                                                    {t.finance.noClients}
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
@@ -564,7 +570,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                                             onClick={() => openClientBalanceModal(client)}
                                                         >
                                                             <DollarSign className="w-4 h-4 mr-2" />
-                                                            Изменить
+                                                            {t.finance.edit}
                                                         </Button>
                                                     </TableCell>
                                                 </TableRow>
@@ -581,10 +587,10 @@ export function FinanceTab({ className }: FinanceTabProps) {
                 <TabsContent value="history">
                     <Card className="border-none shadow-sm">
                         <CardHeader>
-                            <CardTitle className="text-lg font-medium">История финансовых операций</CardTitle>
+                            <CardTitle className="text-lg font-medium">{t.finance.history}</CardTitle>
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-2">
                                 <CardDescription>
-                                    Все транзакции компании и изменения балансов клиентов
+                                    {t.finance.historyDesc}
                                 </CardDescription>
                                 <Select
                                     value={categoryFilter}
@@ -592,10 +598,10 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                 >
                                     <SelectTrigger className="w-[200px]">
                                         <Filter className="w-4 h-4 mr-2" />
-                                        <SelectValue placeholder="Категория" />
+                                        <SelectValue placeholder={t.finance.category} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">Все категории</SelectItem>
+                                        <SelectItem value="all">{t.admin.all}</SelectItem>
                                         {categories.map((cat) => (
                                             <SelectItem key={cat} value={cat}>
                                                 {cat}
@@ -610,19 +616,19 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Дата</TableHead>
-                                            <TableHead>Тип</TableHead>
-                                            <TableHead>Категория</TableHead>
-                                            <TableHead>Описание</TableHead>
-                                            <TableHead>Связан с</TableHead>
-                                            <TableHead className="text-right">Сумма</TableHead>
+                                            <TableHead>{t.finance.date}</TableHead>
+                                            <TableHead>{t.finance.type}</TableHead>
+                                            <TableHead>{t.finance.category}</TableHead>
+                                            <TableHead>{t.finance.description}</TableHead>
+                                            <TableHead>{t.finance.linkedTo}</TableHead>
+                                            <TableHead className="text-right">{t.finance.amount}</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {history.length === 0 ? (
                                             <TableRow>
                                                 <TableCell colSpan={6} className="h-24 text-center text-slate-500">
-                                                    История пуста
+                                                    {t.finance.emptyHistory}
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
@@ -637,7 +643,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                                             <Badge variant={tx.type === 'INCOME' ? 'outline' : 'secondary'} className={
                                                                 tx.type === 'INCOME' ? 'text-green-600 border-green-200 bg-green-50' : 'text-red-600 bg-red-50'
                                                             }>
-                                                                {tx.type === 'INCOME' ? 'Поступление' : 'Списание'}
+                                                                {tx.type === 'INCOME' ? t.finance.income : t.finance.expense}
                                                             </Badge>
                                                         </TableCell>
                                                         <TableCell className="text-xs font-medium">
@@ -650,10 +656,10 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                                             {tx.customer ? (
                                                                 <div className="flex flex-col">
                                                                     <span className="font-medium">{tx.customer.name}</span>
-                                                                    <span className="text-xs text-slate-400">Клиент</span>
+                                                                    <span className="text-xs text-slate-400">{t.admin.clients}</span>
                                                                 </div>
                                                             ) : (
-                                                                <span className="text-slate-500">Компания</span>
+                                                                <span className="text-slate-500">{t.finance.companyBalance}</span>
                                                             )}
                                                         </TableCell>
                                                         <TableCell className={`text-right font-medium ${tx.type === 'INCOME' ? 'text-green-600' : 'text-red-600'
@@ -675,14 +681,14 @@ export function FinanceTab({ className }: FinanceTabProps) {
             <Dialog open={isCompanyFundsModalOpen} onOpenChange={setIsCompanyFundsModalOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Управление балансом компании</DialogTitle>
+                        <DialogTitle>{t.finance.manageBalance}</DialogTitle>
                         <DialogDescription>
-                            Внесите или спишите средства с баланса компании.
+                            {t.finance.manageBalanceDesc}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">Тип</Label>
+                            <Label className="text-right">{t.finance.type}</Label>
                             <div className="col-span-3 flex gap-2">
                                 <Button
                                     type="button"
@@ -691,7 +697,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                     className={transactionType === 'INCOME' ? 'bg-green-600 hover:bg-green-700' : ''}
                                 >
                                     <Plus className="w-4 h-4 mr-2" />
-                                    Пополнить
+                                    {t.finance.topUp}
                                 </Button>
                                 <Button
                                     type="button"
@@ -700,7 +706,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                     className={transactionType === 'EXPENSE' ? 'bg-red-600 hover:bg-red-700' : ''}
                                 >
                                     <Minus className="w-4 h-4 mr-2" />
-                                    Списать
+                                    {t.finance.withdraw}
                                 </Button>
                             </div>
                         </div>
@@ -718,8 +724,8 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                 }
                             }} className="w-full">
                                 <TabsList className="w-full grid grid-cols-2">
-                                    <TabsTrigger value="GENERAL">Общие</TabsTrigger>
-                                    <TabsTrigger value="SALARY">Зарплата</TabsTrigger>
+                                    <TabsTrigger value="GENERAL">{t.finance.general}</TabsTrigger>
+                                    <TabsTrigger value="SALARY">{t.finance.salary}</TabsTrigger>
                                 </TabsList>
                             </Tabs>
                         </div>
@@ -727,7 +733,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                         {transactionCategory === 'SALARY' ? (
                             <>
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="staff" className="text-right">Сотрудник</Label>
+                                    <Label htmlFor="staff" className="text-right">{t.finance.staff}</Label>
                                     <Select
                                         value={selectedStaffId}
                                         onValueChange={(val) => {
@@ -735,12 +741,12 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                             const staffMember = staff.find(s => s.id === val);
                                             if (staffMember) {
                                                 setTransactionAmount(staffMember.salary.toString());
-                                                setTransactionDescription(`Зарплата: ${staffMember.name}`);
+                                                setTransactionDescription(`${t.finance.salary}: ${staffMember.name}`);
                                             }
                                         }}
                                     >
                                         <SelectTrigger className="col-span-3">
-                                            <SelectValue placeholder="Выберите сотрудника" />
+                                            <SelectValue placeholder={t.finance.selectStaff} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {staff.map((s) => (
@@ -752,7 +758,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                     </Select>
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="salary-amount" className="text-right">Сумма</Label>
+                                    <Label htmlFor="salary-amount" className="text-right">{t.finance.amount}</Label>
                                     <Input
                                         id="salary-amount"
                                         type="number"
@@ -766,7 +772,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                             <>
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="amount" className="text-right">
-                                        Сумма ({transactionType === 'INCOME' ? '+' : '-'})
+                                        {t.finance.amount} ({transactionType === 'INCOME' ? '+' : '-'})
                                     </Label>
                                     <Input
                                         id="amount"
@@ -780,19 +786,19 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="description" className="text-right">
-                                        Описание
+                                        {t.finance.description}
                                     </Label>
                                     <Input
                                         id="description"
                                         value={transactionDescription}
                                         onChange={(e) => setTransactionDescription(e.target.value)}
                                         className="col-span-3"
-                                        placeholder="Например: Инвестиции, Закупка..."
+                                        placeholder={t.finance.description}
                                     />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="category" className="text-right">
-                                        Категория
+                                        {t.finance.category}
                                     </Label>
                                     <div className="col-span-3 relative">
                                         <Input
@@ -838,14 +844,14 @@ export function FinanceTab({ className }: FinanceTabProps) {
             <Dialog open={isClientBalanceModalOpen} onOpenChange={setIsClientBalanceModalOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Баланс клиента: {selectedClient?.name}</DialogTitle>
+                        <DialogTitle>{t.finance.clientBalanceTitle}: {selectedClient?.name}</DialogTitle>
                         <DialogDescription>
-                            Текущий баланс: <span className="font-semibold text-slate-900">{selectedClient && formatCurrency(selectedClient.balance)}</span>
+                            {t.finance.currentBalance}: <span className="font-semibold text-slate-900">{selectedClient && formatCurrency(selectedClient.balance)}</span>
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">Действие</Label>
+                            <Label className="text-right">{t.common.actions}</Label>
                             <div className="col-span-3 flex gap-2">
                                 <Button
                                     type="button"
@@ -854,7 +860,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                     className={transactionType === 'INCOME' ? 'bg-green-600 hover:bg-green-700' : ''}
                                 >
                                     <Plus className="w-4 h-4 mr-2" />
-                                    Пополнить
+                                    {t.finance.topUp}
                                 </Button>
                                 <Button
                                     type="button"
@@ -863,13 +869,13 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                     className={transactionType === 'EXPENSE' ? 'bg-red-600 hover:bg-red-700' : ''}
                                 >
                                     <Minus className="w-4 h-4 mr-2" />
-                                    Списать
+                                    {t.finance.withdraw}
                                 </Button>
                             </div>
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="c-amount" className="text-right">
-                                Сумма
+                                {t.finance.amount}
                             </Label>
                             <Input
                                 id="c-amount"
@@ -883,22 +889,22 @@ export function FinanceTab({ className }: FinanceTabProps) {
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="c-description" className="text-right">
-                                Комментарий
+                                {t.finance.comment}
                             </Label>
                             <Input
                                 id="c-description"
                                 value={transactionDescription}
                                 onChange={(e) => setTransactionDescription(e.target.value)}
                                 className="col-span-3"
-                                placeholder="Например: Оплата наличными"
+                                placeholder={t.finance.commentPlaceholder}
                             />
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsClientBalanceModalOpen(false)}>Отмена</Button>
+                        <Button variant="outline" onClick={() => setIsClientBalanceModalOpen(false)}>{t.common.cancel}</Button>
                         <Button onClick={() => handleTransactionSubmit(false)} disabled={isSubmitting}>
                             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                            Подтвердить
+                            {t.finance.confirmPurchase}
                         </Button>
                     </DialogFooter>
                 </DialogContent >
@@ -908,18 +914,18 @@ export function FinanceTab({ className }: FinanceTabProps) {
             < Dialog open={isBuyIngredientsModalOpen} onOpenChange={setIsBuyIngredientsModalOpen} >
                 <DialogContent className="max-w-3xl">
                     <DialogHeader>
-                        <DialogTitle>Закупка ингредиентов</DialogTitle>
+                        <DialogTitle>{t.finance.buyIngredients}</DialogTitle>
                         <DialogDescription>
-                            Добавьте купленные ингредиенты. Сумма будет списана с баланса компании, а остатки на складе увеличены.
+                            {t.finance.buyIngredientsDesc}
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto">
                         <div className="flex justify-between items-center px-1">
-                            <Label className="w-1/3">Ингредиент</Label>
-                            <Label className="w-24">Кол-во (кг)</Label>
-                            <Label className="w-24">Цена за кг</Label>
-                            <Label className="w-24">Сумма</Label>
+                            <Label className="w-1/3">{t.warehouse.ingredient}</Label>
+                            <Label className="w-24">{t.finance.amountKg}</Label>
+                            <Label className="w-24">{t.finance.pricePerKg}</Label>
+                            <Label className="w-24">{t.finance.amount}</Label>
                             <div className="w-8"></div>
                         </div>
 
@@ -931,7 +937,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                                         <Input
                                             value={item.name}
                                             onChange={(e) => handlePurchaseItemChange(index, 'name', e.target.value)}
-                                            placeholder="Название..."
+                                            placeholder={t.common.name}
                                             className="w-full"
                                             list={`ingredients-list-${index}`}
                                         />
@@ -976,19 +982,19 @@ export function FinanceTab({ className }: FinanceTabProps) {
                         ))}
 
                         <Button variant="outline" size="sm" onClick={handleAddPurchaseItem} className="w-full border-dashed">
-                            <Plus className="w-4 h-4 mr-2" /> Добавить строку
+                            <Plus className="w-4 h-4 mr-2" /> {t.finance.addRow}
                         </Button>
                     </div>
 
                     <div className="flex justify-between items-center pt-4 border-t">
                         <div className="text-lg font-bold">
-                            Итого: {formatCurrency(calculateTotalPurchaseCost())}
+                            {t.finance.total}: {formatCurrency(calculateTotalPurchaseCost())}
                         </div>
                         <div className="flex gap-2">
-                            <Button variant="outline" onClick={() => setIsBuyIngredientsModalOpen(false)}>Отмена</Button>
+                            <Button variant="outline" onClick={() => setIsBuyIngredientsModalOpen(false)}>{t.common.cancel}</Button>
                             <Button onClick={handleBuyIngredientsSubmit} disabled={isSubmitting}>
                                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                                Подтвердить закупку
+                                {t.finance.confirmPurchase}
                             </Button>
                         </div>
                     </div>

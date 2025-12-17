@@ -40,6 +40,7 @@ import {
 } from '@/lib/menuData';
 import { DishesManager } from './warehouse/DishesManager';
 import { IngredientsManager } from './warehouse/IngredientsManager';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface WarehouseTabProps {
     className?: string;
@@ -57,6 +58,7 @@ interface InventoryItem {
 }
 
 export function WarehouseTab({ className }: WarehouseTabProps) {
+    const { t } = useLanguage();
     const [activeSubTab, setActiveSubTab] = useState('cooking');
     const [tomorrowMenu, setTomorrowMenu] = useState<DailyMenu | undefined>(undefined);
     const [tomorrowMenuNumber, setTomorrowMenuNumber] = useState<number>(0);
@@ -403,16 +405,16 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                         <div>
                             <CardTitle className="flex items-center gap-2 text-xl">
                                 <Package className="w-5 h-5 text-primary" />
-                                Управление складом
+                                {t.warehouse.title}
                             </CardTitle>
                             <CardDescription>
-                                Планирование готовки и расчёт ингредиентов
+                                {t.warehouse.description}
                             </CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
                             <Badge variant="outline" className="flex items-center gap-1 px-3 py-1.5 bg-primary/5">
                                 <ChefHat className="w-4 h-4" />
-                                <span>Готовим меню {tomorrowMenuNumber}</span>
+                                <span>{t.warehouse.menuFor} {tomorrowMenuNumber}</span>
                             </Badge>
                             <Button variant="outline" size="sm" onClick={fetchClientCalories} disabled={isLoadingClients}>
                                 {isLoadingClients ? (
@@ -429,40 +431,39 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                         <TabsList className="grid w-full grid-cols-5 mb-6">
                             <TabsTrigger value="cooking" className="flex items-center gap-2">
                                 <ChefHat className="w-4 h-4" />
-                                <span className="hidden sm:inline">Готовка</span>
+                                <span className="hidden sm:inline">{t.warehouse.cooking}</span>
                             </TabsTrigger>
                             <TabsTrigger value="inventory" className="flex items-center gap-2">
                                 <Package className="w-4 h-4" />
-                                <span className="hidden sm:inline">Остатки</span>
+                                <span className="hidden sm:inline">{t.warehouse.inventory}</span>
                             </TabsTrigger>
                             <TabsTrigger value="calculator" className="flex items-center gap-2">
                                 <Calculator className="w-4 h-4" />
-                                <span className="hidden sm:inline">Калькулятор</span>
+                                <span className="hidden sm:inline">{t.warehouse.calculator}</span>
                             </TabsTrigger>
                             <TabsTrigger value="dishes" className="flex items-center gap-2">
                                 <Utensils className="w-4 h-4" />
-                                <span className="hidden sm:inline">Блюда</span>
+                                <span className="hidden sm:inline">{t.warehouse.dishes}</span>
                             </TabsTrigger>
                             <TabsTrigger value="ingredients-catalog" className="flex items-center gap-2">
                                 <Package className="w-4 h-4" />
-                                <span className="hidden sm:inline">Справочник</span>
+                                <span className="hidden sm:inline">{t.warehouse.catalog}</span>
                             </TabsTrigger>
                         </TabsList>
 
                         {/* Cooking Tab - Dishes to prepare for tomorrow */}
                         <TabsContent value="cooking" className="space-y-4">
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-                                <strong>Меню {tomorrowMenuNumber}</strong> — блюда для готовки сегодня, доставка завтра.
-                                Укажите количество порций для каждого блюда.
+                                <strong>{t.warehouse.cookingInfo.replace('{number}', tomorrowMenuNumber.toString())}</strong>
                             </div>
 
                             {/* Client distribution info */}
                             <div className="grid grid-cols-5 gap-2 p-3 bg-slate-50 rounded-lg">
                                 {Object.entries(clientsByCalorie).map(([cal, count]) => (
                                     <div key={cal} className="text-center">
-                                        <div className="text-xs text-slate-500">{cal} ккал</div>
+                                        <div className="text-xs text-slate-500">{cal} {t.warehouse.kcal}</div>
                                         <div className="font-semibold text-lg">{count}</div>
-                                        <div className="text-xs text-slate-400">клиентов</div>
+                                        <div className="text-xs text-slate-400">{t.warehouse.clients}</div>
                                     </div>
                                 ))}
                             </div>
@@ -535,9 +536,9 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                             {/* Summary and Stock Warning Section */}
                             <div className="border rounded-lg p-4 bg-slate-50 space-y-3">
                                 <div className="flex justify-between items-center">
-                                    <span className="font-medium">Итого блюд к готовке:</span>
+                                    <span className="font-medium">{t.warehouse.totalDishes}</span>
                                     <Badge variant="outline" className="text-lg px-3 py-1">
-                                        {totalDishesToCook} порций
+                                        {totalDishesToCook} {t.warehouse.portions}
                                     </Badge>
                                 </div>
 
@@ -545,7 +546,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                     <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                                         <div className="flex items-center gap-2 text-red-800 font-medium mb-2">
                                             <AlertTriangle className="w-4 h-4" />
-                                            Недостаточно ингредиентов ({insufficientIngredients.length})
+                                            {t.warehouse.insufficient} ({insufficientIngredients.length})
                                         </div>
                                         <div className="text-sm text-red-700 max-h-32 overflow-y-auto space-y-1">
                                             {insufficientIngredients.slice(0, 5).map(({ name, required, available, unit }) => (
@@ -558,7 +559,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                             ))}
                                             {insufficientIngredients.length > 5 && (
                                                 <div className="text-xs text-red-500">
-                                                    ... и ещё {insufficientIngredients.length - 5} позиций
+                                                    {t.warehouse.andMore.replace('{count}', (insufficientIngredients.length - 5).toString())}
                                                 </div>
                                             )}
                                         </div>
@@ -568,7 +569,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 {hasEnoughStock && totalDishesToCook > 0 && (
                                     <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2 text-green-800">
                                         <Check className="w-4 h-4" />
-                                        Все ингредиенты в наличии
+                                        {t.warehouse.enoughStock}
                                     </div>
                                 )}
                             </div>
@@ -619,7 +620,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                     ) : (
                                         <Utensils className="w-4 h-4" />
                                     )}
-                                    {!hasEnoughStock ? 'Недостаточно продуктов' : 'Списать продукты (Готовка)'}
+                                    {!hasEnoughStock ? t.warehouse.insufficientStock : t.warehouse.cookAndWriteOff}
                                 </Button>
 
                                 <Button onClick={handleSave} disabled={isSaving} className="gap-2">
@@ -628,7 +629,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                     ) : (
                                         <Save className="w-4 h-4" />
                                     )}
-                                    Сохранить план
+                                    {t.warehouse.savePlan}
                                 </Button>
                             </div>
                         </TabsContent>
@@ -636,7 +637,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                         {/* Inventory Tab - Remaining ingredients */}
                         <TabsContent value="inventory" className="space-y-4">
                             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                                Укажите остатки ингредиентов на складе для точного расчёта закупок.
+                                {t.warehouse.inventoryInfo}
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -666,7 +667,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                     ) : (
                                         <Save className="w-4 h-4" />
                                     )}
-                                    Сохранить остатки
+                                    {t.warehouse.saveInventory}
                                 </Button>
                             </div>
                         </TabsContent>
@@ -677,16 +678,16 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 {/* Left: Date selection */}
                                 <div className="space-y-4">
                                     <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
-                                        Выберите дни для расчёта необходимых ингредиентов.
+                                        {t.warehouse.calcDaysInfo}
                                     </div>
 
                                     <Button onClick={calculateForTomorrow} className="w-full gap-2" variant="default">
                                         <Calculator className="w-4 h-4" />
-                                        Расчёт на завтра (Меню {tomorrowMenuNumber})
+                                        {t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())}
                                     </Button>
 
                                     <div className="space-y-2">
-                                        <Label className="text-sm font-medium">Или выберите несколько дней:</Label>
+                                        <Label className="text-sm font-medium">{t.warehouse.selectCalculated}</Label>
                                         <div className="grid grid-cols-2 gap-2">
                                             {getNext14Days().map(({ date, label, menuNumber }) => (
                                                 <button
@@ -700,7 +701,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                     <div className="text-sm font-medium">{label}</div>
                                                     <div className={`text-xs ${selectedDates.includes(date) ? 'text-white/80' : 'text-slate-500'
                                                         }`}>
-                                                        Меню {menuNumber}
+                                                        {t.warehouse.menuFor} {menuNumber}
                                                     </div>
                                                 </button>
                                             ))}
@@ -708,7 +709,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                         {selectedDates.length > 0 && (
                                             <Button onClick={calculateForPeriod} className="w-full gap-2 mt-2">
                                                 <Calculator className="w-4 h-4" />
-                                                Рассчитать для {selectedDates.length} дней
+                                                {t.warehouse.calcForDays.replace('{count}', selectedDates.length.toString())}
                                             </Button>
                                         )}
                                     </div>
@@ -721,7 +722,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                             <div>
                                                 <h4 className="font-medium mb-2 flex items-center gap-2">
                                                     <Package className="w-4 h-4" />
-                                                    Необходимые ингредиенты
+                                                    {t.warehouse.requiredIngredients}
                                                 </h4>
                                                 <div className="bg-white rounded-lg border max-h-48 overflow-y-auto">
                                                     {Array.from(calculatedIngredients.entries()).map(([name, { amount, unit }]) => (
@@ -736,19 +737,19 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                             <div>
                                                 <h4 className="font-medium mb-2 flex items-center gap-2 text-orange-600">
                                                     <ShoppingCart className="w-4 h-4" />
-                                                    Список закупок (нужно докупить)
+                                                    {t.warehouse.shoppingListTitle}
                                                 </h4>
                                                 <div className="bg-orange-50 rounded-lg border border-orange-200 max-h-48 overflow-y-auto">
                                                     {shoppingList.size > 0 ? (
                                                         Array.from(shoppingList.entries()).map(([name, { amount, unit }]) => (
-                                                            <div key={name} className="flex justify-between p-2 border-b border-orange-100 last:border-0 text-sm">
+                                                            <div key={name} className="flex justify-between w-full p-2 border-b border-orange-100 last:border-0 text-sm">
                                                                 <span className="text-orange-800">{name}</span>
                                                                 <span className="font-medium text-orange-900">{amount} {unit}</span>
                                                             </div>
                                                         ))
                                                     ) : (
                                                         <div className="p-4 text-center text-green-600 text-sm">
-                                                            ✅ Все ингредиенты в наличии!
+                                                            {t.warehouse.allGood}
                                                         </div>
                                                     )}
                                                 </div>
@@ -759,7 +760,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                     {calculatedIngredients.size === 0 && (
                                         <div className="text-center py-12 text-slate-400">
                                             <Calculator className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                                            <p>Нажмите кнопку расчёта для просмотра результатов</p>
+                                            <p>{t.warehouse.clickToCalc}</p>
                                         </div>
                                     )}
                                 </div>
