@@ -226,8 +226,8 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         );
         setCalculatedIngredients(ingredients);
 
-        const shopping = calculateShoppingList(ingredients, inventory);
-        setShoppingList(shopping);
+        // const shopping = calculateShoppingList(ingredients, inventory);
+        // setShoppingList(shopping);
 
         toast.success(`Расчёт для меню ${tomorrowMenuNumber} выполнен`);
     };
@@ -260,8 +260,8 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         }
 
         setCalculatedIngredients(totalIngredients);
-        const shopping = calculateShoppingList(totalIngredients, inventory);
-        setShoppingList(shopping);
+        // const shopping = calculateShoppingList(totalIngredients, inventory);
+        // setShoppingList(shopping);
 
         toast.success(`Расчёт для ${selectedDates.length} дней выполнен`);
     };
@@ -353,18 +353,9 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     }, [tomorrowMenu, dishQuantities, clientsByCalorie]);
 
     // Check which ingredients are insufficient
-    const insufficientIngredients = useMemo(() => {
-        const insufficient: Array<{ name: string; required: number; available: number; unit: string }> = [];
-        for (const [name, { amount, unit }] of requiredIngredients) {
-            const available = inventory[name] || 0;
-            if (amount > available) {
-                insufficient.push({ name, required: amount, available, unit });
-            }
-        }
-        return insufficient;
-    }, [requiredIngredients, inventory]);
-
-    const hasEnoughStock = insufficientIngredients.length === 0;
+    // Inventory check disabled - handled by server
+    // const insufficientIngredients = useMemo(() => { ... }, []);
+    // const hasEnoughStock = true;
     const totalDishesToCook = Object.values(dishQuantities).reduce((sum, qty) => sum + qty, 0);
 
     return (
