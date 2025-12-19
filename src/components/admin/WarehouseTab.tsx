@@ -64,7 +64,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     const [tomorrowMenu, setTomorrowMenu] = useState<DailyMenu | undefined>(undefined);
     const [tomorrowMenuNumber, setTomorrowMenuNumber] = useState<number>(0);
     const [dishQuantities, setDishQuantities] = useState<Record<number, number>>({});
-    const [inventory, setInventory] = useState<Record<string, number>>({});
+    // inventory state removed - managed by IngredientsManager
     const [clientsByCalorie, setClientsByCalorie] = useState<Record<number, number>>({
         1200: 0,
         1600: 0,
@@ -72,7 +72,6 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         2500: 0,
         3000: 0,
     });
-    const [isSaving, setIsSaving] = useState(false);
     const [isLoadingClients, setIsLoadingClients] = useState(false);
     const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
@@ -128,8 +127,19 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                     3000: 0,
                 };
 
-                clients.forEach((client: { calories?: number; isActive?: boolean }) => {
+                // Calculate tomorrow's day of week
+                const today = new Date();
+                const tomorrow = new Date(today);
+                tomorrow.setDate(today.getDate() + 1);
+                const dayOfWeek = tomorrow.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+
+                clients.forEach((client: { calories?: number; isActive?: boolean; deliveryDays?: Record<string, boolean> }) => {
                     if (client.isActive !== false) {
+                        // Filter by delivery day if available
+                        if (client.deliveryDays && client.deliveryDays[dayOfWeek as keyof typeof client.deliveryDays] === false) {
+                            return;
+                        }
+
                         const calories = client.calories || 2000;
                         // Map to nearest tier
                         if (calories <= 1400) distribution[1200]++;
@@ -157,12 +167,8 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
 
     const fetchData = async () => {
         try {
-            // Fetch inventory
-            const invResponse = await fetch('/api/admin/warehouse/inventory');
-            if (invResponse.ok) {
-                const data = await invResponse.json();
-                setInventory(data);
-            }
+            // Inventory fetch removed - handled by IngredientsManager
+
 
             // Fetch cooking plan for tomorrow (based on tomorrowMenuNumber and date)
             // We need the date for tomorrow. getTomorrowsMenuNumber() implies +1 day from today roughly, 
@@ -206,48 +212,11 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         }));
     };
 
-    const updateInventory = (name: string, value: string) => {
-        const num = parseFloat(value) || 0;
-        setInventory(prev => ({
-            ...prev,
-            [name]: Math.max(0, num),
-        }));
-    };
 
-    const handleSave = async () => {
-        setIsSaving(true);
-        try {
-            // Save Inventory
-            const invPromise = fetch('/api/admin/warehouse/inventory', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(inventory),
-            });
+    // updateInventory removed
 
-            // Save Cooking Plan
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(today.getDate() + 1);
 
-            const planPromise = fetch('/api/admin/warehouse/cooking-plan', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    date: tomorrow.toISOString(),
-                    menuNumber: tomorrowMenuNumber,
-                    dishes: dishQuantities
-                }),
-            });
 
-            await Promise.all([invPromise, planPromise]);
-            toast.success('Данные успешно сохранены в базе');
-        } catch (error) {
-            console.error('Error saving:', error);
-            toast.error('Ошибка сохранения');
-        } finally {
-            setIsSaving(false);
-        }
-    };
 
     const calculateForTomorrow = () => {
         const ingredients = calculateIngredientsForMenu(
@@ -446,10 +415,6 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 <Utensils className="w-4 h-4" />
                                 <span className="hidden sm:inline">{t.warehouse.dishes}</span>
                             </TabsTrigger>
-                            <TabsTrigger value="ingredients-catalog" className="flex items-center gap-2">
-                                <Package className="w-4 h-4" />
-                                <span className="hidden sm:inline">{t.warehouse.catalog}</span>
-                            </TabsTrigger>
                         </TabsList>
 
                         {/* Cooking Tab - Dishes to prepare for tomorrow */}
@@ -478,42 +443,13 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                             />
                         </TabsContent>
 
-                        {/* Inventory Tab - Remaining ingredients */}
+                        {/* Inventory Tab - Managed by IngredientsManager */}
                         <TabsContent value="inventory" className="space-y-4">
                             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
                                 {t.warehouse.inventoryInfo}
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {getAllIngredients().map((name) => (
-                                    <div key={name} className="flex items-center gap-2 p-2 bg-white rounded-lg border">
-                                        <Label className="flex-1 text-sm truncate" title={name}>
-                                            {name}
-                                        </Label>
-                                        <Input
-                                            type="number"
-                                            min="0"
-                                            step="0.1"
-                                            value={inventory[name] || ''}
-                                            onChange={(e) => updateInventory(name, e.target.value)}
-                                            placeholder="0"
-                                            className="w-20 text-right"
-                                        />
-                                        <span className="text-xs text-slate-400 w-8">гр</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="flex justify-end pt-4 border-t">
-                                <Button onClick={handleSave} disabled={isSaving} className="gap-2">
-                                    {isSaving ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <Save className="w-4 h-4" />
-                                    )}
-                                    {t.warehouse.saveInventory}
-                                </Button>
-                            </div>
+                            <IngredientsManager onUpdate={fetchData} />
                         </TabsContent>
 
                         {/* Calculator Tab - Multi-day calculation */}
@@ -616,10 +552,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                             <DishesManager />
                         </TabsContent>
 
-                        {/* NEW: Ingredients Catalog Tab */}
-                        <TabsContent value="ingredients-catalog">
-                            <IngredientsManager />
-                        </TabsContent>
+
                     </Tabs>
                 </CardContent>
             </Card>

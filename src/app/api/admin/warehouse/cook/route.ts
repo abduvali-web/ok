@@ -129,6 +129,9 @@ export async function POST(request: Request) {
 
     } catch (error) {
         console.error('Error in cooking:', error);
-        return NextResponse.json({ error: 'Failed to process cooking' }, { status: 500 });
+        const message = error instanceof Error ? error.message : 'Failed to process cooking';
+        // Return 400 for expected logic errors (insufficient ingredients), 500 for unexpected
+        const status = message.includes('Insufficient') || message.includes('not found') ? 400 : 500;
+        return NextResponse.json({ error: message }, { status });
     }
 }

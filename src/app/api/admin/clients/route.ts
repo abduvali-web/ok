@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
     const clients = dbClients.map(dbClient => ({
       id: dbClient.id,
       name: dbClient.name,
+      nickName: (dbClient as any).nickName,
       phone: dbClient.phone,
       address: dbClient.address,
       calories: dbClient.calories || 2000,
@@ -102,6 +103,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const {
       name,
+      nickName,
       phone: inputPhone,
       address,
       calories,
@@ -132,6 +134,7 @@ export async function POST(request: NextRequest) {
     const dbClient = await db.customer.create({
       data: {
         name,
+        nickName,
         phone,
         address,
         preferences: specialFeatures || '',
@@ -178,6 +181,7 @@ export async function POST(request: NextRequest) {
     const newClient = {
       id: dbClient.id,
       name: dbClient.name,
+      nickName: (dbClient as any).nickName,
       phone: dbClient.phone,
       address: dbClient.address,
       calories: dbClient.calories || 2000,

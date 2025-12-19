@@ -113,6 +113,7 @@ interface Order {
 interface Client {
   id: string
   name: string
+  nickName?: string | null
   phone: string
   address: string
   calories: number
@@ -246,6 +247,7 @@ export default function MiddleAdminPage() {
   })
   const [clientFormData, setClientFormData] = useState({
     name: '',
+    nickName: '',
     phone: '',
     address: '',
     calories: 1200,
@@ -1163,6 +1165,7 @@ export default function MiddleAdminPage() {
         setIsCreateClientModalOpen(false)
         setClientFormData({
           name: '',
+          nickName: '',
           phone: '',
           address: '',
           calories: 1200,
@@ -1220,6 +1223,7 @@ export default function MiddleAdminPage() {
   const handleEditClient = (client: Client) => {
     setClientFormData({
       name: client.name,
+      nickName: client.nickName || '',
       phone: client.phone,
       address: client.address,
       calories: client.calories,
@@ -2770,6 +2774,18 @@ export default function MiddleAdminPage() {
                               />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
+                              <Label htmlFor="clientNickName" className="text-right">
+                                Никнейм
+                              </Label>
+                              <Input
+                                id="clientNickName"
+                                value={clientFormData.nickName || ''}
+                                onChange={(e) => setClientFormData(prev => ({ ...prev, nickName: e.target.value }))}
+                                className="col-span-3"
+                                placeholder="Например: Офис, Дом... (необязательно)"
+                              />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientPhone" className="text-right">
                                 Телефон
                               </Label>
@@ -3096,6 +3112,7 @@ export default function MiddleAdminPage() {
                             />
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Имя</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Никнейм</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Телефон</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Адрес</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Калории</th>
@@ -3133,6 +3150,9 @@ export default function MiddleAdminPage() {
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-slate-900">
                                 {client.name}
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-500">
+                                {client.nickName || '-'}
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
                                 {client.phone}

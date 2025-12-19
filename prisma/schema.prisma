@@ -64,6 +64,7 @@ enum PlanType {
 model Customer {
   id                String   @id @default(cuid())
   name              String
+  nickName          String?  // Short name or alias
   phone             String   @unique
   address           String
   preferences       String?

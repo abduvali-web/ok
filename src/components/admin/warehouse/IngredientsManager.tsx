@@ -16,7 +16,11 @@ interface Ingredient {
     unit: string;
 }
 
-export function IngredientsManager() {
+interface IngredientsManagerProps {
+    onUpdate?: () => void;
+}
+
+export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -64,6 +68,7 @@ export function IngredientsManager() {
                 fetchIngredients();
                 setIsDialogOpen(false);
                 setCurrentIngredient({});
+                if (onUpdate) onUpdate();
             } else {
                 toast.error('Failed to save ingredient');
             }
@@ -86,6 +91,7 @@ export function IngredientsManager() {
             if (res.ok) {
                 toast.success('Ingredient deleted');
                 fetchIngredients();
+                if (onUpdate) onUpdate();
             } else {
                 toast.error('Failed to delete ingredient');
             }
