@@ -1758,7 +1758,7 @@ export default function MiddleAdminPage() {
 
       <main className="flex min-h-[calc(100vh-4rem)]">
         {/* Sidebar Navigation */}
-        <Tabs defaultValue="orders" className="flex w-full" onValueChange={setActiveTab}>
+        <Tabs defaultValue="orders" className="flex flex-row w-full" onValueChange={setActiveTab}>
           {/* Collapsible Sidebar */}
           <aside
             className={`
