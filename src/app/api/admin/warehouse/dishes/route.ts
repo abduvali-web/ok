@@ -10,6 +10,7 @@ interface DishInput {
     mealType: string
     ingredients: { name: string; amount: number; unit: string }[]
     imageUrl?: string
+    menuNumbers?: number[] // Array of menu numbers (1-21) this dish belongs to
 }
 
 export async function GET(request: NextRequest) {
@@ -20,10 +21,21 @@ export async function GET(request: NextRequest) {
         }
 
         const dishes = await db.dish.findMany({
-            orderBy: { name: 'asc' }
+            orderBy: { name: 'asc' },
+            include: {
+                menus: {
+                    select: { number: true }
+                }
+            }
         })
 
-        return NextResponse.json(dishes)
+        // Flatten menus for easier frontend consumption if desired, or let frontend handle it
+        const formattedDishes = dishes.map(d => ({
+            ...d,
+            menuNumbers: d.menus.map(m => m.number)
+        }))
+
+        return NextResponse.json(formattedDishes)
     } catch (error) {
         console.error('Error fetching dishes:', error)
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
@@ -38,7 +50,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body: DishInput = await request.json()
-        const { name, description, mealType, ingredients, imageUrl } = body
+        const { name, description, mealType, ingredients, imageUrl, menuNumbers } = body
 
         if (!name || !mealType) {
             return NextResponse.json({ error: 'Missing Required Fields' }, { status: 400 })
@@ -50,11 +62,17 @@ export async function POST(request: NextRequest) {
                 description,
                 mealType,
                 ingredients: ingredients || [], // Store as JSON
-                imageUrl
+                imageUrl,
+                menus: {
+                    connect: menuNumbers?.map(num => ({ number: num })) || []
+                }
+            },
+            include: {
+                menus: { select: { number: true } }
             }
         })
 
-        return NextResponse.json(dish)
+        return NextResponse.json({ ...dish, menuNumbers: dish.menus.map(m => m.number) })
     } catch (error) {
         console.error('Error creating dish:', error)
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
@@ -69,7 +87,7 @@ export async function PUT(request: NextRequest) {
         }
 
         const body: DishInput = await request.json()
-        const { id, name, description, mealType, ingredients, imageUrl } = body
+        const { id, name, description, mealType, ingredients, imageUrl, menuNumbers } = body
 
         if (!id) {
             return NextResponse.json({ error: 'Missing ID' }, { status: 400 })
@@ -82,11 +100,18 @@ export async function PUT(request: NextRequest) {
                 description,
                 mealType,
                 ingredients: ingredients || [],
-                imageUrl
+                imageUrl,
+                menus: {
+                    set: [], // Disconnect all first (simpler than managing connect/disconnect diffs)
+                    connect: menuNumbers?.map(num => ({ number: num })) || []
+                }
+            },
+            include: {
+                menus: { select: { number: true } }
             }
         })
 
-        return NextResponse.json(dish)
+        return NextResponse.json({ ...dish, menuNumbers: dish.menus.map(m => m.number) })
     } catch (error) {
         console.error('Error updating dish:', error)
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

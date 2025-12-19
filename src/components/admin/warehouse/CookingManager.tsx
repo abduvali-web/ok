@@ -100,6 +100,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     date,
+                    menuNumber,
                     updates
                 })
             });

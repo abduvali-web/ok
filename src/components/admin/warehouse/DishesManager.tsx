@@ -27,6 +27,7 @@ interface Dish {
     mealType: string;
     ingredients: IngredientRef[];
     imageUrl?: string;
+    menuNumbers?: number[];
 }
 
 interface WarehouseItem {
@@ -120,7 +121,7 @@ export function DishesManager() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [currentDish, setCurrentDish] = useState<Partial<Dish>>({ ingredients: [] });
+    const [currentDish, setCurrentDish] = useState<Partial<Dish>>({ ingredients: [], menuNumbers: [] });
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
@@ -168,7 +169,7 @@ export function DishesManager() {
                 toast.success(currentDish.id ? 'Dish updated' : 'Dish created');
                 fetchData();
                 setIsDialogOpen(false);
-                setCurrentDish({ ingredients: [] });
+                setCurrentDish({ ingredients: [], menuNumbers: [] });
             } else {
                 toast.error('Failed to save dish');
             }
@@ -250,7 +251,7 @@ export function DishesManager() {
                         className="pl-8"
                     />
                 </div>
-                <Button onClick={() => { setCurrentDish({ ingredients: [], unit: 'gr' } as any); setIsDialogOpen(true); }}>
+                <Button onClick={() => { setCurrentDish({ ingredients: [], unit: 'gr', menuNumbers: [] } as any); setIsDialogOpen(true); }}>
                     <Plus className="mr-2 h-4 w-4" /> Add Dish
                 </Button>
             </div>
@@ -262,6 +263,7 @@ export function DishesManager() {
                             <TableHead>Image</TableHead>
                             <TableHead>Name</TableHead>
                             <TableHead>Meal Type</TableHead>
+                            <TableHead>Menus</TableHead>
                             <TableHead>Ingredients</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -294,6 +296,16 @@ export function DishesManager() {
                                         <span className="text-xs font-medium px-2 py-1 rounded bg-slate-100">
                                             {MEAL_TYPES[dish.mealType as keyof typeof MEAL_TYPES] || dish.mealType}
                                         </span>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-wrap gap-1">
+                                            {dish.menuNumbers?.sort((a, b) => a - b).map(num => (
+                                                <span key={num} className="text-[10px] font-mono bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100">
+                                                    #{num}
+                                                </span>
+                                            ))}
+                                            {(!dish.menuNumbers?.length) && <span className="text-xs text-slate-400">-</span>}
+                                        </div>
                                     </TableCell>
                                     <TableCell className="text-sm text-slate-500 max-w-[200px] truncate">
                                         {dish.ingredients && dish.ingredients.map(i => i.name).join(', ')}
@@ -346,6 +358,36 @@ export function DishesManager() {
                                     </SelectContent>
                                 </Select>
                             </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Menus (1-21)</Label>
+                            <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-slate-50 max-h-32 overflow-y-auto">
+                                {Array.from({ length: 21 }, (_, i) => i + 1).map(num => {
+                                    const isSelected = currentDish.menuNumbers?.includes(num);
+                                    return (
+                                        <div
+                                            key={num}
+                                            onClick={() => {
+                                                const current = currentDish.menuNumbers || [];
+                                                const newItem = isSelected
+                                                    ? current.filter(n => n !== num)
+                                                    : [...current, num];
+                                                setCurrentDish({ ...currentDish, menuNumbers: newItem });
+                                            }}
+                                            className={cn(
+                                                "cursor-pointer px-3 py-1.5 rounded-md text-sm border transition-colors",
+                                                isSelected
+                                                    ? "bg-blue-600 text-white border-blue-600 font-medium"
+                                                    : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+                                            )}
+                                        >
+                                            Day {num}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <p className="text-xs text-slate-400">Select which days this dish appears on.</p>
                         </div>
 
                         <div className="space-y-2">
@@ -426,7 +468,7 @@ export function DishesManager() {
                                 )}
                             </div>
                         </div>
-                    </div>
+                    </div >
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
                         <Button onClick={handleSave} disabled={isSaving}>
@@ -434,8 +476,8 @@ export function DishesManager() {
                             Save
                         </Button>
                     </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        </div>
+                </DialogContent >
+            </Dialog >
+        </div >
     );
 }

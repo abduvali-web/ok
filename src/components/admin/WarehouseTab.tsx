@@ -41,7 +41,6 @@ import {
 import { DishesManager } from './warehouse/DishesManager';
 import { IngredientsManager } from './warehouse/IngredientsManager';
 import { CookingManager } from './warehouse/CookingManager'; // Integrated
-import { MenusManager } from './warehouse/MenusManager'; // Integrated
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface WarehouseTabProps {
@@ -430,14 +429,10 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                 </CardHeader>
                 <CardContent>
                     <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-                        <TabsList className="grid w-full grid-cols-5 mb-6">
+                        <TabsList className="grid w-full grid-cols-4 mb-6">
                             <TabsTrigger value="cooking" className="flex items-center gap-2">
                                 <ChefHat className="w-4 h-4" />
                                 <span className="hidden sm:inline">{t.warehouse.cooking}</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="menus" className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4" />
-                                <span className="hidden sm:inline">Menus</span>
                             </TabsTrigger>
                             <TabsTrigger value="inventory" className="flex items-center gap-2">
                                 <Package className="w-4 h-4" />
@@ -481,11 +476,6 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 clientsByCalorie={clientsByCalorie}
                                 onCook={fetchData} // Refresh inventory on cook
                             />
-                        </TabsContent>
-
-                        {/* NEW: Menus Management Tab */}
-                        <TabsContent value="menus">
-                            <MenusManager />
                         </TabsContent>
 
                         {/* Inventory Tab - Remaining ingredients */}

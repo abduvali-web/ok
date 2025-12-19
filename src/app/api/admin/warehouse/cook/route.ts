@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
         // 1. Fetch current plan to update stats
         const targetDate = new Date(date);
-        const plan = await db.dailyCookingPlan.findFirst({
+        let plan = await db.dailyCookingPlan.findFirst({
             where: {
                 date: {
                     gte: new Date(targetDate.setHours(0, 0, 0, 0)),
@@ -44,7 +44,21 @@ export async function POST(request: Request) {
         });
 
         if (!plan) {
-            return NextResponse.json({ error: 'No cooking plan found for date' }, { status: 404 });
+            // Check if we have menuNumber to create one
+            const { menuNumber } = body;
+            if (!menuNumber) {
+                return NextResponse.json({ error: 'No cooking plan found and no menuNumber provided to create one' }, { status: 404 });
+            }
+
+            // Create new plan
+            plan = await db.dailyCookingPlan.create({
+                data: {
+                    date: new Date(date),
+                    menuNumber: parseInt(menuNumber),
+                    dishes: {},
+                    cookedStats: {}
+                }
+            });
         }
 
         const cookedStats = (plan.cookedStats as any) || {};
@@ -92,24 +106,22 @@ export async function POST(request: Request) {
                 data: { cookedStats }
             });
 
-            // Update Inventory
-            for (const [name, deduucAmount] of inventoryUpdates) {
-                // Find item first? Inventory is currently stored ?? 
-                // Wait, previous code used `WarehouseItem` or just a JSON/Map?
-                // Let's check `WarehouseTab` implementation. 
-                // Ah, inventory was fetched via `/api/admin/warehouse/inventory` which maps to `WarehouseItem` table.
-                // We should update `WarehouseItem`.
-
+            // Update Inventory with safety check
+            for (const [name, deductAmount] of inventoryUpdates) {
                 const item = await tx.warehouseItem.findUnique({ where: { name } });
-                if (item) {
-                    await tx.warehouseItem.update({
-                        where: { name },
-                        data: { amount: { decrement: deduucAmount } }
-                    });
-                } else {
-                    // Item doesn't exist? Create optional or skip?
-                    // To handle "Create ingredient if missing" logic generally existing in system
+
+                if (!item) {
+                    throw new Error(`Ingredient not found in warehouse: ${name}`);
                 }
+
+                if (item.amount < deductAmount) {
+                    throw new Error(`Insufficient ingredient: ${name}. Need ${deductAmount.toFixed(1)}${item.unit}, but only have ${item.amount.toFixed(1)}${item.unit}`);
+                }
+
+                await tx.warehouseItem.update({
+                    where: { name },
+                    data: { amount: { decrement: deductAmount } }
+                });
             }
         });
 
