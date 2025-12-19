@@ -40,6 +40,8 @@ import {
 } from '@/lib/menuData';
 import { DishesManager } from './warehouse/DishesManager';
 import { IngredientsManager } from './warehouse/IngredientsManager';
+import { CookingManager } from './warehouse/CookingManager'; // Integrated
+import { MenusManager } from './warehouse/MenusManager'; // Integrated
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface WarehouseTabProps {
@@ -433,6 +435,10 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 <ChefHat className="w-4 h-4" />
                                 <span className="hidden sm:inline">{t.warehouse.cooking}</span>
                             </TabsTrigger>
+                            <TabsTrigger value="menus" className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4" />
+                                <span className="hidden sm:inline">Menus</span>
+                            </TabsTrigger>
                             <TabsTrigger value="inventory" className="flex items-center gap-2">
                                 <Package className="w-4 h-4" />
                                 <span className="hidden sm:inline">{t.warehouse.inventory}</span>
@@ -468,170 +474,18 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 ))}
                             </div>
 
-                            {tomorrowMenu && (
-                                <div className="space-y-4">
-                                    {tomorrowMenu.dishes.map((dish) => (
-                                        <div
-                                            key={dish.id}
-                                            className="flex items-center gap-4 p-4 bg-white rounded-xl border border-slate-100 shadow-sm"
-                                        >
-                                            <div className="w-20 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
-                                                {!imageErrors.has(dish.id) ? (
-                                                    <img
-                                                        src={getDishImageUrl(dish.id)}
-                                                        alt={dish.name}
-                                                        className="w-full h-full object-cover"
-                                                        onError={() => handleImageError(dish.id)}
-                                                        loading="lazy"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-2xl bg-gradient-to-br from-slate-100 to-slate-200">
-                                                        {mealTypeIcons[dish.mealType]}
-                                                    </div>
-                                                )}
-                                            </div>
+                            {/* NEW: Detailed Cooking Manager */}
+                            <CookingManager
+                                date={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]} // Tomorrow
+                                menuNumber={tomorrowMenuNumber}
+                                clientsByCalorie={clientsByCalorie}
+                                onCook={fetchData} // Refresh inventory on cook
+                            />
+                        </TabsContent>
 
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-sm">{mealTypeIcons[dish.mealType]}</span>
-                                                    <Badge variant="outline" className="text-xs">
-                                                        {MEAL_TYPES[dish.mealType]}
-                                                    </Badge>
-                                                </div>
-                                                <h4 className="font-medium text-slate-900 truncate">{dish.name}</h4>
-                                                <p className="text-xs text-slate-500 truncate">
-                                                    {dish.ingredients.map(i => i.name).join(', ')}
-                                                </p>
-                                            </div>
-
-                                            <div className="flex items-center gap-2 flex-shrink-0">
-                                                <Button
-                                                    variant="outline"
-                                                    size="icon"
-                                                    className="h-9 w-9"
-                                                    onClick={() => updateDishQuantity(dish.id, -1)}
-                                                >
-                                                    <Minus className="w-4 h-4" />
-                                                </Button>
-                                                <Input
-                                                    type="number"
-                                                    min="0"
-                                                    value={dishQuantities[dish.id] || 0}
-                                                    onChange={(e) => handleQuantityChange(dish.id, e.target.value)}
-                                                    className="w-16 text-center"
-                                                />
-                                                <Button
-                                                    variant="outline"
-                                                    size="icon"
-                                                    className="h-9 w-9"
-                                                    onClick={() => updateDishQuantity(dish.id, 1)}
-                                                >
-                                                    <Plus className="w-4 h-4" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                            {/* Summary and Stock Warning Section */}
-                            <div className="border rounded-lg p-4 bg-slate-50 space-y-3">
-                                <div className="flex justify-between items-center">
-                                    <span className="font-medium">{t.warehouse.totalDishes}</span>
-                                    <Badge variant="outline" className="text-lg px-3 py-1">
-                                        {totalDishesToCook} {t.warehouse.portions}
-                                    </Badge>
-                                </div>
-
-                                {!hasEnoughStock && (
-                                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                                        <div className="flex items-center gap-2 text-red-800 font-medium mb-2">
-                                            <AlertTriangle className="w-4 h-4" />
-                                            {t.warehouse.insufficient} ({insufficientIngredients.length})
-                                        </div>
-                                        <div className="text-sm text-red-700 max-h-32 overflow-y-auto space-y-1">
-                                            {insufficientIngredients.slice(0, 5).map(({ name, required, available, unit }) => (
-                                                <div key={name} className="flex justify-between">
-                                                    <span>{name}</span>
-                                                    <span className="font-mono">
-                                                        {available.toFixed(1)} / {required.toFixed(1)} {unit}
-                                                    </span>
-                                                </div>
-                                            ))}
-                                            {insufficientIngredients.length > 5 && (
-                                                <div className="text-xs text-red-500">
-                                                    {t.warehouse.andMore.replace('{count}', (insufficientIngredients.length - 5).toString())}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {hasEnoughStock && totalDishesToCook > 0 && (
-                                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2 text-green-800">
-                                        <Check className="w-4 h-4" />
-                                        {t.warehouse.enoughStock}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="flex justify-end pt-4 border-t gap-2">
-                                <Button
-                                    onClick={async () => {
-                                        if (!hasEnoughStock) {
-                                            toast.error('Недостаточно ингредиентов на складе!');
-                                            return;
-                                        }
-                                        if (!confirm('Вы уверены, что хотите списать ингредиенты для выбранных блюд? Это действие изменит остатки на складе.')) return;
-
-                                        setIsSaving(true);
-                                        try {
-                                            const response = await fetch('/api/admin/warehouse/cook', {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ dishes: dishQuantities })
-                                            });
-
-                                            if (response.ok) {
-                                                toast.success('Ингредиенты успешно списаны со склада');
-                                                // Refresh inventory
-                                                const invResponse = await fetch('/api/admin/warehouse/inventory');
-                                                if (invResponse.ok) {
-                                                    const data = await invResponse.json();
-                                                    setInventory(data);
-                                                }
-                                            } else {
-                                                const data = await response.json();
-                                                toast.error(data.error || 'Ошибка списания');
-                                            }
-                                        } catch (error) {
-                                            console.error('Error cooking:', error);
-                                            toast.error('Ошибка соединения');
-                                        } finally {
-                                            setIsSaving(false);
-                                        }
-                                    }}
-                                    disabled={isSaving || !hasEnoughStock || totalDishesToCook === 0}
-                                    className={`gap-2 ${hasEnoughStock ? 'bg-amber-600 hover:bg-amber-700' : 'bg-red-500 hover:bg-red-600'} text-white`}
-                                >
-                                    {isSaving ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : !hasEnoughStock ? (
-                                        <AlertTriangle className="w-4 h-4" />
-                                    ) : (
-                                        <Utensils className="w-4 h-4" />
-                                    )}
-                                    {!hasEnoughStock ? t.warehouse.insufficientStock : t.warehouse.cookAndWriteOff}
-                                </Button>
-
-                                <Button onClick={handleSave} disabled={isSaving} className="gap-2">
-                                    {isSaving ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <Save className="w-4 h-4" />
-                                    )}
-                                    {t.warehouse.savePlan}
-                                </Button>
-                            </div>
+                        {/* NEW: Menus Management Tab */}
+                        <TabsContent value="menus">
+                            <MenusManager />
                         </TabsContent>
 
                         {/* Inventory Tab - Remaining ingredients */}

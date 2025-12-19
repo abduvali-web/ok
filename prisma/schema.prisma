@@ -251,15 +251,27 @@ model WarehouseItem {
   @@map("warehouse_items")
 }
 
+
 model DailyCookingPlan {
+  id          String   @id @default(cuid())
+  date        DateTime @unique
+  menuNumber  Int
+  dishes      Json     // Stores quantities: { [dishId: number]: number }
+  cookedStats Json?    // Stores cooked quantities: { [dishId: string]: { "1200": 5, "1600": 3 } }
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("daily_cooking_plans")
+}
+
+model Menu {
   id         String   @id @default(cuid())
-  date       DateTime @unique
-  menuNumber Int
-  dishes     Json     // Stores quantities: { [dishId: number]: number }
+  number     Int      @unique // 1-21
+  dishes     Dish[]
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  @@map("daily_cooking_plans")
+  @@map("menus")
 }
 
 model Transaction {
@@ -293,6 +305,7 @@ model Dish {
   mealType    String
   ingredients Json     // [{ name: string, amount: number, unit: string }]
   imageUrl    String?
+  menus       Menu[]   // Relation to Menu
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
