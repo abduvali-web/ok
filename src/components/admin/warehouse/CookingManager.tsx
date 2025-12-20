@@ -17,6 +17,7 @@ interface Dish {
     mealType: string;
     ingredients: any[];
     imageUrl: string;
+    calorieMappings?: Record<string, string[]>;
 }
 
 interface CookingManagerProps {
@@ -136,10 +137,17 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
     };
 
     const getNeededAmount = (dishId: string, calorie: number) => {
-        // Here we could assume 1 portion per client unless specified otherwise
-        // For now, let's just show client count as base need
-        // Real logic might need Dish multipliers if some dishes are shared? 
-        // But usually, 1 client = 1 portion of that calorie tier.
+        const dish = dishes.find(d => d.id === dishId);
+        if (!dish) return 0;
+
+        // If mappings exist, check if this calorie group is allowed for THIS menuNumber
+        if (dish.calorieMappings) {
+            const allowedGroups = dish.calorieMappings[menuNumber.toString()] || [];
+            if (!allowedGroups.includes(calorie.toString())) {
+                return 0; // Not needed for this calorie group on this day
+            }
+        }
+
         return clientsByCalorie[calorie] || 0;
     };
 

@@ -84,6 +84,7 @@ export interface Dish {
   name: string;
   mealType: keyof typeof MEAL_TYPES;
   ingredients: Ingredient[];
+  calorieMappings?: Record<string, string[]>;
 }
 
 export interface DailyMenu {
@@ -1515,6 +1516,14 @@ export function calculateIngredientsForMenu(
     for (const [calorieStr, clientCount] of Object.entries(clientsByCalorie)) {
       const calories = parseInt(calorieStr);
       if (clientCount === 0) continue;
+
+      // Check calorie mappings if they exist
+      if (dish.calorieMappings) {
+        const allowedGroups = dish.calorieMappings[menuNumber.toString()] || [];
+        if (!allowedGroups.includes(calorieStr)) {
+          continue; // Dish not assigned to this calorie group for this day
+        }
+      }
 
       const scaledIngredients = scaleIngredients(
         dish.ingredients,
