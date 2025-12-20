@@ -64,7 +64,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     const [tomorrowMenu, setTomorrowMenu] = useState<DailyMenu | undefined>(undefined);
     const [tomorrowMenuNumber, setTomorrowMenuNumber] = useState<number>(0);
     const [dishQuantities, setDishQuantities] = useState<Record<number, number>>({});
-    // inventory state removed - managed by IngredientsManager
+    const [inventory, setInventory] = useState<Record<string, number>>({});
     const [clientsByCalorie, setClientsByCalorie] = useState<Record<number, number>>({
         1200: 0,
         1600: 0,
@@ -165,9 +165,26 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         fetchClientCalories();
     }, [fetchClientCalories]);
 
+    const fetchInventory = useCallback(async () => {
+        try {
+            const response = await fetch('/api/admin/warehouse/ingredients');
+            if (response.ok) {
+                const data = await response.json();
+                // Convert array to record: { "Rice": 500, ... }
+                const invRecord: Record<string, number> = {};
+                data.forEach((item: { name: string, amount: number }) => {
+                    invRecord[item.name] = item.amount;
+                });
+                setInventory(invRecord);
+            }
+        } catch (error) {
+            console.error('Error fetching inventory:', error);
+        }
+    }, []);
+
     const fetchData = async () => {
         try {
-            // Inventory fetch removed - handled by IngredientsManager
+            fetchInventory();
 
 
             // Fetch cooking plan for tomorrow (based on tomorrowMenuNumber and date)
@@ -226,8 +243,8 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         );
         setCalculatedIngredients(ingredients);
 
-        // const shopping = calculateShoppingList(ingredients, inventory);
-        // setShoppingList(shopping);
+        const shopping = calculateShoppingList(ingredients, inventory);
+        setShoppingList(shopping);
 
         toast.success(`Расчёт для меню ${tomorrowMenuNumber} выполнен`);
     };
@@ -260,8 +277,8 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         }
 
         setCalculatedIngredients(totalIngredients);
-        // const shopping = calculateShoppingList(totalIngredients, inventory);
-        // setShoppingList(shopping);
+        const shopping = calculateShoppingList(totalIngredients, inventory);
+        setShoppingList(shopping);
 
         toast.success(`Расчёт для ${selectedDates.length} дней выполнен`);
     };

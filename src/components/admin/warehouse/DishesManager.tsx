@@ -13,6 +13,7 @@ import { Pencil, Trash2, Plus, Search, Loader2, X, Check, ChevronsUpDown } from 
 import { toast } from 'sonner';
 import { MEAL_TYPES } from '@/lib/menuData';
 import { cn } from "@/lib/utils";
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface IngredientRef {
     name: string;
@@ -27,6 +28,7 @@ interface Dish {
     mealType: string;
     ingredients: IngredientRef[];
     imageUrl?: string;
+    calorieGroup?: string;
     menuNumbers?: number[];
 }
 
@@ -116,6 +118,7 @@ function IngredientSelector({
 }
 
 export function DishesManager() {
+    const { t } = useLanguage();
     const [dishes, setDishes] = useState<Dish[]>([]);
     const [warehouseItems, setWarehouseItems] = useState<WarehouseItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -263,6 +266,7 @@ export function DishesManager() {
                             <TableHead>Image</TableHead>
                             <TableHead>Name</TableHead>
                             <TableHead>Meal Type</TableHead>
+                            <TableHead>Calorie Group</TableHead>
                             <TableHead>Menus</TableHead>
                             <TableHead>Ingredients</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
@@ -295,6 +299,11 @@ export function DishesManager() {
                                     <TableCell>
                                         <span className="text-xs font-medium px-2 py-1 rounded bg-slate-100">
                                             {MEAL_TYPES[dish.mealType as keyof typeof MEAL_TYPES] || dish.mealType}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell>
+                                        <span className="text-xs font-mono bg-amber-50 text-amber-700 px-2 py-1 rounded border border-amber-100">
+                                            {dish.calorieGroup || 'All'}
                                         </span>
                                     </TableCell>
                                     <TableCell>
@@ -360,6 +369,36 @@ export function DishesManager() {
                             </div>
                         </div>
 
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>{t.warehouse.calorieGroup}</Label>
+                                <Select
+                                    value={currentDish.calorieGroup || 'All'}
+                                    onValueChange={(val) => setCurrentDish({ ...currentDish, calorieGroup: val })}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select group" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="All">All Tiers</SelectItem>
+                                        <SelectItem value="1200">1200 kcal</SelectItem>
+                                        <SelectItem value="1600">1600 kcal</SelectItem>
+                                        <SelectItem value="2000">2000 kcal</SelectItem>
+                                        <SelectItem value="2500">2500 kcal</SelectItem>
+                                        <SelectItem value="3000">3000 kcal</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Image URL (Optional)</Label>
+                                <Input
+                                    value={currentDish.imageUrl || ''}
+                                    onChange={(e) => setCurrentDish({ ...currentDish, imageUrl: e.target.value })}
+                                    placeholder="https://example.com/image.jpg"
+                                />
+                            </div>
+                        </div>
+
                         <div className="space-y-2">
                             <Label>Menus (1-21)</Label>
                             <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-slate-50 max-h-32 overflow-y-auto">
@@ -388,34 +427,6 @@ export function DishesManager() {
                                 })}
                             </div>
                             <p className="text-xs text-slate-400">Select which days this dish appears on.</p>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Image URL (Optional)</Label>
-                            <div className="flex gap-4 items-start">
-                                <div className="flex-1">
-                                    <Input
-                                        value={currentDish.imageUrl || ''}
-                                        onChange={(e) => setCurrentDish({ ...currentDish, imageUrl: e.target.value })}
-                                        placeholder="https://example.com/image.jpg"
-                                    />
-                                    <p className="text-xs text-slate-400 mt-1">
-                                        Paste a direct link to an image (JPG, PNG, WebP)
-                                    </p>
-                                </div>
-                                {currentDish.imageUrl && (
-                                    <div className="w-20 h-20 rounded-lg border bg-slate-50 overflow-hidden flex-shrink-0">
-                                        <img
-                                            src={currentDish.imageUrl}
-                                            alt="Preview"
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).style.display = 'none';
-                                            }}
-                                        />
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
                         <div className="space-y-2">

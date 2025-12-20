@@ -257,6 +257,7 @@ export const translations = {
             shoppingListTitle: 'Список закупок (нужно докупить)',
             allGood: '✅ Все ингредиенты в наличии!',
             clickToCalc: 'Нажмите кнопку расчёта для просмотра результатов',
+            calorieGroup: 'Группа калорийности',
         },
         finance: {
             title: 'Финансы',
@@ -581,6 +582,7 @@ export const translations = {
             shoppingListTitle: 'Xarid ro\'yxati (sotib olish kerak)',
             allGood: '✅ Barcha masalliqlar mavjud!',
             clickToCalc: 'Natijalarni ko\'rish uchun hisoblash tugmasini bosing',
+            calorieGroup: 'Kaloriya guruhi',
         },
         finance: {
             title: 'Moliya',
@@ -906,7 +908,8 @@ export const translations = {
             addIngredient: 'Add at least one ingredient',
             shoppingListTitle: 'Shopping List (need to buy)',
             allGood: '✅ All ingredients available!',
-            clickToCalc: 'Click calculate to view results',
+            clickToCalc: 'Click the calculate button to view results',
+            calorieGroup: 'Calorie Group',
         },
         finance: {
             title: 'Finance',
