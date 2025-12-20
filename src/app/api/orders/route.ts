@@ -75,24 +75,63 @@ export async function GET(request: NextRequest) {
       }
       if (Object.keys(filters).length > 0) {
         filteredOrders = filteredOrders.filter(order => {
-          if (filters.successful && order.orderStatus !== 'DELIVERED') return false
-          if (filters.failed && order.orderStatus !== 'FAILED') return false
-          if (filters.pending && order.orderStatus !== 'PENDING') return false
-          if (filters.inDelivery && order.orderStatus !== 'IN_DELIVERY') return false
+          // Group filters by category
+          const deliveryStatusFilters = []
+          if (filters.successful) deliveryStatusFilters.push('DELIVERED')
+          if (filters.failed) deliveryStatusFilters.push('FAILED')
+          if (filters.pending) deliveryStatusFilters.push('PENDING')
+          if (filters.inDelivery) deliveryStatusFilters.push('IN_DELIVERY')
+
+          const paymentStatusFilters = []
+          if (filters.paid) paymentStatusFilters.push('PAID')
+          if (filters.unpaid) paymentStatusFilters.push('UNPAID')
+
+          const paymentMethodFilters = []
+          if (filters.card) paymentMethodFilters.push('CARD')
+          if (filters.cash) paymentMethodFilters.push('CASH')
+
+          const calorieFilters = []
+          if (filters.calories1200) calorieFilters.push(1200)
+          if (filters.calories1600) calorieFilters.push(1600)
+          if (filters.calories2000) calorieFilters.push(2000)
+          if (filters.calories2500) calorieFilters.push(2500)
+          if (filters.calories3000) calorieFilters.push(3000)
+
+          const orderTypeFilters = []
+          if (filters.autoOrders) orderTypeFilters.push(true)
+          if (filters.manualOrders) orderTypeFilters.push(false)
+
+          const quantityFilters = []
+          if (filters.singleItem) quantityFilters.push('single')
+          if (filters.multiItem) quantityFilters.push('multi')
+
+          // Apply grouped logic (OR within category, AND between categories)
+
+          // Delivery Status
+          if (deliveryStatusFilters.length > 0 && !deliveryStatusFilters.includes(order.orderStatus)) return false
+
+          // Payment Status
+          if (paymentStatusFilters.length > 0 && !paymentStatusFilters.includes(order.paymentStatus)) return false
+
+          // Payment Method
+          if (paymentMethodFilters.length > 0 && !paymentMethodFilters.includes(order.paymentMethod)) return false
+
+          // Calorie Group
+          if (calorieFilters.length > 0 && !calorieFilters.includes(order.calories)) return false
+
+          // Order Type
+          if (orderTypeFilters.length > 0 && !orderTypeFilters.includes(order.isAutoOrder)) return false
+
+          // Quantity
+          if (quantityFilters.length > 0) {
+            const isSingle = order.quantity === 1
+            const matches = (quantityFilters.includes('single') && isSingle) || (quantityFilters.includes('multi') && !isSingle)
+            if (!matches) return false
+          }
+
+          // Special filters (Prepaid, etc - these remain as AND for now or can be added to categories)
           if (filters.prepaid && !order.isPrepaid) return false
-          if (filters.paid && order.paymentStatus !== 'PAID') return false
-          if (filters.unpaid && order.paymentStatus !== 'UNPAID') return false
-          if (filters.card && order.paymentMethod !== 'CARD') return false
-          if (filters.cash && order.paymentMethod !== 'CASH') return false
-          if (filters.autoOrders && !order.isAutoOrder) return false
-          if (filters.manualOrders && order.isAutoOrder) return false
-          if (filters.calories1200 && order.calories !== 1200) return false
-          if (filters.calories1600 && order.calories !== 1600) return false
-          if (filters.calories2000 && order.calories !== 2000) return false
-          if (filters.calories2500 && order.calories !== 2500) return false
-          if (filters.calories3000 && order.calories !== 3000) return false
-          if (filters.singleItem && order.quantity !== 1) return false
-          if (filters.multiItem && order.quantity === 1) return false
+
           return true
         })
       }

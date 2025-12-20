@@ -2162,125 +2162,199 @@ export default function MiddleAdminPage() {
                 {
                   showFilters && (
                     <div className="mb-6 p-4 border rounded-lg bg-slate-50">
-                      <h3 className="font-medium mb-4">Фильтры</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={filters.successful}
-                            onChange={(e) => setFilters({ ...filters, successful: e.target.checked })}
-                            className="rounded"
-                          />
-                          <span className="text-sm">Успешные заказы</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={filters.failed}
-                            onChange={(e) => setFilters({ ...filters, failed: e.target.checked })}
-                            className="rounded"
-                          />
-                          <span className="text-sm">Неуспешные заказы</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={filters.pending}
-                            onChange={(e) => setFilters({ ...filters, pending: e.target.checked })}
-                            className="rounded"
-                          />
-                          <span className="text-sm">Ожидающие заказы</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={filters.inDelivery}
-                            onChange={(e) => setFilters({ ...filters, inDelivery: e.target.checked })}
-                            className="rounded"
-                          />
-                          <span className="text-sm">В доставке</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={filters.prepaid}
-                            onChange={(e) => setFilters({ ...filters, prepaid: e.target.checked })}
-                            className="rounded"
-                          />
-                          <span className="text-sm">Предоплаченные</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={filters.unpaid}
-                            onChange={(e) => setFilters({ ...filters, unpaid: e.target.checked })}
-                            className="rounded"
-                          />
-                          <span className="text-sm">Неоплаченные</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={filters.paid}
-                            onChange={(e) => setFilters({ ...filters, paid: e.target.checked })}
-                            className="rounded"
-                          />
-                          <span className="text-sm">Оплаченные</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={filters.card}
-                            onChange={(e) => setFilters({ ...filters, card: e.target.checked })}
-                            className="rounded"
-                          />
-                          <span className="text-sm">Оплата картой</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={filters.cash}
-                            onChange={(e) => setFilters({ ...filters, cash: e.target.checked })}
-                            className="rounded"
-                          />
-                          <span className="text-sm">Оплата наличными</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={filters.daily}
-                            onChange={(e) => setFilters({ ...filters, daily: e.target.checked })}
-                            className="rounded"
-                          />
-                          <span className="text-sm">Ежедневные клиенты</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={filters.evenDay}
-                            onChange={(e) => setFilters({ ...filters, evenDay: e.target.checked })}
-                            className="rounded"
-                          />
-                          <span className="text-sm">Четные дни</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={filters.autoOrders}
-                            onChange={(e) => setFilters({ ...filters, autoOrders: e.target.checked })}
-                            className="rounded"
-                          />
-                          <span className="text-sm">🤖 Авто заказы</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={filters.manualOrders}
-                            onChange={(e) => setFilters({ ...filters, manualOrders: e.target.checked })}
-                            className="rounded"
-                          />
-                          <span className="text-sm">📝 Ручные заказы</span>
-                        </label>
+                      <h3 className="font-medium mb-4">{t.admin.filters}</h3>
+
+                      <div className="space-y-4">
+                        {/* Delivery Status */}
+                        <div>
+                          <h4 className="text-sm font-semibold mb-2 text-slate-700">{t.admin.filterGroups.deliveryStatus}</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.pending}
+                                onChange={(e) => setFilters({ ...filters, pending: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.pending} (#facc15)</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.inDelivery}
+                                onChange={(e) => setFilters({ ...filters, inDelivery: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.inDelivery} (#3b82f6)</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.successful}
+                                onChange={(e) => setFilters({ ...filters, successful: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.delivered} (#22c55e)</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.failed}
+                                onChange={(e) => setFilters({ ...filters, failed: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.failed} (#ef4444)</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Payment Status */}
+                        <div>
+                          <h4 className="text-sm font-semibold mb-2 text-slate-700">{t.admin.filterGroups.payment}</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.paid}
+                                onChange={(e) => setFilters({ ...filters, paid: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.paid}</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.unpaid}
+                                onChange={(e) => setFilters({ ...filters, unpaid: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.unpaid}</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.prepaid}
+                                onChange={(e) => setFilters({ ...filters, prepaid: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.prepaid} (⭐)</span>
+                            </label>
+                            <div className="hidden md:block"></div>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.cash}
+                                onChange={(e) => setFilters({ ...filters, cash: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.cash}</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.card}
+                                onChange={(e) => setFilters({ ...filters, card: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.card}</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Calorie Groups */}
+                        <div>
+                          <h4 className="text-sm font-semibold mb-2 text-slate-700">{t.admin.filterGroups.calories}</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.calories1200}
+                                onChange={(e) => setFilters({ ...filters, calories1200: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">1200</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.calories1600}
+                                onChange={(e) => setFilters({ ...filters, calories1600: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">1600</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.calories2000}
+                                onChange={(e) => setFilters({ ...filters, calories2000: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">2000</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.calories2500}
+                                onChange={(e) => setFilters({ ...filters, calories2500: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">2500</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.calories3000}
+                                onChange={(e) => setFilters({ ...filters, calories3000: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">3000</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Other filters */}
+                        <div>
+                          <h4 className="text-sm font-semibold mb-2 text-slate-700">{t.admin.filterGroups.other}</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.autoOrders}
+                                onChange={(e) => setFilters({ ...filters, autoOrders: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.auto}</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.manualOrders}
+                                onChange={(e) => setFilters({ ...filters, manualOrders: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.manual}</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.singleItem}
+                                onChange={(e) => setFilters({ ...filters, singleItem: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.singlePortion}</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.multiItem}
+                                onChange={(e) => setFilters({ ...filters, multiItem: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.multiPortion}</span>
+                            </label>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )

@@ -212,6 +212,23 @@ export const translations = {
                 max: '3000 ккал',
                 single: 'Одиночные заказы',
                 multi: 'Множественные заказы',
+            },
+            filterGroups: {
+                deliveryStatus: 'Статус доставки',
+                payment: 'Оплата',
+                calories: 'Калорийность',
+                other: 'Прочее',
+                delivered: 'Доставлен',
+                failed: 'Отменен',
+                pending: 'Ожидает',
+                inDelivery: 'В доставке',
+                prepaid: 'Предоплата',
+                cash: 'Наличные',
+                card: 'Карта',
+                auto: 'Авто',
+                manual: 'Ручные',
+                singlePortion: '1 порция',
+                multiPortion: '2+ порции',
             }
         },
         warehouse: {
@@ -537,6 +554,23 @@ export const translations = {
                 max: '3000 kkal',
                 single: 'Yakka buyurtmalar',
                 multi: 'Ko\'p buyurtmalar',
+            },
+            filterGroups: {
+                deliveryStatus: 'Yetkazib berish holati',
+                payment: 'To\'lov',
+                calories: 'Kaloriya',
+                other: 'Boshqa',
+                delivered: 'Yetkazildi',
+                failed: 'Bekor qilindi',
+                pending: 'Kutilmoqda',
+                inDelivery: 'Yo\'lda',
+                prepaid: 'Oldindan to\'lov',
+                cash: 'Naqd pul',
+                card: 'Karta',
+                auto: 'Avto',
+                manual: 'Qo\'lda',
+                singlePortion: '1 porsiya',
+                multiPortion: '2+ porsiya',
             }
         },
         warehouse: {
@@ -864,7 +898,23 @@ export const translations = {
                 multi: 'Multiple Orders',
             },
 
-
+            filterGroups: {
+                deliveryStatus: 'Delivery Status',
+                payment: 'Payment',
+                calories: 'Calories',
+                other: 'Other',
+                delivered: 'Delivered',
+                failed: 'Cancelled',
+                pending: 'Pending',
+                inDelivery: 'In Delivery',
+                prepaid: 'Prepaid',
+                cash: 'Cash',
+                card: 'Card',
+                auto: 'Auto',
+                manual: 'Manual',
+                singlePortion: '1 portion',
+                multiPortion: '2+ portions',
+            }
         },
         warehouse: {
             title: 'Warehouse Management',
