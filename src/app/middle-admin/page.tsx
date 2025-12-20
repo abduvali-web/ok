@@ -316,6 +316,7 @@ export default function MiddleAdminPage() {
     pending: false,
     inDelivery: false,
     prepaid: false,
+    paid: false,
     unpaid: false,
     card: false,
     cash: false,
@@ -333,6 +334,7 @@ export default function MiddleAdminPage() {
     autoOrders: false,
     manualOrders: false
   })
+  const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [selectedBinClients, setSelectedBinClients] = useState<Set<string>>(new Set())
 
@@ -2083,7 +2085,7 @@ export default function MiddleAdminPage() {
 
 
           {/* Orders Tab */}
-          < TabsContent value="orders" className="space-y-4" >
+          <TabsContent value="orders" className="space-y-4">
             <Card className="glass-card border-none">
               <CardHeader>
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -2093,617 +2095,247 @@ export default function MiddleAdminPage() {
                       {t.admin.manageOrdersDesc}
                     </CardDescription>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Dialog open={isCreateOrderModalOpen} onOpenChange={setIsCreateOrderModalOpen}>
-                      <DialogTrigger asChild>
-                        <Button>
-                          <Plus className="w-4 h-4 mr-2" />
-                          Создать заказ
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
-                        <DialogHeader>
-                          <DialogTitle>{editingOrderId ? 'Редактировать Заказ' : 'Создать Новый Заказ'}</DialogTitle>
-                          <DialogDescription>
-                            {editingOrderId ? 'Измените данные заказа' : 'Заполните информацию о новом заказе. Вы можете выбрать клиента из списка для автозаполнения данных.'}
-                          </DialogDescription>
-                          {!editingOrderId && orderFormData.selectedClientId && orderFormData.selectedClientId !== "manual" && (
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-2">
-                              <p className="text-xs text-green-800">
-                                ✅ Данные клиента заполнены автоматически
-                              </p>
-                            </div>
-                          )}
-                        </DialogHeader>
-                        <div className="flex-1 overflow-y-auto">
-                          <form onSubmit={handleCreateOrder}>
-                            <div className="grid gap-3 py-2">
-                              <div className="grid grid-cols-4 items-center gap-2">
-                                <Label htmlFor="clientSelect" className="text-right">
-                                  Выбрать клиента
-                                </Label>
-                                <div className="col-span-3">
-                                  <Select
-                                    value={orderFormData.selectedClientId}
-                                    onValueChange={handleClientSelect}
-                                  >
-                                    <SelectTrigger className="w-full">
-                                      <SelectValue placeholder="Выберите клиента из списка или введите данные вручную" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="manual">-- Ввести данные вручную --</SelectItem>
-                                      {clients.map((client) => (
-                                        <SelectItem key={client.id} value={client.id}>
-                                          {client.name} - {client.phone}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                  <p className="text-xs text-slate-400 mt-1">
-                                    Выберите клиента для автозаполнения
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-2">
-                                <Label htmlFor="customerName" className="text-right">
-                                  Имя клиента
-                                  {orderFormData.selectedClientId && (
-                                    <span className="text-xs text-green-600 ml-1">✓</span>
-                                  )}
-                                </Label>
-                                <Input
-                                  id="customerName"
-                                  value={orderFormData.customerName}
-                                  onChange={(e) => setOrderFormData(prev => ({ ...prev, customerName: e.target.value }))}
-                                  className={`col-span-3 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
-                                  required
-                                />
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-2">
-                                <Label htmlFor="customerPhone" className="text-right">
-                                  Телефон клиента
-                                  {orderFormData.selectedClientId && (
-                                    <span className="text-xs text-green-600 ml-1">✓</span>
-                                  )}
-                                </Label>
-                                <div className="col-span-3">
-                                  <Input
-                                    id="customerPhone"
-                                    type="tel"
-                                    placeholder="+998 XX XXX XX XX"
-                                    value={orderFormData.customerPhone}
-                                    onChange={(e) => setOrderFormData(prev => ({ ...prev, customerPhone: e.target.value }))}
-                                    className={orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}
-                                    required
-                                  />
-                                  <p className="text-xs text-muted-foreground mt-1">Формат: +998 XX XXX XX XX</p>
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-2">
-                                <Label htmlFor="deliveryAddress" className="text-right">
-                                  Адрес доставки
-                                  {orderFormData.selectedClientId && (
-                                    <span className="text-xs text-green-600 ml-1">✓</span>
-                                  )}
-                                </Label>
-                                <div className="col-span-3 space-y-2">
-                                  <div className="relative">
-                                    <Input
-                                      id="deliveryAddress"
-                                      value={orderFormData.deliveryAddress}
-                                      onChange={(e) => handleAddressChange(e.target.value)}
-                                      placeholder="Адрес или Google Maps ссылка"
-                                      className={`col-span-3 ${orderFormData.latitude && orderFormData.longitude ? 'pr-10 border-green-500 focus:border-green-500' : ''} ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
-                                      required
-                                    />
-                                    {orderFormData.latitude && orderFormData.longitude && (
-                                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex justify-between items-center">
-                                    <p className="text-xs text-slate-400">
-                                      Можно вставить Google Maps ссылку
-                                    </p>
-                                    {orderFormData.latitude && orderFormData.longitude && (
-                                      <p className="text-xs text-green-600 font-medium">
-                                        📍 {orderFormData.latitude.toFixed(4)}, {orderFormData.longitude.toFixed(4)}
-                                      </p>
-                                    )}
-                                  </div>
-                                  {orderFormData.deliveryAddress.includes('maps.google.com') || orderFormData.deliveryAddress.includes('google.com/maps') ? (
-                                    <p className="text-xs text-blue-600 bg-blue-50 p-1 rounded">
-                                      💡 Google Maps ссылка detected
-                                    </p>
-                                  ) : null}
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-2">
-                                <Label htmlFor="deliveryTime" className="text-right">
-                                  Время доставки
-                                </Label>
-                                <Input
-                                  id="deliveryTime"
-                                  type="time"
-                                  value={orderFormData.deliveryTime}
-                                  onChange={(e) => setOrderFormData(prev => ({ ...prev, deliveryTime: e.target.value }))}
-                                  className="col-span-3"
-                                  required
-                                />
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-2">
-                                <Label htmlFor="quantity" className="text-right">
-                                  Количество
-                                </Label>
-                                <Input
-                                  id="quantity"
-                                  type="number"
-                                  min="1"
-                                  value={orderFormData.quantity}
-                                  onChange={(e) => setOrderFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) }))}
-                                  className="col-span-3"
-                                  required
-                                />
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-2">
-                                <Label htmlFor="calories" className="text-right">
-                                  Калории
-                                  {orderFormData.selectedClientId && (
-                                    <span className="text-xs text-green-600 ml-1">✓</span>
-                                  )}
-                                </Label>
-                                <select
-                                  id="calories"
-                                  value={orderFormData.calories}
-                                  onChange={(e) => setOrderFormData(prev => ({ ...prev, calories: parseInt(e.target.value) }))}
-                                  className={`col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
-                                >
-                                  <option value="1200">1200 ккал</option>
-                                  <option value="1600">1600 ккал</option>
-                                  <option value="2000">2000 ккал</option>
-                                  <option value="2500">2500 ккал</option>
-                                  <option value="3000">3000 ккал</option>
-                                </select>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-2">
-                                <Label htmlFor="paymentMethod" className="text-right">
-                                  Оплата
-                                </Label>
-                                <select
-                                  id="paymentMethod"
-                                  value={orderFormData.paymentMethod}
-                                  onChange={(e) => setOrderFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
-                                  className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                  <option value="CASH">Наличные</option>
-                                  <option value="CARD">Карта</option>
-                                </select>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-2">
-                                <Label htmlFor="specialFeatures" className="text-right">
-                                  Особенности
-                                  {orderFormData.selectedClientId && (
-                                    <span className="text-xs text-green-600 ml-1">✓</span>
-                                  )}
-                                </Label>
-                                <Input
-                                  id="specialFeatures"
-                                  value={orderFormData.specialFeatures}
-                                  onChange={(e) => setOrderFormData(prev => ({ ...prev, specialFeatures: e.target.value }))}
-                                  className={`col-span-3 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
-                                  placeholder="Особые пожелания"
-                                />
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-2">
-                                <Label htmlFor="courier" className="text-right">
-                                  Курьер
-                                </Label>
-                                <select
-                                  id="courier"
-                                  value={orderFormData.courierId}
-                                  onChange={(e) => setOrderFormData(prev => ({ ...prev, courierId: e.target.value }))}
-                                  className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                  <option value="">Автоматически (если есть у клиента)</option>
-                                  {couriers.map((courier) => (
-                                    <option key={courier.id} value={courier.id}>
-                                      {courier.name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                              {orderError && (
-                                <div className="col-span-4">
-                                  <Alert variant="destructive">
-                                    <AlertDescription>{orderError}</AlertDescription>
-                                  </Alert>
-                                </div>
-                              )}
-                            </div>
-                          </form>
-                        </div>
-                        <DialogFooter>
-                          <Button type="button" variant="outline" onClick={() => {
-                            setIsCreateOrderModalOpen(false)
-                            setOrderFormData(prev => ({ ...prev, latitude: null, longitude: null }))
-                            setEditingOrderId(null)
-                          }}>
-                            Отмена
-                          </Button>
-                          <Button type="submit" disabled={isCreatingOrder} onClick={handleCreateOrder}>
-                            {isCreatingOrder ? 'Сохранение...' : (editingOrderId ? 'Сохранить изменения' : 'Создать заказ')}
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                    <Button variant="outline" size="sm" onClick={() => setIsBulkEditOrdersModalOpen(true)}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Редактировать ({selectedOrders.size})
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleDeleteSelectedOrders}>
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Удалить выбранные ({selectedOrders.size})
-                    </Button>
-                  </div>
                 </div>
               </CardHeader>
-              <Dialog open={isCreateCourierModalOpen} onOpenChange={setIsCreateCourierModalOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" style={{ display: 'none' }}>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <Button onClick={() => setIsCreateOrderModalOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
-                    Создать курьера
+                    Создать заказ
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Создать Курьера</DialogTitle>
-                    <DialogDescription>
-                      Создайте новый аккаунт для курьера
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleCreateCourier}>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-2">
-                        <Label htmlFor="courierName" className="text-right">
-                          Имя
-                        </Label>
-                        <Input
-                          id="courierName"
-                          value={courierFormData.name}
-                          onChange={(e) => setCourierFormData(prev => ({ ...prev, name: e.target.value }))}
-                          className="col-span-3"
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-2">
-                        <Label htmlFor="courierEmail" className="text-right">
-                          Email
-                        </Label>
-                        <Input
-                          id="courierEmail"
-                          type="email"
-                          value={courierFormData.email}
-                          onChange={(e) => setCourierFormData(prev => ({ ...prev, email: e.target.value }))}
-                          className="col-span-3"
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-2">
-                        <Label htmlFor="courierPassword" className="text-right">
-                          Пароль
-                        </Label>
-                        <Input
-                          id="courierPassword"
-                          type="password"
-                          value={courierFormData.password}
-                          onChange={(e) => setCourierFormData(prev => ({ ...prev, password: e.target.value }))}
-                          className="col-span-3"
-                          required
-                        />
-                      </div>
+                  <Button variant="outline" size="sm" onClick={() => setIsBulkEditOrdersModalOpen(true)}>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Редактировать ({selectedOrders.size})
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleDeleteSelectedOrders}>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Удалить выбранные ({selectedOrders.size})
+                  </Button>
+                </div>
+                {/* Date Selector */}
+                <div className="flex items-center justify-center mb-6 space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedDate(null)}
+                    className={!selectedDate ? "bg-primary text-primary-foreground" : ""}
+                  >
+                    Все заказы
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <div className="flex space-x-1">
+                    {getDateRange().map((date, index) => (
+                      <Button
+                        key={index}
+                        variant={selectedDate && date.toDateString() === selectedDate.toDateString() ? "default" : "outline"}
+                        size="sm"
+                        className="w-10 h-10 p-0"
+                        onClick={() => setSelectedDate(date)}
+                      >
+                        {date.getDate()}
+                      </Button>
+                    ))}
+                  </div>
+                  <Button variant="outline" size="sm">
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                {/* Selected Date Indicator */}
+                {
+                  selectedDate && (
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-blue-800 text-center">
+                        📅 Показаны заказы за {selectedDate.toLocaleDateString('ru-RU', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        })}
+                      </p>
                     </div>
-                    {courierError && (
-                      <Alert className="mb-4">
-                        <AlertDescription>{courierError}</AlertDescription>
-                      </Alert>
-                    )}
-                    <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setIsCreateCourierModalOpen(false)}>
-                        Отмена
-                      </Button>
-                      <Button type="submit" disabled={isCreatingCourier}>
-                        {isCreatingCourier ? 'Создание...' : 'Создать'}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
-              <Dialog open={isCreateFeatureModalOpen} onOpenChange={setIsCreateFeatureModalOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" style={{ display: 'none' }}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Создать особенность
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Создать Особенность</DialogTitle>
-                    <DialogDescription>
-                      Создайте новую особенность для заказов
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleCreateFeature}>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-2">
-                        <Label htmlFor="featureName" className="text-right">
-                          Название
-                        </Label>
-                        <Input
-                          id="featureName"
-                          value={featureFormData.name}
-                          onChange={(e) => setFeatureFormData(prev => ({ ...prev, name: e.target.value }))}
-                          className="col-span-3"
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-2">
-                        <Label htmlFor="featureDescription" className="text-right">
-                          Описание
-                        </Label>
-                        <Input
-                          id="featureDescription"
-                          value={featureFormData.description}
-                          onChange={(e) => setFeatureFormData(prev => ({ ...prev, description: e.target.value }))}
-                          className="col-span-3"
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-2">
-                        <Label htmlFor="featureType" className="text-right">
-                          Тип
-                        </Label>
-                        <select
-                          id="featureType"
-                          value={featureFormData.type}
-                          onChange={(e) => setFeatureFormData(prev => ({ ...prev, type: e.target.value }))}
-                          className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          <option value="TEXT">Текст</option>
-                          <option value="SELECT">Выбор из списка</option>
-                          <option value="CHECKBOX">Флажок</option>
-                        </select>
-                      </div>
-                      {featureFormData.type === 'SELECT' && (
-                        <div className="grid grid-cols-4 items-center gap-2">
-                          <Label htmlFor="featureOptions" className="text-right">
-                            Варианты
-                          </Label>
-                          <Input
-                            id="featureOptions"
-                            value={featureFormData.options}
-                            onChange={(e) => setFeatureFormData(prev => ({ ...prev, options: e.target.value }))}
-                            className="col-span-3"
-                            placeholder="Вариант1, Вариант2, Вариант3"
+                  )
+                }
+
+                {/* Filters Panel */}
+                {
+                  showFilters && (
+                    <div className="mb-6 p-4 border rounded-lg bg-slate-50">
+                      <h3 className="font-medium mb-4">Фильтры</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={filters.successful}
+                            onChange={(e) => setFilters({ ...filters, successful: e.target.checked })}
+                            className="rounded"
                           />
-                        </div>
-                      )}
+                          <span className="text-sm">Успешные заказы</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={filters.failed}
+                            onChange={(e) => setFilters({ ...filters, failed: e.target.checked })}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Неуспешные заказы</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={filters.pending}
+                            onChange={(e) => setFilters({ ...filters, pending: e.target.checked })}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Ожидающие заказы</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={filters.inDelivery}
+                            onChange={(e) => setFilters({ ...filters, inDelivery: e.target.checked })}
+                            className="rounded"
+                          />
+                          <span className="text-sm">В доставке</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={filters.prepaid}
+                            onChange={(e) => setFilters({ ...filters, prepaid: e.target.checked })}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Предоплаченные</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={filters.unpaid}
+                            onChange={(e) => setFilters({ ...filters, unpaid: e.target.checked })}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Неоплаченные</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={filters.paid}
+                            onChange={(e) => setFilters({ ...filters, paid: e.target.checked })}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Оплаченные</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={filters.card}
+                            onChange={(e) => setFilters({ ...filters, card: e.target.checked })}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Оплата картой</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={filters.cash}
+                            onChange={(e) => setFilters({ ...filters, cash: e.target.checked })}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Оплата наличными</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={filters.daily}
+                            onChange={(e) => setFilters({ ...filters, daily: e.target.checked })}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Ежедневные клиенты</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={filters.evenDay}
+                            onChange={(e) => setFilters({ ...filters, evenDay: e.target.checked })}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Четные дни</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={filters.autoOrders}
+                            onChange={(e) => setFilters({ ...filters, autoOrders: e.target.checked })}
+                            className="rounded"
+                          />
+                          <span className="text-sm">🤖 Авто заказы</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={filters.manualOrders}
+                            onChange={(e) => setFilters({ ...filters, manualOrders: e.target.checked })}
+                            className="rounded"
+                          />
+                          <span className="text-sm">📝 Ручные заказы</span>
+                        </label>
+                      </div>
                     </div>
-                    {featureError && (
-                      <Alert className="mb-4">
-                        <AlertDescription>{featureError}</AlertDescription>
-                      </Alert>
-                    )}
-                    <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setIsCreateFeatureModalOpen(false)}>
-                        Отмена
-                      </Button>
-                      <Button type="submit" disabled={isCreatingFeature}>
-                        {isCreatingFeature ? 'Создание...' : 'Создать'}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
-              {/* Date Selector */}
-              <div className="flex items-center justify-center mb-6 space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedDate(null)}
-                  className={!selectedDate ? "bg-primary text-primary-foreground" : ""}
-                >
-                  Все заказы
-                </Button>
-                <Button variant="outline" size="sm">
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <div className="flex space-x-1">
-                  {getDateRange().map((date, index) => (
-                    <Button
-                      key={index}
-                      variant={selectedDate && date.toDateString() === selectedDate.toDateString() ? "default" : "outline"}
-                      size="sm"
-                      className="w-10 h-10 p-0"
-                      onClick={() => setSelectedDate(date)}
-                    >
-                      {date.getDate()}
-                    </Button>
-                  ))}
+                  )
+                }
+
+
+                {/* Today's Menu Display */}
+                <TodaysMenu className="mb-6" />
+
+                {/* Order Search */}
+                <div className="mb-4 relative">
+                  <Input
+                    placeholder="Поиск по имени, адресу или номеру заказа..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                  <Filter className="w-5 h-5 absolute left-3 top-2.5 text-slate-400 pointer-events-none" />
                 </div>
-                <Button variant="outline" size="sm">
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
 
-              {/* Selected Date Indicator */}
-              {
-                selectedDate && (
-                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-800 text-center">
-                      📅 Показаны заказы за {selectedDate.toLocaleDateString('ru-RU', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                      })}
-                    </p>
-                  </div>
-                )
-              }
-
-              {/* Filters Panel */}
-              {
-                showFilters && (
-                  <div className="mb-6 p-4 border rounded-lg bg-slate-50">
-                    <h3 className="font-medium mb-4">Фильтры</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.successful}
-                          onChange={(e) => setFilters({ ...filters, successful: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">Успешные заказы</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.failed}
-                          onChange={(e) => setFilters({ ...filters, failed: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">Неуспешные заказы</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.pending}
-                          onChange={(e) => setFilters({ ...filters, pending: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">Ожидающие заказы</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.inDelivery}
-                          onChange={(e) => setFilters({ ...filters, inDelivery: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">В доставке</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.prepaid}
-                          onChange={(e) => setFilters({ ...filters, prepaid: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">Предоплаченные</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.unpaid}
-                          onChange={(e) => setFilters({ ...filters, unpaid: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">Неоплаченные</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.card}
-                          onChange={(e) => setFilters({ ...filters, card: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">Оплата картой</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.cash}
-                          onChange={(e) => setFilters({ ...filters, cash: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">Оплата наличными</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.daily}
-                          onChange={(e) => setFilters({ ...filters, daily: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">Ежедневные клиенты</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.evenDay}
-                          onChange={(e) => setFilters({ ...filters, evenDay: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">Четные дни</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.autoOrders}
-                          onChange={(e) => setFilters({ ...filters, autoOrders: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">🤖 Авто заказы</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.manualOrders}
-                          onChange={(e) => setFilters({ ...filters, manualOrders: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">📝 Ручные заказы</span>
-                      </label>
-                    </div>
-                  </div>
-                )
-              }
-
-
-              {/* Today's Menu Display */}
-              <TodaysMenu className="mb-6" />
-
-              {/* Orders Table */}
-              <div className="rounded-md border">
-                <OrdersTable
-                  orders={orders}
-                  selectedOrders={selectedOrders}
-                  onSelectOrder={handleOrderSelect}
-                  onSelectAll={handleSelectAllOrders}
-                  onDeleteSelected={handleDeleteSelectedOrders}
-                  onViewOrder={(order) => {
-                    setSelectedOrder(order)
-                    setIsOrderDetailsModalOpen(true)
-                  }}
-                  onEditOrder={handleEditOrder}
-                />
-              </div>
-
-              {/* Table Actions */}
-              <div className="flex justify-between items-center mt-4">
-                <div className="flex space-x-2">
+                {/* Orders Table */}
+                <div className="rounded-md border">
+                  <OrdersTable
+                    orders={orders.filter(order => {
+                      const searchLower = searchTerm.toLowerCase()
+                      return (
+                        order.customer?.name.toLowerCase().includes(searchLower) ||
+                        order.customerName?.toLowerCase().includes(searchLower) ||
+                        order.deliveryAddress.toLowerCase().includes(searchLower) ||
+                        order.orderNumber.toString().includes(searchLower)
+                      )
+                    })}
+                    selectedOrders={selectedOrders}
+                    onSelectOrder={handleOrderSelect}
+                    onSelectAll={handleSelectAllOrders}
+                    onDeleteSelected={handleDeleteSelectedOrders}
+                    onViewOrder={(order) => {
+                      setSelectedOrder(order)
+                      setIsOrderDetailsModalOpen(true)
+                    }}
+                    onEditOrder={handleEditOrder}
+                  />
                 </div>
-                <Button>
-                  <Save className="w-4 h-4 mr-2" />
-                  Сохранить изменения
-                </Button>
-              </div>
+
+                {/* Table Actions */}
+                <div className="flex justify-between items-center mt-4">
+                  <div className="flex space-x-2">
+                  </div>
+                </div>
+              </CardContent>
             </Card>
-          </TabsContent >
+          </TabsContent>
 
           {/* Clients Tab */}
-          < TabsContent value="clients" className="space-y-6" >
+          <TabsContent value="clients" className="space-y-6">
             <Card className="glass-card border-none">
               <CardHeader>
                 <div className="flex justify-between items-center">
@@ -3200,11 +2832,6 @@ export default function MiddleAdminPage() {
                                       </>
                                     )}
                                   </Badge>
-                                  {client.autoOrdersEnabled && (
-                                    <Badge variant="outline" className="text-xs border-blue-200 text-blue-600">
-                                      🤖 Авто
-                                    </Badge>
-                                  )}
                                 </div>
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
@@ -3274,15 +2901,6 @@ export default function MiddleAdminPage() {
                             <div className="text-sm font-medium">Калории:</div>
                             <div className="text-sm">{client.calories} ккал</div>
                           </div>
-
-                          {client.autoOrdersEnabled && (
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs border-blue-200 text-blue-600">
-                                🤖 Авто-заказы включены
-                              </Badge>
-                            </div>
-                          )}
-
                           <div className="text-xs text-muted-foreground">
                             <div className="font-medium mb-1">Дни доставки:</div>
                             <div className="flex flex-wrap gap-1">
@@ -3901,164 +3519,8 @@ export default function MiddleAdminPage() {
             </Card>
           </TabsContent>
 
-          {/* Edit Admin Modal */}
-          <Dialog open={isEditAdminModalOpen} onOpenChange={setIsEditAdminModalOpen}>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>Редактировать Администратора</DialogTitle>
-                <DialogDescription>
-                  Измените данные администратора или курьера
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleUpdateAdmin}>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="edit-name" className="text-right">
-                      Имя
-                    </Label>
-                    <Input
-                      id="edit-name"
-                      value={editAdminFormData.name}
-                      onChange={(e) => setEditAdminFormData({ ...editAdminFormData, name: e.target.value })}
-                      className="col-span-3"
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="edit-email" className="text-right">
-                      Email
-                    </Label>
-                    <Input
-                      id="edit-email"
-                      type="email"
-                      value={editAdminFormData.email}
-                      onChange={(e) => setEditAdminFormData({ ...editAdminFormData, email: e.target.value })}
-                      className="col-span-3"
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="edit-password" className="text-right">
-                      Пароль
-                    </Label>
-                    <Input
-                      id="edit-password"
-                      type="password"
-                      placeholder="Оставьте пустым, чтобы не менять"
-                      value={editAdminFormData.password}
-                      onChange={(e) => setEditAdminFormData({ ...editAdminFormData, password: e.target.value })}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="edit-role" className="text-right">
-                      Роль
-                    </Label>
-                    <select
-                      id="edit-role"
-                      value={editAdminFormData.role}
-                      onChange={(e) => setEditAdminFormData({ ...editAdminFormData, role: e.target.value })}
-                      className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="LOW_ADMIN">Низкий администратор</option>
-                      <option value="COURIER">Курьер</option>
-                      <option value="WORKER">Работник</option>
-                    </select>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="edit-salary" className="text-right">
-                      Зарплата
-                    </Label>
-                    <Input
-                      id="edit-salary"
-                      type="number"
-                      value={editAdminFormData.salary || ''}
-                      onChange={(e) => setEditAdminFormData({ ...editAdminFormData, salary: parseInt(e.target.value) || 0 })}
-                      className="col-span-3"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="edit-active" className="text-right">
-                      Статус
-                    </Label>
-                    <div className="col-span-3 flex items-center space-x-2">
-                      <Checkbox
-                        id="edit-active"
-                        checked={editAdminFormData.isActive}
-                        onCheckedChange={(checked) => setEditAdminFormData({ ...editAdminFormData, isActive: checked as boolean })}
-                      />
-                      <label
-                        htmlFor="edit-active"
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        Активен
-                      </label>
-                    </div>
-                  </div>
-
-                  {editAdminFormData.role === 'LOW_ADMIN' && (
-                    <div className="grid grid-cols-4 items-start gap-4">
-                      <Label className="text-right pt-2">
-                        Доступ к вкладкам
-                      </Label>
-                      <div className="col-span-3 space-y-2 border rounded-md p-3">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="tab-orders"
-                            checked={editAdminFormData.allowedTabs.includes('orders')}
-                            onCheckedChange={(checked) => {
-                              const tabs = checked
-                                ? [...editAdminFormData.allowedTabs, 'orders']
-                                : editAdminFormData.allowedTabs.filter(t => t !== 'orders')
-                              setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
-                            }}
-                          />
-                          <label htmlFor="tab-orders" className="text-sm">Заказы</label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="tab-clients"
-                            checked={editAdminFormData.allowedTabs.includes('clients')}
-                            onCheckedChange={(checked) => {
-                              const tabs = checked
-                                ? [...editAdminFormData.allowedTabs, 'clients']
-                                : editAdminFormData.allowedTabs.filter(t => t !== 'clients')
-                              setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
-                            }}
-                          />
-                          <label htmlFor="tab-clients" className="text-sm">Клиенты</label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="tab-chat"
-                            checked={editAdminFormData.allowedTabs.includes('chat')}
-                            onCheckedChange={(checked) => {
-                              const tabs = checked
-                                ? [...editAdminFormData.allowedTabs, 'chat']
-                                : editAdminFormData.allowedTabs.filter(t => t !== 'chat')
-                              setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
-                            }}
-                          />
-                          <label htmlFor="tab-chat" className="text-sm">Чат</label>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsEditAdminModalOpen(false)}>
-                    Отмена
-                  </Button>
-                  <Button type="submit">
-                    Сохранить
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-
           {/* Interface Tab */}
+
           < TabsContent value="interface" className="space-y-6" >
             <InterfaceSettings />
           </TabsContent >
@@ -4382,6 +3844,673 @@ export default function MiddleAdminPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog >
-    </div >
+
+      {/* Order Details Modal */}
+      < Dialog open={isOrderDetailsModalOpen} onOpenChange={setIsOrderDetailsModalOpen} >
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Детали заказа #{selectedOrder?.orderNumber}</DialogTitle>
+            <DialogDescription>
+              Полная информация о заказе и клиенте
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
+            {selectedOrder && (
+              <div className="space-y-6">
+                {/* Basic Info */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-slate-500">Статус:</span>
+                    <Badge
+                      className={
+                        selectedOrder.orderStatus === 'DELIVERED'
+                          ? "bg-green-100 text-green-800"
+                          : selectedOrder.orderStatus === 'IN_DELIVERY'
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-orange-100 text-orange-800"
+                      }
+                    >
+                      {selectedOrder.orderStatus === 'DELIVERED'
+                        ? "Доставлен"
+                        : selectedOrder.orderStatus === 'IN_DELIVERY'
+                          ? "В доставке"
+                          : "Ожидает"}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-slate-500">Оплата:</span>
+                    <Badge
+                      variant={selectedOrder.paymentStatus === 'PAID' ? "default" : "destructive"}
+                      className={selectedOrder.paymentStatus === 'PAID' ? "bg-green-100 text-green-800" : ""}
+                    >
+                      {selectedOrder.paymentStatus === 'PAID' ? "Оплачен" : "Не оплачен"}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-slate-500">Метод:</span>
+                    <span className="text-sm">{selectedOrder.paymentMethod === 'CASH' ? 'Наличные' : 'Карта'}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-slate-500">Количество:</span>
+                    <span className="text-sm font-bold">{selectedOrder.quantity} порц.</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-slate-500">Калории:</span>
+                    <span className="text-sm">{selectedOrder.calories} ккал</span>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4 space-y-3">
+                  <h4 className="font-semibold text-sm">Клиент</h4>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                      <User className="w-5 h-5 text-slate-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{selectedOrder.customerName || selectedOrder.customer?.name}</p>
+                      <p className="text-xs text-slate-500">{selectedOrder.customer?.phone}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4 space-y-3">
+                  <h4 className="font-semibold text-sm">Доставка</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="w-4 h-4 mt-0.5 text-slate-400" />
+                      <p className="text-sm">{selectedOrder.deliveryAddress}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-slate-400" />
+                      <p className="text-sm">{selectedOrder.deliveryTime}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="w-4 h-4 text-slate-400" />
+                      <p className="text-sm">
+                        {selectedOrder.deliveryDate && new Date(selectedOrder.deliveryDate).toLocaleDateString('ru-RU')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedOrder.specialFeatures && (
+                  <div className="border-t pt-4 space-y-2">
+                    <h4 className="font-semibold text-sm">Особенности</h4>
+                    <p className="text-sm bg-orange-50 p-2 rounded border border-orange-100 text-orange-800">
+                      {selectedOrder.specialFeatures}
+                    </p>
+                  </div>
+                )}
+
+                {selectedOrder.courier && (
+                  <div className="border-t pt-4 space-y-2">
+                    <h4 className="font-semibold text-sm">Курьер</h4>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center">
+                        <Truck className="w-4 h-4 text-blue-500" />
+                      </div>
+                      <p className="text-sm">{selectedOrder.courier.name}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOrderDetailsModalOpen(false)}>
+              Закрыть
+            </Button>
+            {selectedOrder && (
+              <Button onClick={() => {
+                setIsOrderDetailsModalOpen(false)
+                handleEditOrder(selectedOrder)
+              }}>
+                Редактировать
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog >
+
+      {/* Edit Admin Modal */}
+      < Dialog open={isEditAdminModalOpen} onOpenChange={setIsEditAdminModalOpen} >
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Редактировать Администратора</DialogTitle>
+            <DialogDescription>
+              Измените данные администратора или курьера
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdateAdmin}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-name" className="text-right">
+                  Имя
+                </Label>
+                <Input
+                  id="edit-name"
+                  value={editAdminFormData.name}
+                  onChange={(e) => setEditAdminFormData({ ...editAdminFormData, name: e.target.value })}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-email" className="text-right">
+                  Email
+                </Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editAdminFormData.email}
+                  onChange={(e) => setEditAdminFormData({ ...editAdminFormData, email: e.target.value })}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-password" className="text-right">
+                  Пароль
+                </Label>
+                <Input
+                  id="edit-password"
+                  type="password"
+                  placeholder="Оставьте пустым, чтобы не менять"
+                  value={editAdminFormData.password}
+                  onChange={(e) => setEditAdminFormData({ ...editAdminFormData, password: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-role" className="text-right">
+                  Роль
+                </Label>
+                <select
+                  id="edit-role"
+                  value={editAdminFormData.role}
+                  onChange={(e) => setEditAdminFormData({ ...editAdminFormData, role: e.target.value })}
+                  className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="LOW_ADMIN">Низкий администратор</option>
+                  <option value="COURIER">Курьер</option>
+                  <option value="WORKER">Работник</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-salary" className="text-right">
+                  Зарплата
+                </Label>
+                <Input
+                  id="edit-salary"
+                  type="number"
+                  value={editAdminFormData.salary || ''}
+                  onChange={(e) => setEditAdminFormData({ ...editAdminFormData, salary: parseInt(e.target.value) || 0 })}
+                  className="col-span-3"
+                  placeholder="0"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-active" className="text-right">
+                  Статус
+                </Label>
+                <div className="col-span-3 flex items-center space-x-2">
+                  <Checkbox
+                    id="edit-active"
+                    checked={editAdminFormData.isActive}
+                    onCheckedChange={(checked) => setEditAdminFormData({ ...editAdminFormData, isActive: checked as boolean })}
+                  />
+                  <label
+                    htmlFor="edit-active"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Активен
+                  </label>
+                </div>
+              </div>
+
+              {editAdminFormData.role === 'LOW_ADMIN' && (
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label className="text-right pt-2">
+                    Доступ к вкладкам
+                  </Label>
+                  <div className="col-span-3 space-y-2 border rounded-md p-3">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="tab-orders"
+                        checked={editAdminFormData.allowedTabs.includes('orders')}
+                        onCheckedChange={(checked) => {
+                          const tabs = checked
+                            ? [...editAdminFormData.allowedTabs, 'orders']
+                            : editAdminFormData.allowedTabs.filter(t => t !== 'orders')
+                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
+                        }}
+                      />
+                      <label htmlFor="tab-orders" className="text-sm">Заказы</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="tab-clients"
+                        checked={editAdminFormData.allowedTabs.includes('clients')}
+                        onCheckedChange={(checked) => {
+                          const tabs = checked
+                            ? [...editAdminFormData.allowedTabs, 'clients']
+                            : editAdminFormData.allowedTabs.filter(t => t !== 'clients')
+                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
+                        }}
+                      />
+                      <label htmlFor="tab-clients" className="text-sm">Клиенты</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="tab-chat"
+                        checked={editAdminFormData.allowedTabs.includes('chat')}
+                        onCheckedChange={(checked) => {
+                          const tabs = checked
+                            ? [...editAdminFormData.allowedTabs, 'chat']
+                            : editAdminFormData.allowedTabs.filter(t => t !== 'chat')
+                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
+                        }}
+                      />
+                      <label htmlFor="tab-chat" className="text-sm">Чат</label>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsEditAdminModalOpen(false)}>
+                Отмена
+              </Button>
+              <Button type="submit">
+                Сохранить
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog >
+
+      {/* Create Order Modal */}
+      < Dialog open={isCreateOrderModalOpen} onOpenChange={setIsCreateOrderModalOpen} >
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{editingOrderId ? 'Редактировать Заказ' : 'Создать Новый Заказ'}</DialogTitle>
+            <DialogDescription>
+              {editingOrderId ? 'Измените данные заказа' : 'Заполните информацию о новом заказе. Вы можете выбрать клиента из списка для автозаполнения данных.'}
+            </DialogDescription>
+            {!editingOrderId && orderFormData.selectedClientId && orderFormData.selectedClientId !== "manual" && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-2">
+                <p className="text-xs text-green-800">
+                  ✅ Данные клиента заполнены автоматически
+                </p>
+              </div>
+            )}
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto">
+            <form onSubmit={handleCreateOrder}>
+              <div className="grid gap-3 py-2">
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="clientSelect" className="text-right">
+                    Выбрать клиента
+                  </Label>
+                  <div className="col-span-3">
+                    <Select
+                      value={orderFormData.selectedClientId}
+                      onValueChange={handleClientSelect}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Выберите клиента из списка или введите данные вручную" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manual">-- Ввести данные вручную --</SelectItem>
+                        {clients.map((client) => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {client.name} - {client.phone}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Выберите клиента для автозаполнения
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="customerName" className="text-right">
+                    Имя клиента
+                    {orderFormData.selectedClientId && (
+                      <span className="text-xs text-green-600 ml-1">✓</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="customerName"
+                    value={orderFormData.customerName}
+                    onChange={(e) => setOrderFormData(prev => ({ ...prev, customerName: e.target.value }))}
+                    className={`col-span-3 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="customerPhone" className="text-right">
+                    Телефон клиента
+                    {orderFormData.selectedClientId && (
+                      <span className="text-xs text-green-600 ml-1">✓</span>
+                    )}
+                  </Label>
+                  <div className="col-span-3">
+                    <Input
+                      id="customerPhone"
+                      type="tel"
+                      placeholder="+998 XX XXX XX XX"
+                      value={orderFormData.customerPhone}
+                      onChange={(e) => setOrderFormData(prev => ({ ...prev, customerPhone: e.target.value }))}
+                      className={orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Формат: +998 XX XXX XX XX</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="deliveryAddress" className="text-right">
+                    Адрес доставки
+                    {orderFormData.selectedClientId && (
+                      <span className="text-xs text-green-600 ml-1">✓</span>
+                    )}
+                  </Label>
+                  <div className="col-span-3 space-y-2">
+                    <div className="relative">
+                      <Input
+                        id="deliveryAddress"
+                        value={orderFormData.deliveryAddress}
+                        onChange={(e) => handleAddressChange(e.target.value)}
+                        placeholder="Адрес или Google Maps ссылка"
+                        className={`col-span-3 ${orderFormData.latitude && orderFormData.longitude ? 'pr-10 border-green-500 focus:border-green-500' : ''} ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
+                        required
+                      />
+                      {orderFormData.latitude && orderFormData.longitude && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs text-slate-400">
+                        Можно вставить Google Maps ссылку
+                      </p>
+                      {orderFormData.latitude && orderFormData.longitude && (
+                        <p className="text-xs text-green-600 font-medium">
+                          📍 {orderFormData.latitude.toFixed(4)}, {orderFormData.longitude.toFixed(4)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="deliveryTime" className="text-right">
+                    Время доставки
+                  </Label>
+                  <Input
+                    id="deliveryTime"
+                    type="time"
+                    value={orderFormData.deliveryTime}
+                    onChange={(e) => setOrderFormData(prev => ({ ...prev, deliveryTime: e.target.value }))}
+                    className="col-span-3"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="quantity" className="text-right">
+                    Количество
+                  </Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="1"
+                    value={orderFormData.quantity}
+                    onChange={(e) => setOrderFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) }))}
+                    className="col-span-3"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="calories" className="text-right">
+                    Калории
+                    {orderFormData.selectedClientId && (
+                      <span className="text-xs text-green-600 ml-1">✓</span>
+                    )}
+                  </Label>
+                  <select
+                    id="calories"
+                    value={orderFormData.calories}
+                    onChange={(e) => setOrderFormData(prev => ({ ...prev, calories: parseInt(e.target.value) }))}
+                    className={`col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
+                  >
+                    <option value="1200">1200 ккал</option>
+                    <option value="1600">1600 ккал</option>
+                    <option value="2000">2000 ккал</option>
+                    <option value="2500">2500 ккал</option>
+                    <option value="3000">3000 ккал</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="paymentMethod" className="text-right">
+                    Оплата
+                  </Label>
+                  <select
+                    id="paymentMethod"
+                    value={orderFormData.paymentMethod}
+                    onChange={(e) => setOrderFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                    className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="CASH">Наличные</option>
+                    <option value="CARD">Карта</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="specialFeatures" className="text-right">
+                    Особенности
+                    {orderFormData.selectedClientId && (
+                      <span className="text-xs text-green-600 ml-1">✓</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="specialFeatures"
+                    value={orderFormData.specialFeatures}
+                    onChange={(e) => setOrderFormData(prev => ({ ...prev, specialFeatures: e.target.value }))}
+                    className={`col-span-3 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
+                    placeholder="Особые пожелания"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="courier" className="text-right">
+                    Курьер
+                  </Label>
+                  <select
+                    id="courier"
+                    value={orderFormData.courierId}
+                    onChange={(e) => setOrderFormData(prev => ({ ...prev, courierId: e.target.value }))}
+                    className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="">Автоматически (если есть у клиента)</option>
+                    {couriers.map((courier) => (
+                      <option key={courier.id} value={courier.id}>
+                        {courier.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {orderError && (
+                  <div className="col-span-4">
+                    <Alert variant="destructive">
+                      <AlertDescription>{orderError}</AlertDescription>
+                    </Alert>
+                  </div>
+                )}
+              </div>
+            </form>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => {
+              setIsCreateOrderModalOpen(false)
+              setOrderFormData(prev => ({ ...prev, latitude: null, longitude: null }))
+              setEditingOrderId(null)
+            }}>
+              Отмена
+            </Button>
+            <Button type="submit" disabled={isCreatingOrder} onClick={handleCreateOrder}>
+              {isCreatingOrder ? 'Сохранение...' : (editingOrderId ? 'Сохранить изменения' : 'Создать заказ')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog >
+
+      {/* Create Courier Modal */}
+      < Dialog open={isCreateCourierModalOpen} onOpenChange={setIsCreateCourierModalOpen} >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Создать Курьера</DialogTitle>
+            <DialogDescription>
+              Создайте новый аккаунт для курьера
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateCourier}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="courierName" className="text-right">
+                  Имя
+                </Label>
+                <Input
+                  id="courierName"
+                  value={courierFormData.name}
+                  onChange={(e) => setCourierFormData(prev => ({ ...prev, name: e.target.value }))}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="courierEmail" className="text-right">
+                  Email
+                </Label>
+                <Input
+                  id="courierEmail"
+                  type="email"
+                  value={courierFormData.email}
+                  onChange={(e) => setCourierFormData(prev => ({ ...prev, email: e.target.value }))}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="courierPassword" className="text-right">
+                  Пароль
+                </Label>
+                <Input
+                  id="courierPassword"
+                  type="password"
+                  value={courierFormData.password}
+                  onChange={(e) => setCourierFormData(prev => ({ ...prev, password: e.target.value }))}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+            </div>
+            {courierError && (
+              <Alert className="mb-4">
+                <AlertDescription>{courierError}</AlertDescription>
+              </Alert>
+            )}
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsCreateCourierModalOpen(false)}>
+                Отмена
+              </Button>
+              <Button type="submit" disabled={isCreatingCourier}>
+                {isCreatingCourier ? 'Создание...' : 'Создать'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Feature Modal */}
+      <Dialog open={isCreateFeatureModalOpen} onOpenChange={setIsCreateFeatureModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Создать Особенность</DialogTitle>
+            <DialogDescription>
+              Создайте новую особенность для заказов
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateFeature}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="featureName" className="text-right">
+                  Название
+                </Label>
+                <Input
+                  id="featureName"
+                  value={featureFormData.name}
+                  onChange={(e) => setFeatureFormData(prev => ({ ...prev, name: e.target.value }))}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="featureDescription" className="text-right">
+                  Описание
+                </Label>
+                <Input
+                  id="featureDescription"
+                  value={featureFormData.description}
+                  onChange={(e) => setFeatureFormData(prev => ({ ...prev, description: e.target.value }))}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="featureType" className="text-right">
+                  Тип
+                </Label>
+                <select
+                  id="featureType"
+                  value={featureFormData.type}
+                  onChange={(e) => setFeatureFormData(prev => ({ ...prev, type: e.target.value }))}
+                  className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="TEXT">Текст</option>
+                  <option value="SELECT">Выбор из списка</option>
+                  <option value="CHECKBOX">Флажок</option>
+                </select>
+              </div>
+              {featureFormData.type === 'SELECT' && (
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="featureOptions" className="text-right">
+                    Варианты
+                  </Label>
+                  <Input
+                    id="featureOptions"
+                    value={featureFormData.options}
+                    onChange={(e) => setFeatureFormData(prev => ({ ...prev, options: e.target.value }))}
+                    className="col-span-3"
+                    placeholder="Вариант1, Вариант2, Вариант3"
+                  />
+                </div>
+              )}
+            </div>
+            {featureError && (
+              <Alert className="mb-4">
+                <AlertDescription>{featureError}</AlertDescription>
+              </Alert>
+            )}
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsCreateFeatureModalOpen(false)}>
+                Отмена
+              </Button>
+              <Button type="submit" disabled={isCreatingFeature}>
+                {isCreatingFeature ? 'Создание...' : 'Создать'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }

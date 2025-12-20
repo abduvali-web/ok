@@ -121,32 +121,39 @@ export async function PATCH(
         )
 
         // 2. Handle Payment (Income) if received
-        if (amountReceived !== undefined && amountReceived !== null) {
-          const parsedAmount = parseFloat(amountReceived)
-          if (!isNaN(parsedAmount) && parsedAmount > 0) {
-            updateData.amountReceived = parsedAmount
+        const totalOrderCost = dailyPrice * (order.quantity || 1)
+        const parsedAmount = amountReceived !== undefined && amountReceived !== null ? parseFloat(amountReceived) : 0
 
-            transactionOps.push(
-              db.transaction.create({
-                data: {
-                  amount: parsedAmount,
-                  type: 'INCOME',
-                  category: 'ORDER_PAYMENT',
-                  description: `Оплата за заказ #${order.orderNumber} (Курьер: ${(user as any).name || 'Unknown'})`,
-                  adminId: order.adminId,
-                  customerId: order.customerId
-                }
-              }),
-              db.customer.update({
-                where: { id: order.customerId },
-                data: { balance: { increment: parsedAmount } }
-              }),
-              db.admin.update({
-                where: { id: order.adminId },
-                data: { companyBalance: { increment: parsedAmount } }
-              })
-            )
-          }
+        if (!isNaN(parsedAmount) && parsedAmount > 0) {
+          updateData.amountReceived = parsedAmount
+
+          transactionOps.push(
+            db.transaction.create({
+              data: {
+                amount: parsedAmount,
+                type: 'INCOME',
+                category: 'ORDER_PAYMENT',
+                description: `Оплата за заказ #${order.orderNumber} (Курьер: ${(user as any).name || 'Unknown'})`,
+                adminId: order.adminId,
+                customerId: order.customerId
+              }
+            }),
+            db.customer.update({
+              where: { id: order.customerId },
+              data: { balance: { increment: parsedAmount } }
+            }),
+            db.admin.update({
+              where: { id: order.adminId },
+              data: { companyBalance: { increment: parsedAmount } }
+            })
+          )
+        }
+
+        // 3. Update Payment Status based on received amount
+        if (parsedAmount >= totalOrderCost) {
+          updateData.paymentStatus = 'PAID'
+        } else if (!order.isPrepaid) {
+          updateData.paymentStatus = 'UNPAID'
         }
 
         // Execute all balance updates transactionally

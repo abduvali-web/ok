@@ -80,6 +80,7 @@ export async function GET(request: NextRequest) {
           if (filters.pending && order.orderStatus !== 'PENDING') return false
           if (filters.inDelivery && order.orderStatus !== 'IN_DELIVERY') return false
           if (filters.prepaid && !order.isPrepaid) return false
+          if (filters.paid && order.paymentStatus !== 'PAID') return false
           if (filters.unpaid && order.paymentStatus !== 'UNPAID') return false
           if (filters.card && order.paymentMethod !== 'CARD') return false
           if (filters.cash && order.paymentMethod !== 'CASH') return false
