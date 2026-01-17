@@ -531,7 +531,7 @@ export function SetsTab() {
                                                                                 <Badge variant="outline" className="text-[10px] mb-1">{MEAL_TYPES[dish.mealType]}</Badge>
                                                                                 <h4 className="font-medium text-sm line-clamp-2">{dish.dishName}</h4>
                                                                             </div>
-                                                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                            <div className="flex gap-1">
                                                                                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
                                                                                     setEditingDish({
                                                                                         setId: selectedSet.id,

@@ -73,15 +73,15 @@ export function AdminLayout({
             <div className="flex-1 flex flex-col min-w-0 relative">
                 {/* Sidebar Toggle Button (Custom request) */}
                 <Button
-                    variant="ghost"
+                    variant="default"
                     size="icon"
-                    className="absolute top-4 left-4 z-50 lg:hidden bg-white/50 backdrop-blur-sm shadow-sm hover:bg-white"
+                    className="fixed top-3 left-3 z-[100] lg:hidden shadow-lg rounded-full h-10 w-10 opacity-90 hover:opacity-100 transition-opacity"
                     onClick={() => setIsSidebarOpen(true)}
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
+                        width="20"
+                        height="20"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
