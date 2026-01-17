@@ -15,7 +15,8 @@
     "test:ui": "playwright test --ui",
     "test:debug": "playwright test --debug",
     "test:report": "playwright show-report",
-    "push": "npx prisma db push --accept-data-loss && git push"
+    "push": "npx prisma db push --accept-data-loss && git push",
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@codemirror/language": "^6.11.3",

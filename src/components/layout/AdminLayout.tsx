@@ -75,8 +75,8 @@ export function AdminLayout({
                 <Button
                     variant="default"
                     size="icon"
-                    className="fixed top-3 left-3 z-[100] lg:hidden shadow-lg rounded-full h-10 w-10 opacity-90 hover:opacity-100 transition-opacity"
-                    onClick={() => setIsSidebarOpen(true)}
+                    className="fixed top-3 left-3 z-[120] shadow-lg rounded-full h-10 w-10 opacity-90 hover:opacity-100 transition-opacity bg-primary text-primary-foreground"
+                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"

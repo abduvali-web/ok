@@ -57,11 +57,17 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
     const [isCooking, setIsCooking] = useState(false);
 
     // Custom set integration
-    const [activeSet, setActiveSet] = useState<MenuSet | null>(null);
+    const [availableSets, setAvailableSets] = useState<MenuSet[]>([]);
+    const [selectedSetId, setSelectedSetId] = useState<string>('active');
+
+    const activeSet = useMemo(() => {
+        if (selectedSetId === 'active') return availableSets.find(s => s.isActive) || null;
+        return availableSets.find(s => s.id === selectedSetId) || null;
+    }, [availableSets, selectedSetId]);
 
     useEffect(() => {
         fetchData();
-    }, [menuNumber, date]);
+    }, [menuNumber, date, selectedSetId]);
 
     const fetchData = async () => {
         setLoading(true);
@@ -72,12 +78,14 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
                 const setsRes = await fetch('/api/admin/sets');
                 if (setsRes.ok) {
                     const sets: MenuSet[] = await setsRes.json();
+                    setAvailableSets(sets);
 
-                    // Logic Update: Find the globally active set.
-                    // The set itself covers all days, so we just check for isActive = true
-                    // If multiple are active (shouldn't happen ideally), pick first.
-                    currentActiveSet = sets.find(s => s.isActive) || null;
-                    setActiveSet(currentActiveSet);
+                    // Logic Update: determine active set based on selection or global status
+                    if (selectedSetId === 'active') {
+                        currentActiveSet = sets.find(s => s.isActive) || null;
+                    } else {
+                        currentActiveSet = sets.find(s => s.id === selectedSetId) || null;
+                    }
                 }
             } catch (e) {
                 console.warn('Failed to fetch sets', e);
@@ -285,19 +293,38 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <span className="text-sm text-slate-500 whitespace-nowrap">Filter Calories:</span>
-                    <Select value={selectedCalorieGroup} onValueChange={setSelectedCalorieGroup}>
-                        <SelectTrigger className="w-full sm:w-[120px]">
-                            <SelectValue placeholder="All" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Groups</SelectItem>
-                            {CALORIE_GROUPS.map(c => (
-                                <SelectItem key={c} value={c.toString()}>{c} kcal</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto items-start sm:items-center">
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <span className="text-sm text-slate-500 whitespace-nowrap">Set:</span>
+                        <Select value={selectedSetId} onValueChange={setSelectedSetId}>
+                            <SelectTrigger className="w-full sm:w-[180px]">
+                                <SelectValue placeholder="Select Set" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="active">Auto (Active Global)</SelectItem>
+                                {availableSets.map(s => (
+                                    <SelectItem key={s.id} value={s.id}>
+                                        {s.name} {s.isActive ? '✓' : ''}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <span className="text-sm text-slate-500 whitespace-nowrap">Filter:</span>
+                        <Select value={selectedCalorieGroup} onValueChange={setSelectedCalorieGroup}>
+                            <SelectTrigger className="w-full sm:w-[120px]">
+                                <SelectValue placeholder="All" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Calories</SelectItem>
+                                {CALORIE_GROUPS.map(c => (
+                                    <SelectItem key={c} value={c.toString()}>{c} kcal</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
             </div>
 
