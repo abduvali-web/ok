@@ -78,31 +78,60 @@ function optimizeRouteNearestNeighbor(
     return route;
 }
 
+// Helper to extract coordinates from various Google Maps URL formats or strings
+function extractCoordinatesFromInput(input: string): { lat: number, lng: number } | null {
+    if (!input) return null;
+
+    // Pattern 1: @lat,lng (common in maps urls)
+    const atMatch = input.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
+
+    // Pattern 2: q=lat,lng or ll=lat,lng
+    const qMatch = input.match(/[?&](?:q|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (qMatch) return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };
+
+    // Pattern 3: Just "lat,lng" or "lat, lng"
+    const simpleMatch = input.match(/^(-?\d+\.\d+),\s*(-?\d+\.\d+)$/);
+    if (simpleMatch) return { lat: parseFloat(simpleMatch[1]), lng: parseFloat(simpleMatch[2]) };
+
+    return null;
+}
+
 // Build Google Maps URL with waypoints
 function buildGoogleMapsUrl(
     startPoint: { lat: number; lng: number } | null,
-    waypoints: Array<{ lat: number; lng: number; address: string }>
+    waypoints: Array<{ lat?: number; lng?: number; address: string }>,
+    unoptimizedAddresses: string[] = [] // Addresses without coords
 ): string {
-    if (waypoints.length === 0) return 'https://www.google.com/maps';
-
-    // For Google Maps directions URL:
+    // Base URL
     // https://www.google.com/maps/dir/origin/waypoint1/waypoint2/.../destination
 
     const parts: string[] = [];
 
-    // Add start point if available
+    // 1. Start point
     if (startPoint) {
         parts.push(`${startPoint.lat},${startPoint.lng}`);
     }
 
-    // Add all waypoints
+    // 2. Optimized waypoints (which have coords)
     waypoints.forEach(wp => {
-        // Use coordinates if available, otherwise use address
-        parts.push(`${wp.lat},${wp.lng}`);
+        if (wp.lat && wp.lng) {
+            parts.push(`${wp.lat},${wp.lng}`);
+        } else {
+            // Fallback to address if coords missing in this list (unlikely for optimized list)
+            parts.push(encodeURIComponent(wp.address));
+        }
     });
 
-    // Build the URL
-    const path = parts.map(p => encodeURIComponent(p)).join('/');
+    // 3. Append unoptimized addresses at the end
+    // These are locations we couldn't sort, so we just add them to the route list
+    unoptimizedAddresses.forEach(addr => {
+        parts.push(encodeURIComponent(addr));
+    });
+
+    if (parts.length === 0) return 'https://www.google.com/maps';
+
+    const path = parts.join('/');
     return `https://www.google.com/maps/dir/${path}`;
 }
 
@@ -121,35 +150,47 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'No orders provided' }, { status: 400 });
         }
 
-        // Filter orders with valid coordinates
-        const validOrders = orders.filter(
-            (o: OrderLocation) => o.latitude != null && o.longitude != null
-        );
+        // Process orders: try to find coords for everyone
+        const processedOrders = orders.map((o: OrderLocation) => {
+            // If we already have explicit coords, use them
+            if (o.latitude != null && o.longitude != null) {
+                return { ...o, hasCoords: true };
+            }
 
-        if (validOrders.length === 0) {
-            return NextResponse.json({
-                error: 'No orders with valid coordinates',
-                orderedIds: orders.map((o: OrderLocation) => o.id),
-                googleMapsUrl: 'https://www.google.com/maps',
-                waypoints: []
-            }, { status: 200 });
-        }
+            // Try to extract from address string (URL or "lat,lng")
+            const extracted = extractCoordinatesFromInput(o.address);
+            if (extracted) {
+                return {
+                    ...o,
+                    latitude: extracted.lat,
+                    longitude: extracted.lng,
+                    hasCoords: true
+                };
+            }
 
-        // Default start point (Tashkent center if not provided)
+            // No coords found
+            return { ...o, hasCoords: false };
+        });
+
+        // Separate into optimizable (with coords) and others
+        const validOrders = processedOrders.filter((o: any) => o.hasCoords);
+        const dateOrders = processedOrders.filter((o: any) => !o.hasCoords);
+
+        // Default start point
         const start = startPoint || { lat: 41.2995, lng: 69.2401 };
 
-        // Prepare locations
-        const locations = validOrders.map((o: OrderLocation) => ({
+        // Prepare locations for optimization
+        const locations = validOrders.map((o: any) => ({
             id: o.id,
             lat: o.latitude!,
             lng: o.longitude!,
             address: o.address
         }));
 
-        // Optimize route using nearest neighbor algorithm
+        // Optimize route
         const optimizedLocations = optimizeRouteNearestNeighbor(start, locations);
 
-        // Calculate total distance
+        // Calculate stats
         let totalDistance = 0;
         let currentPoint = start;
 
@@ -161,27 +202,22 @@ export async function POST(request: NextRequest) {
             currentPoint = { lat: loc.lat, lng: loc.lng };
         }
 
-        // Build Google Maps URL with optimized waypoints
+        // Build Google Maps URL including BOTH optimized points and unoptimized addresses
         const googleMapsUrl = buildGoogleMapsUrl(
             start,
             optimizedLocations.map(loc => ({
                 lat: loc.lat,
                 lng: loc.lng,
                 address: loc.address
-            }))
+            })),
+            dateOrders.map((o: any) => o.address) // Append these addresses to the URL
         );
-
-        // Add orders without coordinates at the end
-        const ordersWithoutCoords = orders
-            .filter((o: OrderLocation) => o.latitude == null || o.longitude == null)
-            .map((o: OrderLocation) => o.id);
 
         const allOrderedIds = [
             ...optimizedLocations.map(loc => loc.id),
-            ...ordersWithoutCoords
+            ...dateOrders.map((o: any) => o.id)
         ];
 
-        // Estimate duration (assuming 25 km/h average speed in city traffic)
         const estimatedDuration = (totalDistance / 25) * 60; // minutes
 
         const result: OptimizedRoute = {
@@ -191,11 +227,18 @@ export async function POST(request: NextRequest) {
             formattedDistance: `${Math.round(totalDistance * 10) / 10} км`,
             formattedDuration: formatDuration(estimatedDuration),
             googleMapsUrl,
-            waypoints: optimizedLocations.map(loc => ({
-                orderId: loc.id,
-                address: loc.address,
-                coords: { lat: loc.lat, lng: loc.lng }
-            }))
+            waypoints: [
+                ...optimizedLocations.map(loc => ({
+                    orderId: loc.id,
+                    address: loc.address,
+                    coords: { lat: loc.lat, lng: loc.lng }
+                })),
+                ...dateOrders.map((o: any) => ({
+                    orderId: o.id,
+                    address: o.address, // We only have the address/link
+                    coords: undefined
+                }))
+            ]
         };
 
         return NextResponse.json(result);

@@ -45,7 +45,6 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
         { id: 'divider1', type: 'divider' },
         { id: 'warehouse', label: t.warehouse.title, icon: Package, group: 'operations' },
         { id: 'cooking', label: t.warehouse.cooking, icon: ChefHat, group: 'operations' },
-        { id: 'sets', label: 'Сеты', icon: UtensilsCrossed, group: 'operations' },
         { id: 'divider2', type: 'divider' },
         { id: 'finance', label: t.finance.title, icon: DollarSign, group: 'finance' },
         { id: 'history', label: t.admin.history, icon: History, group: 'finance' },

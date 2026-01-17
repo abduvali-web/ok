@@ -42,6 +42,8 @@ import { DishesManager } from './warehouse/DishesManager';
 import { IngredientsManager } from './warehouse/IngredientsManager';
 import { CookingManager } from './warehouse/CookingManager'; // Integrated
 import { useLanguage } from '@/contexts/LanguageContext';
+import { SetsTab } from './SetsTab';
+import { UtensilsCrossed } from 'lucide-react';
 
 interface WarehouseTabProps {
     className?: string;
@@ -406,10 +408,14 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                 </CardHeader>
                 <CardContent>
                     <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-                        <TabsList className="grid w-full grid-cols-4 mb-6">
+                        <TabsList className="grid w-full grid-cols-5 mb-6">
                             <TabsTrigger value="cooking" className="flex items-center gap-2">
                                 <ChefHat className="w-4 h-4" />
                                 <span className="hidden sm:inline">{t.warehouse.cooking}</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="sets" className="flex items-center gap-2">
+                                <UtensilsCrossed className="w-4 h-4" />
+                                <span className="hidden sm:inline">Сеты</span>
                             </TabsTrigger>
                             <TabsTrigger value="inventory" className="flex items-center gap-2">
                                 <Package className="w-4 h-4" />
@@ -449,6 +455,11 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 clientsByCalorie={clientsByCalorie}
                                 onCook={fetchData} // Refresh inventory on cook
                             />
+                        </TabsContent>
+
+                        {/* Sets Tab */}
+                        <TabsContent value="sets" className="space-y-4">
+                            <SetsTab />
                         </TabsContent>
 
                         {/* Inventory Tab - Managed by IngredientsManager */}

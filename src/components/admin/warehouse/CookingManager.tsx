@@ -7,17 +7,35 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { Loader2, ChefHat, Check, AlertTriangle } from 'lucide-react';
+import { Loader2, ChefHat, Check, AlertTriangle, UtensilsCrossed } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Dish {
+    id: string | number; // Support both for compatibility
+    name: string;
+    description?: string;
+    mealType: string;
+    imageUrl?: string;
+    calorieMappings?: Record<string, string[]>;
+}
+
+interface SetDish {
+    dishId: number;
+    dishName: string;
+    mealType: string;
+}
+
+interface CalorieGroup {
+    calories: number;
+    dishes: SetDish[];
+}
+
+interface MenuSet {
     id: string;
     name: string;
-    description: string;
-    mealType: string;
-    ingredients: any[];
-    imageUrl: string;
-    calorieMappings?: Record<string, string[]>;
+    menuNumber: number;
+    calorieGroups: CalorieGroup[];
+    isActive: boolean;
 }
 
 interface CookingManagerProps {
@@ -37,6 +55,9 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
     const [cookingAmounts, setCookingAmounts] = useState<Record<string, Record<string, string>>>({});
     const [isCooking, setIsCooking] = useState(false);
 
+    // Custom set integration
+    const [activeSet, setActiveSet] = useState<MenuSet | null>(null);
+
     useEffect(() => {
         fetchData();
     }, [menuNumber, date]);
@@ -44,16 +65,50 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
     const fetchData = async () => {
         setLoading(true);
         try {
-            // Fetch Menu Dishes
-            const menuRes = await fetch(`/api/admin/menus?number=${menuNumber}`);
-            if (menuRes.ok) {
-                const menuData = await menuRes.json();
-                if (menuData && menuData.dishes) {
-                    setDishes(menuData.dishes);
+            // 1. Fetch Active Sets first
+            let currentActiveSet: MenuSet | null = null;
+            try {
+                const setsRes = await fetch('/api/admin/sets');
+                if (setsRes.ok) {
+                    const sets: MenuSet[] = await setsRes.json();
+                    // Find active set for this menu number
+                    currentActiveSet = sets.find(s => s.menuNumber === menuNumber && s.isActive) || null;
+                    setActiveSet(currentActiveSet);
+                }
+            } catch (e) {
+                console.warn('Failed to fetch sets', e);
+            }
+
+            // 2. Determine dishes based on Set or Standard Menu
+            if (currentActiveSet) {
+                // Determine all unique dishes from the set
+                const uniqueDishesMap = new Map<number, Dish>();
+
+                currentActiveSet.calorieGroups.forEach(group => {
+                    group.dishes.forEach(d => {
+                        if (!uniqueDishesMap.has(d.dishId)) {
+                            uniqueDishesMap.set(d.dishId, {
+                                id: d.dishId,
+                                name: d.dishName,
+                                mealType: d.mealType
+                            });
+                        }
+                    });
+                });
+
+                setDishes(Array.from(uniqueDishesMap.values()));
+            } else {
+                // Fallback to standard menu
+                const menuRes = await fetch(`/api/admin/menus?number=${menuNumber}`);
+                if (menuRes.ok) {
+                    const menuData = await menuRes.json();
+                    if (menuData && menuData.dishes) {
+                        setDishes(menuData.dishes);
+                    }
                 }
             }
 
-            // Fetch Cooking Plan Status
+            // 3. Fetch Cooking Plan Status
             const planRes = await fetch(`/api/admin/warehouse/cooking-plan?date=${date}`);
             if (planRes.ok) {
                 const planData = await planRes.json();
@@ -102,12 +157,14 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
                 body: JSON.stringify({
                     date,
                     menuNumber,
-                    updates
+                    updates,
+                    // Pass active set info so backend knows which ingredients to deduct
+                    activeSetId: activeSet?.id
                 })
             });
 
             if (res.ok) {
-                toast.success('Cooked successfully');
+                toast.success('Приготовлено и списано со склада');
                 // Clear inputs
                 setCookingAmounts(prev => {
                     const newState = { ...prev };
@@ -136,11 +193,23 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
         return cookingPlan?.cookedStats?.[dishId]?.[calorie] || 0;
     };
 
-    const getNeededAmount = (dishId: string, calorie: number) => {
-        const dish = dishes.find(d => d.id === dishId);
+    const getNeededAmount = (dishId: string | number, calorie: number) => {
+        // If we are using a custom set
+        if (activeSet) {
+            const group = activeSet.calorieGroups.find(g => g.calories === calorie);
+            if (!group) return 0;
+
+            // Check if this dish is in this calorie group
+            const hasDish = group.dishes.some(d => d.dishId == dishId); // loose equality for string/number
+
+            return hasDish ? (clientsByCalorie[calorie] || 0) : 0;
+        }
+
+        // Fallback to standard logic
+        const dish = dishes.find(d => d.id == dishId);
         if (!dish) return 0;
 
-        // If mappings exist, check if this calorie group is allowed for THIS menuNumber
+        // If mappings exist (standard menu logic)
         if (dish.calorieMappings) {
             const allowedGroups = dish.calorieMappings[menuNumber.toString()] || [];
             if (!allowedGroups.includes(calorie.toString())) {
@@ -161,12 +230,28 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Cooking Control</h3>
-                <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-500">Filter Calories:</span>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 className="text-lg font-medium flex items-center gap-2">
+                        Cooking Control
+                        {activeSet && (
+                            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                                <UtensilsCrossed className="w-3 h-3 mr-1" />
+                                Custom Set: {activeSet.name}
+                            </Badge>
+                        )}
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                        {activeSet
+                            ? "Блюда загружены из активного сета для этого дня"
+                            : "Используется стандартное меню (нет активных сетов)"}
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <span className="text-sm text-slate-500 whitespace-nowrap">Filter Calories:</span>
                     <Select value={selectedCalorieGroup} onValueChange={setSelectedCalorieGroup}>
-                        <SelectTrigger className="w-[120px]">
+                        <SelectTrigger className="w-full sm:w-[120px]">
                             <SelectValue placeholder="All" />
                         </SelectTrigger>
                         <SelectContent>
@@ -195,53 +280,77 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {dishes.map(dish => (
-                            <TableRow key={dish.id}>
-                                <TableCell className="font-medium">
-                                    {dish.name}
-                                    <div className="text-xs text-slate-400">{dish.mealType}</div>
-                                </TableCell>
-                                {filteredCalorieGroups.map(cal => {
-                                    const needed = getNeededAmount(dish.id, cal);
-                                    const cooked = getCookedAmount(dish.id, cal);
-                                    const remaining = Math.max(0, needed - cooked);
-                                    const inputVal = cookingAmounts[dish.id]?.[cal] || '';
+                        {dishes.map(dish => {
+                            // Check if this dish is needed for ANY of the filtered calorie groups
+                            const isNeededAnywhere = filteredCalorieGroups.some(cal => getNeededAmount(dish.id, cal) > 0);
 
-                                    return (
-                                        <TableCell key={cal} className="p-2">
-                                            <div className="bg-slate-50 rounded-lg p-2 space-y-2 border">
-                                                <div className="flex justify-between text-xs">
-                                                    <span className={cooked >= needed ? "text-green-600 font-medium" : "text-amber-600"}>
-                                                        Done: {cooked}
-                                                    </span>
-                                                    <span className="text-slate-500">Left: {remaining}</span>
+                            // Optional: Hide dishes that aren't needed for any displayed column to clean up view
+                            // if (!isNeededAnywhere) return null; 
+
+                            return (
+                                <TableRow key={dish.id}>
+                                    <TableCell className="font-medium">
+                                        {dish.name}
+                                        <div className="text-xs text-slate-400">{dish.mealType}</div>
+                                    </TableCell>
+                                    {filteredCalorieGroups.map(cal => {
+                                        const needed = getNeededAmount(dish.id, cal);
+                                        const cooked = getCookedAmount(dish.id.toString(), cal);
+                                        const remaining = Math.max(0, needed - cooked);
+                                        const inputVal = cookingAmounts[dish.id.toString()]?.[cal] || '';
+
+                                        // If not needed for this column, show greyed out or empty
+                                        if (needed === 0) {
+                                            return (
+                                                <TableCell key={cal} className="p-2 bg-slate-50/50">
+                                                    <div className="h-full flex items-center justify-center text-slate-300 text-xs text-center">
+                                                        -
+                                                    </div>
+                                                </TableCell>
+                                            );
+                                        }
+
+                                        return (
+                                            <TableCell key={cal} className="p-2">
+                                                <div className="bg-slate-50 rounded-lg p-2 space-y-2 border">
+                                                    <div className="flex justify-between text-xs">
+                                                        <span className={cooked >= needed ? "text-green-600 font-medium" : "text-amber-600"}>
+                                                            Ready: {cooked}
+                                                        </span>
+                                                        <span className="text-slate-500">Left: {remaining}</span>
+                                                    </div>
+                                                    <div className="flex gap-1">
+                                                        <Input
+                                                            type="number"
+                                                            className="h-7 text-xs px-1"
+                                                            placeholder={remaining.toString()}
+                                                            value={inputVal}
+                                                            onChange={(e) => handleAmountChange(dish.id.toString(), cal, e.target.value)}
+                                                        />
+                                                        <Button
+                                                            size="icon"
+                                                            className="h-7 w-7 shrink-0"
+                                                            disabled={isCooking || !inputVal}
+                                                            onClick={() => handleCook(dish.id.toString(), cal)}
+                                                        >
+                                                            <ChefHat className="h-3 w-3" />
+                                                        </Button>
+                                                    </div>
                                                 </div>
-                                                <div className="flex gap-1">
-                                                    <Input
-                                                        type="number"
-                                                        className="h-7 text-xs px-1"
-                                                        placeholder={remaining.toString()}
-                                                        value={inputVal}
-                                                        onChange={(e) => handleAmountChange(dish.id, cal, e.target.value)}
-                                                    />
-                                                    <Button
-                                                        size="icon"
-                                                        className="h-7 w-7 shrink-0"
-                                                        disabled={isCooking || !inputVal}
-                                                        onClick={() => handleCook(dish.id, cal)}
-                                                    >
-                                                        <ChefHat className="h-3 w-3" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                    );
-                                })}
-                            </TableRow>
-                        ))}
+                                            </TableCell>
+                                        );
+                                    })}
+                                </TableRow>
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </div>
+            {dishes.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground bg-slate-50 rounded-lg border border-dashed">
+                    Нет блюд для отображения
+                </div>
+            )}
         </div>
     );
 }
