@@ -77,6 +77,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     const [isLoadingClients, setIsLoadingClients] = useState(false);
     const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
     const [activeSet, setActiveSet] = useState<any>(null);
+    const [allClients, setAllClients] = useState<any[]>([]);
 
     // Calculation state
     const [selectedDates, setSelectedDates] = useState<string[]>([]);
@@ -115,6 +116,43 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         setDishQuantities(initialQuantities);
     }, [tomorrowMenu, clientsByCalorie]);
 
+    const getDistributionForDate = useCallback((date: Date) => {
+        const distribution: Record<number, number> = {
+            1200: 0,
+            1600: 0,
+            2000: 0,
+            2500: 0,
+            3000: 0,
+        };
+
+        const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+
+        allClients.forEach((client: any) => {
+            if (client.isActive !== false) {
+                // Parse deliveryDays if it's a string
+                let deliveryDays = client.deliveryDays;
+                if (typeof deliveryDays === 'string') {
+                    try { deliveryDays = JSON.parse(deliveryDays); } catch (e) { deliveryDays = {}; }
+                }
+
+                // Filter by delivery day if available
+                if (deliveryDays && deliveryDays[dayOfWeek] === false) {
+                    return;
+                }
+
+                const calories = client.calories || 2000;
+                // Map to nearest tier
+                if (calories <= 1400) distribution[1200]++;
+                else if (calories <= 1800) distribution[1600]++;
+                else if (calories <= 2200) distribution[2000]++;
+                else if (calories <= 2800) distribution[2500]++;
+                else distribution[3000]++;
+            }
+        });
+
+        return distribution;
+    }, [allClients]);
+
     // Fetch client calorie distribution from database
     const fetchClientCalories = useCallback(async () => {
         setIsLoadingClients(true);
@@ -122,29 +160,29 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             const response = await fetch('/api/admin/clients');
             if (response.ok) {
                 const clients = await response.json();
-                const distribution: Record<number, number> = {
-                    1200: 0,
-                    1600: 0,
-                    2000: 0,
-                    2500: 0,
-                    3000: 0,
-                };
+                setAllClients(clients);
 
-                // Calculate tomorrow's day of week
+                // Calculate tomorrow's distribution for display
                 const today = new Date();
                 const tomorrow = new Date(today);
                 tomorrow.setDate(today.getDate() + 1);
+
+                // We'll calculate it using the same logic we just added
+                // But since state hasn't updated yet, we use the local variable
+                const distribution: Record<number, number> = {
+                    1200: 0, 1600: 0, 2000: 0, 2500: 0, 3000: 0,
+                };
                 const dayOfWeek = tomorrow.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
 
-                clients.forEach((client: { calories?: number; isActive?: boolean; deliveryDays?: Record<string, boolean> }) => {
+                clients.forEach((client: any) => {
                     if (client.isActive !== false) {
-                        // Filter by delivery day if available
-                        if (client.deliveryDays && client.deliveryDays[dayOfWeek as keyof typeof client.deliveryDays] === false) {
-                            return;
+                        let deliveryDays = client.deliveryDays;
+                        if (typeof deliveryDays === 'string') {
+                            try { deliveryDays = JSON.parse(deliveryDays); } catch (e) { deliveryDays = {}; }
                         }
+                        if (deliveryDays && deliveryDays[dayOfWeek] === false) return;
 
                         const calories = client.calories || 2000;
-                        // Map to nearest tier
                         if (calories <= 1400) distribution[1200]++;
                         else if (calories <= 1800) distribution[1600]++;
                         else if (calories <= 2200) distribution[2000]++;
@@ -297,10 +335,14 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         for (const dateStr of selectedDates) {
             const date = new Date(dateStr);
             const menuNumber = getMenuNumber(date);
+
+            // DYNAMICALLY calculate distribution for this specific date
+            const distributionForDate = getDistributionForDate(date);
+
             const menuIngredients = calculateIngredientsForMenu(
                 menuNumber,
-                clientsByCalorie,
-                dishQuantities,
+                distributionForDate,
+                dishQuantities, // User overrides (usually for tomorrow)
                 activeSet
             );
 

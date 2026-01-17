@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { OrderStatus, PaymentStatus, PaymentMethod } from '@prisma/client'
 
 function isEligibleByPattern(orderPattern: string | null | undefined, date: Date) {
   const day = date.getDate()
@@ -33,10 +34,24 @@ export async function POST(request: NextRequest) {
     // Ensure we start from the beginning of the day
     startDate.setHours(0, 0, 0, 0)
 
-    const defaultAdmin = await db.admin.findFirst({ where: { role: 'SUPER_ADMIN' } })
-    if (!defaultAdmin) return NextResponse.json({ error: 'Администратор не найден' }, { status: 400 })
+    // Robust default admin detection
+    let defaultAdmin = await db.admin.findFirst({ where: { role: 'SUPER_ADMIN' } })
+    if (!defaultAdmin) {
+      // Fallback to current user if no super admin exists
+      defaultAdmin = await db.admin.findUnique({ where: { id: user.id } })
+    }
+
+    // Last resort: any admin
+    if (!defaultAdmin) {
+      defaultAdmin = await db.admin.findFirst()
+    }
+
+    if (!defaultAdmin) {
+      return NextResponse.json({ error: 'Администратор не найден' }, { status: 400 })
+    }
 
     const customers = await db.customer.findMany({ where: { isActive: true, deletedAt: null } })
+    console.log(`Generating auto-orders for ${customers.length} customers starting from ${startDate.toDateString()}`)
 
     let totalCreated = 0
     const createdOrdersSummary: any[] = []
@@ -109,10 +124,10 @@ export async function POST(request: NextRequest) {
             quantity: 1,
             calories: c.calories ?? 1600,
             specialFeatures: c.preferences || '',
-            paymentStatus: 'UNPAID',
-            paymentMethod: 'CASH',
+            paymentStatus: PaymentStatus.UNPAID,
+            paymentMethod: PaymentMethod.CASH,
             isPrepaid: false,
-            status: 'PENDING',
+            status: OrderStatus.PENDING,
             fromAutoOrder: true // Mark as auto-order
           },
           include: { customer: { select: { name: true, phone: true } } }
@@ -122,7 +137,7 @@ export async function POST(request: NextRequest) {
         if (createdOrdersSummary.length < 50) { // Limit response size
           createdOrdersSummary.push({
             id: createdOrder.id,
-            customerName: createdOrder.customer?.name,
+            customerName: (createdOrder as any).customer?.name,
             date: processDate.toISOString().split('T')[0]
           })
         }
