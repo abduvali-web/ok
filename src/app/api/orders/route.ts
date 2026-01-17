@@ -76,17 +76,12 @@ export async function GET(request: NextRequest) {
       if (Object.keys(filters).length > 0) {
         filteredOrders = filteredOrders.filter(order => {
           // Group filters by category
-<<<<<<< HEAD
           const deliveryStatusFilters = []
-=======
-          const deliveryStatusFilters: string[] = []
->>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
           if (filters.successful) deliveryStatusFilters.push('DELIVERED')
           if (filters.failed) deliveryStatusFilters.push('FAILED')
           if (filters.pending) deliveryStatusFilters.push('PENDING')
           if (filters.inDelivery) deliveryStatusFilters.push('IN_DELIVERY')
 
-<<<<<<< HEAD
           const paymentStatusFilters = []
           if (filters.paid) paymentStatusFilters.push('PAID')
           if (filters.unpaid) paymentStatusFilters.push('UNPAID')
@@ -96,47 +91,24 @@ export async function GET(request: NextRequest) {
           if (filters.cash) paymentMethodFilters.push('CASH')
 
           const calorieFilters = []
-=======
-          const paymentStatusFilters: string[] = []
-          if (filters.paid) paymentStatusFilters.push('PAID')
-          if (filters.unpaid) paymentStatusFilters.push('UNPAID')
-
-          const paymentMethodFilters: string[] = []
-          if (filters.card) paymentMethodFilters.push('CARD')
-          if (filters.cash) paymentMethodFilters.push('CASH')
-
-          const calorieFilters: number[] = []
->>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
           if (filters.calories1200) calorieFilters.push(1200)
           if (filters.calories1600) calorieFilters.push(1600)
           if (filters.calories2000) calorieFilters.push(2000)
           if (filters.calories2500) calorieFilters.push(2500)
           if (filters.calories3000) calorieFilters.push(3000)
 
-<<<<<<< HEAD
           const orderTypeFilters = []
           if (filters.autoOrders) orderTypeFilters.push(true)
           if (filters.manualOrders) orderTypeFilters.push(false)
 
           const quantityFilters = []
-=======
-          const orderTypeFilters: boolean[] = []
-          if (filters.autoOrders) orderTypeFilters.push(true)
-          if (filters.manualOrders) orderTypeFilters.push(false)
-
-          const quantityFilters: string[] = []
->>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
           if (filters.singleItem) quantityFilters.push('single')
           if (filters.multiItem) quantityFilters.push('multi')
 
           // Apply grouped logic (OR within category, AND between categories)
 
           // Delivery Status
-<<<<<<< HEAD
           if (deliveryStatusFilters.length > 0 && !deliveryStatusFilters.includes(order.orderStatus)) return false
-=======
-          if (deliveryStatusFilters.length > 0 && !deliveryStatusFilters.includes(order.status)) return false
->>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
 
           // Payment Status
           if (paymentStatusFilters.length > 0 && !paymentStatusFilters.includes(order.paymentStatus)) return false
@@ -148,11 +120,7 @@ export async function GET(request: NextRequest) {
           if (calorieFilters.length > 0 && !calorieFilters.includes(order.calories)) return false
 
           // Order Type
-<<<<<<< HEAD
           if (orderTypeFilters.length > 0 && !orderTypeFilters.includes(order.isAutoOrder)) return false
-=======
-          if (orderTypeFilters.length > 0 && !orderTypeFilters.includes(order.fromAutoOrder)) return false
->>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
 
           // Quantity
           if (quantityFilters.length > 0) {
@@ -171,19 +139,11 @@ export async function GET(request: NextRequest) {
 
     const transformedOrders = filteredOrders.map(order => ({
       ...order,
-<<<<<<< HEAD
-=======
-      orderStatus: order.status,
-      isAutoOrder: order.fromAutoOrder,
->>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
       customerName: order.customer?.name || 'Неизвестный клиент',
       customerPhone: order.customer?.phone || 'Нет телефона',
       customer: { name: order.customer?.name || 'Неизвестный клиент', phone: order.customer?.phone || 'Нет телефона' },
       deliveryDate: order.deliveryDate ? new Date(order.deliveryDate).toISOString().split('T')[0] : new Date(order.createdAt).toISOString().split('T')[0],
-<<<<<<< HEAD
       isAutoOrder: order.isAutoOrder,
-=======
->>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
       courierName: order.courier?.name || null
     }))
 
@@ -304,11 +264,7 @@ export async function POST(request: NextRequest) {
           paymentStatus: paymentStatus || PaymentStatus.UNPAID,
           paymentMethod: paymentMethod || PaymentMethod.CASH,
           isPrepaid: isPrepaid || false,
-<<<<<<< HEAD
           orderStatus: OrderStatus.PENDING,
-=======
-          status: OrderStatus.PENDING,
->>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
           latitude: sanitizedLatitude,
           longitude: sanitizedLongitude
         },
