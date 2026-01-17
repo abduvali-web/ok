@@ -221,12 +221,24 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
     const getNeededAmount = (dishId: string | number, calorie: number) => {
         // If we are using a custom set
         if (activeSet) {
-            const group = activeSet.calorieGroups.find(g => g.calories === calorie);
+            let group: CalorieGroup | undefined;
+            const groups = activeSet.calorieGroups as unknown as Record<string, CalorieGroup[]>;
+
+            if (Array.isArray(groups)) {
+                // Legacy fallback
+                group = groups.find((g: any) => g.calories === calorie);
+            } else {
+                // New structure
+                const dayGroups = groups[menuNumber.toString()];
+                if (dayGroups) {
+                    group = dayGroups.find(g => g.calories === calorie);
+                }
+            }
+
             if (!group) return 0;
 
             // Check if this dish is in this calorie group
-            const hasDish = group.dishes.some(d => d.dishId == dishId); // loose equality for string/number
-
+            const hasDish = group.dishes.some(d => d.dishId == dishId); // loose equality
             return hasDish ? (clientsByCalorie[calorie] || 0) : 0;
         }
 

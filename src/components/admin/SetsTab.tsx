@@ -223,6 +223,55 @@ export function SetsTab() {
 
     // CRUD Operations for Dishes (similar to before but aware of Day structure)
 
+    // Ingredient Management
+    const getAllUniqueIngredients = () => {
+        const ingredients = new Map<string, string>(); // name -> unit
+        getAllDishes().forEach(d => {
+            d.ingredients?.forEach(i => ingredients.set(i.name, i.unit));
+        });
+        return Array.from(ingredients.entries()).map(([name, unit]) => ({ name, unit })).sort((a, b) => a.name.localeCompare(b.name));
+    };
+
+    const removeIngredient = (index: number) => {
+        if (!editingDish) return;
+        const currentIngredients = editingDish.dish.customIngredients
+            ? [...editingDish.dish.customIngredients]
+            : [...getOriginalIngredients(editingDish.dish.dishId)];
+
+        currentIngredients.splice(index, 1);
+
+        setEditingDish({
+            ...editingDish,
+            dish: { ...editingDish.dish, customIngredients: currentIngredients }
+        });
+    };
+
+    const addIngredient = (name: string) => {
+        if (!editingDish) return;
+        const currentIngredients = editingDish.dish.customIngredients
+            ? [...editingDish.dish.customIngredients]
+            : [...getOriginalIngredients(editingDish.dish.dishId)];
+
+        if (currentIngredients.find(i => i.name === name)) {
+            toast.error('Ингредиент уже добавлен');
+            return;
+        }
+
+        const allIngs = getAllUniqueIngredients();
+        const found = allIngs.find(i => i.name === name);
+
+        currentIngredients.push({
+            name,
+            amount: 0,
+            unit: found?.unit || 'gr'
+        });
+
+        setEditingDish({
+            ...editingDish,
+            dish: { ...editingDish.dish, customIngredients: currentIngredients }
+        });
+    };
+
     const updateEditingDish = async () => {
         if (!editingDish || !selectedSet) return;
 
@@ -649,22 +698,30 @@ export function SetsTab() {
                 </DialogContent>
             </Dialog>
 
-            {/* Edit Ingredients Modal - Same as before but uses local state */}
+            {/* Edit Ingredients Modal */}
             <Dialog open={isEditDishModalOpen} onOpenChange={setIsEditDishModalOpen}>
-                <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-hidden flex flex-col">
-                    <DialogHeader>
+                <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-hidden flex flex-col p-0">
+                    <DialogHeader className="px-6 py-4 border-b">
                         <DialogTitle>Ингредиенты: {editingDish?.dish.dishName}</DialogTitle>
+                        <DialogDescription>
+                            Настройте состав и вес ингредиентов для этого блюда в рамках сета.
+                        </DialogDescription>
                     </DialogHeader>
                     {editingDish && (
-                        <div className="flex-1 overflow-auto py-2">
+                        <div className="flex-1 overflow-auto">
                             <Table>
-                                <TableHeader>
-                                    <TableRow><TableHead>Название</TableHead><TableHead>Кол-во</TableHead><TableHead>Ед.</TableHead></TableRow>
+                                <TableHeader className="bg-slate-50 sticky top-0">
+                                    <TableRow>
+                                        <TableHead className="pl-6">Название</TableHead>
+                                        <TableHead>Кол-во</TableHead>
+                                        <TableHead>Ед.</TableHead>
+                                        <TableHead className="w-[50px]"></TableHead>
+                                    </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {(editingDish.dish.customIngredients || getOriginalIngredients(editingDish.dish.dishId)).map((ing, idx) => (
-                                        <TableRow key={idx}>
-                                            <TableCell>{ing.name}</TableCell>
+                                        <TableRow key={`${ing.name}-${idx}`}>
+                                            <TableCell className="pl-6 font-medium">{ing.name}</TableCell>
                                             <TableCell>
                                                 <Input
                                                     type="number" className="h-8 w-24"
@@ -682,16 +739,58 @@ export function SetsTab() {
                                                     }}
                                                 />
                                             </TableCell>
-                                            <TableCell>{ing.unit}</TableCell>
+                                            <TableCell className="text-muted-foreground text-sm">{ing.unit}</TableCell>
+                                            <TableCell>
+                                                <Button
+                                                    variant="ghost" size="icon"
+                                                    onClick={() => removeIngredient(idx)}
+                                                    className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </TableCell>
                                         </TableRow>
                                     ))}
+                                    {(editingDish.dish.customIngredients || getOriginalIngredients(editingDish.dish.dishId)).length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-24 text-center text-slate-400">
+                                                Нет ингредиентов
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
                                 </TableBody>
                             </Table>
                         </div>
                     )}
-                    <DialogFooter>
-                        <Button onClick={updateEditingDish}>Сохранить</Button>
-                    </DialogFooter>
+
+                    <div className="p-4 border-t bg-slate-50/50 space-y-3">
+                        <div className="space-y-2">
+                            <Label className="text-xs text-muted-foreground uppercase font-bold">Добавить ингредиент</Label>
+                            <Select onValueChange={(val) => {
+                                addIngredient(val);
+                                // Hack to reset select not needed if we want to add multiple? No, value stays.
+                                // It's fine for now.
+                            }}>
+                                <SelectTrigger className="bg-white">
+                                    <SelectValue placeholder="Выберите ингредиент из списка..." />
+                                </SelectTrigger>
+                                <SelectContent className="max-h-60">
+                                    {getAllUniqueIngredients().map((ing) => (
+                                        <SelectItem key={ing.name} value={ing.name}>
+                                            <div className="flex justify-between w-full min-w-[200px]">
+                                                <span>{ing.name}</span>
+                                                <span className="text-muted-foreground text-xs">{ing.unit}</span>
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex justify-end gap-2 pt-2">
+                            <Button variant="outline" onClick={() => setIsEditDishModalOpen(false)}>Отмена</Button>
+                            <Button onClick={updateEditingDish}>Сохранить изменения</Button>
+                        </div>
+                    </div>
                 </DialogContent>
             </Dialog>
         </div>
