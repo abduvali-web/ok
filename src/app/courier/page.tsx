@@ -32,6 +32,10 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { CourierProfile } from '@/components/courier/CourierProfile'
 import { ChatTab } from '@/components/chat/ChatTab'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet"
+<<<<<<< HEAD
+=======
+import { RouteOptimizeButton } from '@/components/admin/RouteOptimizeButton'
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
 
 // Dynamically import Map component to avoid SSR issues with Leaflet
 const CourierMap = dynamic(() => import('@/components/courier/CourierMap'), {
@@ -440,6 +444,30 @@ export default function CourierPage() {
                 {t.courier.todayOrders} ({orders.length})
               </h2>
 
+<<<<<<< HEAD
+=======
+              {orders.length > 0 && (
+                <RouteOptimizeButton
+                  orders={orders.map(o => ({
+                    id: o.id,
+                    deliveryAddress: o.deliveryAddress,
+                    latitude: o.latitude,
+                    longitude: o.longitude,
+                    customerName: o.customer.name
+                  }))}
+                  onOptimized={(orderedIds) => {
+                    const orderedOrders = orderedIds
+                      .map(id => orders.find(o => o.id === id))
+                      .filter(Boolean) as typeof orders;
+                    setOrders(orderedOrders);
+                  }}
+                  startPoint={currentLocation}
+                  variant="outline"
+                  size="sm"
+                />
+              )}
+
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
               <AnimatePresence mode="popLayout">
                 {orders.length === 0 ? (
                   <motion.div

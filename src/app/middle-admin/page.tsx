@@ -51,7 +51,14 @@ import {
   MapPin,
   Edit,
   Globe,
+<<<<<<< HEAD
   DollarSign
+=======
+  DollarSign,
+  Clock,
+  Truck,
+  UtensilsCrossed
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -71,6 +78,11 @@ import { getDailyPrice, PLAN_TYPES } from '@/lib/menuData'
 
 import { WarehouseTab } from '@/components/admin/WarehouseTab'
 import { FinanceTab } from '@/components/admin/FinanceTab'
+<<<<<<< HEAD
+=======
+import { SetsTab } from '@/components/admin/SetsTab'
+import { RouteOptimizeButton } from '@/components/admin/RouteOptimizeButton'
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
 
 interface Admin {
   id: string
@@ -1834,6 +1846,10 @@ export default function MiddleAdminPage() {
               <DollarSign className="w-4 h-4 mr-2" />
               {t.finance.title}
             </TabsTrigger>
+<<<<<<< HEAD
+=======
+
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
           </TabsList>
 
           {/* Statistics Tab */}
@@ -2098,11 +2114,30 @@ export default function MiddleAdminPage() {
                 </div>
               </CardHeader>
               <CardContent>
+<<<<<<< HEAD
                 <div className="flex items-center gap-2">
+=======
+                <div className="flex flex-wrap items-center gap-2">
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
                   <Button onClick={() => setIsCreateOrderModalOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Создать заказ
                   </Button>
+<<<<<<< HEAD
+=======
+                  <RouteOptimizeButton
+                    orders={orders}
+                    onOptimized={(orderedIds) => {
+                      // Reorder the orders array based on optimized IDs
+                      const orderedOrders = orderedIds
+                        .map(id => orders.find(o => o.id === id))
+                        .filter(Boolean) as typeof orders;
+                      setOrders(orderedOrders);
+                    }}
+                    variant="outline"
+                    size="sm"
+                  />
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
                   <Button variant="outline" size="sm" onClick={() => setIsBulkEditOrdersModalOpen(true)}>
                     <Edit className="w-4 h-4 mr-2" />
                     Редактировать ({selectedOrders.size})
@@ -3776,6 +3811,16 @@ export default function MiddleAdminPage() {
           <TabsContent value="warehouse" className="space-y-4">
             <WarehouseTab />
           </TabsContent>
+<<<<<<< HEAD
+=======
+
+          {/* Finance Tab */}
+          <TabsContent value="finance" className="space-y-4">
+            <FinanceTab />
+          </TabsContent>
+
+
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
         </Tabs>
       </main >
       {/* Bulk Edit Orders Modal */}

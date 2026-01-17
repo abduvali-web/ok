@@ -62,41 +62,70 @@ export async function PATCH(
         if (!hasRole(user, ['COURIER'])) {
           return NextResponse.json({ error: 'Только курьер может начать доставку' }, { status: 403 })
         }
+<<<<<<< HEAD
         if (order.orderStatus !== 'PENDING') {
           return NextResponse.json({ error: 'Можно начать только ожидающий заказ' }, { status: 400 })
         }
         updateData.orderStatus = 'IN_DELIVERY'
+=======
+        if (order.status !== 'PENDING') {
+          return NextResponse.json({ error: 'Можно начать только ожидающий заказ' }, { status: 400 })
+        }
+        updateData.status = 'IN_DELIVERY'
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
         updateData.courierId = user.id
         break
       case 'pause_delivery':
         if (!hasRole(user, ['COURIER'])) {
           return NextResponse.json({ error: 'Только курьер может приостановить доставку' }, { status: 403 })
         }
+<<<<<<< HEAD
         if (order.orderStatus !== 'IN_DELIVERY') {
           return NextResponse.json({ error: 'Можно приостановить только активную доставку' }, { status: 400 })
         }
         updateData.orderStatus = 'PAUSED'
+=======
+        if (order.status !== 'IN_DELIVERY') {
+          return NextResponse.json({ error: 'Можно приостановить только активную доставку' }, { status: 400 })
+        }
+        updateData.status = 'PAUSED'
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
         break
       case 'resume_delivery':
         if (!hasRole(user, ['COURIER'])) {
           return NextResponse.json({ error: 'Только курьер может возобновить доставку' }, { status: 403 })
         }
+<<<<<<< HEAD
         if (order.orderStatus !== 'PAUSED') {
           return NextResponse.json({ error: 'Можно возобновить только приостановленную доставку' }, { status: 400 })
         }
         updateData.orderStatus = 'IN_DELIVERY'
+=======
+        if (order.status !== 'PAUSED') {
+          return NextResponse.json({ error: 'Можно возобновить только приостановленную доставку' }, { status: 400 })
+        }
+        updateData.status = 'IN_DELIVERY'
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
         break
       case 'complete_delivery':
         if (!hasRole(user, ['COURIER'])) {
           return NextResponse.json({ error: 'Только курьер может завершить доставку' }, { status: 403 })
         }
 
+<<<<<<< HEAD
         if (order.orderStatus === 'DELIVERED') {
+=======
+        if (order.status === 'DELIVERED') {
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
           return NextResponse.json({ error: 'Заказ уже доставлен' }, { status: 400 })
         }
 
         const { amountReceived } = body
+<<<<<<< HEAD
         updateData.orderStatus = 'DELIVERED'
+=======
+        updateData.status = 'DELIVERED'
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
         updateData.deliveredAt = new Date()
 
         const transactionOps = []
@@ -239,7 +268,11 @@ export async function PATCH(
       customerPhone: updatedOrder.customer?.phone || 'Нет телефона',
       customer: { name: updatedOrder.customer?.name || 'Неизвестный клиент', phone: updatedOrder.customer?.phone || 'Нет телефона' },
       deliveryDate: updatedOrder.deliveryDate ? new Date(updatedOrder.deliveryDate).toISOString().split('T')[0] : new Date(updatedOrder.createdAt).toISOString().split('T')[0],
+<<<<<<< HEAD
       isAutoOrder: updatedOrder.isAutoOrder,
+=======
+      isAutoOrder: updatedOrder.fromAutoOrder,
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
       courierName: updatedOrder.courier?.name || null
     }
 
@@ -314,7 +347,11 @@ export async function GET(
       customerPhone: order.customer?.phone || 'Нет телефона',
       customer: { name: order.customer?.name || 'Неизвестный клиент', phone: order.customer?.phone || 'Нет телефона' },
       deliveryDate: order.deliveryDate ? new Date(order.deliveryDate).toISOString().split('T')[0] : new Date(order.createdAt).toISOString().split('T')[0],
+<<<<<<< HEAD
       isAutoOrder: order.isAutoOrder
+=======
+      isAutoOrder: order.fromAutoOrder
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
     }
 
     return NextResponse.json(transformedOrder)
