@@ -127,6 +127,8 @@ enum OrderStatus {
   DELIVERING
   DELIVERED
   CANCELED
+
+  @@map("order_status_new")
 }
 
 enum OrderType {
