@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useState, useEffect, ReactNode } from 'react';
+import { Button } from "@/components/ui/button";
 import { Sidebar } from './Sidebar';
 import { MobileHeader } from './MobileHeader';
 
@@ -69,7 +70,31 @@ export function AdminLayout({
             />
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0">
+            <div className="flex-1 flex flex-col min-w-0 relative">
+                {/* Sidebar Toggle Button (Custom request) */}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-4 left-4 z-50 lg:hidden bg-white/50 backdrop-blur-sm shadow-sm hover:bg-white"
+                    onClick={() => setIsSidebarOpen(true)}
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    >
+                        <line x1="4" x2="20" y1="12" y2="12" />
+                        <line x1="4" x2="20" y1="6" y2="6" />
+                        <line x1="4" x2="20" y1="18" y2="18" />
+                    </svg>
+                </Button>
+
                 {/* Mobile Header */}
                 <MobileHeader
                     onMenuClick={() => setIsSidebarOpen(true)}

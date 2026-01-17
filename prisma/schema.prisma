@@ -43,6 +43,7 @@ model Admin {
   companyBalance        Float          @default(0)
   salary                Int            @default(0)
   transactions          Transaction[]
+  menuSets              MenuSet[]
 
   @@map("admins")
 }
@@ -98,94 +99,77 @@ model Customer {
 model Order {
   id              String         @id @default(cuid())
   orderNumber     Int            @unique
+  status          OrderStatus    @default(NEW)
   customerId      String
-  adminId         String
-  courierId       String?
+  customer        Customer       @relation(fields: [customerId], references: [id])
+  deliveryDate    DateTime       @default(now())
   deliveryAddress String
-  deliveryDate    DateTime?
-  deliveryTime    String
-  quantity        Int            @default(1)
-  calories        Int
-  specialFeatures String?
-  paymentStatus   PaymentStatus
-  paymentMethod   PaymentMethod
-  orderStatus     OrderStatus    @default(PENDING)
-  isPrepaid       Boolean        @default(false)
-  isAutoOrder     Boolean        @default(false)
   latitude        Float?
   longitude       Float?
-  deliveredAt     DateTime?
-  deletedAt       DateTime?
+  notes           String?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
-  amountReceived  Float?
+  orderType       OrderType      @default(MORNING)
+  fromAutoOrder   Boolean        @default(false)
+  
+  adminId         String?
+  admin           Admin?         @relation("OrderAdmin", fields: [adminId], references: [id])
 
-  customer  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  admin     Admin    @relation("OrderAdmin", fields: [adminId], references: [id])
-  courier   Admin?   @relation("OrderCourier", fields: [courierId], references: [id])
+  courierId       String?
+  courier         Admin?         @relation("OrderCourier", fields: [courierId], references: [id])
 
   @@map("orders")
 }
 
-enum PaymentStatus {
-  PAID
-  UNPAID
-}
-
-enum PaymentMethod {
-  CARD
-  CASH
-}
-
 enum OrderStatus {
-  PENDING
-  IN_DELIVERY
-  PAUSED
+  NEW
+  IN_PROCESS
+  DELIVERING
   DELIVERED
-  FAILED
+  CANCELED
+}
+
+enum OrderType {
+  MORNING
+  EVENING
 }
 
 model ActionLog {
-  id          String   @id @default(cuid())
-  adminId     String
-  action      String
-  entityType  String
-  entityId    String
-  oldValues   String?
-  newValues   String?
-  description String?
-  createdAt   DateTime @default(now())
-
-  admin Admin @relation(fields: [adminId], references: [id])
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+  
+  admin     Admin    @relation(fields: [adminId], references: [id])
 
   @@map("action_logs")
 }
 
 model InterfaceConfig {
-  id           String   @id @default(cuid())
-  adminId      String   @unique
-  buttonConfig String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  admin Admin @relation(fields: [adminId], references: [id])
+  id        String   @id @default(cuid())
+  adminId   String   @unique
+  theme     String   @default("light")
+  language  String   @default("ru")
+  
+  admin     Admin    @relation(fields: [adminId], references: [id])
 
   @@map("interface_configs")
 }
 
 model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
 
   user Admin @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -197,6 +181,7 @@ model Conversation {
   id             String    @id @default(cuid())
   participant1Id String
   participant2Id String
+  lastMessage    String?
   lastMessageAt  DateTime  @default(now())
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -251,7 +236,6 @@ model WarehouseItem {
   
   @@map("warehouse_items")
 }
-
 
 model DailyCookingPlan {
   id          String   @id @default(cuid())
@@ -312,4 +296,21 @@ model Dish {
   updatedAt   DateTime @updatedAt
 
   @@map("dishes")
+}
+
+model MenuSet {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  menuNumber    Int      @default(0)
+  calorieGroups Json     // Custom calorie/dish config
+  isActive      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  adminId       String?
+  admin         Admin?   @relation(fields: [adminId], references: [id])
+
+  @@map("menu_sets")
+  @@index([adminId])
 }

@@ -1839,13 +1839,7 @@ export default function MiddleAdminPage() {
               <DollarSign className="w-4 h-4 mr-2" />
               {t.finance.title}
             </TabsTrigger>
-            <TabsTrigger
-              value="sets"
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
-            >
-              <UtensilsCrossed className="w-4 h-4 mr-2" />
-              Сеты
-            </TabsTrigger>
+
           </TabsList>
 
           {/* Statistics Tab */}
@@ -3806,10 +3800,7 @@ export default function MiddleAdminPage() {
             <FinanceTab />
           </TabsContent>
 
-          {/* Sets Tab - Custom Menu Sets */}
-          <TabsContent value="sets" className="space-y-4">
-            <SetsTab />
-          </TabsContent>
+
         </Tabs>
       </main >
       {/* Bulk Edit Orders Modal */}
