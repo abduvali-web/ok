@@ -4,53 +4,52 @@ import { MENUS, getDishImageUrl, EXTRA_DISHES } from '../src/lib/menuData';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Clearing existing dishes...');
+  console.log('Clearing existing menus and dishes...');
+  await prisma.menu.deleteMany();
   await prisma.dish.deleteMany();
+
   console.log('Start seeding Dishes from menuData...');
 
-  const processDish = async (dish: any) => {
-    // Correct Image URL from the Map
-    const imageUrl = getDishImageUrl(dish.id);
+  const dishMap = new Map<string, any>();
 
-    // Check if exists by ID (since we want to keep IDs in sync)
+  // 1. First, create all unique dishes
+  const allSourceDishes = [
+    ...MENUS.flatMap(m => m.dishes),
+    ...EXTRA_DISHES
+  ];
+
+  for (const dish of allSourceDishes) {
     const dishId = dish.id.toString();
-    const existing = await prisma.dish.findUnique({ where: { id: dishId } });
+    if (dishMap.has(dishId)) continue;
 
-    if (!existing) {
-      await prisma.dish.create({
-        data: {
-          id: dishId,
-          name: dish.name,
-          mealType: dish.mealType,
-          imageUrl: imageUrl,
-          ingredients: dish.ingredients || [],
-        }
-      });
-      console.log(`Created: ${dish.name} (ID: ${dishId})`);
-    } else {
-      // Update image or ingredients if changed
-      // We always update ingredients to ensure sync with menuData
-      await prisma.dish.update({
-        where: { id: existing.id },
-        data: {
-          imageUrl: imageUrl,
-          ingredients: dish.ingredients || [] // Fix: Update ingredients
-        }
-      });
-      console.log(`Updated: ${dish.name}`);
-    }
-  };
-
-  // 1. Process Daily Menus
-  for (const menu of MENUS) {
-    for (const dish of menu.dishes) {
-      await processDish(dish);
-    }
+    const imageUrl = getDishImageUrl(dish.id);
+    const createdDish = await prisma.dish.create({
+      data: {
+        id: dishId,
+        name: dish.name,
+        mealType: dish.mealType,
+        imageUrl: imageUrl,
+        ingredients: dish.ingredients || [],
+      }
+    });
+    dishMap.set(dishId, createdDish);
+    console.log(`Created Dish: ${dish.name} (ID: ${dishId})`);
   }
 
-  // 2. Process Extra/6th Meal Dishes
-  for (const dish of EXTRA_DISHES) {
-    await processDish(dish);
+  // 2. Create the 21 Menu records and link dishes
+  console.log('Seeding 21-day Menus...');
+  for (const sourceMenu of MENUS) {
+    const dishIds = sourceMenu.dishes.map(d => d.id.toString());
+
+    await prisma.menu.create({
+      data: {
+        number: sourceMenu.menuNumber,
+        dishes: {
+          connect: dishIds.map(id => ({ id }))
+        }
+      }
+    });
+    console.log(`Created Menu #${sourceMenu.menuNumber} with ${dishIds.length} dishes`);
   }
 
   console.log('Seeding finished.');

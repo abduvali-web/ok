@@ -78,6 +78,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
     const [activeSet, setActiveSet] = useState<any>(null);
     const [allClients, setAllClients] = useState<any[]>([]);
+    const [allOrders, setAllOrders] = useState<any[]>([]);
 
     // Calculation state
     const [selectedDates, setSelectedDates] = useState<string[]>([]);
@@ -125,8 +126,29 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             3000: 0,
         };
 
+        const dateStr = date.toISOString().split('T')[0];
         const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
 
+        // 1. Try to get distribution from ACTUAL ORDERS first (Source of Truth)
+        const dayOrders = allOrders.filter(o => {
+            const oDate = o.deliveryDate ? new Date(o.deliveryDate).toISOString().split('T')[0] : '';
+            return oDate === dateStr;
+        });
+
+        if (dayOrders.length > 0) {
+            dayOrders.forEach(order => {
+                const cals = order.calories || 2000;
+                // Map to nearest tier
+                if (cals <= 1400) distribution[1200]++;
+                else if (cals <= 1800) distribution[1600]++;
+                else if (cals <= 2200) distribution[2000]++;
+                else if (cals <= 2800) distribution[2500]++;
+                else distribution[3000]++;
+            });
+            return distribution;
+        }
+
+        // 2. Fallback to Client Patterns if no orders exist for this day
         allClients.forEach((client: any) => {
             if (client.isActive !== false) {
                 // Parse deliveryDays if it's a string
