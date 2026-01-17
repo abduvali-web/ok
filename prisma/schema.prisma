@@ -104,13 +104,21 @@ model Order {
   customer        Customer       @relation(fields: [customerId], references: [id])
   deliveryDate    DateTime?      @default(now())
   deliveryAddress String
+  deliveryTime    String?
   latitude        Float?
   longitude       Float?
+  quantity        Int            @default(1)
+  calories        Int            @default(1600)
+  specialFeatures String?
   notes           String?
+  paymentStatus   PaymentStatus  @default(UNPAID)
+  paymentMethod   PaymentMethod  @default(CASH)
+  isPrepaid       Boolean        @default(false)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   orderType       OrderType      @default(MORNING)
   fromAutoOrder   Boolean        @default(false)
+  deletedAt       DateTime?
   
   adminId         String?
   admin           Admin?         @relation("OrderAdmin", fields: [adminId], references: [id])
@@ -123,12 +131,26 @@ model Order {
 
 enum OrderStatus {
   NEW
+  PENDING
   IN_PROCESS
-  DELIVERING
+  IN_DELIVERY
   DELIVERED
   CANCELED
+  FAILED
 
   @@map("order_status_new")
+}
+
+enum PaymentStatus {
+  PAID
+  UNPAID
+  PARTIAL
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
 }
 
 enum OrderType {

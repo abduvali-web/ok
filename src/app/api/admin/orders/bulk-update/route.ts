@@ -23,7 +23,7 @@ export async function PATCH(request: NextRequest) {
         // Prepare update data
         const updateData: any = {}
 
-        if (updates.orderStatus) updateData.orderStatus = updates.orderStatus
+        if (updates.orderStatus) updateData.status = updates.orderStatus
         if (updates.paymentStatus) updateData.paymentStatus = updates.paymentStatus
         if (updates.courierId) updateData.courierId = updates.courierId === 'none' ? null : updates.courierId
         if (updates.deliveryDate) updateData.deliveryDate = new Date(updates.deliveryDate)

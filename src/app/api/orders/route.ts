@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
           // Apply grouped logic (OR within category, AND between categories)
 
           // Delivery Status
-          if (deliveryStatusFilters.length > 0 && !deliveryStatusFilters.includes(order.orderStatus)) return false
+          if (deliveryStatusFilters.length > 0 && !deliveryStatusFilters.includes(order.status)) return false
 
           // Payment Status
           if (paymentStatusFilters.length > 0 && !paymentStatusFilters.includes(order.paymentStatus)) return false
@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
           if (calorieFilters.length > 0 && !calorieFilters.includes(order.calories)) return false
 
           // Order Type
-          if (orderTypeFilters.length > 0 && !orderTypeFilters.includes(order.isAutoOrder)) return false
+          if (orderTypeFilters.length > 0 && !orderTypeFilters.includes(order.fromAutoOrder)) return false
 
           // Quantity
           if (quantityFilters.length > 0) {
@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
       customerPhone: order.customer?.phone || 'Нет телефона',
       customer: { name: order.customer?.name || 'Неизвестный клиент', phone: order.customer?.phone || 'Нет телефона' },
       deliveryDate: order.deliveryDate ? new Date(order.deliveryDate).toISOString().split('T')[0] : new Date(order.createdAt).toISOString().split('T')[0],
-      isAutoOrder: order.isAutoOrder,
+      isAutoOrder: order.fromAutoOrder,
       courierName: order.courier?.name || null
     }))
 
@@ -264,7 +264,7 @@ export async function POST(request: NextRequest) {
           paymentStatus: paymentStatus || PaymentStatus.UNPAID,
           paymentMethod: paymentMethod || PaymentMethod.CASH,
           isPrepaid: isPrepaid || false,
-          orderStatus: OrderStatus.PENDING,
+          status: OrderStatus.PENDING,
           latitude: sanitizedLatitude,
           longitude: sanitizedLongitude
         },

@@ -112,8 +112,8 @@ export async function POST(request: NextRequest) {
             paymentStatus: 'UNPAID',
             paymentMethod: 'CASH',
             isPrepaid: false,
-            orderStatus: 'PENDING',
-            isAutoOrder: true // Mark as auto-order
+            status: 'PENDING',
+            fromAutoOrder: true // Mark as auto-order
           },
           include: { customer: { select: { name: true, phone: true } } }
         })
@@ -173,7 +173,7 @@ export async function GET(request: NextRequest) {
       todayStats: {
         date: dayStart.toDateString(),
         autoOrdersCreated: todays.length,
-        orders: todays.map(o => ({ id: o.id, customerName: o.customer?.name, customerPhone: o.customer?.phone, deliveryAddress: o.deliveryAddress, deliveryDate: o.deliveryDate?.toISOString().split('T')[0], deliveryTime: o.deliveryTime, isAutoOrder: true }))
+        orders: todays.map(o => ({ id: o.id, customerName: o.customer?.name, customerPhone: o.customer?.phone, deliveryAddress: o.deliveryAddress, deliveryDate: o.deliveryDate?.toISOString().split('T')[0], deliveryTime: o.deliveryTime, isAutoOrder: o.fromAutoOrder }))
       },
       tomorrowPreview: { date: tomorrow.toDateString(), eligibleClients: tomorrowEligible.length, clients: tomorrowEligible }
     })
