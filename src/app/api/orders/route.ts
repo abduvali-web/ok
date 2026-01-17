@@ -76,32 +76,32 @@ export async function GET(request: NextRequest) {
       if (Object.keys(filters).length > 0) {
         filteredOrders = filteredOrders.filter(order => {
           // Group filters by category
-          const deliveryStatusFilters = []
+          const deliveryStatusFilters: string[] = []
           if (filters.successful) deliveryStatusFilters.push('DELIVERED')
           if (filters.failed) deliveryStatusFilters.push('FAILED')
           if (filters.pending) deliveryStatusFilters.push('PENDING')
           if (filters.inDelivery) deliveryStatusFilters.push('IN_DELIVERY')
 
-          const paymentStatusFilters = []
+          const paymentStatusFilters: string[] = []
           if (filters.paid) paymentStatusFilters.push('PAID')
           if (filters.unpaid) paymentStatusFilters.push('UNPAID')
 
-          const paymentMethodFilters = []
+          const paymentMethodFilters: string[] = []
           if (filters.card) paymentMethodFilters.push('CARD')
           if (filters.cash) paymentMethodFilters.push('CASH')
 
-          const calorieFilters = []
+          const calorieFilters: number[] = []
           if (filters.calories1200) calorieFilters.push(1200)
           if (filters.calories1600) calorieFilters.push(1600)
           if (filters.calories2000) calorieFilters.push(2000)
           if (filters.calories2500) calorieFilters.push(2500)
           if (filters.calories3000) calorieFilters.push(3000)
 
-          const orderTypeFilters = []
+          const orderTypeFilters: boolean[] = []
           if (filters.autoOrders) orderTypeFilters.push(true)
           if (filters.manualOrders) orderTypeFilters.push(false)
 
-          const quantityFilters = []
+          const quantityFilters: string[] = []
           if (filters.singleItem) quantityFilters.push('single')
           if (filters.multiItem) quantityFilters.push('multi')
 
