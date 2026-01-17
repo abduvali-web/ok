@@ -91,7 +91,11 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
                 // calorieGroups is now Record<string, CalorieGroup[]>
                 // Ensure we access it safely as it might be typed loosely from JSON
                 const setGroups = currentActiveSet.calorieGroups as unknown as Record<string, CalorieGroup[]>;
-                const dayData = setGroups[menuNumber.toString()];
+
+                let dayData: CalorieGroup[] | undefined;
+                if (!Array.isArray(setGroups)) {
+                    dayData = setGroups[menuNumber.toString()];
+                }
 
                 if (dayData && Array.isArray(dayData)) {
                     // Determine all unique dishes from this day's set config

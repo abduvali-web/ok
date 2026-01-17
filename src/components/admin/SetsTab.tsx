@@ -159,6 +159,9 @@ export function SetsTab() {
     const getCurrentDayData = (): CalorieGroup[] => {
         if (!selectedSet) return [];
 
+        // Safety check for legacy data
+        if (Array.isArray(selectedSet.calorieGroups)) return [];
+
         // Check if data exists for this day
         const dayData = (selectedSet.calorieGroups as any)[activeDay];
 
