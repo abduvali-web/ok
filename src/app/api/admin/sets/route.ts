@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { auth } from '@/auth';
 
-// GET - Fetch all sets for the admin
+// GET - Fetch all sets
 export async function GET(request: NextRequest) {
     try {
         const session = await auth();
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        // Allow courier/admins to view sets
 
-        // For now, sets are stored in a simple JSON structure
-        // In a real application, you'd have a proper MenuSet model in Prisma
-        // For now, we'll simulate this with a simple in-memory or localStorage approach
+        const sets = await db.menuSet.findMany({
+            orderBy: { createdAt: 'desc' }
+        });
 
-        // Since we don't have a MenuSet model yet, return empty array
-        // The actual implementation would fetch from database
-        return NextResponse.json([]);
+        // Parse JSON fields if needed (Prisma handles this usually, but let's be safe)
+        // If calorieGroups is stored as string in some legacy DBs, parse it. 
+        // Assuming proper JSON type in Prisma.
+
+        return NextResponse.json(sets);
     } catch (error) {
         console.error('Error fetching sets:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -32,28 +32,30 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { name, description, menuNumber, calorieGroups } = body;
+        const { name, description } = body;
 
-        if (!name || !menuNumber || !calorieGroups) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        if (!name) {
+            return NextResponse.json({ error: 'Name is required' }, { status: 400 });
         }
 
-        // Create a new set object
-        // In a real implementation, this would be saved to the database
-        const newSet = {
-            id: `set_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            name,
-            description: description || '',
-            menuNumber,
-            calorieGroups,
-            isActive: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            adminId: session.user.id
-        };
+        // We initialize with empty calorieGroups structure
+        // Structure: { "1": [...], "2": [...] } where keys are day numbers
+        const initialCalorieGroups: any = {};
 
-        // For now, return the created set
-        // In production, save to database first
+        // Optional: Pre-fill with default menus if requested?
+        // For now, let's start empty or let the frontend handling the filling.
+
+        const newSet = await db.menuSet.create({
+            data: {
+                name,
+                description: description || '',
+                menuNumber: 0, // 0 indicates a "Global" set containing all days
+                calorieGroups: initialCalorieGroups,
+                isActive: false, // Inactive by default
+                adminId: session.user.id
+            }
+        });
+
         return NextResponse.json(newSet, { status: 201 });
     } catch (error) {
         console.error('Error creating set:', error);

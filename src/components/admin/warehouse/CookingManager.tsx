@@ -19,6 +19,7 @@ interface Dish {
     calorieMappings?: Record<string, string[]>;
 }
 
+// Types for custom sets
 interface SetDish {
     dishId: number;
     dishName: string;
@@ -33,8 +34,8 @@ interface CalorieGroup {
 interface MenuSet {
     id: string;
     name: string;
-    menuNumber: number;
-    calorieGroups: CalorieGroup[];
+    menuNumber: number; // Global sets have 0 or ignored
+    calorieGroups: Record<string, CalorieGroup[]>; // Changed to map day -> groups
     isActive: boolean;
 }
 
@@ -71,8 +72,11 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
                 const setsRes = await fetch('/api/admin/sets');
                 if (setsRes.ok) {
                     const sets: MenuSet[] = await setsRes.json();
-                    // Find active set for this menu number
-                    currentActiveSet = sets.find(s => s.menuNumber === menuNumber && s.isActive) || null;
+
+                    // Logic Update: Find the globally active set.
+                    // The set itself covers all days, so we just check for isActive = true
+                    // If multiple are active (shouldn't happen ideally), pick first.
+                    currentActiveSet = sets.find(s => s.isActive) || null;
                     setActiveSet(currentActiveSet);
                 }
             } catch (e) {
@@ -80,25 +84,42 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
             }
 
             // 2. Determine dishes based on Set or Standard Menu
-            if (currentActiveSet) {
-                // Determine all unique dishes from the set
-                const uniqueDishesMap = new Map<number, Dish>();
+            let foundSetDishes = false;
 
-                currentActiveSet.calorieGroups.forEach(group => {
-                    group.dishes.forEach(d => {
-                        if (!uniqueDishesMap.has(d.dishId)) {
-                            uniqueDishesMap.set(d.dishId, {
-                                id: d.dishId,
-                                name: d.dishName,
-                                mealType: d.mealType
+            if (currentActiveSet) {
+                // Get data for the CURRENT menuNumber (day)
+                // calorieGroups is now Record<string, CalorieGroup[]>
+                // Ensure we access it safely as it might be typed loosely from JSON
+                const setGroups = currentActiveSet.calorieGroups as unknown as Record<string, CalorieGroup[]>;
+                const dayData = setGroups[menuNumber.toString()];
+
+                if (dayData && Array.isArray(dayData)) {
+                    // Determine all unique dishes from this day's set config
+                    const uniqueDishesMap = new Map<number, Dish>();
+
+                    dayData.forEach(group => {
+                        if (group && group.dishes) {
+                            group.dishes.forEach(d => {
+                                if (!uniqueDishesMap.has(d.dishId)) {
+                                    uniqueDishesMap.set(d.dishId, {
+                                        id: d.dishId,
+                                        name: d.dishName,
+                                        mealType: d.mealType
+                                    });
+                                }
                             });
                         }
                     });
-                });
 
-                setDishes(Array.from(uniqueDishesMap.values()));
-            } else {
-                // Fallback to standard menu
+                    if (uniqueDishesMap.size > 0) {
+                        setDishes(Array.from(uniqueDishesMap.values()));
+                        foundSetDishes = true;
+                    }
+                }
+            }
+
+            if (!foundSetDishes) {
+                // Fallback to standard menu if no active set OR set has no data for this day
                 const menuRes = await fetch(`/api/admin/menus?number=${menuNumber}`);
                 if (menuRes.ok) {
                     const menuData = await menuRes.json();

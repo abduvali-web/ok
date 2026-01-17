@@ -16,21 +16,15 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const { date, updates, dishes: simpleDishes } = body;
-        // Support both old simple format (dishes: {id: qty}) and new format (updates: [{...}])
-        // We might want to keep backward compatibility or deprecate old.
-        // For this task, we focus on new detailed format.
+        const { date, updates, dishes: simpleDishes, activeSetId } = body;
 
         if (simpleDishes) {
-            // ... legacy logic if needed...
             return NextResponse.json({ error: 'Please use new detailed cooking interface' }, { status: 400 });
         }
 
         if (!date || !updates || !Array.isArray(updates)) {
             return NextResponse.json({ error: 'Invalid request format' }, { status: 400 });
         }
-
-        // updates: [{ dishId, calorie, amount }]
 
         // 1. Fetch current plan to update stats
         const targetDate = new Date(date);
@@ -44,13 +38,11 @@ export async function POST(request: Request) {
         });
 
         if (!plan) {
-            // Check if we have menuNumber to create one
             const { menuNumber } = body;
             if (!menuNumber) {
                 return NextResponse.json({ error: 'No cooking plan found and no menuNumber provided to create one' }, { status: 404 });
             }
 
-            // Create new plan
             plan = await db.dailyCookingPlan.create({
                 data: {
                     date: new Date(date),
@@ -63,11 +55,24 @@ export async function POST(request: Request) {
 
         const cookedStats = (plan.cookedStats as any) || {};
 
-        // 2. Process each update
-        // We need to fetch Dish details to know ingredients
-        const dishIds = updates.map((u: any) => u.dishId);
+        // 2. Fetch Active Set if provided (for custom ingredients)
+        let activeSet = null;
+        if (activeSetId) {
+            activeSet = await db.menuSet.findUnique({
+                where: { id: activeSetId }
+            });
+        }
+
+        // 3. Fetch standard dishes (we still need them for fallback and base info)
+        const dishIds = updates.map((u: any) => u.dishId.toString());
+        // Note: dishId comes as string or number, ensure string for Prisma if ID is string, or convert
+        // Assuming Dish ID in DB is Int (based on previous code using findMany with numbers usually)
+        // Let's check schema assumption. Previous code used `in: dishIds` directly.
+        // Let's assume IDs are Ints.
+        const dishIdsInt = dishIds.map((id: string) => parseInt(id)).filter((n: number) => !isNaN(n));
+
         const dishes = await db.dish.findMany({
-            where: { id: { in: dishIds } }
+            where: { id: { in: dishIdsInt } }
         });
         const dishMap = new Map(dishes.map(d => [d.id, d]));
 
@@ -75,16 +80,45 @@ export async function POST(request: Request) {
 
         for (const update of updates) {
             const { dishId, calorie, amount } = update;
-            const dish = dishMap.get(dishId);
+            // dishId might be string from JSON, convert to Int for map lookup
+            const dId = typeof dishId === 'string' ? parseInt(dishId) : dishId;
+
+            const dish = dishMap.get(dId);
             if (!dish) continue;
 
-            // Calculate ingredients for this specific batch
-            // Note: DB ingredients is Json, cast it
-            const ingredients = dish.ingredients as any[];
+            // Determine Ingredients: Standard or Custom from Set?
+            let ingredientsToUse = dish.ingredients as any[];
+
+            if (activeSet && activeSet.calorieGroups) {
+                // Determine day number from plan or body
+                // plan is guaranteed to exist here
+                const currentMenuNumber = plan!.menuNumber;
+
+                // calorieGroups is JSON object: Record<string, CalorieGroup[]>
+                const setGroups = activeSet.calorieGroups as any;
+
+                // Get groups for this specific day
+                const dayGroups = setGroups[currentMenuNumber.toString()];
+
+                if (dayGroups && Array.isArray(dayGroups)) {
+                    const targetGroup = dayGroups.find((g: any) => g.calories === calorie);
+
+                    if (targetGroup && targetGroup.dishes) {
+                        // Find this dish in the group
+                        const setDish = targetGroup.dishes.find((d: any) => d.dishId === dId);
+
+                        // If dish found in set AND has custom ingredients, use them
+                        if (setDish && setDish.customIngredients && setDish.customIngredients.length > 0) {
+                            ingredientsToUse = setDish.customIngredients;
+                        }
+                    }
+                }
+            }
+
             const mealType = dish.mealType as keyof typeof MEAL_TYPES;
 
-            // Scale
-            const scaled = scaleIngredients(ingredients, calorie, mealType, amount);
+            // Scale ingredients
+            const scaled = scaleIngredients(ingredientsToUse, calorie, mealType, amount);
 
             // Accumulate deductions
             for (const ing of scaled) {
@@ -93,16 +127,16 @@ export async function POST(request: Request) {
             }
 
             // Update stats
-            if (!cookedStats[dishId]) cookedStats[dishId] = {};
-            const currentCooked = cookedStats[dishId][calorie] || 0;
-            cookedStats[dishId][calorie] = currentCooked + amount;
+            if (!cookedStats[dId]) cookedStats[dId] = {};
+            const currentCooked = cookedStats[dId][calorie] || 0;
+            cookedStats[dId][calorie] = currentCooked + amount;
         }
 
-        // 3. Apply DB Transaction
+        // 4. Apply DB Transaction
         await db.$transaction(async (tx) => {
             // Update Plan
             await tx.dailyCookingPlan.update({
-                where: { id: plan.id },
+                where: { id: plan!.id }, // plan is not null here
                 data: { cookedStats }
             });
 
@@ -111,11 +145,11 @@ export async function POST(request: Request) {
                 const item = await tx.warehouseItem.findUnique({ where: { name } });
 
                 if (!item) {
-                    throw new Error(`Ingredient not found in warehouse: ${name}`);
+                    throw new Error(`Ингредиент не найден на складе: ${name}`);
                 }
 
                 if (item.amount < deductAmount) {
-                    throw new Error(`Insufficient ingredient: ${name}. Need ${deductAmount.toFixed(1)}${item.unit}, but only have ${item.amount.toFixed(1)}${item.unit}`);
+                    throw new Error(`Недостаточно: ${name}. Нужно ${deductAmount.toFixed(1)}${item.unit}, есть ${item.amount.toFixed(1)}${item.unit}`);
                 }
 
                 await tx.warehouseItem.update({
@@ -131,7 +165,7 @@ export async function POST(request: Request) {
         console.error('Error in cooking:', error);
         const message = error instanceof Error ? error.message : 'Failed to process cooking';
         // Return 400 for expected logic errors (insufficient ingredients), 500 for unexpected
-        const status = message.includes('Insufficient') || message.includes('not found') ? 400 : 500;
+        const status = message.includes('Недостаточно') || message.includes('не найден') ? 400 : 500;
         return NextResponse.json({ error: message }, { status });
     }
 }

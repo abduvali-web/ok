@@ -1,7 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
 import { auth } from '@/auth';
 
-// PATCH - Update a set
+export async function GET(
+    request: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const id = params.id;
+        const set = await db.menuSet.findUnique({
+            where: { id }
+        });
+
+        if (!set) {
+            return NextResponse.json({ error: 'Set not found' }, { status: 404 });
+        }
+
+        return NextResponse.json(set);
+    } catch (error) {
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+}
+
 export async function PATCH(
     request: NextRequest,
     { params }: { params: { id: string } }
@@ -12,15 +32,36 @@ export async function PATCH(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const setId = params.id;
+        const id = params.id;
         const body = await request.json();
 
-        // In a real implementation, update the set in the database
-        const updatedSet = {
-            id: setId,
-            ...body,
-            updatedAt: new Date().toISOString()
-        };
+        // Allowed fields to update
+        const { name, description, calorieGroups, isActive } = body;
+
+        const updateData: any = {};
+        if (name !== undefined) updateData.name = name;
+        if (description !== undefined) updateData.description = description;
+        if (calorieGroups !== undefined) updateData.calorieGroups = calorieGroups;
+        if (isActive !== undefined) {
+            updateData.isActive = isActive;
+
+            // If activating this set, we might want to deactivate others?
+            // Since this is a Global Set (all days), there should probably be only ONE active Global Set.
+            // Or maybe multiple can be active but the user chooses which one to apply?
+            // For now, let's allow multiple active and let logic decide (prioritize one).
+            // Ideally: deactivate all other sets if this one is activated.
+            if (isActive) {
+                await db.menuSet.updateMany({
+                    where: { id: { not: id } },
+                    data: { isActive: false }
+                });
+            }
+        }
+
+        const updatedSet = await db.menuSet.update({
+            where: { id },
+            data: updateData
+        });
 
         return NextResponse.json(updatedSet);
     } catch (error) {
@@ -29,7 +70,6 @@ export async function PATCH(
     }
 }
 
-// DELETE - Delete a set
 export async function DELETE(
     request: NextRequest,
     { params }: { params: { id: string } }
@@ -40,33 +80,14 @@ export async function DELETE(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const setId = params.id;
+        const id = params.id;
+        await db.menuSet.delete({
+            where: { id }
+        });
 
-        // In a real implementation, delete the set from the database
-        return NextResponse.json({ success: true, deletedId: setId });
+        return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error deleting set:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-    }
-}
-
-// GET - Fetch a single set
-export async function GET(
-    request: NextRequest,
-    { params }: { params: { id: string } }
-) {
-    try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        const setId = params.id;
-
-        // In a real implementation, fetch the set from the database
-        return NextResponse.json({ error: 'Set not found' }, { status: 404 });
-    } catch (error) {
-        console.error('Error fetching set:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

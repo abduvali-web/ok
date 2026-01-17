@@ -69,12 +69,9 @@ export function RouteOptimizeButton({
         const ordersWithCoords = orders.filter(o => o.latitude != null && o.longitude != null);
 
         if (ordersWithCoords.length === 0) {
-            toast.error('Нет заказов с координатами для оптимизации маршрута');
-            return;
-        }
-
-        if (ordersWithCoords.length < orders.length) {
-            toast.warning(`${orders.length - ordersWithCoords.length} заказов без координат будут добавлены в конец`);
+            toast.info('Нет заказов с координатами. Будет построен маршрут без оптимизации по адресу.');
+        } else if (ordersWithCoords.length < orders.length) {
+            toast.warning(`${orders.length - ordersWithCoords.length} заказов без координат будут добавлены в конец маршрута`);
         }
 
         setIsOptimizing(true);

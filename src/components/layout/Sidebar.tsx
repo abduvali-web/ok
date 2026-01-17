@@ -69,8 +69,8 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
 
             {/* Sidebar Container */}
             <div className={cn(
-                "fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-slate-900 to-slate-950 text-white transform transition-transform duration-300 ease-out lg:translate-x-0 lg:static lg:block shadow-xl",
-                isOpen ? "translate-x-0" : "-translate-x-full",
+                "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:flex lg:flex-col shadow-xl",
+                isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
                 className
             )}>
                 <div className="flex flex-col h-full">
