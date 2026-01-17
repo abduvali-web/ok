@@ -56,7 +56,7 @@ export async function POST(request: Request) {
         const cookedStats = (plan.cookedStats as any) || {};
 
         // 2. Fetch Active Set if provided (for custom ingredients)
-        let activeSet = null;
+        let activeSet: any = null;
         if (activeSetId) {
             activeSet = await db.menuSet.findUnique({
                 where: { id: activeSetId }
@@ -65,14 +65,8 @@ export async function POST(request: Request) {
 
         // 3. Fetch standard dishes (we still need them for fallback and base info)
         const dishIds = updates.map((u: any) => u.dishId.toString());
-        // Note: dishId comes as string or number, ensure string for Prisma if ID is string, or convert
-        // Assuming Dish ID in DB is Int (based on previous code using findMany with numbers usually)
-        // Let's check schema assumption. Previous code used `in: dishIds` directly.
-        // Let's assume IDs are Ints.
-        const dishIdsInt = dishIds.map((id: string) => parseInt(id)).filter((n: number) => !isNaN(n));
-
         const dishes = await db.dish.findMany({
-            where: { id: { in: dishIdsInt } }
+            where: { id: { in: dishIds } }
         });
         const dishMap = new Map(dishes.map(d => [d.id, d]));
 
@@ -80,8 +74,7 @@ export async function POST(request: Request) {
 
         for (const update of updates) {
             const { dishId, calorie, amount } = update;
-            // dishId might be string from JSON, convert to Int for map lookup
-            const dId = typeof dishId === 'string' ? parseInt(dishId) : dishId;
+            const dId = dishId.toString();
 
             const dish = dishMap.get(dId);
             if (!dish) continue;
@@ -91,7 +84,6 @@ export async function POST(request: Request) {
 
             if (activeSet && activeSet.calorieGroups) {
                 // Determine day number from plan or body
-                // plan is guaranteed to exist here
                 const currentMenuNumber = plan!.menuNumber;
 
                 // calorieGroups is JSON object: Record<string, CalorieGroup[]>
@@ -105,7 +97,7 @@ export async function POST(request: Request) {
 
                     if (targetGroup && targetGroup.dishes) {
                         // Find this dish in the group
-                        const setDish = targetGroup.dishes.find((d: any) => d.dishId === dId);
+                        const setDish = targetGroup.dishes.find((d: any) => d.dishId.toString() === dId);
 
                         // If dish found in set AND has custom ingredients, use them
                         if (setDish && setDish.customIngredients && setDish.customIngredients.length > 0) {

@@ -1509,8 +1509,11 @@ export function calculateIngredientsForMenu(
 
   const totalIngredients = new Map<string, { amount: number; unit: string }>();
 
+  const totalClients = Object.values(clientsByCalorie).reduce((sum, c) => sum + c, 0);
+  if (totalClients === 0) return totalIngredients;
+
   for (const dish of menu.dishes) {
-    const dishQty = dishQuantities?.[dish.id] ?? 1;
+    const dishQty = dishQuantities?.[dish.id] ?? totalClients;
     if (dishQty === 0) continue;
 
     for (const [calorieStr, clientCount] of Object.entries(clientsByCalorie)) {
@@ -1525,11 +1528,14 @@ export function calculateIngredientsForMenu(
         }
       }
 
+      // Distribute dishQty proportionally across calorie tiers
+      const portionsForTier = (dishQty / totalClients) * clientCount;
+
       const scaledIngredients = scaleIngredients(
         dish.ingredients,
         calories,
-        dish.mealType,
-        dishQty * clientCount
+        dish.mealType as any,
+        portionsForTier
       );
 
       for (const ing of scaledIngredients) {
