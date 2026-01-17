@@ -1502,15 +1502,74 @@ export function getTomorrowsMenu(): DailyMenu | undefined {
 export function calculateIngredientsForMenu(
   menuNumber: number,
   clientsByCalorie: Record<number, number>,
-  dishQuantities?: Record<number, number>
+  dishQuantities?: Record<number, number>,
+  activeSet?: any
 ): Map<string, { amount: number; unit: string }> {
-  const menu = getMenu(menuNumber);
-  if (!menu) return new Map();
-
   const totalIngredients = new Map<string, { amount: number; unit: string }>();
 
   const totalClients = Object.values(clientsByCalorie).reduce((sum, c) => sum + c, 0);
   if (totalClients === 0) return totalIngredients;
+
+  // 1. Logic if Active Set exists for this menuNumber (day)
+  if (activeSet && activeSet.calorieGroups) {
+    const dayData = activeSet.calorieGroups[menuNumber.toString()];
+    if (dayData && Array.isArray(dayData)) {
+      // Process each calorie group defined in the set
+      for (const group of dayData) {
+        const calories = group.calories;
+        const clientCount = clientsByCalorie[calories] || 0;
+        if (clientCount === 0) continue;
+
+        for (const setDish of group.dishes) {
+          // If dishQuantities provided (usually for tomorrow), use it. 
+          // Otherwise default to totalClients based on existing logic
+          const dishQty = dishQuantities?.[setDish.dishId] ?? totalClients;
+          if (dishQty === 0) continue;
+
+          // Portions for this tier
+          const portionsForTier = (dishQty / totalClients) * clientCount;
+
+          // Ingredients: Custom from set OR Standard from base dish
+          let ingredientsToUse = setDish.customIngredients;
+          if (!ingredientsToUse) {
+            // Fallback to searching standard menus for this dish
+            let found = false;
+            for (const menu of MENUS) {
+              const d = menu.dishes.find(d => d.id === setDish.dishId);
+              if (d) {
+                ingredientsToUse = d.ingredients;
+                found = true;
+                break;
+              }
+            }
+          }
+
+          if (ingredientsToUse) {
+            const scaled = scaleIngredients(
+              ingredientsToUse,
+              calories,
+              setDish.mealType as any,
+              portionsForTier
+            );
+
+            for (const ing of scaled) {
+              const existing = totalIngredients.get(ing.name);
+              if (existing) {
+                existing.amount = Math.round((existing.amount + ing.amount) * 10) / 10;
+              } else {
+                totalIngredients.set(ing.name, { amount: Math.round(ing.amount * 10) / 10, unit: ing.unit });
+              }
+            }
+          }
+        }
+      }
+      return totalIngredients;
+    }
+  }
+
+  // 2. Fallback to Standard Menu Logic
+  const menu = getMenu(menuNumber);
+  if (!menu) return new Map();
 
   for (const dish of menu.dishes) {
     const dishQty = dishQuantities?.[dish.id] ?? totalClients;

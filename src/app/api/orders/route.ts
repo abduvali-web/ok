@@ -139,11 +139,12 @@ export async function GET(request: NextRequest) {
 
     const transformedOrders = filteredOrders.map(order => ({
       ...order,
+      orderStatus: order.status,
+      isAutoOrder: order.fromAutoOrder,
       customerName: order.customer?.name || 'Неизвестный клиент',
       customerPhone: order.customer?.phone || 'Нет телефона',
       customer: { name: order.customer?.name || 'Неизвестный клиент', phone: order.customer?.phone || 'Нет телефона' },
       deliveryDate: order.deliveryDate ? new Date(order.deliveryDate).toISOString().split('T')[0] : new Date(order.createdAt).toISOString().split('T')[0],
-      isAutoOrder: order.fromAutoOrder,
       courierName: order.courier?.name || null
     }))
 

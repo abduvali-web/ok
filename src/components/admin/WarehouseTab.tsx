@@ -76,6 +76,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     });
     const [isLoadingClients, setIsLoadingClients] = useState(false);
     const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+    const [activeSet, setActiveSet] = useState<any>(null);
 
     // Calculation state
     const [selectedDates, setSelectedDates] = useState<string[]>([]);
@@ -206,6 +207,39 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                     setDishQuantities(data.dishes);
                 }
             }
+
+            // Fetch active set
+            const setsResponse = await fetch('/api/admin/sets');
+            if (setsResponse.ok) {
+                const sets = await setsResponse.json();
+                const active = sets.find((s: any) => s.isActive);
+                if (active) {
+                    setActiveSet(active);
+
+                    // If active set has dishes for tomorrow, update tomorrowMenu
+                    const dayData = active.calorieGroups[tomorrowMenuNumber.toString()];
+                    if (dayData && Array.isArray(dayData)) {
+                        const uniqueDishesMap = new Map<number, Dish>();
+                        dayData.forEach((group: any) => {
+                            group.dishes.forEach((d: any) => {
+                                if (!uniqueDishesMap.has(d.dishId)) {
+                                    uniqueDishesMap.set(d.dishId, {
+                                        id: d.dishId,
+                                        name: d.dishName,
+                                        mealType: d.mealType
+                                    } as any);
+                                }
+                            });
+                        });
+                        if (uniqueDishesMap.size > 0) {
+                            setTomorrowMenu({
+                                menuNumber: tomorrowMenuNumber,
+                                dishes: Array.from(uniqueDishesMap.values())
+                            });
+                        }
+                    }
+                }
+            }
         } catch (error) {
             console.error('Error fetching warehouse data:', error);
             toast.error('Ошибка загрузки данных склада');
@@ -241,7 +275,8 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         const ingredients = calculateIngredientsForMenu(
             tomorrowMenuNumber,
             clientsByCalorie,
-            dishQuantities
+            dishQuantities,
+            activeSet
         );
         setCalculatedIngredients(ingredients);
 
@@ -265,7 +300,8 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             const menuIngredients = calculateIngredientsForMenu(
                 menuNumber,
                 clientsByCalorie,
-                dishQuantities
+                dishQuantities,
+                activeSet
             );
 
             for (const [name, { amount, unit }] of menuIngredients) {
