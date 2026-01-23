@@ -1,0 +1,301 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id                String           @id @default(cuid())
+  email             String           @unique
+  password          String?
+  name              String
+  role              AdminRole        @default(SUPER_ADMIN)
+  isActive          Boolean          @default(true)
+  createdBy         String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  allowedTabs       String?
+  googleId          String?          @unique
+  hasPassword       Boolean          @default(true)
+  latitude          Float?
+  longitude         Float?
+  phone             String?
+  trialEndsAt       DateTime?
+  companyBalance    Float            @default(0)
+  salary            Int              @default(0)
+  accounts          Account[]
+  actionLogs        ActionLog[]
+  creator           Admin?           @relation("AdminHierarchy", fields: [createdBy], references: [id])
+  createdAdmins     Admin[]          @relation("AdminHierarchy")
+  conversationsAsP1 Conversation[]   @relation("ConversationParticipant1")
+  conversationsAsP2 Conversation[]   @relation("ConversationParticipant2")
+  createdClients    Customer[]       @relation("ClientCreator")
+  clients           Customer[]       @relation("ClientDefaultCourier")
+  interfaceConfig   InterfaceConfig?
+  sentMessages      Message[]        @relation("MessageSender")
+  orders            Order[]          @relation("OrderAdmin")
+  courierOrders     Order[]          @relation("OrderCourier")
+  transactions      Transaction[]
+  website           Website?
+
+  @@map("admins")
+}
+
+model Customer {
+  id                String        @id @default(cuid())
+  name              String
+  phone             String        @unique
+  address           String
+  preferences       String?
+  orderPattern      String?
+  isActive          Boolean       @default(true)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  latitude          Float?
+  longitude         Float?
+  autoOrdersEnabled Boolean       @default(true)
+  calories          Int           @default(2000)
+  createdBy         String?
+  defaultCourierId  String?
+  deletedAt         DateTime?
+  deletedBy         String?
+  deliveryDays      String?
+  password          String?
+  balance           Float         @default(0)
+  dailyPrice        Int           @default(84000)
+  notes             String?
+  planType          PlanType      @default(CLASSIC)
+  nickName          String?
+  creator           Admin?        @relation("ClientCreator", fields: [createdBy], references: [id])
+  defaultCourier    Admin?        @relation("ClientDefaultCourier", fields: [defaultCourierId], references: [id])
+  orders            Order[]
+  transactions      Transaction[]
+
+  @@map("customers")
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  orderNumber     Int           @unique
+  customerId      String
+  adminId         String
+  courierId       String?
+  deliveryAddress String
+  deliveryDate    DateTime?
+  deliveryTime    String
+  quantity        Int           @default(1)
+  calories        Int
+  specialFeatures String?
+  paymentStatus   PaymentStatus
+  paymentMethod   PaymentMethod
+  orderStatus     OrderStatus   @default(PENDING)
+  isPrepaid       Boolean       @default(false)
+  deliveredAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+  isAutoOrder     Boolean       @default(false)
+  latitude        Float?
+  longitude       Float?
+  amountReceived  Float?
+  admin           Admin         @relation("OrderAdmin", fields: [adminId], references: [id])
+  courier         Admin?        @relation("OrderCourier", fields: [courierId], references: [id])
+  customer        Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("orders")
+}
+
+model ActionLog {
+  id          String   @id @default(cuid())
+  adminId     String
+  action      String
+  entityType  String
+  entityId    String
+  oldValues   String?
+  newValues   String?
+  description String?
+  createdAt   DateTime @default(now())
+  admin       Admin    @relation(fields: [adminId], references: [id])
+
+  @@map("action_logs")
+}
+
+model InterfaceConfig {
+  id           String   @id @default(cuid())
+  adminId      String   @unique
+  buttonConfig String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  admin        Admin    @relation(fields: [adminId], references: [id])
+
+  @@map("interface_configs")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              Admin   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Conversation {
+  id             String    @id @default(cuid())
+  participant1Id String
+  participant2Id String
+  lastMessageAt  DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  participant1   Admin     @relation("ConversationParticipant1", fields: [participant1Id], references: [id], onDelete: Cascade)
+  participant2   Admin     @relation("ConversationParticipant2", fields: [participant2Id], references: [id], onDelete: Cascade)
+  messages       Message[]
+
+  @@unique([participant1Id, participant2Id])
+  @@index([participant1Id])
+  @@index([participant2Id])
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         Admin        @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@map("messages")
+}
+
+model Website {
+  id          String   @id @default(cuid())
+  adminId     String   @unique
+  subdomain   String   @unique
+  theme       String
+  content     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  chatEnabled Boolean  @default(false)
+  admin       Admin    @relation(fields: [adminId], references: [id])
+
+  @@map("websites")
+}
+
+model WarehouseItem {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  amount    Float    @default(0)
+  unit      String   @default("gr")
+  updatedAt DateTime @updatedAt
+
+  @@map("warehouse_items")
+}
+
+model DailyCookingPlan {
+  id          String   @id @default(cuid())
+  date        DateTime @unique
+  menuNumber  Int
+  dishes      Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  cookedStats Json?
+
+  @@map("daily_cooking_plans")
+}
+
+model Menu {
+  id        String   @id @default(cuid())
+  number    Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  dishes    Dish[]   @relation("DishToMenu")
+
+  @@map("menus")
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  amount      Float
+  type        TransactionType
+  description String?
+  category    String?
+  createdAt   DateTime        @default(now())
+  adminId     String?
+  customerId  String?
+  admin       Admin?          @relation(fields: [adminId], references: [id])
+  customer    Customer?       @relation(fields: [customerId], references: [id])
+
+  @@index([adminId])
+  @@index([customerId])
+  @@map("transactions")
+}
+
+model Dish {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  mealType        String
+  ingredients     Json
+  imageUrl        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  calorieMappings Json?
+  menus           Menu[]   @relation("DishToMenu")
+
+  @@map("dishes")
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  MIDDLE_ADMIN
+  LOW_ADMIN
+  COURIER
+  WORKER
+}
+
+enum PlanType {
+  CLASSIC
+  INDIVIDUAL
+  DIABETIC
+}
+
+enum PaymentStatus {
+  PAID
+  UNPAID
+}
+
+enum PaymentMethod {
+  CARD
+  CASH
+}
+
+enum OrderStatus {
+  PENDING
+  IN_DELIVERY
+  PAUSED
+  DELIVERED
+  FAILED
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
