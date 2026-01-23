@@ -29,10 +29,14 @@ export async function GET(request: Request) {
         });
 
         if (!plan) {
-            return NextResponse.json({ dishes: {} });
+            return NextResponse.json({ dishes: {}, cookedStats: {} });
         }
 
-        return NextResponse.json({ dishes: plan.dishes });
+        return NextResponse.json({
+            dishes: plan.dishes,
+            cookedStats: plan.cookedStats || {},
+            menuNumber: plan.menuNumber
+        });
     } catch (error) {
         console.error('Error fetching cooking plan:', error);
         return NextResponse.json({ error: 'Failed to fetch cooking plan' }, { status: 500 });

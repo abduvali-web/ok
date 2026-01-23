@@ -7,47 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ENUMS
-
-enum AdminRole {
-  SUPER_ADMIN
-  MIDDLE_ADMIN
-  LOW_ADMIN
-  COURIER
-  WORKER
-}
-
-enum PlanType {
-  CLASSIC
-  INDIVIDUAL
-  DIABETIC
-}
-
-enum PaymentStatus {
-  PAID
-  UNPAID
-}
-
-enum PaymentMethod {
-  CARD
-  CASH
-}
-
-enum OrderStatus {
-  PENDING
-  IN_DELIVERY
-  PAUSED
-  DELIVERED
-  FAILED
-}
-
-enum TransactionType {
-  INCOME
-  EXPENSE
-}
-
-// MODELS
-
 model Admin {
   id                String           @id @default(cuid())
   email             String           @unique
@@ -81,7 +40,6 @@ model Admin {
   courierOrders     Order[]          @relation("OrderCourier")
   transactions      Transaction[]
   website           Website?
-  menuSets          MenuSet[]        // Relation to MenuSet
 
   @@map("admins")
 }
@@ -89,7 +47,6 @@ model Admin {
 model Customer {
   id                String        @id @default(cuid())
   name              String
-  nickName          String?
   phone             String        @unique
   address           String
   preferences       String?
@@ -111,6 +68,7 @@ model Customer {
   dailyPrice        Int           @default(84000)
   notes             String?
   planType          PlanType      @default(CLASSIC)
+  nickName          String?
   creator           Admin?        @relation("ClientCreator", fields: [createdBy], references: [id])
   defaultCourier    Admin?        @relation("ClientDefaultCourier", fields: [defaultCourierId], references: [id])
   orders            Order[]
@@ -305,18 +263,39 @@ model Dish {
   @@map("dishes")
 }
 
-model MenuSet {
-  id            String   @id @default(cuid())
-  name          String
-  description   String?
-  menuNumber    Int      @default(0)
-  calorieGroups Json
-  isActive      Boolean  @default(false)
-  adminId       String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
-  admin         Admin    @relation(fields: [adminId], references: [id])
+enum AdminRole {
+  SUPER_ADMIN
+  MIDDLE_ADMIN
+  LOW_ADMIN
+  COURIER
+  WORKER
+}
 
-  @@map("menu_sets")
+enum PlanType {
+  CLASSIC
+  INDIVIDUAL
+  DIABETIC
+}
+
+enum PaymentStatus {
+  PAID
+  UNPAID
+}
+
+enum PaymentMethod {
+  CARD
+  CASH
+}
+
+enum OrderStatus {
+  PENDING
+  IN_DELIVERY
+  PAUSED
+  DELIVERED
+  FAILED
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
 }

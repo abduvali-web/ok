@@ -25,19 +25,11 @@ interface CookingManagerProps {
     menuNumber: number;
     clientsByCalorie: Record<number, number>;
     onCook?: () => void;
-<<<<<<< HEAD
-    activeSet?: any;
-=======
->>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
 }
 
-const CALORIE_GROUPS = [1200, 1600, 2000, 2500, 3000];
+const CALORIE_GROUPS=[1200, 1600, 2000, 2500, 3000];
 
-<<<<<<< HEAD
-export function CookingManager({ date, menuNumber, clientsByCalorie, onCook, activeSet }: CookingManagerProps) {
-=======
 export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: CookingManagerProps) {
->>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
     const [dishes, setDishes] = useState<Dish[]>([]);
     const [loading, setLoading] = useState(true);
     const [cookingPlan, setCookingPlan] = useState<any>(null); // { cookedStats: { dishId: { 1200: 5 } } }
@@ -47,72 +39,24 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
 
     useEffect(() => {
         fetchData();
-<<<<<<< HEAD
-    }, [menuNumber, date, activeSet]);
-=======
     }, [menuNumber, date]);
->>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
 
-    const fetchData = async () => {
+    const fetchData=async () => {
         setLoading(true);
         try {
-<<<<<<< HEAD
-            // Determine source of dishes
-            if (activeSet) {
-                // Load from Active Set
-                const dayData = activeSet.calorieGroups?.[menuNumber.toString()];
-                if (dayData && Array.isArray(dayData)) {
-                    const uniqueDishesMap = new Map<string, Dish>();
-
-                    dayData.forEach((group: any) => {
-                        group.dishes.forEach((d: any) => {
-                            const idStr = d.dishId.toString();
-                            if (!uniqueDishesMap.has(idStr)) {
-                                uniqueDishesMap.set(idStr, {
-                                    id: idStr,
-                                    name: d.dishName,
-                                    description: '',
-                                    mealType: d.mealType,
-                                    ingredients: d.customIngredients || [],
-                                    imageUrl: '',
-                                    calorieMappings: { [menuNumber.toString()]: [] }
-                                });
-                            }
-                            const dish = uniqueDishesMap.get(idStr)!;
-                            // Add calorie mapping
-                            const mappings = dish.calorieMappings![menuNumber.toString()];
-                            if (!mappings.includes(group.calories.toString())) {
-                                mappings.push(group.calories.toString());
-                            }
-                        });
-                    });
-                    setDishes(Array.from(uniqueDishesMap.values()));
-                } else {
-                    setDishes([]);
-                }
-            } else {
-                // Fetch Standard Menu Dishes
-                const menuRes = await fetch(`/api/admin/menus?number=${menuNumber}`);
-                if (menuRes.ok) {
-                    const menuData = await menuRes.json();
-                    if (menuData && menuData.dishes) {
-                        setDishes(menuData.dishes);
-                    }
-=======
             // Fetch Menu Dishes
-            const menuRes = await fetch(`/api/admin/menus?number=${menuNumber}`);
+            const menuRes=await fetch(`/api/admin/menus?number=${menuNumber}`);
             if (menuRes.ok) {
-                const menuData = await menuRes.json();
+                const menuData=await menuRes.json();
                 if (menuData && menuData.dishes) {
                     setDishes(menuData.dishes);
->>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
                 }
             }
 
             // Fetch Cooking Plan Status
-            const planRes = await fetch(`/api/admin/warehouse/cooking-plan?date=${date}`);
+            const planRes=await fetch(`/api/admin/warehouse/cooking-plan?date=${date}`);
             if (planRes.ok) {
-                const planData = await planRes.json();
+                const planData=await planRes.json();
                 setCookingPlan(planData);
             }
         } catch (error) {
@@ -123,8 +67,8 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
         }
     };
 
-    const handleAmountChange = (dishId: string, calorie: number, value: string) => {
-        setCookingAmounts(prev => ({
+    const handleAmountChange=(dishId: string, calorie: number, value: string) => {
+        setCookingAmounts(prev=> ({
             ...prev,
             [dishId]: {
                 ...(prev[dishId] || {}),
@@ -133,26 +77,26 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
         }));
     };
 
-    const handleCook = async (dishId: string, calorie: number | null) => {
+    const handleCook=async (dishId: string, calorie: number | null) => {
         const updates: { dishId: string, calorie: number, amount: number }[] = [];
 
         if (calorie) {
             // Cook for specific calorie group
-            const amount = parseInt(cookingAmounts[dishId]?.[calorie] || '0');
+            const amount=parseInt(cookingAmounts[dishId]?.[calorie] || '0');
             if (amount <= 0) return;
             updates.push({ dishId, calorie, amount });
         } else {
             // Batch cook logic if needed, but for now we do per-cell
         }
 
-        if (updates.length === 0) {
+        if (updates.length=== 0) {
             toast.error('Please enter a valid amount');
             return;
         }
 
         setIsCooking(true);
         try {
-            const res = await fetch('/api/admin/warehouse/cook', {
+            const res=await fetch('/api/admin/warehouse/cook', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -165,9 +109,9 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
             if (res.ok) {
                 toast.success('Cooked successfully');
                 // Clear inputs
-                setCookingAmounts(prev => {
-                    const newState = { ...prev };
-                    updates.forEach(u => {
+                setCookingAmounts(prev=> {
+                    const newState={ ...prev };
+                    updates.forEach(u=> {
                         if (newState[u.dishId]) {
                             delete newState[u.dishId][u.calorie];
                         }
@@ -177,7 +121,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
                 fetchData();
                 if (onCook) onCook();
             } else {
-                const data = await res.json();
+                const data=await res.json();
                 toast.error(data.error || 'Failed to cook');
             }
         } catch (error) {
@@ -188,17 +132,17 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
         }
     };
 
-    const getCookedAmount = (dishId: string, calorie: number) => {
+    const getCookedAmount=(dishId: string, calorie: number) => {
         return cookingPlan?.cookedStats?.[dishId]?.[calorie] || 0;
     };
 
-    const getNeededAmount = (dishId: string, calorie: number) => {
-        const dish = dishes.find(d => d.id === dishId);
+    const getNeededAmount=(dishId: string, calorie: number) => {
+        const dish=dishes.find(d=> d.id=== dishId);
         if (!dish) return 0;
 
         // If mappings exist, check if this calorie group is allowed for THIS menuNumber
         if (dish.calorieMappings) {
-            const allowedGroups = dish.calorieMappings[menuNumber.toString()] || [];
+            const allowedGroups=dish.calorieMappings[menuNumber.toString()] || [];
             if (!allowedGroups.includes(calorie.toString())) {
                 return 0; // Not needed for this calorie group on this day
             }
@@ -207,7 +151,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
         return clientsByCalorie[calorie] || 0;
     };
 
-    const filteredCalorieGroups = selectedCalorieGroup === 'all'
+    const filteredCalorieGroups=selectedCalorieGroup=== 'all'
         ? CALORIE_GROUPS
         : [parseInt(selectedCalorieGroup)];
 
@@ -227,7 +171,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Groups</SelectItem>
-                            {CALORIE_GROUPS.map(c => (
+                            {CALORIE_GROUPS.map(c=> (
                                 <SelectItem key={c} value={c.toString()}>{c} kcal</SelectItem>
                             ))}
                         </SelectContent>
@@ -240,7 +184,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
                     <TableHeader>
                         <TableRow>
                             <TableHead className="w-[200px]">Dish</TableHead>
-                            {filteredCalorieGroups.map(cal => (
+                            {filteredCalorieGroups.map(cal=> (
                                 <TableHead key={cal} className="text-center min-w-[150px]">
                                     {cal} kcal
                                     <div className="text-xs font-normal text-slate-500">
@@ -251,23 +195,23 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {dishes.map(dish => (
+                        {dishes.map(dish=> (
                             <TableRow key={dish.id}>
                                 <TableCell className="font-medium">
                                     {dish.name}
                                     <div className="text-xs text-slate-400">{dish.mealType}</div>
                                 </TableCell>
-                                {filteredCalorieGroups.map(cal => {
-                                    const needed = getNeededAmount(dish.id, cal);
-                                    const cooked = getCookedAmount(dish.id, cal);
-                                    const remaining = Math.max(0, needed - cooked);
-                                    const inputVal = cookingAmounts[dish.id]?.[cal] || '';
+                                {filteredCalorieGroups.map(cal=> {
+                                    const needed=getNeededAmount(dish.id, cal);
+                                    const cooked=getCookedAmount(dish.id, cal);
+                                    const remaining=Math.max(0, needed - cooked);
+                                    const inputVal=cookingAmounts[dish.id]?.[cal] || '';
 
                                     return (
                                         <TableCell key={cal} className="p-2">
                                             <div className="bg-slate-50 rounded-lg p-2 space-y-2 border">
                                                 <div className="flex justify-between text-xs">
-                                                    <span className={cooked >= needed ? "text-green-600 font-medium" : "text-amber-600"}>
+                                                    <span className={cooked>= needed ? "text-green-600 font-medium" : "text-amber-600"}>
                                                         Done: {cooked}
                                                     </span>
                                                     <span className="text-slate-500">Left: {remaining}</span>
@@ -285,7 +229,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
                                                         className="h-7 w-7 shrink-0"
                                                         disabled={isCooking || !inputVal}
                                                         onClick={() => handleCook(dish.id, cal)}
-                                                    >
+>
                                                         <ChefHat className="h-3 w-3" />
                                                     </Button>
                                                 </div>

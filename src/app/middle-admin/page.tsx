@@ -51,20 +51,10 @@ import {
   MapPin,
   Edit,
   Globe,
-<<<<<<<HEAD
-=======
-<<<<<<<HEAD
-  DollarSign
-=======
->>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
   DollarSign,
   Clock,
   Truck,
   UtensilsCrossed
-<<<<<<<HEAD
-=======
->>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
->>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -84,16 +74,8 @@ import { getDailyPrice, PLAN_TYPES } from '@/lib/menuData'
 
 import { WarehouseTab } from '@/components/admin/WarehouseTab'
 import { FinanceTab } from '@/components/admin/FinanceTab'
-<<<<<<<HEAD
 import { SetsTab } from '@/components/admin/SetsTab'
 import { RouteOptimizeButton } from '@/components/admin/RouteOptimizeButton'
-=======
-<<<<<<<HEAD
-=======
-import { SetsTab } from '@/components/admin/SetsTab'
-import { RouteOptimizeButton } from '@/components/admin/RouteOptimizeButton'
->>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
->>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
 
 interface Admin {
   id: string
@@ -412,7 +394,7 @@ export default function MiddleAdminPage() {
         ? `/api/orders?date=${selectedDate.toISOString().split('T')[0]}&filters=${JSON.stringify(filters)}`
         : `/api/orders?filters=${JSON.stringify(filters)}`
 
-      const headers={
+      const headers = {
       }
 
       const fetchPromise = Promise.all([
@@ -1003,7 +985,7 @@ export default function MiddleAdminPage() {
       }
 
       // Add coordinates and date to order data, but keep original address
-      const orderDataWithCoords={
+      const orderDataWithCoords = {
         ...orderFormData,
         // Keep the original deliveryAddress, don't overwrite with coordinates
         latitude,
@@ -1420,7 +1402,7 @@ export default function MiddleAdminPage() {
     setIsUpdatingBulk(true)
 
     try {
-      const updates: any={}
+      const updates: any = {}
       if (bulkOrderUpdates.orderStatus) updates.orderStatus = bulkOrderUpdates.orderStatus
       if (bulkOrderUpdates.paymentStatus) updates.paymentStatus = bulkOrderUpdates.paymentStatus
       if (bulkOrderUpdates.courierId) updates.courierId = bulkOrderUpdates.courierId
@@ -1470,7 +1452,7 @@ export default function MiddleAdminPage() {
     setIsUpdatingBulk(true)
 
     try {
-      const updates: any={}
+      const updates: any = {}
       if (bulkClientUpdates.isActive !== undefined) updates.isActive = bulkClientUpdates.isActive
       if (bulkClientUpdates.calories) updates.calories = bulkClientUpdates.calories
 
@@ -1857,26 +1839,20 @@ export default function MiddleAdminPage() {
               <DollarSign className="w-4 h-4 mr-2" />
               {t.finance.title}
             </TabsTrigger>
-<<<<<<<HEAD
-  <TabsTrigger
-    value="sets"
-    className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
-  >
-    <UtensilsCrossed className="w-4 h-4 mr-2" />
-    {t.sets?.title || "Сеты"}
-  </TabsTrigger>
-=======
-<<<<<<<HEAD
-=======
+            <TabsTrigger
+              value="sets"
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
+            >
+              <UtensilsCrossed className="w-4 h-4 mr-2" />
+              Сеты
+            </TabsTrigger>
 
->>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
->>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
-          </TabsList >
+          </TabsList>
 
-    {/* Statistics Tab */ }
-    <TabsContent value="statistics" className="space-y-6" >
-      {/* Order Statistics */ }
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" >
+          {/* Statistics Tab */}
+          <TabsContent value="statistics" className="space-y-6">
+            {/* Order Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">{t.admin.stats.successful}</CardTitle>
@@ -1924,10 +1900,10 @@ export default function MiddleAdminPage() {
                   <p className="text-xs text-slate-500">В очереди</p>
                 </CardContent>
               </Card>
-            </div >
+            </div>
 
-    {/* Payment Statistics */ }
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" >
+            {/* Payment Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">{t.admin.stats.prepaid}</CardTitle>
@@ -1975,10 +1951,10 @@ export default function MiddleAdminPage() {
                   <p className="text-xs text-slate-500">При получении</p>
                 </CardContent>
               </Card>
-            </div >
+            </div>
 
-    {/* Customer Statistics */ }
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" >
+            {/* Customer Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">{t.admin.stats.daily}</CardTitle>
@@ -2026,10 +2002,10 @@ export default function MiddleAdminPage() {
                   <p className="text-xs text-slate-500">С особенностями</p>
                 </CardContent>
               </Card>
-            </div >
+            </div>
 
-    {/* Calories Statistics */ }
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6" >
+            {/* Calories Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">{t.admin.stats.lowCal}</CardTitle>
@@ -2089,10 +2065,10 @@ export default function MiddleAdminPage() {
                   <p className="text-xs text-slate-500">Максимальные</p>
                 </CardContent>
               </Card>
-            </div >
+            </div>
 
-    {/* Item Count Statistics */ }
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6" >
+            {/* Item Count Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="glass-card border-none">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">{t.admin.stats.single}</CardTitle>
@@ -2116,778 +2092,871 @@ export default function MiddleAdminPage() {
                   <p className="text-xs text-slate-500">Два и более рационов</p>
                 </CardContent>
               </Card>
-            </div >
-          </TabsContent >
-
-
-
-    {/* Orders Tab */ }
-    <TabsContent value="orders" className="space-y-4" >
-      <Card className="glass-card border-none">
-        <CardHeader>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <CardTitle className="text-xl font-semibold">{t.admin.manageOrders}</CardTitle>
-              <CardDescription>
-                {t.admin.manageOrdersDesc}
-              </CardDescription>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button onClick={() => setIsCreateOrderModalOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Создать заказ
-            </Button>
-            <RouteOptimizeButton
-              orders={orders}
-              onOptimized={(orderedIds) => {
-                // Reorder the orders array based on optimized IDs
-                const orderedOrders = orderedIds
-                  .map(id => orders.find(o => o.id === id))
-                  .filter(Boolean) as typeof orders;
-                setOrders(orderedOrders);
-              }}
-              variant="outline"
-              size="sm"
-            />
+          </TabsContent>
 
-            <Button variant="outline" size="sm" onClick={() => setIsBulkEditOrdersModalOpen(true)}>
-              <Edit className="w-4 h-4 mr-2" />
-              Редактировать ({selectedOrders.size})
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleDeleteSelectedOrders}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              Удалить выбранные ({selectedOrders.size})
-            </Button>
-          </div >
-          {/* Date Selector */}
-          <div className="flex items-center justify-center mb-6 space-x-2" >
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSelectedDate(null)}
-              className={!selectedDate ? "bg-primary text-primary-foreground" : ""}
-            >
-              Все заказы
-            </Button>
-            <Button variant="outline" size="sm">
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <div className="flex space-x-1">
-              {getDateRange().map((date, index) => (
-                <Button
-                  key={index}
-                  variant={selectedDate && date.toDateString() === selectedDate.toDateString() ? "default" : "outline"}
-                  size="sm"
-                  className="w-10 h-10 p-0"
-                  onClick={() => setSelectedDate(date)}
-                >
-                  {date.getDate()}
-                </Button>
-              ))}
-            </div>
-            <Button variant="outline" size="sm">
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div >
 
-          {/* Selected Date Indicator */}
-          {
-            selectedDate && (
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800 text-center">
-                  📅 Показаны заказы за {selectedDate.toLocaleDateString('ru-RU', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                  })}
-                </p>
-              </div>
-            )
-          }
 
-          {/* Filters Panel */}
-          {
-            showFilters && (
-              <div className="mb-6 p-4 border rounded-lg bg-slate-50">
-                <h3 className="font-medium mb-4">{t.admin.filters}</h3>
-
-                <div className="space-y-4">
-                  {/* Delivery Status */}
+          {/* Orders Tab */}
+          <TabsContent value="orders" className="space-y-4">
+            <Card className="glass-card border-none">
+              <CardHeader>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
-                    <h4 className="text-sm font-semibold mb-2 text-slate-700">{t.admin.filterGroups.deliveryStatus}</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.pending}
-                          onChange={(e) => setFilters({ ...filters, pending: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{t.admin.filterGroups.pending} (#facc15)</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.inDelivery}
-                          onChange={(e) => setFilters({ ...filters, inDelivery: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{t.admin.filterGroups.inDelivery} (#3b82f6)</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.successful}
-                          onChange={(e) => setFilters({ ...filters, successful: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{t.admin.filterGroups.delivered} (#22c55e)</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.failed}
-                          onChange={(e) => setFilters({ ...filters, failed: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{t.admin.filterGroups.failed} (#ef4444)</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Payment Status */}
-                  <div>
-                    <h4 className="text-sm font-semibold mb-2 text-slate-700">{t.admin.filterGroups.payment}</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.paid}
-                          onChange={(e) => setFilters({ ...filters, paid: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{t.admin.filterGroups.paid}</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.unpaid}
-                          onChange={(e) => setFilters({ ...filters, unpaid: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{t.admin.filterGroups.unpaid}</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.prepaid}
-                          onChange={(e) => setFilters({ ...filters, prepaid: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{t.admin.filterGroups.prepaid} (⭐)</span>
-                      </label>
-                      <div className="hidden md:block"></div>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.cash}
-                          onChange={(e) => setFilters({ ...filters, cash: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{t.admin.filterGroups.cash}</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.card}
-                          onChange={(e) => setFilters({ ...filters, card: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{t.admin.filterGroups.card}</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Calorie Groups */}
-                  <div>
-                    <h4 className="text-sm font-semibold mb-2 text-slate-700">{t.admin.filterGroups.calories}</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.calories1200}
-                          onChange={(e) => setFilters({ ...filters, calories1200: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">1200</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.calories1600}
-                          onChange={(e) => setFilters({ ...filters, calories1600: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">1600</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.calories2000}
-                          onChange={(e) => setFilters({ ...filters, calories2000: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">2000</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.calories2500}
-                          onChange={(e) => setFilters({ ...filters, calories2500: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">2500</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.calories3000}
-                          onChange={(e) => setFilters({ ...filters, calories3000: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">3000</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Other filters */}
-                  <div>
-                    <h4 className="text-sm font-semibold mb-2 text-slate-700">{t.admin.filterGroups.other}</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.autoOrders}
-                          onChange={(e) => setFilters({ ...filters, autoOrders: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{t.admin.filterGroups.auto}</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.manualOrders}
-                          onChange={(e) => setFilters({ ...filters, manualOrders: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{t.admin.filterGroups.manual}</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.singleItem}
-                          onChange={(e) => setFilters({ ...filters, singleItem: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{t.admin.filterGroups.singlePortion}</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.multiItem}
-                          onChange={(e) => setFilters({ ...filters, multiItem: e.target.checked })}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{t.admin.filterGroups.multiPortion}</span>
-                      </label>
-                    </div>
+                    <CardTitle className="text-xl font-semibold">{t.admin.manageOrders}</CardTitle>
+                    <CardDescription>
+                      {t.admin.manageOrdersDesc}
+                    </CardDescription>
                   </div>
                 </div>
-              </div>
-            )
-          }
-
-
-          {/* Today's Menu Display */}
-          <TodaysMenu className="mb-6" />
-
-          {/* Order Search */}
-          <div className="mb-4 relative">
-            <Input
-              placeholder="Поиск по имени, адресу или номеру заказа..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-            <Filter className="w-5 h-5 absolute left-3 top-2.5 text-slate-400 pointer-events-none" />
-          </div>
-
-          {/* Orders Table */}
-          <div className="rounded-md border">
-            <OrdersTable
-              orders={orders.filter(order => {
-                const searchLower = searchTerm.toLowerCase()
-                return (
-                  order.customer?.name.toLowerCase().includes(searchLower) ||
-                  order.customerName?.toLowerCase().includes(searchLower) ||
-                  order.deliveryAddress.toLowerCase().includes(searchLower) ||
-                  order.orderNumber.toString().includes(searchLower)
-                )
-              })}
-              selectedOrders={selectedOrders}
-              onSelectOrder={handleOrderSelect}
-              onSelectAll={handleSelectAllOrders}
-              onDeleteSelected={handleDeleteSelectedOrders}
-              onViewOrder={(order) => {
-                setSelectedOrder(order)
-                setIsOrderDetailsModalOpen(true)
-              }}
-              onEditOrder={handleEditOrder}
-            />
-          </div>
-
-          {/* Table Actions */}
-          <div className="flex justify-between items-center mt-4">
-            <div className="flex space-x-2">
-            </div>
-          </div>
-        </CardContent >
-      </Card >
-          </TabsContent >
-
-    {/* Clients Tab */ }
-    <TabsContent value="clients" className="space-y-6" >
-      <Card className="glass-card border-none">
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>{t.admin.manageClients}</CardTitle>
-              <CardDescription>
-                {t.admin.manageClientsDesc}
-                {clientStatusFilter !== 'all' && (
-                  <span className="ml-2 text-sm">
-                    (Показано: {clients.filter(client => {
-                      if (clientStatusFilter === 'active') return client.isActive
-                      if (clientStatusFilter === 'inactive') return !client.isActive
-                      return true
-                    }).length} из {clients.length})
-                  </span>
-                )}
-              </CardDescription>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Select value={clientStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setClientStatusFilter(value)}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Фильтр статуса" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Все клиенты</SelectItem>
-                  <SelectItem value="active">Только активные</SelectItem>
-                  <SelectItem value="inactive">Только приостановленные</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                onClick={() => setActiveTab('bin')}
-              >
-                🗑️ Корзина
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleRunAutoOrders}
-              >
-                🤖 Создать авто-заказы
-              </Button>
-              <Dialog open={isCreateClientModalOpen} onOpenChange={setIsCreateClientModalOpen}>
-                <DialogTrigger asChild>
-                  <Button>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button onClick={() => setIsCreateOrderModalOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
-                    Создать клиента
+                    Создать заказ
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>{editingClientId ? 'Редактировать Клиента' : 'Создать Клиента'}</DialogTitle>
-                    <DialogDescription>
-                      {editingClientId ? 'Измените данные клиента' : 'Создайте нового клиента в системе'}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleCreateClient}>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-2">
-                        <Label htmlFor="clientName" className="text-right">
-                          Имя
-                        </Label>
-                        <Input
-                          id="clientName"
-                          value={clientFormData.name}
-                          onChange={(e) => setClientFormData(prev => ({ ...prev, name: e.target.value }))}
-                          className="col-span-3"
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-2">
-                        <Label htmlFor="clientNickName" className="text-right">
-                          Никнейм
-                        </Label>
-                        <Input
-                          id="clientNickName"
-                          value={clientFormData.nickName || ''}
-                          onChange={(e) => setClientFormData(prev => ({ ...prev, nickName: e.target.value }))}
-                          className="col-span-3"
-                          placeholder="Например: Офис, Дом... (необязательно)"
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-2">
-                        <Label htmlFor="clientPhone" className="text-right">
-                          Телефон
-                        </Label>
-                        <div className="col-span-3">
-                          <Input
-                            id="clientPhone"
-                            type="tel"
-                            placeholder="+998 XX XXX XX XX"
-                            value={clientFormData.phone}
-                            onChange={(e) => setClientFormData(prev => ({ ...prev, phone: e.target.value }))}
-                            required
-                          />
-                          <p className="text-xs text-muted-foreground mt-1">Формат: +998 XX XXX XX XX</p>
+                  <RouteOptimizeButton
+                    orders={orders}
+                    onOptimized={(orderedIds) => {
+                      // Reorder the orders array based on optimized IDs
+                      const orderedOrders = orderedIds
+                        .map(id => orders.find(o => o.id === id))
+                        .filter(Boolean) as typeof orders;
+                      setOrders(orderedOrders);
+                    }}
+                    variant="outline"
+                    size="sm"
+                  />
+                  <Button variant="outline" size="sm" onClick={() => setIsBulkEditOrdersModalOpen(true)}>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Редактировать ({selectedOrders.size})
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleDeleteSelectedOrders}>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Удалить выбранные ({selectedOrders.size})
+                  </Button>
+                </div>
+                {/* Date Selector */}
+                <div className="flex items-center justify-center mb-6 space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedDate(null)}
+                    className={!selectedDate ? "bg-primary text-primary-foreground" : ""}
+                  >
+                    Все заказы
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <div className="flex space-x-1">
+                    {getDateRange().map((date, index) => (
+                      <Button
+                        key={index}
+                        variant={selectedDate && date.toDateString() === selectedDate.toDateString() ? "default" : "outline"}
+                        size="sm"
+                        className="w-10 h-10 p-0"
+                        onClick={() => setSelectedDate(date)}
+                      >
+                        {date.getDate()}
+                      </Button>
+                    ))}
+                  </div>
+                  <Button variant="outline" size="sm">
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                {/* Selected Date Indicator */}
+                {
+                  selectedDate && (
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-blue-800 text-center">
+                        📅 Показаны заказы за {selectedDate.toLocaleDateString('ru-RU', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                  )
+                }
+
+                {/* Filters Panel */}
+                {
+                  showFilters && (
+                    <div className="mb-6 p-4 border rounded-lg bg-slate-50">
+                      <h3 className="font-medium mb-4">{t.admin.filters}</h3>
+
+                      <div className="space-y-4">
+                        {/* Delivery Status */}
+                        <div>
+                          <h4 className="text-sm font-semibold mb-2 text-slate-700">{t.admin.filterGroups.deliveryStatus}</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.pending}
+                                onChange={(e) => setFilters({ ...filters, pending: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.pending} (#facc15)</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.inDelivery}
+                                onChange={(e) => setFilters({ ...filters, inDelivery: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.inDelivery} (#3b82f6)</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.successful}
+                                onChange={(e) => setFilters({ ...filters, successful: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.delivered} (#22c55e)</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.failed}
+                                onChange={(e) => setFilters({ ...filters, failed: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.failed} (#ef4444)</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Payment Status */}
+                        <div>
+                          <h4 className="text-sm font-semibold mb-2 text-slate-700">{t.admin.filterGroups.payment}</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.paid}
+                                onChange={(e) => setFilters({ ...filters, paid: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.paid}</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.unpaid}
+                                onChange={(e) => setFilters({ ...filters, unpaid: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.unpaid}</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.prepaid}
+                                onChange={(e) => setFilters({ ...filters, prepaid: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.prepaid} (⭐)</span>
+                            </label>
+                            <div className="hidden md:block"></div>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.cash}
+                                onChange={(e) => setFilters({ ...filters, cash: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.cash}</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.card}
+                                onChange={(e) => setFilters({ ...filters, card: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.card}</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Calorie Groups */}
+                        <div>
+                          <h4 className="text-sm font-semibold mb-2 text-slate-700">{t.admin.filterGroups.calories}</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.calories1200}
+                                onChange={(e) => setFilters({ ...filters, calories1200: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">1200</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.calories1600}
+                                onChange={(e) => setFilters({ ...filters, calories1600: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">1600</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.calories2000}
+                                onChange={(e) => setFilters({ ...filters, calories2000: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">2000</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.calories2500}
+                                onChange={(e) => setFilters({ ...filters, calories2500: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">2500</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.calories3000}
+                                onChange={(e) => setFilters({ ...filters, calories3000: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">3000</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Other filters */}
+                        <div>
+                          <h4 className="text-sm font-semibold mb-2 text-slate-700">{t.admin.filterGroups.other}</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.autoOrders}
+                                onChange={(e) => setFilters({ ...filters, autoOrders: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.auto}</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.manualOrders}
+                                onChange={(e) => setFilters({ ...filters, manualOrders: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.manual}</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.singleItem}
+                                onChange={(e) => setFilters({ ...filters, singleItem: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.singlePortion}</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={filters.multiItem}
+                                onChange={(e) => setFilters({ ...filters, multiItem: e.target.checked })}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{t.admin.filterGroups.multiPortion}</span>
+                            </label>
+                          </div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-2">
-                        <Label htmlFor="clientAddress" className="text-right">
-                          Адрес
-                        </Label>
-                        <Input
-                          id="clientAddress"
-                          value={clientFormData.address}
-                          onChange={(e) => setClientFormData(prev => ({ ...prev, address: e.target.value }))}
-                          className="col-span-3"
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-2">
-                        <Label htmlFor="googleMapsLink" className="text-right">
-                          Ссылка на карту
-                        </Label>
+                    </div>
+                  )
+                }
 
-                        <Input
-                          id="googleMapsLink"
-                          placeholder="https://maps.google.com/..."
-                          value={clientFormData.googleMapsLink || ''}
-                          onChange={(e) => handleClientAddressChange(e.target.value)}
-                          className="col-span-3"
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-2">
-                        <Label htmlFor="clientPlanType" className="text-right">
-                          Тариф
-                        </Label>
-                        <select
-                          id="clientPlanType"
-                          value={clientFormData.planType}
-                          onChange={(e) => {
-                            const val = e.target.value as any
-                            setClientFormData(prev => ({
-                              ...prev,
-                              planType: val,
-                              dailyPrice: getDailyPrice(val, prev.calories)
-                            }))
-                          }}
-                          className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {Object.entries(PLAN_TYPES).map(([key, label]) => (
-                            <option key={key} value={key}>{label}</option>
-                          ))}
-                        </select>
-                      </div>
 
-                      <div className="grid grid-cols-4 items-center gap-2">
-                        <Label htmlFor="clientCalories" className="text-right">
-                          Калории
-                        </Label>
-                        <select
-                          id="clientCalories"
-                          value={clientFormData.calories}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value)
-                            setClientFormData(prev => ({
-                              ...prev,
-                              calories: val,
-                              dailyPrice: getDailyPrice(prev.planType, val)
-                            }))
-                          }}
-                          className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          <option value="1200">1200 ккал</option>
-                          <option value="1600">1600 ккал</option>
-                          <option value="2000">2000 ккал</option>
-                          <option value="2500">2500 ккал</option>
-                          <option value="3000">3000 ккал</option>
-                        </select>
-                      </div>
+                {/* Today's Menu Display */}
+                <TodaysMenu className="mb-6" />
 
-                      <div className="grid grid-cols-4 items-center gap-2">
-                        <Label htmlFor="clientPrice" className="text-right">
-                          Цена (сум)
-                        </Label>
-                        <Input
-                          id="clientPrice"
-                          type="number"
-                          value={clientFormData.dailyPrice}
-                          onChange={(e) => setClientFormData(prev => ({ ...prev, dailyPrice: parseInt(e.target.value) }))}
-                          className="col-span-3"
-                        />
-                      </div>
+                {/* Order Search */}
+                <div className="mb-4 relative">
+                  <Input
+                    placeholder="Поиск по имени, адресу или номеру заказа..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                  <Filter className="w-5 h-5 absolute left-3 top-2.5 text-slate-400 pointer-events-none" />
+                </div>
 
-                      <div className="grid grid-cols-4 items-center gap-2">
-                        <Label htmlFor="clientNotes" className="text-right">
-                          Заметки
-                        </Label>
-                        <Input
-                          id="clientNotes"
-                          value={clientFormData.notes || ''}
-                          onChange={(e) => setClientFormData(prev => ({ ...prev, notes: e.target.value }))}
-                          className="col-span-3"
-                          placeholder="Индивидуальные предпочтения..."
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-2">
-                        <Label htmlFor="clientSpecialFeatures" className="text-right">
-                          Особенности
-                        </Label>
-                        <Input
-                          id="clientSpecialFeatures"
-                          value={clientFormData.specialFeatures}
-                          onChange={(e) => setClientFormData(prev => ({ ...prev, specialFeatures: e.target.value }))}
-                          className="col-span-3"
-                          placeholder="Особые пожелания (необязательно)"
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-start gap-2">
-                        <Label className="text-right pt-2">
-                          Дни доставки
-                        </Label>
-                        <div className="col-span-3 space-y-2">
-                          <div className="text-xs text-slate-500 mb-2">
-                            Выберите дни недели для автоматического создания заказов
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="monday"
-                                checked={clientFormData.deliveryDays.monday}
-                                onCheckedChange={(checked) => handleDeliveryDayChange('monday', checked === true)}
+                {/* Orders Table */}
+                <div className="rounded-md border">
+                  <OrdersTable
+                    orders={orders.filter(order => {
+                      const searchLower = searchTerm.toLowerCase()
+                      return (
+                        order.customer?.name.toLowerCase().includes(searchLower) ||
+                        order.customerName?.toLowerCase().includes(searchLower) ||
+                        order.deliveryAddress.toLowerCase().includes(searchLower) ||
+                        order.orderNumber.toString().includes(searchLower)
+                      )
+                    })}
+                    selectedOrders={selectedOrders}
+                    onSelectOrder={handleOrderSelect}
+                    onSelectAll={handleSelectAllOrders}
+                    onDeleteSelected={handleDeleteSelectedOrders}
+                    onViewOrder={(order) => {
+                      setSelectedOrder(order)
+                      setIsOrderDetailsModalOpen(true)
+                    }}
+                    onEditOrder={handleEditOrder}
+                  />
+                </div>
+
+                {/* Table Actions */}
+                <div className="flex justify-between items-center mt-4">
+                  <div className="flex space-x-2">
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Clients Tab */}
+          <TabsContent value="clients" className="space-y-6">
+            <Card className="glass-card border-none">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>{t.admin.manageClients}</CardTitle>
+                    <CardDescription>
+                      {t.admin.manageClientsDesc}
+                      {clientStatusFilter !== 'all' && (
+                        <span className="ml-2 text-sm">
+                          (Показано: {clients.filter(client => {
+                            if (clientStatusFilter === 'active') return client.isActive
+                            if (clientStatusFilter === 'inactive') return !client.isActive
+                            return true
+                          }).length} из {clients.length})
+                        </span>
+                      )}
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Select value={clientStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setClientStatusFilter(value)}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Фильтр статуса" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Все клиенты</SelectItem>
+                        <SelectItem value="active">Только активные</SelectItem>
+                        <SelectItem value="inactive">Только приостановленные</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      onClick={() => setActiveTab('bin')}
+                    >
+                      🗑️ Корзина
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleRunAutoOrders}
+                    >
+                      🤖 Создать авто-заказы
+                    </Button>
+                    <Dialog open={isCreateClientModalOpen} onOpenChange={setIsCreateClientModalOpen}>
+                      <DialogTrigger asChild>
+                        <Button>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Создать клиента
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>{editingClientId ? 'Редактировать Клиента' : 'Создать Клиента'}</DialogTitle>
+                          <DialogDescription>
+                            {editingClientId ? 'Измените данные клиента' : 'Создайте нового клиента в системе'}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleCreateClient}>
+                          <div className="grid gap-4 py-4">
+                            <div className="grid grid-cols-4 items-center gap-2">
+                              <Label htmlFor="clientName" className="text-right">
+                                Имя
+                              </Label>
+                              <Input
+                                id="clientName"
+                                value={clientFormData.name}
+                                onChange={(e) => setClientFormData(prev => ({ ...prev, name: e.target.value }))}
+                                className="col-span-3"
+                                required
                               />
-                              <Label htmlFor="monday" className="text-sm">Понедельник</Label>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="tuesday"
-                                checked={clientFormData.deliveryDays.tuesday}
-                                onCheckedChange={(checked) => handleDeliveryDayChange('tuesday', checked === true)}
+                            <div className="grid grid-cols-4 items-center gap-2">
+                              <Label htmlFor="clientNickName" className="text-right">
+                                Никнейм
+                              </Label>
+                              <Input
+                                id="clientNickName"
+                                value={clientFormData.nickName || ''}
+                                onChange={(e) => setClientFormData(prev => ({ ...prev, nickName: e.target.value }))}
+                                className="col-span-3"
+                                placeholder="Например: Офис, Дом... (необязательно)"
                               />
-                              <Label htmlFor="tuesday" className="text-sm">Вторник</Label>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="wednesday"
-                                checked={clientFormData.deliveryDays.wednesday}
-                                onCheckedChange={(checked) => handleDeliveryDayChange('wednesday', checked === true)}
+                            <div className="grid grid-cols-4 items-center gap-2">
+                              <Label htmlFor="clientPhone" className="text-right">
+                                Телефон
+                              </Label>
+                              <div className="col-span-3">
+                                <Input
+                                  id="clientPhone"
+                                  type="tel"
+                                  placeholder="+998 XX XXX XX XX"
+                                  value={clientFormData.phone}
+                                  onChange={(e) => setClientFormData(prev => ({ ...prev, phone: e.target.value }))}
+                                  required
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">Формат: +998 XX XXX XX XX</p>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-2">
+                              <Label htmlFor="clientAddress" className="text-right">
+                                Адрес
+                              </Label>
+                              <Input
+                                id="clientAddress"
+                                value={clientFormData.address}
+                                onChange={(e) => setClientFormData(prev => ({ ...prev, address: e.target.value }))}
+                                className="col-span-3"
+                                required
                               />
-                              <Label htmlFor="wednesday" className="text-sm">Среда</Label>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="thursday"
-                                checked={clientFormData.deliveryDays.thursday}
-                                onCheckedChange={(checked) => handleDeliveryDayChange('thursday', checked === true)}
+                            <div className="grid grid-cols-4 items-center gap-2">
+                              <Label htmlFor="googleMapsLink" className="text-right">
+                                Ссылка на карту
+                              </Label>
+
+                              <Input
+                                id="googleMapsLink"
+                                placeholder="https://maps.google.com/..."
+                                value={clientFormData.googleMapsLink || ''}
+                                onChange={(e) => handleClientAddressChange(e.target.value)}
+                                className="col-span-3"
                               />
-                              <Label htmlFor="thursday" className="text-sm">Четверг</Label>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="friday"
-                                checked={clientFormData.deliveryDays.friday}
-                                onCheckedChange={(checked) => handleDeliveryDayChange('friday', checked === true)}
-                              />
-                              <Label htmlFor="friday" className="text-sm">Пятница</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="saturday"
-                                checked={clientFormData.deliveryDays.saturday}
-                                onCheckedChange={(checked) => handleDeliveryDayChange('saturday', checked === true)}
-                              />
-                              <Label htmlFor="saturday" className="text-sm">Суббота</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="sunday"
-                                checked={clientFormData.deliveryDays.sunday}
-                                onCheckedChange={(checked) => handleDeliveryDayChange('sunday', checked === true)}
-                              />
-                              <Label htmlFor="sunday" className="text-sm">Воскресенье</Label>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2 pt-2">
-                            <Label htmlFor="defaultCourier" className="text-sm w-full">
-                              Курьер по умолчанию:
+                            <div className="grid grid-cols-4 items-center gap-2">
+                              <Label htmlFor="clientPlanType" className="text-right">
+                                Тариф
+                              </Label>
                               <select
-                                id="defaultCourier"
-                                value={clientFormData.defaultCourierId}
-                                onChange={(e) => setClientFormData(prev => ({ ...prev, defaultCourierId: e.target.value }))}
-                                className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                id="clientPlanType"
+                                value={clientFormData.planType}
+                                onChange={(e) => {
+                                  const val = e.target.value as any
+                                  setClientFormData(prev => ({
+                                    ...prev,
+                                    planType: val,
+                                    dailyPrice: getDailyPrice(val, prev.calories)
+                                  }))
+                                }}
+                                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                               >
-                                <option value="">Нет</option>
-                                {couriers.map((courier) => (
-                                  <option key={courier.id} value={courier.id}>
-                                    {courier.name}
-                                  </option>
+                                {Object.entries(PLAN_TYPES).map(([key, label]) => (
+                                  <option key={key} value={key}>{label}</option>
                                 ))}
                               </select>
-                            </Label>
+                            </div>
+
+                            <div className="grid grid-cols-4 items-center gap-2">
+                              <Label htmlFor="clientCalories" className="text-right">
+                                Калории
+                              </Label>
+                              <select
+                                id="clientCalories"
+                                value={clientFormData.calories}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value)
+                                  setClientFormData(prev => ({
+                                    ...prev,
+                                    calories: val,
+                                    dailyPrice: getDailyPrice(prev.planType, val)
+                                  }))
+                                }}
+                                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                <option value="1200">1200 ккал</option>
+                                <option value="1600">1600 ккал</option>
+                                <option value="2000">2000 ккал</option>
+                                <option value="2500">2500 ккал</option>
+                                <option value="3000">3000 ккал</option>
+                              </select>
+                            </div>
+
+                            <div className="grid grid-cols-4 items-center gap-2">
+                              <Label htmlFor="clientPrice" className="text-right">
+                                Цена (сум)
+                              </Label>
+                              <Input
+                                id="clientPrice"
+                                type="number"
+                                value={clientFormData.dailyPrice}
+                                onChange={(e) => setClientFormData(prev => ({ ...prev, dailyPrice: parseInt(e.target.value) }))}
+                                className="col-span-3"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-4 items-center gap-2">
+                              <Label htmlFor="clientNotes" className="text-right">
+                                Заметки
+                              </Label>
+                              <Input
+                                id="clientNotes"
+                                value={clientFormData.notes || ''}
+                                onChange={(e) => setClientFormData(prev => ({ ...prev, notes: e.target.value }))}
+                                className="col-span-3"
+                                placeholder="Индивидуальные предпочтения..."
+                              />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-2">
+                              <Label htmlFor="clientSpecialFeatures" className="text-right">
+                                Особенности
+                              </Label>
+                              <Input
+                                id="clientSpecialFeatures"
+                                value={clientFormData.specialFeatures}
+                                onChange={(e) => setClientFormData(prev => ({ ...prev, specialFeatures: e.target.value }))}
+                                className="col-span-3"
+                                placeholder="Особые пожелания (необязательно)"
+                              />
+                            </div>
+                            <div className="grid grid-cols-4 items-start gap-2">
+                              <Label className="text-right pt-2">
+                                Дни доставки
+                              </Label>
+                              <div className="col-span-3 space-y-2">
+                                <div className="text-xs text-slate-500 mb-2">
+                                  Выберите дни недели для автоматического создания заказов
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id="monday"
+                                      checked={clientFormData.deliveryDays.monday}
+                                      onCheckedChange={(checked) => handleDeliveryDayChange('monday', checked === true)}
+                                    />
+                                    <Label htmlFor="monday" className="text-sm">Понедельник</Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id="tuesday"
+                                      checked={clientFormData.deliveryDays.tuesday}
+                                      onCheckedChange={(checked) => handleDeliveryDayChange('tuesday', checked === true)}
+                                    />
+                                    <Label htmlFor="tuesday" className="text-sm">Вторник</Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id="wednesday"
+                                      checked={clientFormData.deliveryDays.wednesday}
+                                      onCheckedChange={(checked) => handleDeliveryDayChange('wednesday', checked === true)}
+                                    />
+                                    <Label htmlFor="wednesday" className="text-sm">Среда</Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id="thursday"
+                                      checked={clientFormData.deliveryDays.thursday}
+                                      onCheckedChange={(checked) => handleDeliveryDayChange('thursday', checked === true)}
+                                    />
+                                    <Label htmlFor="thursday" className="text-sm">Четверг</Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id="friday"
+                                      checked={clientFormData.deliveryDays.friday}
+                                      onCheckedChange={(checked) => handleDeliveryDayChange('friday', checked === true)}
+                                    />
+                                    <Label htmlFor="friday" className="text-sm">Пятница</Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id="saturday"
+                                      checked={clientFormData.deliveryDays.saturday}
+                                      onCheckedChange={(checked) => handleDeliveryDayChange('saturday', checked === true)}
+                                    />
+                                    <Label htmlFor="saturday" className="text-sm">Суббота</Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id="sunday"
+                                      checked={clientFormData.deliveryDays.sunday}
+                                      onCheckedChange={(checked) => handleDeliveryDayChange('sunday', checked === true)}
+                                    />
+                                    <Label htmlFor="sunday" className="text-sm">Воскресенье</Label>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2 pt-2">
+                                  <Label htmlFor="defaultCourier" className="text-sm w-full">
+                                    Курьер по умолчанию:
+                                    <select
+                                      id="defaultCourier"
+                                      value={clientFormData.defaultCourierId}
+                                      onChange={(e) => setClientFormData(prev => ({ ...prev, defaultCourierId: e.target.value }))}
+                                      className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                      <option value="">Нет</option>
+                                      {couriers.map((courier) => (
+                                        <option key={courier.id} value={courier.id}>
+                                          {courier.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </Label>
+                                </div>
+                                <div className="flex items-center space-x-2 pt-2">
+                                  <Checkbox
+                                    id="autoOrdersEnabled"
+                                    checked={clientFormData.autoOrdersEnabled}
+                                    onCheckedChange={(checked) => setClientFormData(prev => ({ ...prev, autoOrdersEnabled: checked === true }))}
+                                  />
+                                  <Label htmlFor="autoOrdersEnabled" className="text-sm">
+                                    Включить автоматическое создание заказов
+                                  </Label>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-2 pt-2">
-                            <Checkbox
-                              id="autoOrdersEnabled"
-                              checked={clientFormData.autoOrdersEnabled}
-                              onCheckedChange={(checked) => setClientFormData(prev => ({ ...prev, autoOrdersEnabled: checked === true }))}
-                            />
-                            <Label htmlFor="autoOrdersEnabled" className="text-sm">
-                              Включить автоматическое создание заказов
-                            </Label>
-                          </div>
-                        </div>
+                          {clientError && (
+                            <Alert className="mb-4">
+                              <AlertDescription>{clientError}</AlertDescription>
+                            </Alert>
+                          )}
+                          <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setIsCreateClientModalOpen(false)}>
+                              Отмена
+                            </Button>
+                            <Button type="submit" disabled={isCreatingClient}>
+                              {isCreatingClient ? 'Сохранение...' : (editingClientId ? 'Сохранить' : 'Создать')}
+                            </Button>
+                          </DialogFooter>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {/* Client Management Buttons */}
+                {selectedClients.size > 0 && (
+                  <div className="mb-4 p-3 bg-slate-50 border rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">
+                        Выбрано клиентов: {selectedClients.size}
+                      </span>
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const client = clients.find(c => selectedClients.has(c.id))
+                            if (client) handleEditClient(client)
+                          }}
+                          disabled={selectedClients.size !== 1}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Редактировать
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handlePauseSelectedClients}
+                          className="text-orange-600 border-orange-200 hover:bg-orange-50"
+                        >
+                          <Pause className="w-4 h-4 mr-2" />
+                          Приостановить выбранных
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleResumeSelectedClients}
+                          className="text-green-600 border-green-200 hover:bg-green-50"
+                        >
+                          <Play className="w-4 h-4 mr-2" />
+                          Возобновить выбранных
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={handleDeleteSelectedClients}
+                          disabled={selectedClients.size === 0}
+                        >
+                          🗑️ Удалить выбранных клиентов
+                        </Button>
                       </div>
                     </div>
-                    {clientError && (
-                      <Alert className="mb-4">
-                        <AlertDescription>{clientError}</AlertDescription>
-                      </Alert>
-                    )}
-                    <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setIsCreateClientModalOpen(false)}>
-                        Отмена
-                      </Button>
-                      <Button type="submit" disabled={isCreatingClient}>
-                        {isCreatingClient ? 'Сохранение...' : (editingClientId ? 'Сохранить' : 'Создать')}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {/* Client Management Buttons */}
-          {selectedClients.size > 0 && (
-            <div className="mb-4 p-3 bg-slate-50 border rounded-lg">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">
-                  Выбрано клиентов: {selectedClients.size}
-                </span>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const client = clients.find(c => selectedClients.has(c.id))
-                      if (client) handleEditClient(client)
-                    }}
-                    disabled={selectedClients.size !== 1}
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Редактировать
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handlePauseSelectedClients}
-                    className="text-orange-600 border-orange-200 hover:bg-orange-50"
-                  >
-                    <Pause className="w-4 h-4 mr-2" />
-                    Приостановить выбранных
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleResumeSelectedClients}
-                    className="text-green-600 border-green-200 hover:bg-green-50"
-                  >
-                    <Play className="w-4 h-4 mr-2" />
-                    Возобновить выбранных
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleDeleteSelectedClients}
-                    disabled={selectedClients.size === 0}
-                  >
-                    🗑️ Удалить выбранных клиентов
-                  </Button>
+                  </div>
+                )}
+                {/* Clients Table */}
+                {/* Desktop View */}
+                <div className="hidden md:block border rounded-lg overflow-hidden">
+                  <div className="max-h-96 overflow-y-auto">
+                    <table className="w-full">
+                      <thead className="bg-slate-50 sticky top-0">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-12">
+                            <input
+                              type="checkbox"
+                              className="rounded border-slate-300"
+                              onChange={(e) => {
+                                const filteredClients = clients.filter(client => {
+                                  if (clientStatusFilter === 'active') return client.isActive
+                                  if (clientStatusFilter === 'inactive') return !client.isActive
+                                  return true
+                                })
+                                if (e.target.checked) {
+                                  setSelectedClients(new Set(filteredClients.map(c => c.id)))
+                                } else {
+                                  setSelectedClients(new Set())
+                                }
+                              }}
+                              checked={(() => {
+                                const filteredClients = clients.filter(client => {
+                                  if (clientStatusFilter === 'active') return client.isActive
+                                  if (clientStatusFilter === 'inactive') return !client.isActive
+                                  return true
+                                })
+                                return selectedClients.size === filteredClients.length && filteredClients.length > 0
+                              })()}
+                            />
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Имя</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Никнейм</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Телефон</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Адрес</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Калории</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Дни доставки</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                            Статус / Авто
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                            Особенности
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                            Дата добавления
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                            Действия
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-slate-200">
+                        {clients
+                          .filter(client => {
+                            if (clientStatusFilter === 'active') return client.isActive
+                            if (clientStatusFilter === 'inactive') return !client.isActive
+                            return true
+                          })
+                          .map((client) => (
+                            <tr key={client.id} className="hover:bg-slate-50">
+                              <td className="px-4 py-2 whitespace-nowrap text-sm">
+                                <input
+                                  type="checkbox"
+                                  className="rounded border-slate-300"
+                                  checked={selectedClients.has(client.id)}
+                                  onChange={() => handleToggleClientSelection(client.id)}
+                                />
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-slate-900">
+                                {client.name}
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-500">
+                                {client.nickName || '-'}
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
+                                {client.phone}
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
+                                {client.address}
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
+                                {client.calories} ккал
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
+                                <div className="text-xs">
+                                  {client.deliveryDays?.monday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Пн</span>}
+                                  {client.deliveryDays?.tuesday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Вт</span>}
+                                  {client.deliveryDays?.wednesday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Ср</span>}
+                                  {client.deliveryDays?.thursday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Чт</span>}
+                                  {client.deliveryDays?.friday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Пт</span>}
+                                  {client.deliveryDays?.saturday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Сб</span>}
+                                  {client.deliveryDays?.sunday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Вс</span>}
+                                  {(!client.deliveryDays || Object.values(client.deliveryDays).every(day => !day)) && (
+                                    <span className="text-slate-400">-</span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap text-sm">
+                                <div className="flex flex-col gap-1">
+                                  <Badge
+                                    variant={client.isActive ? "default" : "secondary"}
+                                    className={
+                                      `${client.isActive
+                                        ? "bg-green-100 text-green-800 border-green-200"
+                                        : "bg-red-100 text-red-800 border-red-200"} cursor-pointer hover:opacity-80`
+                                    }
+                                    onClick={() => handleToggleClientStatus(client.id, client.isActive)}
+                                  >
+                                    {client.isActive ? (
+                                      <>
+                                        <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
+                                        Активен
+                                      </>
+                                    ) : (
+                                      <>
+                                        <div className="w-2 h-2 bg-red-500 rounded-full mr-1"></div>
+                                        Приостановлен
+                                      </>
+                                    )}
+                                  </Badge>
+                                </div>
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
+                                {client.specialFeatures || '-'}
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
+                                📅 {new Date(client.createdAt).toLocaleDateString('ru-RU')}
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleEditClient(client)}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
-          {/* Clients Table */}
-          {/* Desktop View */}
-          <div className="hidden md:block border rounded-lg overflow-hidden">
-            <div className="max-h-96 overflow-y-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50 sticky top-0">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-12">
-                      <input
-                        type="checkbox"
-                        className="rounded border-slate-300"
-                        onChange={(e) => {
-                          const filteredClients = clients.filter(client => {
-                            if (clientStatusFilter === 'active') return client.isActive
-                            if (clientStatusFilter === 'inactive') return !client.isActive
-                            return true
-                          })
-                          if (e.target.checked) {
-                            setSelectedClients(new Set(filteredClients.map(c => c.id)))
-                          } else {
-                            setSelectedClients(new Set())
-                          }
-                        }}
-                        checked={(() => {
-                          const filteredClients = clients.filter(client => {
-                            if (clientStatusFilter === 'active') return client.isActive
-                            if (clientStatusFilter === 'inactive') return !client.isActive
-                            return true
-                          })
-                          return selectedClients.size === filteredClients.length && filteredClients.length > 0
-                        })()}
-                      />
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Имя</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Никнейм</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Телефон</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Адрес</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Калории</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Дни доставки</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      Статус / Авто
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      Особенности
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      Дата добавления
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      Действия
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-slate-200">
+
+                {/* Mobile View */}
+                <div className="md:hidden space-y-4">
                   {clients
                     .filter(client => {
                       if (clientStatusFilter === 'active') return client.isActive
@@ -2895,1758 +2964,1661 @@ export default function MiddleAdminPage() {
                       return true
                     })
                     .map((client) => (
-                      <tr key={client.id} className="hover:bg-slate-50">
-                        <td className="px-4 py-2 whitespace-nowrap text-sm">
-                          <input
-                            type="checkbox"
-                            className="rounded border-slate-300"
-                            checked={selectedClients.has(client.id)}
-                            onChange={() => handleToggleClientSelection(client.id)}
-                          />
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-slate-900">
-                          {client.name}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-500">
-                          {client.nickName || '-'}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
-                          {client.phone}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
-                          {client.address}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
-                          {client.calories} ккал
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
-                          <div className="text-xs">
-                            {client.deliveryDays?.monday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Пн</span>}
-                            {client.deliveryDays?.tuesday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Вт</span>}
-                            {client.deliveryDays?.wednesday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Ср</span>}
-                            {client.deliveryDays?.thursday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Чт</span>}
-                            {client.deliveryDays?.friday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Пт</span>}
-                            {client.deliveryDays?.saturday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Сб</span>}
-                            {client.deliveryDays?.sunday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Вс</span>}
-                            {(!client.deliveryDays || Object.values(client.deliveryDays).every(day => !day)) && (
-                              <span className="text-slate-400">-</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm">
-                          <div className="flex flex-col gap-1">
+                      <Card key={client.id} className="overflow-hidden">
+                        <CardHeader className="pb-2 bg-muted/30">
+                          <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                checked={selectedClients.has(client.id)}
+                                onCheckedChange={() => handleToggleClientSelection(client.id)}
+                              />
+                              <div className="flex flex-col">
+                                <CardTitle className="text-base">{client.name}</CardTitle>
+                                <CardDescription>{client.phone}</CardDescription>
+                              </div>
+                            </div>
                             <Badge
                               variant={client.isActive ? "default" : "secondary"}
                               className={
                                 `${client.isActive
                                   ? "bg-green-100 text-green-800 border-green-200"
-                                  : "bg-red-100 text-red-800 border-red-200"} cursor-pointer hover:opacity-80`
+                                  : "bg-red-100 text-red-800 border-red-200"} cursor-pointer`
                               }
                               onClick={() => handleToggleClientStatus(client.id, client.isActive)}
                             >
-                              {client.isActive ? (
-                                <>
-                                  <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                                  Активен
-                                </>
-                              ) : (
-                                <>
-                                  <div className="w-2 h-2 bg-red-500 rounded-full mr-1"></div>
-                                  Приостановлен
-                                </>
-                              )}
+                              {client.isActive ? "Активен" : "Приостановлен"}
                             </Badge>
                           </div>
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
-                          {client.specialFeatures || '-'}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
-                          📅 {new Date(client.createdAt).toLocaleDateString('ru-RU')}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditClient(client)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                        </CardHeader>
+                        <CardContent className="pt-4 space-y-3">
+                          <div className="flex items-start gap-3">
+                            <MapPin className="w-4 h-4 mt-1 text-muted-foreground" />
+                            <div className="text-sm">{client.address}</div>
+                          </div>
 
-          {/* Mobile View */}
-          <div className="md:hidden space-y-4">
-            {clients
-              .filter(client => {
-                if (clientStatusFilter === 'active') return client.isActive
-                if (clientStatusFilter === 'inactive') return !client.isActive
-                return true
-              })
-              .map((client) => (
-                <Card key={client.id} className="overflow-hidden">
-                  <CardHeader className="pb-2 bg-muted/30">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          checked={selectedClients.has(client.id)}
-                          onCheckedChange={() => handleToggleClientSelection(client.id)}
-                        />
-                        <div className="flex flex-col">
-                          <CardTitle className="text-base">{client.name}</CardTitle>
-                          <CardDescription>{client.phone}</CardDescription>
+                          <div className="flex items-center gap-3">
+                            <div className="text-sm font-medium">Калории:</div>
+                            <div className="text-sm">{client.calories} ккал</div>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            <div className="font-medium mb-1">Дни доставки:</div>
+                            <div className="flex flex-wrap gap-1">
+                              {client.deliveryDays?.monday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Пн</span>}
+                              {client.deliveryDays?.tuesday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Вт</span>}
+                              {client.deliveryDays?.wednesday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Ср</span>}
+                              {client.deliveryDays?.thursday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Чт</span>}
+                              {client.deliveryDays?.friday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Пт</span>}
+                              {client.deliveryDays?.saturday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Сб</span>}
+                              {client.deliveryDays?.sunday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Вс</span>}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
+
+                {/* Auto Orders Info */}
+                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <CalendarDays className="w-5 h-5" />
+                    Автоматические заказы
+                  </h3>
+                  <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950 p-3 rounded-md">
+                    <p className="font-medium mb-1">Информация:</p>
+                    <p>• При создании клиента заказы генерируются на 30 дней вперед</p>
+                    <p>• Повторная проверка только через 30 дней после создания</p>
+                    <p>• Дальнейшие проверки каждые 30 дней от последней</p>
+                    <p>• Время доставки: 11:00-14:00</p>
+                    <p>• Система работает полностью автоматически</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Finance Tab */}
+          <TabsContent value="finance" className="space-y-6">
+            <FinanceTab />
+          </TabsContent>
+
+          {/* Order Details Modal */}
+          <Dialog open={isOrderDetailsModalOpen} onOpenChange={setIsOrderDetailsModalOpen}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Детали Заказа</DialogTitle>
+                <DialogDescription>
+                  Полная информация о заказе
+                </DialogDescription>
+              </DialogHeader>
+              {selectedOrder && (
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right font-medium">
+                      Номер заказа:
+                    </Label>
+                    <div className="col-span-3 font-semibold">
+                      #{selectedOrder.orderNumber}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right font-medium">
+                      {t.admin.clients}:
+                    </Label>
+                    <div className="col-span-3">
+                      {selectedOrder.customer.name}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right font-medium">
+                      Телефон:
+                    </Label>
+                    <div className="col-span-3">
+                      {selectedOrder.customer.phone}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right font-medium">
+                      Адрес:
+                    </Label>
+                    <div className="col-span-3">
+                      {selectedOrder.deliveryAddress}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right font-medium">
+                      Время доставки:
+                    </Label>
+                    <div className="col-span-3">
+                      {selectedOrder.deliveryTime}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right font-medium">
+                      Количество:
+                    </Label>
+                    <div className="col-span-3">
+                      {selectedOrder.quantity}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right font-medium">
+                      Калории:
+                    </Label>
+                    <div className="col-span-3">
+                      {selectedOrder.calories} ккал
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right font-medium">
+                      Особенности:
+                    </Label>
+                    <div className="col-span-3">
+                      {selectedOrder.specialFeatures || 'Нет'}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right font-medium">
+                      Курьер:
+                    </Label>
+                    <div className="col-span-3">
+                      {selectedOrder.courierName || 'Не назначен'}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right font-medium">
+                      Статус:
+                    </Label>
+                    <div className="col-span-3">
+                      <div className="flex items-center">
+                        <div className={`w-2 h-2 rounded-full ${getStatusColor(selectedOrder.orderStatus)} mr-2`}></div>
+                        <span>{getStatusText(selectedOrder.orderStatus)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right font-medium">
+                      Оплата:
+                    </Label>
+                    <div className="col-span-3">
+                      {selectedOrder.paymentMethod === 'CARD' ? 'Карта' : 'Наличные'} - {selectedOrder.paymentStatus === 'PAID' ? 'Оплачено' : 'Не оплачено'}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right font-medium">
+                      Предоплата:
+                    </Label>
+                    <div className="col-span-3">
+                      {selectedOrder.isPrepaid ? 'Да' : 'Нет'}
+                    </div>
+                  </div>
+                </div>
+              )}
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => handleGetAdminRoute(selectedOrder!)}
+                  disabled={!selectedOrder}
+                >
+                  <Route className="w-4 h-4 mr-2" />
+                  Маршрут
+                </Button>
+                <Button variant="outline" onClick={() => setIsOrderDetailsModalOpen(false)}>
+                  Закрыть
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Website Builder Tab */}
+          <TabsContent value="website" className="space-y-6">
+            <WebsiteBuilderPage />
+          </TabsContent>
+
+          {/* Admins Tab */}
+          <TabsContent value="admins" className="space-y-6">
+            <Card className="glass-card border-none">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Управление Низкими Администраторами и Курьерами</CardTitle>
+                    <CardDescription>
+                      Добавляйте, удаляйте и управляйте низкими администраторами и курьерами
+                    </CardDescription>
+                  </div>
+                  <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Добавить
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Добавить Администратора или Курьера</DialogTitle>
+                        <DialogDescription>
+                          Создайте нового низкого администратора или курьера
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleCreateAdmin}>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-2">
+                            <Label htmlFor="name" className="text-right">
+                              Имя
+                            </Label>
+                            <Input
+                              id="name"
+                              value={createFormData.name}
+                              onChange={(e) => setCreateFormData(prev => ({ ...prev, name: e.target.value }))}
+                              className="col-span-3"
+                              required
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-2">
+                            <Label htmlFor="email" className="text-right">
+                              Email
+                            </Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              value={createFormData.email}
+                              onChange={(e) => setCreateFormData(prev => ({ ...prev, email: e.target.value }))}
+                              className="col-span-3"
+                              required
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="password" className="text-right">
+                              Пароль
+                            </Label>
+                            <div className="col-span-3 relative">
+                              <Input
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                value={createFormData.password}
+                                onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
+                                required={createFormData.role !== 'WORKER'}
+                                minLength={6}
+                                placeholder={createFormData.role === 'WORKER' ? 'Необязательно' : ''}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                  <Eye className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-2">
+                            <Label htmlFor="role" className="text-right">
+                              Роль
+                            </Label>
+                            <select
+                              id="role"
+                              value={createFormData.role}
+                              onChange={(e) => setCreateFormData(prev => ({ ...prev, role: e.target.value }))}
+                              className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <option value="LOW_ADMIN">Низкий администратор</option>
+                              <option value="COURIER">Курьер</option>
+                              <option value="WORKER">Работник</option>
+                            </select>
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-2">
+                            <Label htmlFor="salary" className="text-right">
+                              Зарплата
+                            </Label>
+                            <Input
+                              id="salary"
+                              type="number"
+                              value={createFormData.salary || ''}
+                              onChange={(e) => setCreateFormData(prev => ({ ...prev, salary: parseInt(e.target.value) || 0 }))}
+                              className="col-span-3"
+                              placeholder="0"
+                            />
+                          </div>
+                          {createFormData.role === 'LOW_ADMIN' && (
+                            <div className="col-span-4 space-y-3 border-t pt-4">
+                              <Label className="text-sm font-medium">Разрешенные вкладки</Label>
+                              <p className="text-xs text-muted-foreground">Выберите, какие вкладки будут доступны для этого администратора</p>
+                              <div className="space-y-2">
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id="tab-statistics"
+                                    checked={createFormData.allowedTabs.includes('statistics')}
+                                    onCheckedChange={(checked) => {
+                                      const tabs = checked
+                                        ? [...createFormData.allowedTabs, 'statistics']
+                                        : createFormData.allowedTabs.filter(t => t !== 'statistics')
+                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
+                                    }}
+                                  />
+                                  <label htmlFor="tab-statistics" className="text-sm cursor-pointer">
+                                    Статистика
+                                  </label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id="tab-orders"
+                                    checked={createFormData.allowedTabs.includes('orders')}
+                                    onCheckedChange={(checked) => {
+                                      const tabs = checked
+                                        ? [...createFormData.allowedTabs, 'orders']
+                                        : createFormData.allowedTabs.filter(t => t !== 'orders')
+                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
+                                    }}
+                                  />
+                                  <label htmlFor="tab-orders" className="text-sm cursor-pointer">
+                                    Заказы
+                                  </label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id="tab-clients"
+                                    checked={createFormData.allowedTabs.includes('clients')}
+                                    onCheckedChange={(checked) => {
+                                      const tabs = checked
+                                        ? [...createFormData.allowedTabs, 'clients']
+                                        : createFormData.allowedTabs.filter(t => t !== 'clients')
+                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
+                                    }}
+                                  />
+                                  <label htmlFor="tab-clients" className="text-sm cursor-pointer">
+                                    Клиенты
+                                  </label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id="tab-chat"
+                                    checked={createFormData.allowedTabs.includes('chat')}
+                                    onCheckedChange={(checked) => {
+                                      const tabs = checked
+                                        ? [...createFormData.allowedTabs, 'chat']
+                                        : createFormData.allowedTabs.filter(t => t !== 'chat')
+                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
+                                    }}
+                                  />
+                                  <label htmlFor="tab-chat" className="text-sm cursor-pointer">
+                                    Чат
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          {createError && (
+                            <div className="col-span-4">
+                              <Alert variant="destructive">
+                                <AlertDescription>{createError}</AlertDescription>
+                              </Alert>
+                            </div>
+                          )}
+                        </div>
+                        <DialogFooter>
+                          <Button type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+                            Отмена
+                          </Button>
+                          <Button type="submit" disabled={isCreating}>
+                            {isCreating ? 'Создание...' : 'Создать'}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {/* Desktop View */}
+                <div className="hidden md:block space-y-4">
+                  {lowAdmins.map((admin) => (
+                    <div key={admin.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <Avatar>
+                          <AvatarFallback>{admin.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{admin.name}</p>
+                          <p className="text-sm text-slate-500">{admin.email}</p>
+                          <Badge variant={admin.isActive ? "default" : "secondary"}>
+                            {admin.role === 'COURIER' ? 'Курьер' : admin.role === 'WORKER' ? 'Работник' : 'Низкий администратор'}
+                          </Badge>
+                          <Badge variant={admin.isActive ? "default" : "secondary"} className="ml-2">
+                            {admin.isActive ? "Активен" : "Приостановлен"}
+                          </Badge>
                         </div>
                       </div>
-                      <Badge
-                        variant={client.isActive ? "default" : "secondary"}
-                        className={
-                          `${client.isActive
-                            ? "bg-green-100 text-green-800 border-green-200"
-                            : "bg-red-100 text-red-800 border-red-200"} cursor-pointer`
-                        }
-                        onClick={() => handleToggleClientStatus(client.id, client.isActive)}
-                      >
-                        {client.isActive ? "Активен" : "Приостановлен"}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-4 space-y-3">
-                    <div className="flex items-start gap-3">
-                      <MapPin className="w-4 h-4 mt-1 text-muted-foreground" />
-                      <div className="text-sm">{client.address}</div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="text-sm font-medium">Калории:</div>
-                      <div className="text-sm">{client.calories} ккал</div>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      <div className="font-medium mb-1">Дни доставки:</div>
-                      <div className="flex flex-wrap gap-1">
-                        {client.deliveryDays?.monday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Пн</span>}
-                        {client.deliveryDays?.tuesday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Вт</span>}
-                        {client.deliveryDays?.wednesday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Ср</span>}
-                        {client.deliveryDays?.thursday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Чт</span>}
-                        {client.deliveryDays?.friday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Пт</span>}
-                        {client.deliveryDays?.saturday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Сб</span>}
-                        {client.deliveryDays?.sunday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Вс</span>}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-          </div>
-
-          {/* Auto Orders Info */}
-          <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <CalendarDays className="w-5 h-5" />
-              Автоматические заказы
-            </h3>
-            <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950 p-3 rounded-md">
-              <p className="font-medium mb-1">Информация:</p>
-              <p>• При создании клиента заказы генерируются на 30 дней вперед</p>
-              <p>• Повторная проверка только через 30 дней после создания</p>
-              <p>• Дальнейшие проверки каждые 30 дней от последней</p>
-              <p>• Время доставки: 11:00-14:00</p>
-              <p>• Система работает полностью автоматически</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-          </TabsContent >
-
-    {/* Finance Tab */ }
-    <TabsContent value="finance" className="space-y-6" >
-      <FinanceTab />
-    </TabsContent >
-
-
-    {/* Sets Tab */ }
-    <TabsContent value="sets" className="space-y-6" >
-      <SetsTab />
-    </TabsContent >
-
-
-    {/* Order Details Modal */ }
-    <Dialog open={ isOrderDetailsModalOpen } onOpenChange={ setIsOrderDetailsModalOpen } >
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Детали Заказа</DialogTitle>
-          <DialogDescription>
-            Полная информация о заказе
-          </DialogDescription>
-        </DialogHeader>
-        {selectedOrder && (
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right font-medium">
-                Номер заказа:
-              </Label>
-              <div className="col-span-3 font-semibold">
-                #{selectedOrder.orderNumber}
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right font-medium">
-                {t.admin.clients}:
-              </Label>
-              <div className="col-span-3">
-                {selectedOrder.customer.name}
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right font-medium">
-                Телефон:
-              </Label>
-              <div className="col-span-3">
-                {selectedOrder.customer.phone}
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right font-medium">
-                Адрес:
-              </Label>
-              <div className="col-span-3">
-                {selectedOrder.deliveryAddress}
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right font-medium">
-                Время доставки:
-              </Label>
-              <div className="col-span-3">
-                {selectedOrder.deliveryTime}
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right font-medium">
-                Количество:
-              </Label>
-              <div className="col-span-3">
-                {selectedOrder.quantity}
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right font-medium">
-                Калории:
-              </Label>
-              <div className="col-span-3">
-                {selectedOrder.calories} ккал
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right font-medium">
-                Особенности:
-              </Label>
-              <div className="col-span-3">
-                {selectedOrder.specialFeatures || 'Нет'}
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right font-medium">
-                Курьер:
-              </Label>
-              <div className="col-span-3">
-                {selectedOrder.courierName || 'Не назначен'}
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right font-medium">
-                Статус:
-              </Label>
-              <div className="col-span-3">
-                <div className="flex items-center">
-                  <div className={`w-2 h-2 rounded-full ${getStatusColor(selectedOrder.orderStatus)} mr-2`}></div>
-                  <span>{getStatusText(selectedOrder.orderStatus)}</span>
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right font-medium">
-                Оплата:
-              </Label>
-              <div className="col-span-3">
-                {selectedOrder.paymentMethod === 'CARD' ? 'Карта' : 'Наличные'} - {selectedOrder.paymentStatus === 'PAID' ? 'Оплачено' : 'Не оплачено'}
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right font-medium">
-                Предоплата:
-              </Label>
-              <div className="col-span-3">
-                {selectedOrder.isPrepaid ? 'Да' : 'Нет'}
-              </div>
-            </div>
-          </div>
-        )}
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => handleGetAdminRoute(selectedOrder!)}
-            disabled={!selectedOrder}
-          >
-            <Route className="w-4 h-4 mr-2" />
-            Маршрут
-          </Button>
-          <Button variant="outline" onClick={() => setIsOrderDetailsModalOpen(false)}>
-            Закрыть
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-          </Dialog >
-
-    {/* Website Builder Tab */ }
-    <TabsContent value="website" className="space-y-6" >
-      <WebsiteBuilderPage />
-          </TabsContent >
-
-    {/* Admins Tab */ }
-    <TabsContent value="admins" className="space-y-6" >
-      <Card className="glass-card border-none">
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>Управление Низкими Администраторами и Курьерами</CardTitle>
-              <CardDescription>
-                Добавляйте, удаляйте и управляйте низкими администраторами и курьерами
-              </CardDescription>
-            </div>
-            <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Добавить
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Добавить Администратора или Курьера</DialogTitle>
-                  <DialogDescription>
-                    Создайте нового низкого администратора или курьера
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleCreateAdmin}>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-2">
-                      <Label htmlFor="name" className="text-right">
-                        Имя
-                      </Label>
-                      <Input
-                        id="name"
-                        value={createFormData.name}
-                        onChange={(e) => setCreateFormData(prev => ({ ...prev, name: e.target.value }))}
-                        className="col-span-3"
-                        required
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-2">
-                      <Label htmlFor="email" className="text-right">
-                        Email
-                      </Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={createFormData.email}
-                        onChange={(e) => setCreateFormData(prev => ({ ...prev, email: e.target.value }))}
-                        className="col-span-3"
-                        required
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="password" className="text-right">
-                        Пароль
-                      </Label>
-                      <div className="col-span-3 relative">
-                        <Input
-                          id="password"
-                          type={showPassword ? "text" : "password"}
-                          value={createFormData.password}
-                          onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
-                          required={createFormData.role !== 'WORKER'}
-                          minLength={6}
-                          placeholder={createFormData.role === 'WORKER' ? 'Необязательно' : ''}
-                        />
+                      <div className="flex items-center space-x-2">
                         <Button
-                          type="button"
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
-                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                          onClick={() => setShowPassword(!showPassword)}
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(`/api/admin/${admin.id}/password`, {
+                                headers: {
+                                }
+                              })
+                              if (response.ok) {
+                                const data = await response.json()
+                                toast.info(data.password || 'Пароль скрыт. Используйте функцию сброса.')
+                              } else {
+                                toast.error('Ошибка получения пароля')
+                              }
+                            } catch (error) {
+                              toast.error('Ошибка соединения с сервером')
+                            }
+                          }}
                         >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          <Eye className="w-4 h-4 mr-1" />
+                          Пароль
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(`/api/admin/${admin.id}/toggle-status`, {
+                                method: 'PATCH',
+                                headers: {
+                                  'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ isActive: !admin.isActive })
+                              })
+                              if (response.ok) {
+                                fetchData()
+                                toast.success(`Статус ${admin.isActive ? 'приостановлен' : 'активирован'}`)
+                              } else {
+                                toast.error('Ошибка изменения статуса')
+                              }
+                            } catch (error) {
+                              toast.error('Ошибка соединения с сервером')
+                            }
+                          }}
+                        >
+                          {admin.isActive ? (
+                            <Pause className="w-4 h-4 mr-1" />
                           ) : (
-                            <Eye className="h-4 w-4 text-muted-foreground" />
+                            <Play className="w-4 h-4 mr-1" />
                           )}
+                          {admin.isActive ? "Приостановить" : "Активировать"}
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={async () => {
+                            if (!confirm(`Вы уверены, что хотите удалить администратора ${admin.name}?`)) {
+                              return
+                            }
+                            try {
+                              const response = await fetch(`/api/admin/${admin.id}/delete`, {
+                                method: 'DELETE',
+                                headers: {
+                                }
+                              })
+                              if (response.ok) {
+                                fetchData()
+                                toast.success('Администратор удален')
+                              } else {
+                                const data = await response.json()
+                                toast.error(data.error || 'Ошибка удаления администратора')
+                              }
+                            } catch (error) {
+                              toast.error('Ошибка соединения с сервером')
+                            }
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Удалить
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditAdmin(admin)}
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Изменить
                         </Button>
                       </div>
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-2">
-                      <Label htmlFor="role" className="text-right">
-                        Роль
-                      </Label>
-                      <select
-                        id="role"
-                        value={createFormData.role}
-                        onChange={(e) => setCreateFormData(prev => ({ ...prev, role: e.target.value }))}
-                        className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <option value="LOW_ADMIN">Низкий администратор</option>
-                        <option value="COURIER">Курьер</option>
-                        <option value="WORKER">Работник</option>
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-2">
-                      <Label htmlFor="salary" className="text-right">
-                        Зарплата
-                      </Label>
-                      <Input
-                        id="salary"
-                        type="number"
-                        value={createFormData.salary || ''}
-                        onChange={(e) => setCreateFormData(prev => ({ ...prev, salary: parseInt(e.target.value) || 0 }))}
-                        className="col-span-3"
-                        placeholder="0"
-                      />
-                    </div>
-                    {createFormData.role === 'LOW_ADMIN' && (
-                      <div className="col-span-4 space-y-3 border-t pt-4">
-                        <Label className="text-sm font-medium">Разрешенные вкладки</Label>
-                        <p className="text-xs text-muted-foreground">Выберите, какие вкладки будут доступны для этого администратора</p>
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id="tab-statistics"
-                              checked={createFormData.allowedTabs.includes('statistics')}
-                              onCheckedChange={(checked) => {
-                                const tabs = checked
-                                  ? [...createFormData.allowedTabs, 'statistics']
-                                  : createFormData.allowedTabs.filter(t => t !== 'statistics')
-                                setCreateFormData({ ...createFormData, allowedTabs: tabs })
-                              }}
-                            />
-                            <label htmlFor="tab-statistics" className="text-sm cursor-pointer">
-                              Статистика
-                            </label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id="tab-orders"
-                              checked={createFormData.allowedTabs.includes('orders')}
-                              onCheckedChange={(checked) => {
-                                const tabs = checked
-                                  ? [...createFormData.allowedTabs, 'orders']
-                                  : createFormData.allowedTabs.filter(t => t !== 'orders')
-                                setCreateFormData({ ...createFormData, allowedTabs: tabs })
-                              }}
-                            />
-                            <label htmlFor="tab-orders" className="text-sm cursor-pointer">
-                              Заказы
-                            </label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id="tab-clients"
-                              checked={createFormData.allowedTabs.includes('clients')}
-                              onCheckedChange={(checked) => {
-                                const tabs = checked
-                                  ? [...createFormData.allowedTabs, 'clients']
-                                  : createFormData.allowedTabs.filter(t => t !== 'clients')
-                                setCreateFormData({ ...createFormData, allowedTabs: tabs })
-                              }}
-                            />
-                            <label htmlFor="tab-clients" className="text-sm cursor-pointer">
-                              Клиенты
-                            </label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id="tab-chat"
-                              checked={createFormData.allowedTabs.includes('chat')}
-                              onCheckedChange={(checked) => {
-                                const tabs = checked
-                                  ? [...createFormData.allowedTabs, 'chat']
-                                  : createFormData.allowedTabs.filter(t => t !== 'chat')
-                                setCreateFormData({ ...createFormData, allowedTabs: tabs })
-                              }}
-                            />
-                            <label htmlFor="tab-chat" className="text-sm cursor-pointer">
-                              Чат
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {createError && (
-                      <div className="col-span-4">
-                        <Alert variant="destructive">
-                          <AlertDescription>{createError}</AlertDescription>
-                        </Alert>
-                      </div>
-                    )}
-                  </div>
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
-                      Отмена
-                    </Button>
-                    <Button type="submit" disabled={isCreating}>
-                      {isCreating ? 'Создание...' : 'Создать'}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {/* Desktop View */}
-          <div className="hidden md:block space-y-4">
-            {lowAdmins.map((admin) => (
-              <div key={admin.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <Avatar>
-                    <AvatarFallback>{admin.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{admin.name}</p>
-                    <p className="text-sm text-slate-500">{admin.email}</p>
-                    <Badge variant={admin.isActive ? "default" : "secondary"}>
-                      {admin.role === 'COURIER' ? 'Курьер' : admin.role === 'WORKER' ? 'Работник' : 'Низкий администратор'}
-                    </Badge>
-                    <Badge variant={admin.isActive ? "default" : "secondary"} className="ml-2">
-                      {admin.isActive ? "Активен" : "Приостановлен"}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={async () => {
-                      try {
-                        const response = await fetch(`/api/admin/${admin.id}/password`, {
-                          headers: {
-                          }
-                        })
-                        if (response.ok) {
-                          const data = await response.json()
-                          toast.info(data.password || 'Пароль скрыт. Используйте функцию сброса.')
-                        } else {
-                          toast.error('Ошибка получения пароля')
-                        }
-                      } catch (error) {
-                        toast.error('Ошибка соединения с сервером')
-                      }
-                    }}
-                  >
-                    <Eye className="w-4 h-4 mr-1" />
-                    Пароль
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={async () => {
-                      try {
-                        const response = await fetch(`/api/admin/${admin.id}/toggle-status`, {
-                          method: 'PATCH',
-                          headers: {
-                            'Content-Type': 'application/json'
-                          },
-                          body: JSON.stringify({ isActive: !admin.isActive })
-                        })
-                        if (response.ok) {
-                          fetchData()
-                          toast.success(`Статус ${admin.isActive ? 'приостановлен' : 'активирован'}`)
-                        } else {
-                          toast.error('Ошибка изменения статуса')
-                        }
-                      } catch (error) {
-                        toast.error('Ошибка соединения с сервером')
-                      }
-                    }}
-                  >
-                    {admin.isActive ? (
-                      <Pause className="w-4 h-4 mr-1" />
-                    ) : (
-                      <Play className="w-4 h-4 mr-1" />
-                    )}
-                    {admin.isActive ? "Приостановить" : "Активировать"}
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={async () => {
-                      if (!confirm(`Вы уверены, что хотите удалить администратора ${admin.name}?`)) {
-                        return
-                      }
-                      try {
-                        const response = await fetch(`/api/admin/${admin.id}/delete`, {
-                          method: 'DELETE',
-                          headers: {
-                          }
-                        })
-                        if (response.ok) {
-                          fetchData()
-                          toast.success('Администратор удален')
-                        } else {
-                          const data = await response.json()
-                          toast.error(data.error || 'Ошибка удаления администратора')
-                        }
-                      } catch (error) {
-                        toast.error('Ошибка соединения с сервером')
-                      }
-                    }}
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Удалить
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditAdmin(admin)}
-                  >
-                    <Edit className="w-4 h-4 mr-1" />
-                    Изменить
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Mobile View */}
-          <div className="md:hidden space-y-4">
-            {lowAdmins.map((admin) => (
-              <Card key={admin.id}>
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarFallback>{admin.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <CardTitle className="text-base">{admin.name}</CardTitle>
-                        <CardDescription>{admin.email}</CardDescription>
-                      </div>
-                    </div>
-                    <Badge variant={admin.isActive ? "default" : "secondary"}>
-                      {admin.isActive ? "Активен" : "Приостановлен"}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-4 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <Badge variant="outline">
-                      {admin.role === 'COURIER' ? 'Курьер' : admin.role === 'WORKER' ? 'Работник' : 'Низкий администратор'}
-                    </Badge>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={async () => {
-                        try {
-                          const response = await fetch(`/api/admin/${admin.id}/password`, {
-                            headers: {
-                            }
-                          })
-                          if (response.ok) {
-                            const data = await response.json()
-                            toast.info(data.password || 'Пароль скрыт. Используйте функцию сброса.')
-                          } else {
-                            toast.error('Ошибка получения пароля')
-                          }
-                        } catch (error) {
-                          toast.error('Ошибка соединения с сервером')
-                        }
-                      }}
-                    >
-                      <Eye className="w-4 h-4 mr-1" />
-                      Пароль
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => handleEditAdmin(admin)}
-                    >
-                      <Edit className="w-4 h-4 mr-1" />
-                      Изменить
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant={admin.isActive ? "secondary" : "default"}
-                      size="sm"
-                      className="w-full"
-                      onClick={async () => {
-                        try {
-                          const response = await fetch(`/api/admin/${admin.id}/toggle-status`, {
-                            method: 'PATCH',
-                            headers: {
-                              'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({ isActive: !admin.isActive })
-                          })
-                          if (response.ok) {
-                            fetchData()
-                            toast.success(`Статус ${admin.isActive ? 'приостановлен' : 'активирован'}`)
-                          } else {
-                            toast.error('Ошибка изменения статуса')
-                          }
-                        } catch (error) {
-                          toast.error('Ошибка соединения с сервером')
-                        }
-                      }}
-                    >
-                      {admin.isActive ? (
-                        <Pause className="w-4 h-4 mr-1" />
-                      ) : (
-                        <Play className="w-4 h-4 mr-1" />
-                      )}
-                      {admin.isActive ? "Пауза" : "Старт"}
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="w-full"
-                      onClick={async () => {
-                        if (confirm('Вы уверены, что хотите удалить этого пользователя?')) {
-                          try {
-                            const response = await fetch(`/api/admin/${admin.id}/delete`, {
-                              method: 'DELETE',
-                              headers: {
-                              }
-                            })
-                            if (response.ok) {
-                              fetchData()
-                              toast.success('Пользователь удален')
-                            } else {
-                              toast.error('Ошибка удаления')
-                            }
-                          } catch (error) {
-                            toast.error('Ошибка соединения с сервером')
-                          }
-                        }
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Удалить
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-          </TabsContent >
-
-    {/* Interface Tab */ }
-
-    <TabsContent value="interface" className="space-y-6" >
-      <InterfaceSettings />
-          </TabsContent >
-
-    {/* History Tab */ }
-    <TabsContent value="history" className="space-y-6" >
-      <HistoryTable role="MIDDLE_ADMIN" />
-          </TabsContent >
-
-    {/* Profile Tab with Chat and Settings */ }
-    <TabsContent value="profile" className="space-y-6" >
-      <Card>
-        <CardHeader>
-          <CardTitle>Профиль и Настройки</CardTitle>
-          <CardDescription>
-            Управляйте своим профилем и общайтесь с командой
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Change Password Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Безопасность</h3>
-            <Button
-              variant="outline"
-              onClick={() => setIsChangePasswordOpen(true)}
-              className="w-full sm:w-auto"
-            >
-              <User className="w-4 h-4 mr-2" />
-              Изменить пароль
-            </Button>
-            <ChangePasswordModal
-              isOpen={isChangePasswordOpen}
-              onClose={() => setIsChangePasswordOpen(false)}
-            />
-          </div>
-
-          {/* Divider */}
-          <div className="border-t" />
-
-          {/* Chat Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Сообщения</h3>
-            <ChatTab />
-          </div>
-        </CardContent>
-      </Card>
-          </TabsContent >
-
-    <TabsContent value="bin" className="space-y-4">
-      <Tabs defaultValue="orders" className="w-full">
-        <TabsList>
-          <TabsTrigger value="orders">{t.admin.deletedOrders}</TabsTrigger>
-          <TabsTrigger value="clients">{t.admin.deletedClients}</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="orders" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold tracking-tight">Корзина заказов</h2>
-            <div className="flex gap-2">
-              <Button
-                onClick={handleRestoreSelectedOrders}
-                variant="outline"
-                disabled={selectedOrders.size === 0}
-              >
-                <History className="mr-2 h-4 w-4" />
-                {t.admin.restoreSelected} ({selectedOrders.size})
-              </Button>
-              <Button onClick={fetchBinOrders} variant="outline">
-                <History className="mr-2 h-4 w-4" />
-                {t.common.actions}
-              </Button>
-            </div>
-          </div>
-
-          <div className="rounded-md border">
-            <OrdersTable
-              orders={binOrders}
-              selectedOrders={selectedOrders}
-              onSelectOrder={handleOrderSelect}
-              onSelectAll={handleSelectAllBinOrders}
-              onDeleteSelected={handlePermanentDeleteOrders}
-              onViewOrder={(order) => {
-                setSelectedOrder(order)
-                setIsOrderDetailsModalOpen(true)
-              }}
-            />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="clients" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold tracking-tight">Корзина клиентов</h2>
-            <div className="flex gap-2">
-              {selectedBinClients.size > 0 && (
-                <div className="flex gap-2">
-                  <Button onClick={handleRestoreSelectedClients} variant="outline">
-                    <History className="mr-2 h-4 w-4" />
-                    Восстановить ({selectedBinClients.size})
-                  </Button>
-                  <Button
-                    onClick={handlePermanentDeleteClients}
-                    variant="destructive"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Удалить навсегда ({selectedBinClients.size})
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-md border">
-            <div className="relative w-full overflow-auto">
-              <table className="w-full caption-bottom text-sm">
-                <thead className="[&_tr]:border-b">
-                  <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      <Checkbox
-                        checked={binClients.length > 0 && selectedBinClients.size === binClients.length}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedBinClients(new Set(binClients.map(c => c.id)))
-                          } else {
-                            setSelectedBinClients(new Set())
-                          }
-                        }}
-                      />
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{t.admin.table.name}</th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{t.admin.table.phone}</th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{t.admin.table.address}</th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{t.common.date}</th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{t.admin.table.role}</th>
-                  </tr>
-                </thead>
-                <tbody className="[&_tr:last-child]:border-0">
-                  {binClients.map((client) => (
-                    <tr key={client.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                      <td className="p-4 align-middle">
-                        <Checkbox
-                          checked={selectedBinClients.has(client.id)}
-                          onCheckedChange={(checked) => {
-                            const newSelected = new Set(selectedBinClients)
-                            if (checked) {
-                              newSelected.add(client.id)
-                            } else {
-                              newSelected.delete(client.id)
-                            }
-                            setSelectedBinClients(newSelected)
-                          }}
-                        />
-                      </td>
-                      <td className="p-4 align-middle font-medium">{client.name}</td>
-                      <td className="p-4 align-middle">{client.phone}</td>
-                      <td className="p-4 align-middle">{client.address}</td>
-                      <td className="p-4 align-middle">
-                        {client.deletedAt ? new Date(client.deletedAt).toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US') : '-'}
-                      </td>
-                      <td className="p-4 align-middle">{client.deletedBy || '-'}</td>
-                    </tr>
                   ))}
-                  {binClients.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="p-4 text-center text-muted-foreground">
-                        {t.finance.noClients}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+                </div>
 
-    </TabsContent>
+                {/* Mobile View */}
+                <div className="md:hidden space-y-4">
+                  {lowAdmins.map((admin) => (
+                    <Card key={admin.id}>
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-3">
+                            <Avatar>
+                              <AvatarFallback>{admin.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <CardTitle className="text-base">{admin.name}</CardTitle>
+                              <CardDescription>{admin.email}</CardDescription>
+                            </div>
+                          </div>
+                          <Badge variant={admin.isActive ? "default" : "secondary"}>
+                            {admin.isActive ? "Активен" : "Приостановлен"}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-4 space-y-4">
+                        <div className="flex justify-between items-center">
+                          <Badge variant="outline">
+                            {admin.role === 'COURIER' ? 'Курьер' : admin.role === 'WORKER' ? 'Работник' : 'Низкий администратор'}
+                          </Badge>
+                        </div>
 
-  {/* Warehouse Tab */ }
-  <TabsContent value="warehouse" className="space-y-4">
-    <WarehouseTab />
-  </TabsContent>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={async () => {
+                              try {
+                                const response = await fetch(`/api/admin/${admin.id}/password`, {
+                                  headers: {
+                                  }
+                                })
+                                if (response.ok) {
+                                  const data = await response.json()
+                                  toast.info(data.password || 'Пароль скрыт. Используйте функцию сброса.')
+                                } else {
+                                  toast.error('Ошибка получения пароля')
+                                }
+                              } catch (error) {
+                                toast.error('Ошибка соединения с сервером')
+                              }
+                            }}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            Пароль
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => handleEditAdmin(admin)}
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            Изменить
+                          </Button>
+                        </div>
 
-  {/* Finance Tab */ }
-  <TabsContent value="finance" className="space-y-4">
-    <FinanceTab />
-  </TabsContent>
-        </Tabs >
-      </main >
-    {/* Bulk Edit Orders Modal */ }
-    <Dialog open={ isBulkEditOrdersModalOpen } onOpenChange={ setIsBulkEditOrdersModalOpen } >
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Редактировать выбранные заказы ({selectedOrders.size})</DialogTitle>
-          <DialogDescription>
-            Измените параметры для выбранных заказов. Оставьте поля пустыми, чтобы не менять их.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-2">
-            <Label htmlFor="bulkOrderStatus" className="text-right">
-              Статус
-            </Label>
-            <select
-              id="bulkOrderStatus"
-              value={bulkOrderUpdates.orderStatus}
-              onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, orderStatus: e.target.value }))}
-              className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Не менять</option>
-              <option value="PENDING">Ожидает</option>
-              <option value="IN_DELIVERY">В доставке</option>
-              <option value="DELIVERED">Доставлен</option>
-              <option value="FAILED">Отменен</option>
-            </select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-2">
-            <Label htmlFor="bulkPaymentStatus" className="text-right">
-              Оплата
-            </Label>
-            <select
-              id="bulkPaymentStatus"
-              value={bulkOrderUpdates.paymentStatus}
-              onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, paymentStatus: e.target.value }))}
-              className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Не менять</option>
-              <option value="PAID">Оплачен</option>
-              <option value="UNPAID">Не оплачен</option>
-            </select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-2">
-            <Label htmlFor="bulkCourier" className="text-right">
-              Курьер
-            </Label>
-            <select
-              id="bulkCourier"
-              value={bulkOrderUpdates.courierId}
-              onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, courierId: e.target.value }))}
-              className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Не менять</option>
-              <option value="none">Снять курьера</option>
-              {couriers.map(courier => (
-                <option key={courier.id} value={courier.id}>{courier.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-2">
-            <Label htmlFor="bulkDeliveryDate" className="text-right">
-              Дата
-            </Label>
-            <Input
-              id="bulkDeliveryDate"
-              type="date"
-              value={bulkOrderUpdates.deliveryDate}
-              onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, deliveryDate: e.target.value }))}
-              className="col-span-3"
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsBulkEditOrdersModalOpen(false)}>
-            {t.common.cancel}
-          </Button>
-          <Button onClick={handleBulkUpdateOrders} disabled={isUpdatingBulk}>
-            {isUpdatingBulk ? t.common.loading : t.common.save}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-      </Dialog >
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            variant={admin.isActive ? "secondary" : "default"}
+                            size="sm"
+                            className="w-full"
+                            onClick={async () => {
+                              try {
+                                const response = await fetch(`/api/admin/${admin.id}/toggle-status`, {
+                                  method: 'PATCH',
+                                  headers: {
+                                    'Content-Type': 'application/json'
+                                  },
+                                  body: JSON.stringify({ isActive: !admin.isActive })
+                                })
+                                if (response.ok) {
+                                  fetchData()
+                                  toast.success(`Статус ${admin.isActive ? 'приостановлен' : 'активирован'}`)
+                                } else {
+                                  toast.error('Ошибка изменения статуса')
+                                }
+                              } catch (error) {
+                                toast.error('Ошибка соединения с сервером')
+                              }
+                            }}
+                          >
+                            {admin.isActive ? (
+                              <Pause className="w-4 h-4 mr-1" />
+                            ) : (
+                              <Play className="w-4 h-4 mr-1" />
+                            )}
+                            {admin.isActive ? "Пауза" : "Старт"}
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="w-full"
+                            onClick={async () => {
+                              if (confirm('Вы уверены, что хотите удалить этого пользователя?')) {
+                                try {
+                                  const response = await fetch(`/api/admin/${admin.id}/delete`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                    }
+                                  })
+                                  if (response.ok) {
+                                    fetchData()
+                                    toast.success('Пользователь удален')
+                                  } else {
+                                    toast.error('Ошибка удаления')
+                                  }
+                                } catch (error) {
+                                  toast.error('Ошибка соединения с сервером')
+                                }
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Удалить
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-    {/* Bulk Edit Clients Modal */ }
-    <Dialog open={ isBulkEditClientsModalOpen } onOpenChange={ setIsBulkEditClientsModalOpen } >
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Редактировать выбранные клиентов ({selectedClients.size})</DialogTitle>
-          <DialogDescription>
-            Измените параметры для выбранных клиентов. Оставьте поля пустыми, чтобы не менять их.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-2">
-            <Label htmlFor="bulkIsActive" className="text-right">
-              Статус
-            </Label>
-            <select
-              id="bulkIsActive"
-              value={bulkClientUpdates.isActive === undefined ? '' : bulkClientUpdates.isActive.toString()}
-              onChange={(e) => setBulkClientUpdates(prev => ({
-                ...prev,
-                isActive: e.target.value === '' ? undefined : e.target.value === 'true'
-              }))}
-              className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Не менять</option>
-              <option value="true">Активен</option>
-              <option value="false">Приостановлен</option>
-            </select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-2">
-            <Label htmlFor="bulkCalories" className="text-right">
-              Калории
-            </Label>
-            <select
-              id="bulkCalories"
-              value={bulkClientUpdates.calories}
-              onChange={(e) => setBulkClientUpdates(prev => ({ ...prev, calories: e.target.value }))}
-              className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Не менять</option>
-              <option value="1200">1200</option>
-              <option value="1600">1600</option>
-              <option value="2000">2000</option>
-              <option value="2500">2500</option>
-              <option value="3000">3000</option>
-            </select>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsBulkEditClientsModalOpen(false)}>
-            {t.common.cancel}
-          </Button>
-          <Button onClick={handleBulkUpdateClients} disabled={isUpdatingBulk}>
-            {isUpdatingBulk ? t.common.loading : t.common.save}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-      </Dialog >
+          {/* Interface Tab */}
 
-    {/* Order Details Modal */ }
-    <Dialog open={ isOrderDetailsModalOpen } onOpenChange={ setIsOrderDetailsModalOpen } >
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Детали заказа #{selectedOrder?.orderNumber}</DialogTitle>
-          <DialogDescription>
-            Полная информация о заказе и клиенте
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
-          {selectedOrder && (
-            <div className="space-y-6">
-              {/* Basic Info */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-500">Статус:</span>
-                  <Badge
-                    className={
-                      selectedOrder.orderStatus === 'DELIVERED'
-                        ? "bg-green-100 text-green-800"
-                        : selectedOrder.orderStatus === 'IN_DELIVERY'
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-orange-100 text-orange-800"
-                    }
+          <TabsContent value="interface" className="space-y-6">
+            <InterfaceSettings />
+          </TabsContent>
+
+          {/* History Tab */}
+          <TabsContent value="history" className="space-y-6">
+            <HistoryTable role="MIDDLE_ADMIN" />
+          </TabsContent>
+
+          {/* Profile Tab with Chat and Settings */}
+          <TabsContent value="profile" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Профиль и Настройки</CardTitle>
+                <CardDescription>
+                  Управляйте своим профилем и общайтесь с командой
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Change Password Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Безопасность</h3>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsChangePasswordOpen(true)}
+                    className="w-full sm:w-auto"
                   >
-                    {selectedOrder.orderStatus === 'DELIVERED'
-                      ? "Доставлен"
-                      : selectedOrder.orderStatus === 'IN_DELIVERY'
-                        ? "В доставке"
-                        : "Ожидает"}
-                  </Badge>
+                    <User className="w-4 h-4 mr-2" />
+                    Изменить пароль
+                  </Button>
+                  <ChangePasswordModal
+                    isOpen={isChangePasswordOpen}
+                    onClose={() => setIsChangePasswordOpen(false)}
+                  />
                 </div>
+
+                {/* Divider */}
+                <div className="border-t" />
+
+                {/* Chat Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Сообщения</h3>
+                  <ChatTab />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="bin" className="space-y-4">
+            <Tabs defaultValue="orders" className="w-full">
+              <TabsList>
+                <TabsTrigger value="orders">{t.admin.deletedOrders}</TabsTrigger>
+                <TabsTrigger value="clients">{t.admin.deletedClients}</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="orders" className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-500">Оплата:</span>
-                  <Badge
-                    variant={selectedOrder.paymentStatus === 'PAID' ? "default" : "destructive"}
-                    className={selectedOrder.paymentStatus === 'PAID' ? "bg-green-100 text-green-800" : ""}
-                  >
-                    {selectedOrder.paymentStatus === 'PAID' ? "Оплачен" : "Не оплачен"}
-                  </Badge>
+                  <h2 className="text-2xl font-bold tracking-tight">Корзина заказов</h2>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleRestoreSelectedOrders}
+                      variant="outline"
+                      disabled={selectedOrders.size === 0}
+                    >
+                      <History className="mr-2 h-4 w-4" />
+                      {t.admin.restoreSelected} ({selectedOrders.size})
+                    </Button>
+                    <Button onClick={fetchBinOrders} variant="outline">
+                      <History className="mr-2 h-4 w-4" />
+                      {t.common.actions}
+                    </Button>
+                  </div>
                 </div>
+
+                <div className="rounded-md border">
+                  <OrdersTable
+                    orders={binOrders}
+                    selectedOrders={selectedOrders}
+                    onSelectOrder={handleOrderSelect}
+                    onSelectAll={handleSelectAllBinOrders}
+                    onDeleteSelected={handlePermanentDeleteOrders}
+                    onViewOrder={(order) => {
+                      setSelectedOrder(order)
+                      setIsOrderDetailsModalOpen(true)
+                    }}
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="clients" className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-500">Метод:</span>
-                  <span className="text-sm">{selectedOrder.paymentMethod === 'CASH' ? 'Наличные' : 'Карта'}</span>
+                  <h2 className="text-2xl font-bold tracking-tight">Корзина клиентов</h2>
+                  <div className="flex gap-2">
+                    {selectedBinClients.size > 0 && (
+                      <div className="flex gap-2">
+                        <Button onClick={handleRestoreSelectedClients} variant="outline">
+                          <History className="mr-2 h-4 w-4" />
+                          Восстановить ({selectedBinClients.size})
+                        </Button>
+                        <Button
+                          onClick={handlePermanentDeleteClients}
+                          variant="destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Удалить навсегда ({selectedBinClients.size})
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-500">Количество:</span>
-                  <span className="text-sm font-bold">{selectedOrder.quantity} порц.</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-500">Калории:</span>
-                  <span className="text-sm">{selectedOrder.calories} ккал</span>
-                </div>
-              </div>
 
-              <div className="border-t pt-4 space-y-3">
-                <h4 className="font-semibold text-sm">Клиент</h4>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                    <User className="w-5 h-5 text-slate-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{selectedOrder.customerName || selectedOrder.customer?.name}</p>
-                    <p className="text-xs text-slate-500">{selectedOrder.customer?.phone}</p>
+                <div className="rounded-md border">
+                  <div className="relative w-full overflow-auto">
+                    <table className="w-full caption-bottom text-sm">
+                      <thead className="[&_tr]:border-b">
+                        <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <Checkbox
+                              checked={binClients.length > 0 && selectedBinClients.size === binClients.length}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedBinClients(new Set(binClients.map(c => c.id)))
+                                } else {
+                                  setSelectedBinClients(new Set())
+                                }
+                              }}
+                            />
+                          </th>
+                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{t.admin.table.name}</th>
+                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{t.admin.table.phone}</th>
+                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{t.admin.table.address}</th>
+                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{t.common.date}</th>
+                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{t.admin.table.role}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="[&_tr:last-child]:border-0">
+                        {binClients.map((client) => (
+                          <tr key={client.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                            <td className="p-4 align-middle">
+                              <Checkbox
+                                checked={selectedBinClients.has(client.id)}
+                                onCheckedChange={(checked) => {
+                                  const newSelected = new Set(selectedBinClients)
+                                  if (checked) {
+                                    newSelected.add(client.id)
+                                  } else {
+                                    newSelected.delete(client.id)
+                                  }
+                                  setSelectedBinClients(newSelected)
+                                }}
+                              />
+                            </td>
+                            <td className="p-4 align-middle font-medium">{client.name}</td>
+                            <td className="p-4 align-middle">{client.phone}</td>
+                            <td className="p-4 align-middle">{client.address}</td>
+                            <td className="p-4 align-middle">
+                              {client.deletedAt ? new Date(client.deletedAt).toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US') : '-'}
+                            </td>
+                            <td className="p-4 align-middle">{client.deletedBy || '-'}</td>
+                          </tr>
+                        ))}
+                        {binClients.length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="p-4 text-center text-muted-foreground">
+                              {t.finance.noClients}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-              </div>
+              </TabsContent>
+            </Tabs>
 
-              <div className="border-t pt-4 space-y-3">
-                <h4 className="font-semibold text-sm">Доставка</h4>
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 mt-0.5 text-slate-400" />
-                    <p className="text-sm">{selectedOrder.deliveryAddress}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-slate-400" />
-                    <p className="text-sm">{selectedOrder.deliveryTime}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className="w-4 h-4 text-slate-400" />
-                    <p className="text-sm">
-                      {selectedOrder.deliveryDate && new Date(selectedOrder.deliveryDate).toLocaleDateString('ru-RU')}
-                    </p>
-                  </div>
-                </div>
-              </div>
+          </TabsContent>
 
-              {selectedOrder.specialFeatures && (
-                <div className="border-t pt-4 space-y-2">
-                  <h4 className="font-semibold text-sm">Особенности</h4>
-                  <p className="text-sm bg-orange-50 p-2 rounded border border-orange-100 text-orange-800">
-                    {selectedOrder.specialFeatures}
-                  </p>
-                </div>
-              )}
+          {/* Warehouse Tab */}
+          <TabsContent value="warehouse" className="space-y-4">
+            <WarehouseTab />
+          </TabsContent>
+          {/* Finance Tab */}
+          <TabsContent value="finance" className="space-y-4">
+            <FinanceTab />
+          </TabsContent>
 
-              {selectedOrder.courier && (
-                <div className="border-t pt-4 space-y-2">
-                  <h4 className="font-semibold text-sm">Курьер</h4>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center">
-                      <Truck className="w-4 h-4 text-blue-500" />
-                    </div>
-                    <p className="text-sm">{selectedOrder.courier.name}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOrderDetailsModalOpen(false)}>
-            Закрыть
-          </Button>
-          {selectedOrder && (
-            <Button onClick={() => {
-              setIsOrderDetailsModalOpen(false)
-              handleEditOrder(selectedOrder)
-            }}>
-              Редактировать
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-      </Dialog >
-
-    {/* Edit Admin Modal */ }
-    <Dialog open={ isEditAdminModalOpen } onOpenChange={ setIsEditAdminModalOpen } >
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Редактировать Администратора</DialogTitle>
-          <DialogDescription>
-            Измените данные администратора или курьера
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleUpdateAdmin}>
+          {/* Sets Tab */}
+          <TabsContent value="sets" className="space-y-4">
+            <SetsTab />
+          </TabsContent>
+        </Tabs>
+      </main>
+      {/* Bulk Edit Orders Modal */}
+      <Dialog open={isBulkEditOrdersModalOpen} onOpenChange={setIsBulkEditOrdersModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Редактировать выбранные заказы ({selectedOrders.size})</DialogTitle>
+            <DialogDescription>
+              Измените параметры для выбранных заказов. Оставьте поля пустыми, чтобы не менять их.
+            </DialogDescription>
+          </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-name" className="text-right">
-                Имя
-              </Label>
-              <Input
-                id="edit-name"
-                value={editAdminFormData.name}
-                onChange={(e) => setEditAdminFormData({ ...editAdminFormData, name: e.target.value })}
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-email" className="text-right">
-                Email
-              </Label>
-              <Input
-                id="edit-email"
-                type="email"
-                value={editAdminFormData.email}
-                onChange={(e) => setEditAdminFormData({ ...editAdminFormData, email: e.target.value })}
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-password" className="text-right">
-                Пароль
-              </Label>
-              <Input
-                id="edit-password"
-                type="password"
-                placeholder="Оставьте пустым, чтобы не менять"
-                value={editAdminFormData.password}
-                onChange={(e) => setEditAdminFormData({ ...editAdminFormData, password: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-role" className="text-right">
-                Роль
-              </Label>
-              <select
-                id="edit-role"
-                value={editAdminFormData.role}
-                onChange={(e) => setEditAdminFormData({ ...editAdminFormData, role: e.target.value })}
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="LOW_ADMIN">Низкий администратор</option>
-                <option value="COURIER">Курьер</option>
-                <option value="WORKER">Работник</option>
-              </select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-salary" className="text-right">
-                Зарплата
-              </Label>
-              <Input
-                id="edit-salary"
-                type="number"
-                value={editAdminFormData.salary || ''}
-                onChange={(e) => setEditAdminFormData({ ...editAdminFormData, salary: parseInt(e.target.value) || 0 })}
-                className="col-span-3"
-                placeholder="0"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-active" className="text-right">
+            <div className="grid grid-cols-4 items-center gap-2">
+              <Label htmlFor="bulkOrderStatus" className="text-right">
                 Статус
               </Label>
-              <div className="col-span-3 flex items-center space-x-2">
-                <Checkbox
-                  id="edit-active"
-                  checked={editAdminFormData.isActive}
-                  onCheckedChange={(checked) => setEditAdminFormData({ ...editAdminFormData, isActive: checked as boolean })}
-                />
-                <label
-                  htmlFor="edit-active"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Активен
-                </label>
-              </div>
+              <select
+                id="bulkOrderStatus"
+                value={bulkOrderUpdates.orderStatus}
+                onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, orderStatus: e.target.value }))}
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Не менять</option>
+                <option value="PENDING">Ожидает</option>
+                <option value="IN_DELIVERY">В доставке</option>
+                <option value="DELIVERED">Доставлен</option>
+                <option value="FAILED">Отменен</option>
+              </select>
             </div>
+            <div className="grid grid-cols-4 items-center gap-2">
+              <Label htmlFor="bulkPaymentStatus" className="text-right">
+                Оплата
+              </Label>
+              <select
+                id="bulkPaymentStatus"
+                value={bulkOrderUpdates.paymentStatus}
+                onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, paymentStatus: e.target.value }))}
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Не менять</option>
+                <option value="PAID">Оплачен</option>
+                <option value="UNPAID">Не оплачен</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-2">
+              <Label htmlFor="bulkCourier" className="text-right">
+                Курьер
+              </Label>
+              <select
+                id="bulkCourier"
+                value={bulkOrderUpdates.courierId}
+                onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, courierId: e.target.value }))}
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Не менять</option>
+                <option value="none">Снять курьера</option>
+                {couriers.map(courier => (
+                  <option key={courier.id} value={courier.id}>{courier.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-2">
+              <Label htmlFor="bulkDeliveryDate" className="text-right">
+                Дата
+              </Label>
+              <Input
+                id="bulkDeliveryDate"
+                type="date"
+                value={bulkOrderUpdates.deliveryDate}
+                onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, deliveryDate: e.target.value }))}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBulkEditOrdersModalOpen(false)}>
+              {t.common.cancel}
+            </Button>
+            <Button onClick={handleBulkUpdateOrders} disabled={isUpdatingBulk}>
+              {isUpdatingBulk ? t.common.loading : t.common.save}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-            {editAdminFormData.role === 'LOW_ADMIN' && (
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label className="text-right pt-2">
-                  Доступ к вкладкам
-                </Label>
-                <div className="col-span-3 space-y-2 border rounded-md p-3">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="tab-orders"
-                      checked={editAdminFormData.allowedTabs.includes('orders')}
-                      onCheckedChange={(checked) => {
-                        const tabs = checked
-                          ? [...editAdminFormData.allowedTabs, 'orders']
-                          : editAdminFormData.allowedTabs.filter(t => t !== 'orders')
-                        setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
-                      }}
-                    />
-                    <label htmlFor="tab-orders" className="text-sm">Заказы</label>
+      {/* Bulk Edit Clients Modal */}
+      <Dialog open={isBulkEditClientsModalOpen} onOpenChange={setIsBulkEditClientsModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Редактировать выбранные клиентов ({selectedClients.size})</DialogTitle>
+            <DialogDescription>
+              Измените параметры для выбранных клиентов. Оставьте поля пустыми, чтобы не менять их.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-2">
+              <Label htmlFor="bulkIsActive" className="text-right">
+                Статус
+              </Label>
+              <select
+                id="bulkIsActive"
+                value={bulkClientUpdates.isActive === undefined ? '' : bulkClientUpdates.isActive.toString()}
+                onChange={(e) => setBulkClientUpdates(prev => ({
+                  ...prev,
+                  isActive: e.target.value === '' ? undefined : e.target.value === 'true'
+                }))}
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Не менять</option>
+                <option value="true">Активен</option>
+                <option value="false">Приостановлен</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-2">
+              <Label htmlFor="bulkCalories" className="text-right">
+                Калории
+              </Label>
+              <select
+                id="bulkCalories"
+                value={bulkClientUpdates.calories}
+                onChange={(e) => setBulkClientUpdates(prev => ({ ...prev, calories: e.target.value }))}
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Не менять</option>
+                <option value="1200">1200</option>
+                <option value="1600">1600</option>
+                <option value="2000">2000</option>
+                <option value="2500">2500</option>
+                <option value="3000">3000</option>
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBulkEditClientsModalOpen(false)}>
+              {t.common.cancel}
+            </Button>
+            <Button onClick={handleBulkUpdateClients} disabled={isUpdatingBulk}>
+              {isUpdatingBulk ? t.common.loading : t.common.save}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Order Details Modal */}
+      <Dialog open={isOrderDetailsModalOpen} onOpenChange={setIsOrderDetailsModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Детали заказа #{selectedOrder?.orderNumber}</DialogTitle>
+            <DialogDescription>
+              Полная информация о заказе и клиенте
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
+            {selectedOrder && (
+              <div className="space-y-6">
+                {/* Basic Info */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-slate-500">Статус:</span>
+                    <Badge
+                      className={
+                        selectedOrder.orderStatus === 'DELIVERED'
+                          ? "bg-green-100 text-green-800"
+                          : selectedOrder.orderStatus === 'IN_DELIVERY'
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-orange-100 text-orange-800"
+                      }
+                    >
+                      {selectedOrder.orderStatus === 'DELIVERED'
+                        ? "Доставлен"
+                        : selectedOrder.orderStatus === 'IN_DELIVERY'
+                          ? "В доставке"
+                          : "Ожидает"}
+                    </Badge>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="tab-clients"
-                      checked={editAdminFormData.allowedTabs.includes('clients')}
-                      onCheckedChange={(checked) => {
-                        const tabs = checked
-                          ? [...editAdminFormData.allowedTabs, 'clients']
-                          : editAdminFormData.allowedTabs.filter(t => t !== 'clients')
-                        setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
-                      }}
-                    />
-                    <label htmlFor="tab-clients" className="text-sm">Клиенты</label>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-slate-500">Оплата:</span>
+                    <Badge
+                      variant={selectedOrder.paymentStatus === 'PAID' ? "default" : "destructive"}
+                      className={selectedOrder.paymentStatus === 'PAID' ? "bg-green-100 text-green-800" : ""}
+                    >
+                      {selectedOrder.paymentStatus === 'PAID' ? "Оплачен" : "Не оплачен"}
+                    </Badge>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="tab-chat"
-                      checked={editAdminFormData.allowedTabs.includes('chat')}
-                      onCheckedChange={(checked) => {
-                        const tabs = checked
-                          ? [...editAdminFormData.allowedTabs, 'chat']
-                          : editAdminFormData.allowedTabs.filter(t => t !== 'chat')
-                        setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
-                      }}
-                    />
-                    <label htmlFor="tab-chat" className="text-sm">Чат</label>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-slate-500">Метод:</span>
+                    <span className="text-sm">{selectedOrder.paymentMethod === 'CASH' ? 'Наличные' : 'Карта'}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-slate-500">Количество:</span>
+                    <span className="text-sm font-bold">{selectedOrder.quantity} порц.</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-slate-500">Калории:</span>
+                    <span className="text-sm">{selectedOrder.calories} ккал</span>
                   </div>
                 </div>
+
+                <div className="border-t pt-4 space-y-3">
+                  <h4 className="font-semibold text-sm">Клиент</h4>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                      <User className="w-5 h-5 text-slate-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{selectedOrder.customerName || selectedOrder.customer?.name}</p>
+                      <p className="text-xs text-slate-500">{selectedOrder.customer?.phone}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4 space-y-3">
+                  <h4 className="font-semibold text-sm">Доставка</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="w-4 h-4 mt-0.5 text-slate-400" />
+                      <p className="text-sm">{selectedOrder.deliveryAddress}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-slate-400" />
+                      <p className="text-sm">{selectedOrder.deliveryTime}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="w-4 h-4 text-slate-400" />
+                      <p className="text-sm">
+                        {selectedOrder.deliveryDate && new Date(selectedOrder.deliveryDate).toLocaleDateString('ru-RU')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedOrder.specialFeatures && (
+                  <div className="border-t pt-4 space-y-2">
+                    <h4 className="font-semibold text-sm">Особенности</h4>
+                    <p className="text-sm bg-orange-50 p-2 rounded border border-orange-100 text-orange-800">
+                      {selectedOrder.specialFeatures}
+                    </p>
+                  </div>
+                )}
+
+                {selectedOrder.courier && (
+                  <div className="border-t pt-4 space-y-2">
+                    <h4 className="font-semibold text-sm">Курьер</h4>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center">
+                        <Truck className="w-4 h-4 text-blue-500" />
+                      </div>
+                      <p className="text-sm">{selectedOrder.courier.name}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsEditAdminModalOpen(false)}>
-              Отмена
+            <Button variant="outline" onClick={() => setIsOrderDetailsModalOpen(false)}>
+              Закрыть
             </Button>
-            <Button type="submit">
-              Сохранить
-            </Button>
+            {selectedOrder && (
+              <Button onClick={() => {
+                setIsOrderDetailsModalOpen(false)
+                handleEditOrder(selectedOrder)
+              }}>
+                Редактировать
+              </Button>
+            )}
           </DialogFooter>
-        </form>
-      </DialogContent>
-      </Dialog >
+        </DialogContent>
+      </Dialog>
 
-    {/* Create Order Modal */ }
-    <Dialog open={ isCreateOrderModalOpen } onOpenChange={ setIsCreateOrderModalOpen } >
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>{editingOrderId ? 'Редактировать Заказ' : 'Создать Новый Заказ'}</DialogTitle>
-          <DialogDescription>
-            {editingOrderId ? 'Измените данные заказа' : 'Заполните информацию о новом заказе. Вы можете выбрать клиента из списка для автозаполнения данных.'}
-          </DialogDescription>
-          {!editingOrderId && orderFormData.selectedClientId && orderFormData.selectedClientId !== "manual" && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-2">
-              <p className="text-xs text-green-800">
-                ✅ Данные клиента заполнены автоматически
-              </p>
-            </div>
-          )}
-        </DialogHeader>
-        <div className="flex-1 overflow-y-auto">
-          <form onSubmit={handleCreateOrder}>
-            <div className="grid gap-3 py-2">
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="clientSelect" className="text-right">
-                  Выбрать клиента
-                </Label>
-                <div className="col-span-3">
-                  <Select
-                    value={orderFormData.selectedClientId}
-                    onValueChange={handleClientSelect}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Выберите клиента из списка или введите данные вручную" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="manual">-- Ввести данные вручную --</SelectItem>
-                      {clients.map((client) => (
-                        <SelectItem key={client.id} value={client.id}>
-                          {client.name} - {client.phone}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Выберите клиента для автозаполнения
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="customerName" className="text-right">
-                  Имя клиента
-                  {orderFormData.selectedClientId && (
-                    <span className="text-xs text-green-600 ml-1">✓</span>
-                  )}
+      {/* Edit Admin Modal */}
+      <Dialog open={isEditAdminModalOpen} onOpenChange={setIsEditAdminModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Редактировать Администратора</DialogTitle>
+            <DialogDescription>
+              Измените данные администратора или курьера
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdateAdmin}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-name" className="text-right">
+                  Имя
                 </Label>
                 <Input
-                  id="customerName"
-                  value={orderFormData.customerName}
-                  onChange={(e) => setOrderFormData(prev => ({ ...prev, customerName: e.target.value }))}
-                  className={`col-span-3 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="customerPhone" className="text-right">
-                  Телефон клиента
-                  {orderFormData.selectedClientId && (
-                    <span className="text-xs text-green-600 ml-1">✓</span>
-                  )}
-                </Label>
-                <div className="col-span-3">
-                  <Input
-                    id="customerPhone"
-                    type="tel"
-                    placeholder="+998 XX XXX XX XX"
-                    value={orderFormData.customerPhone}
-                    onChange={(e) => setOrderFormData(prev => ({ ...prev, customerPhone: e.target.value }))}
-                    className={orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Формат: +998 XX XXX XX XX</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="deliveryAddress" className="text-right">
-                  Адрес доставки
-                  {orderFormData.selectedClientId && (
-                    <span className="text-xs text-green-600 ml-1">✓</span>
-                  )}
-                </Label>
-                <div className="col-span-3 space-y-2">
-                  <div className="relative">
-                    <Input
-                      id="deliveryAddress"
-                      value={orderFormData.deliveryAddress}
-                      onChange={(e) => handleAddressChange(e.target.value)}
-                      placeholder="Адрес или Google Maps ссылка"
-                      className={`col-span-3 ${orderFormData.latitude && orderFormData.longitude ? 'pr-10 border-green-500 focus:border-green-500' : ''} ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
-                      required
-                    />
-                    {orderFormData.latitude && orderFormData.longitude && (
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className="text-xs text-slate-400">
-                      Можно вставить Google Maps ссылку
-                    </p>
-                    {orderFormData.latitude && orderFormData.longitude && (
-                      <p className="text-xs text-green-600 font-medium">
-                        📍 {orderFormData.latitude.toFixed(4)}, {orderFormData.longitude.toFixed(4)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="deliveryTime" className="text-right">
-                  Время доставки
-                </Label>
-                <Input
-                  id="deliveryTime"
-                  type="time"
-                  value={orderFormData.deliveryTime}
-                  onChange={(e) => setOrderFormData(prev => ({ ...prev, deliveryTime: e.target.value }))}
+                  id="edit-name"
+                  value={editAdminFormData.name}
+                  onChange={(e) => setEditAdminFormData({ ...editAdminFormData, name: e.target.value })}
                   className="col-span-3"
                   required
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="quantity" className="text-right">
-                  Количество
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-email" className="text-right">
+                  Email
                 </Label>
                 <Input
-                  id="quantity"
+                  id="edit-email"
+                  type="email"
+                  value={editAdminFormData.email}
+                  onChange={(e) => setEditAdminFormData({ ...editAdminFormData, email: e.target.value })}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-password" className="text-right">
+                  Пароль
+                </Label>
+                <Input
+                  id="edit-password"
+                  type="password"
+                  placeholder="Оставьте пустым, чтобы не менять"
+                  value={editAdminFormData.password}
+                  onChange={(e) => setEditAdminFormData({ ...editAdminFormData, password: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-role" className="text-right">
+                  Роль
+                </Label>
+                <select
+                  id="edit-role"
+                  value={editAdminFormData.role}
+                  onChange={(e) => setEditAdminFormData({ ...editAdminFormData, role: e.target.value })}
+                  className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="LOW_ADMIN">Низкий администратор</option>
+                  <option value="COURIER">Курьер</option>
+                  <option value="WORKER">Работник</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-salary" className="text-right">
+                  Зарплата
+                </Label>
+                <Input
+                  id="edit-salary"
                   type="number"
-                  min="1"
-                  value={orderFormData.quantity}
-                  onChange={(e) => setOrderFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) }))}
+                  value={editAdminFormData.salary || ''}
+                  onChange={(e) => setEditAdminFormData({ ...editAdminFormData, salary: parseInt(e.target.value) || 0 })}
                   className="col-span-3"
-                  required
+                  placeholder="0"
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="calories" className="text-right">
-                  Калории
-                  {orderFormData.selectedClientId && (
-                    <span className="text-xs text-green-600 ml-1">✓</span>
-                  )}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-active" className="text-right">
+                  Статус
                 </Label>
-                <select
-                  id="calories"
-                  value={orderFormData.calories}
-                  onChange={(e) => setOrderFormData(prev => ({ ...prev, calories: parseInt(e.target.value) }))}
-                  className={`col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
-                >
-                  <option value="1200">1200 ккал</option>
-                  <option value="1600">1600 ккал</option>
-                  <option value="2000">2000 ккал</option>
-                  <option value="2500">2500 ккал</option>
-                  <option value="3000">3000 ккал</option>
-                </select>
+                <div className="col-span-3 flex items-center space-x-2">
+                  <Checkbox
+                    id="edit-active"
+                    checked={editAdminFormData.isActive}
+                    onCheckedChange={(checked) => setEditAdminFormData({ ...editAdminFormData, isActive: checked as boolean })}
+                  />
+                  <label
+                    htmlFor="edit-active"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Активен
+                  </label>
+                </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="paymentMethod" className="text-right">
-                  Оплата
-                </Label>
-                <select
-                  id="paymentMethod"
-                  value={orderFormData.paymentMethod}
-                  onChange={(e) => setOrderFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
-                  className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="CASH">Наличные</option>
-                  <option value="CARD">Карта</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="specialFeatures" className="text-right">
-                  Особенности
-                  {orderFormData.selectedClientId && (
-                    <span className="text-xs text-green-600 ml-1">✓</span>
-                  )}
-                </Label>
-                <Input
-                  id="specialFeatures"
-                  value={orderFormData.specialFeatures}
-                  onChange={(e) => setOrderFormData(prev => ({ ...prev, specialFeatures: e.target.value }))}
-                  className={`col-span-3 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
-                  placeholder="Особые пожелания"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="courier" className="text-right">
-                  Курьер
-                </Label>
-                <select
-                  id="courier"
-                  value={orderFormData.courierId}
-                  onChange={(e) => setOrderFormData(prev => ({ ...prev, courierId: e.target.value }))}
-                  className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="">Автоматически (если есть у клиента)</option>
-                  {couriers.map((courier) => (
-                    <option key={courier.id} value={courier.id}>
-                      {courier.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {orderError && (
-                <div className="col-span-4">
-                  <Alert variant="destructive">
-                    <AlertDescription>{orderError}</AlertDescription>
-                  </Alert>
+
+              {editAdminFormData.role === 'LOW_ADMIN' && (
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label className="text-right pt-2">
+                    Доступ к вкладкам
+                  </Label>
+                  <div className="col-span-3 space-y-2 border rounded-md p-3">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="tab-orders"
+                        checked={editAdminFormData.allowedTabs.includes('orders')}
+                        onCheckedChange={(checked) => {
+                          const tabs = checked
+                            ? [...editAdminFormData.allowedTabs, 'orders']
+                            : editAdminFormData.allowedTabs.filter(t => t !== 'orders')
+                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
+                        }}
+                      />
+                      <label htmlFor="tab-orders" className="text-sm">Заказы</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="tab-clients"
+                        checked={editAdminFormData.allowedTabs.includes('clients')}
+                        onCheckedChange={(checked) => {
+                          const tabs = checked
+                            ? [...editAdminFormData.allowedTabs, 'clients']
+                            : editAdminFormData.allowedTabs.filter(t => t !== 'clients')
+                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
+                        }}
+                      />
+                      <label htmlFor="tab-clients" className="text-sm">Клиенты</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="tab-chat"
+                        checked={editAdminFormData.allowedTabs.includes('chat')}
+                        onCheckedChange={(checked) => {
+                          const tabs = checked
+                            ? [...editAdminFormData.allowedTabs, 'chat']
+                            : editAdminFormData.allowedTabs.filter(t => t !== 'chat')
+                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
+                        }}
+                      />
+                      <label htmlFor="tab-chat" className="text-sm">Чат</label>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsEditAdminModalOpen(false)}>
+                Отмена
+              </Button>
+              <Button type="submit">
+                Сохранить
+              </Button>
+            </DialogFooter>
           </form>
-        </div>
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => {
-            setIsCreateOrderModalOpen(false)
-            setOrderFormData(prev => ({ ...prev, latitude: null, longitude: null }))
-            setEditingOrderId(null)
-          }}>
-            Отмена
-          </Button>
-          <Button type="submit" disabled={isCreatingOrder} onClick={handleCreateOrder}>
-            {isCreatingOrder ? 'Сохранение...' : (editingOrderId ? 'Сохранить изменения' : 'Создать заказ')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-      </Dialog >
+        </DialogContent>
+      </Dialog>
 
-    {/* Create Courier Modal */ }
-    <Dialog open={ isCreateCourierModalOpen } onOpenChange={ setIsCreateCourierModalOpen } >
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Создать Курьера</DialogTitle>
-          <DialogDescription>
-            Создайте новый аккаунт для курьера
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleCreateCourier}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-2">
-              <Label htmlFor="courierName" className="text-right">
-                Имя
-              </Label>
-              <Input
-                id="courierName"
-                value={courierFormData.name}
-                onChange={(e) => setCourierFormData(prev => ({ ...prev, name: e.target.value }))}
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-2">
-              <Label htmlFor="courierEmail" className="text-right">
-                Email
-              </Label>
-              <Input
-                id="courierEmail"
-                type="email"
-                value={courierFormData.email}
-                onChange={(e) => setCourierFormData(prev => ({ ...prev, email: e.target.value }))}
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-2">
-              <Label htmlFor="courierPassword" className="text-right">
-                Пароль
-              </Label>
-              <Input
-                id="courierPassword"
-                type="password"
-                value={courierFormData.password}
-                onChange={(e) => setCourierFormData(prev => ({ ...prev, password: e.target.value }))}
-                className="col-span-3"
-                required
-              />
-            </div>
-          </div>
-          {courierError && (
-            <Alert className="mb-4">
-              <AlertDescription>{courierError}</AlertDescription>
-            </Alert>
-          )}
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsCreateCourierModalOpen(false)}>
-              Отмена
-            </Button>
-            <Button type="submit" disabled={isCreatingCourier}>
-              {isCreatingCourier ? 'Создание...' : 'Создать'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-      </Dialog >
-
-    {/* Create Feature Modal */ }
-    <Dialog open={ isCreateFeatureModalOpen } onOpenChange={ setIsCreateFeatureModalOpen } >
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Создать Особенность</DialogTitle>
-          <DialogDescription>
-            Создайте новую особенность для заказов
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleCreateFeature}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-2">
-              <Label htmlFor="featureName" className="text-right">
-                Название
-              </Label>
-              <Input
-                id="featureName"
-                value={featureFormData.name}
-                onChange={(e) => setFeatureFormData(prev => ({ ...prev, name: e.target.value }))}
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-2">
-              <Label htmlFor="featureDescription" className="text-right">
-                Описание
-              </Label>
-              <Input
-                id="featureDescription"
-                value={featureFormData.description}
-                onChange={(e) => setFeatureFormData(prev => ({ ...prev, description: e.target.value }))}
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-2">
-              <Label htmlFor="featureType" className="text-right">
-                Тип
-              </Label>
-              <select
-                id="featureType"
-                value={featureFormData.type}
-                onChange={(e) => setFeatureFormData(prev => ({ ...prev, type: e.target.value }))}
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="TEXT">Текст</option>
-                <option value="SELECT">Выбор из списка</option>
-                <option value="CHECKBOX">Флажок</option>
-              </select>
-            </div>
-            {featureFormData.type === 'SELECT' && (
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="featureOptions" className="text-right">
-                  Варианты
-                </Label>
-                <Input
-                  id="featureOptions"
-                  value={featureFormData.options}
-                  onChange={(e) => setFeatureFormData(prev => ({ ...prev, options: e.target.value }))}
-                  className="col-span-3"
-                  placeholder="Вариант1, Вариант2, Вариант3"
-                />
+      {/* Create Order Modal */}
+      <Dialog open={isCreateOrderModalOpen} onOpenChange={setIsCreateOrderModalOpen}>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{editingOrderId ? 'Редактировать Заказ' : 'Создать Новый Заказ'}</DialogTitle>
+            <DialogDescription>
+              {editingOrderId ? 'Измените данные заказа' : 'Заполните информацию о новом заказе. Вы можете выбрать клиента из списка для автозаполнения данных.'}
+            </DialogDescription>
+            {!editingOrderId && orderFormData.selectedClientId && orderFormData.selectedClientId !== "manual" && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-2">
+                <p className="text-xs text-green-800">
+                  ✅ Данные клиента заполнены автоматически
+                </p>
               </div>
             )}
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto">
+            <form onSubmit={handleCreateOrder}>
+              <div className="grid gap-3 py-2">
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="clientSelect" className="text-right">
+                    Выбрать клиента
+                  </Label>
+                  <div className="col-span-3">
+                    <Select
+                      value={orderFormData.selectedClientId}
+                      onValueChange={handleClientSelect}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Выберите клиента из списка или введите данные вручную" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manual">-- Ввести данные вручную --</SelectItem>
+                        {clients.map((client) => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {client.name} - {client.phone}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Выберите клиента для автозаполнения
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="customerName" className="text-right">
+                    Имя клиента
+                    {orderFormData.selectedClientId && (
+                      <span className="text-xs text-green-600 ml-1">✓</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="customerName"
+                    value={orderFormData.customerName}
+                    onChange={(e) => setOrderFormData(prev => ({ ...prev, customerName: e.target.value }))}
+                    className={`col-span-3 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="customerPhone" className="text-right">
+                    Телефон клиента
+                    {orderFormData.selectedClientId && (
+                      <span className="text-xs text-green-600 ml-1">✓</span>
+                    )}
+                  </Label>
+                  <div className="col-span-3">
+                    <Input
+                      id="customerPhone"
+                      type="tel"
+                      placeholder="+998 XX XXX XX XX"
+                      value={orderFormData.customerPhone}
+                      onChange={(e) => setOrderFormData(prev => ({ ...prev, customerPhone: e.target.value }))}
+                      className={orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Формат: +998 XX XXX XX XX</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="deliveryAddress" className="text-right">
+                    Адрес доставки
+                    {orderFormData.selectedClientId && (
+                      <span className="text-xs text-green-600 ml-1">✓</span>
+                    )}
+                  </Label>
+                  <div className="col-span-3 space-y-2">
+                    <div className="relative">
+                      <Input
+                        id="deliveryAddress"
+                        value={orderFormData.deliveryAddress}
+                        onChange={(e) => handleAddressChange(e.target.value)}
+                        placeholder="Адрес или Google Maps ссылка"
+                        className={`col-span-3 ${orderFormData.latitude && orderFormData.longitude ? 'pr-10 border-green-500 focus:border-green-500' : ''} ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
+                        required
+                      />
+                      {orderFormData.latitude && orderFormData.longitude && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs text-slate-400">
+                        Можно вставить Google Maps ссылку
+                      </p>
+                      {orderFormData.latitude && orderFormData.longitude && (
+                        <p className="text-xs text-green-600 font-medium">
+                          📍 {orderFormData.latitude.toFixed(4)}, {orderFormData.longitude.toFixed(4)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="deliveryTime" className="text-right">
+                    Время доставки
+                  </Label>
+                  <Input
+                    id="deliveryTime"
+                    type="time"
+                    value={orderFormData.deliveryTime}
+                    onChange={(e) => setOrderFormData(prev => ({ ...prev, deliveryTime: e.target.value }))}
+                    className="col-span-3"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="quantity" className="text-right">
+                    Количество
+                  </Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="1"
+                    value={orderFormData.quantity}
+                    onChange={(e) => setOrderFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) }))}
+                    className="col-span-3"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="calories" className="text-right">
+                    Калории
+                    {orderFormData.selectedClientId && (
+                      <span className="text-xs text-green-600 ml-1">✓</span>
+                    )}
+                  </Label>
+                  <select
+                    id="calories"
+                    value={orderFormData.calories}
+                    onChange={(e) => setOrderFormData(prev => ({ ...prev, calories: parseInt(e.target.value) }))}
+                    className={`col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
+                  >
+                    <option value="1200">1200 ккал</option>
+                    <option value="1600">1600 ккал</option>
+                    <option value="2000">2000 ккал</option>
+                    <option value="2500">2500 ккал</option>
+                    <option value="3000">3000 ккал</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="paymentMethod" className="text-right">
+                    Оплата
+                  </Label>
+                  <select
+                    id="paymentMethod"
+                    value={orderFormData.paymentMethod}
+                    onChange={(e) => setOrderFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                    className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="CASH">Наличные</option>
+                    <option value="CARD">Карта</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="specialFeatures" className="text-right">
+                    Особенности
+                    {orderFormData.selectedClientId && (
+                      <span className="text-xs text-green-600 ml-1">✓</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="specialFeatures"
+                    value={orderFormData.specialFeatures}
+                    onChange={(e) => setOrderFormData(prev => ({ ...prev, specialFeatures: e.target.value }))}
+                    className={`col-span-3 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
+                    placeholder="Особые пожелания"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="courier" className="text-right">
+                    Курьер
+                  </Label>
+                  <select
+                    id="courier"
+                    value={orderFormData.courierId}
+                    onChange={(e) => setOrderFormData(prev => ({ ...prev, courierId: e.target.value }))}
+                    className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="">Автоматически (если есть у клиента)</option>
+                    {couriers.map((courier) => (
+                      <option key={courier.id} value={courier.id}>
+                        {courier.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {orderError && (
+                  <div className="col-span-4">
+                    <Alert variant="destructive">
+                      <AlertDescription>{orderError}</AlertDescription>
+                    </Alert>
+                  </div>
+                )}
+              </div>
+            </form>
           </div>
-          {featureError && (
-            <Alert className="mb-4">
-              <AlertDescription>{featureError}</AlertDescription>
-            </Alert>
-          )}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsCreateFeatureModalOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => {
+              setIsCreateOrderModalOpen(false)
+              setOrderFormData(prev => ({ ...prev, latitude: null, longitude: null }))
+              setEditingOrderId(null)
+            }}>
               Отмена
             </Button>
-            <Button type="submit" disabled={isCreatingFeature}>
-              {isCreatingFeature ? 'Создание...' : 'Создать'}
+            <Button type="submit" disabled={isCreatingOrder} onClick={handleCreateOrder}>
+              {isCreatingOrder ? 'Сохранение...' : (editingOrderId ? 'Сохранить изменения' : 'Создать заказ')}
             </Button>
           </DialogFooter>
-        </form>
-      </DialogContent>
-      </Dialog >
-    </div >
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Courier Modal */}
+      <Dialog open={isCreateCourierModalOpen} onOpenChange={setIsCreateCourierModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Создать Курьера</DialogTitle>
+            <DialogDescription>
+              Создайте новый аккаунт для курьера
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateCourier}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="courierName" className="text-right">
+                  Имя
+                </Label>
+                <Input
+                  id="courierName"
+                  value={courierFormData.name}
+                  onChange={(e) => setCourierFormData(prev => ({ ...prev, name: e.target.value }))}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="courierEmail" className="text-right">
+                  Email
+                </Label>
+                <Input
+                  id="courierEmail"
+                  type="email"
+                  value={courierFormData.email}
+                  onChange={(e) => setCourierFormData(prev => ({ ...prev, email: e.target.value }))}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="courierPassword" className="text-right">
+                  Пароль
+                </Label>
+                <Input
+                  id="courierPassword"
+                  type="password"
+                  value={courierFormData.password}
+                  onChange={(e) => setCourierFormData(prev => ({ ...prev, password: e.target.value }))}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+            </div>
+            {courierError && (
+              <Alert className="mb-4">
+                <AlertDescription>{courierError}</AlertDescription>
+              </Alert>
+            )}
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsCreateCourierModalOpen(false)}>
+                Отмена
+              </Button>
+              <Button type="submit" disabled={isCreatingCourier}>
+                {isCreatingCourier ? 'Создание...' : 'Создать'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Feature Modal */}
+      <Dialog open={isCreateFeatureModalOpen} onOpenChange={setIsCreateFeatureModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Создать Особенность</DialogTitle>
+            <DialogDescription>
+              Создайте новую особенность для заказов
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateFeature}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="featureName" className="text-right">
+                  Название
+                </Label>
+                <Input
+                  id="featureName"
+                  value={featureFormData.name}
+                  onChange={(e) => setFeatureFormData(prev => ({ ...prev, name: e.target.value }))}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="featureDescription" className="text-right">
+                  Описание
+                </Label>
+                <Input
+                  id="featureDescription"
+                  value={featureFormData.description}
+                  onChange={(e) => setFeatureFormData(prev => ({ ...prev, description: e.target.value }))}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="featureType" className="text-right">
+                  Тип
+                </Label>
+                <select
+                  id="featureType"
+                  value={featureFormData.type}
+                  onChange={(e) => setFeatureFormData(prev => ({ ...prev, type: e.target.value }))}
+                  className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="TEXT">Текст</option>
+                  <option value="SELECT">Выбор из списка</option>
+                  <option value="CHECKBOX">Флажок</option>
+                </select>
+              </div>
+              {featureFormData.type === 'SELECT' && (
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label htmlFor="featureOptions" className="text-right">
+                    Варианты
+                  </Label>
+                  <Input
+                    id="featureOptions"
+                    value={featureFormData.options}
+                    onChange={(e) => setFeatureFormData(prev => ({ ...prev, options: e.target.value }))}
+                    className="col-span-3"
+                    placeholder="Вариант1, Вариант2, Вариант3"
+                  />
+                </div>
+              )}
+            </div>
+            {featureError && (
+              <Alert className="mb-4">
+                <AlertDescription>{featureError}</AlertDescription>
+              </Alert>
+            )}
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsCreateFeatureModalOpen(false)}>
+                Отмена
+              </Button>
+              <Button type="submit" disabled={isCreatingFeature}>
+                {isCreatingFeature ? 'Создание...' : 'Создать'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }

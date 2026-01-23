@@ -1499,86 +1499,37 @@ export function getTomorrowsMenu(): DailyMenu | undefined {
 }
 
 // Calculate total ingredients needed for a menu based on client calorie distribution
-// Calculate total ingredients needed for a menu based on client calorie distribution
 export function calculateIngredientsForMenu(
   menuNumber: number,
   clientsByCalorie: Record<number, number>,
-  dishQuantities?: Record<number, number>,
-  activeSet?: any
+  dishQuantities?: Record<number, number>
 ): Map<string, { amount: number; unit: string }> {
-  // Helper to find original dish
-  const getOriginalDish = (id: number) => {
-    for (const m of MENUS) {
-      const d = m.dishes.find(d => d.id === id);
-      if (d) return d;
-    }
-    return null;
-  };
+  const menu = getMenu(menuNumber);
+  if (!menu) return new Map();
 
   const totalIngredients = new Map<string, { amount: number; unit: string }>();
-  const totalClients = Object.values(clientsByCalorie).reduce((sum, c) => sum + c, 0);
 
-  for (const [calorieStr, clientCount] of Object.entries(clientsByCalorie)) {
-    const calories = parseInt(calorieStr);
-    if (clientCount === 0) continue;
+  for (const dish of menu.dishes) {
+    const dishQty = dishQuantities?.[dish.id] ?? 1;
+    if (dishQty === 0) continue;
 
-    let tierDishes: any[] = [];
+    for (const [calorieStr, clientCount] of Object.entries(clientsByCalorie)) {
+      const calories = parseInt(calorieStr);
+      if (clientCount === 0) continue;
 
-    if (activeSet) {
-      // Use Set Logic
-      const dayData = activeSet.calorieGroups?.[menuNumber.toString()];
-      if (Array.isArray(dayData)) {
-        const group = dayData.find((g: any) => g.calories === calories);
-        if (group && Array.isArray(group.dishes)) {
-          tierDishes = group.dishes;
+      // Check calorie mappings if they exist
+      if (dish.calorieMappings) {
+        const allowedGroups = dish.calorieMappings[menuNumber.toString()] || [];
+        if (!allowedGroups.includes(calorieStr)) {
+          continue; // Dish not assigned to this calorie group for this day
         }
       }
-    } else {
-      // Use Standard Menu Logic
-      const menu = getMenu(menuNumber);
-      if (menu) {
-        tierDishes = menu.dishes.filter(dish => {
-          if (dish.calorieMappings) {
-            const allowedGroups = dish.calorieMappings[menuNumber.toString()] || [];
-            return allowedGroups.includes(calorieStr);
-          }
-          return true; // Default to included if no mapping
-        });
-      }
-    }
-
-    for (const dish of tierDishes) {
-      const dishId = dish.dishId || dish.id;
-
-      // Determine ingredients: Custom (from Set) -> Original
-      let ingredients = dish.customIngredients;
-      if (!ingredients && dish.ingredients) {
-        ingredients = dish.ingredients;
-      }
-      if (!ingredients) {
-        const original = getOriginalDish(dishId);
-        ingredients = original?.ingredients || [];
-      }
-
-      // Determine Portions
-      let portions = clientCount; // Default: 1 portion per client
-
-      // If user specified a TOTAL quantity target, distribute it proportionally
-      // NOTE: This assumes dishQuantities contains the TOTAL target across all tiers
-      const targetQty = dishQuantities?.[dishId];
-      if (targetQty !== undefined && totalClients > 0) {
-        portions = (targetQty / totalClients) * clientCount;
-      } else if (targetQty !== undefined && totalClients === 0) {
-        portions = 0;
-      }
-
-      if (portions <= 0) continue;
 
       const scaledIngredients = scaleIngredients(
-        ingredients,
+        dish.ingredients,
         calories,
         dish.mealType,
-        portions
+        dishQty * clientCount
       );
 
       for (const ing of scaledIngredients) {
