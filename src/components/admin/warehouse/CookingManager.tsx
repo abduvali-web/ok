@@ -25,12 +25,19 @@ interface CookingManagerProps {
     menuNumber: number;
     clientsByCalorie: Record<number, number>;
     onCook?: () => void;
+<<<<<<< HEAD
     activeSet?: any;
+=======
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
 }
 
 const CALORIE_GROUPS = [1200, 1600, 2000, 2500, 3000];
 
+<<<<<<< HEAD
 export function CookingManager({ date, menuNumber, clientsByCalorie, onCook, activeSet }: CookingManagerProps) {
+=======
+export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: CookingManagerProps) {
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
     const [dishes, setDishes] = useState<Dish[]>([]);
     const [loading, setLoading] = useState(true);
     const [cookingPlan, setCookingPlan] = useState<any>(null); // { cookedStats: { dishId: { 1200: 5 } } }
@@ -40,11 +47,16 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook, act
 
     useEffect(() => {
         fetchData();
+<<<<<<< HEAD
     }, [menuNumber, date, activeSet]);
+=======
+    }, [menuNumber, date]);
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
 
     const fetchData = async () => {
         setLoading(true);
         try {
+<<<<<<< HEAD
             // Determine source of dishes
             if (activeSet) {
                 // Load from Active Set
@@ -86,6 +98,14 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook, act
                     if (menuData && menuData.dishes) {
                         setDishes(menuData.dishes);
                     }
+=======
+            // Fetch Menu Dishes
+            const menuRes = await fetch(`/api/admin/menus?number=${menuNumber}`);
+            if (menuRes.ok) {
+                const menuData = await menuRes.json();
+                if (menuData && menuData.dishes) {
+                    setDishes(menuData.dishes);
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
                 }
             }
 

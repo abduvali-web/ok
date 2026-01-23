@@ -37,14 +37,25 @@ import {
     MEAL_TYPES,
     type DailyMenu,
     type Dish,
+<<<<<<< HEAD
     MENUS,
+=======
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
 } from '@/lib/menuData';
 import { DishesManager } from './warehouse/DishesManager';
 import { IngredientsManager } from './warehouse/IngredientsManager';
 import { CookingManager } from './warehouse/CookingManager'; // Integrated
 import { useLanguage } from '@/contexts/LanguageContext';
+<<<<<<< HEAD
 import { SetsTab } from './SetsTab';
 import { UtensilsCrossed } from 'lucide-react';
+=======
+<<<<<<< HEAD
+=======
+import { SetsTab } from './SetsTab';
+import { UtensilsCrossed } from 'lucide-react';
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
 
 interface WarehouseTabProps {
     className?: string;
@@ -77,9 +88,18 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     });
     const [isLoadingClients, setIsLoadingClients] = useState(false);
     const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+<<<<<<< HEAD
     const [activeSet, setActiveSet] = useState<any>(null);
     const [allClients, setAllClients] = useState<any[]>([]);
     const [allOrders, setAllOrders] = useState<any[]>([]);
+=======
+<<<<<<< HEAD
+=======
+    const [activeSet, setActiveSet] = useState<any>(null);
+    const [allClients, setAllClients] = useState<any[]>([]);
+    const [allOrders, setAllOrders] = useState<any[]>([]);
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
 
     // Calculation state
     const [selectedDates, setSelectedDates] = useState<string[]>([]);
@@ -118,6 +138,11 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         setDishQuantities(initialQuantities);
     }, [tomorrowMenu, clientsByCalorie]);
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
     const getDistributionForDate = useCallback((date: Date) => {
         const distribution: Record<number, number> = {
             1200: 0,
@@ -175,6 +200,11 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
 
         return distribution;
     }, [allClients]);
+<<<<<<< HEAD
+=======
+
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
     // Fetch client calorie distribution from database
     const fetchClientCalories = useCallback(async () => {
         setIsLoadingClients(true);
@@ -182,6 +212,34 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             const response = await fetch('/api/admin/clients');
             if (response.ok) {
                 const clients = await response.json();
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+                const distribution: Record<number, number> = {
+                    1200: 0,
+                    1600: 0,
+                    2000: 0,
+                    2500: 0,
+                    3000: 0,
+                };
+
+                // Calculate tomorrow's day of week
+                const today = new Date();
+                const tomorrow = new Date(today);
+                tomorrow.setDate(today.getDate() + 1);
+                const dayOfWeek = tomorrow.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+
+                clients.forEach((client: { calories?: number; isActive?: boolean; deliveryDays?: Record<string, boolean> }) => {
+                    if (client.isActive !== false) {
+                        // Filter by delivery day if available
+                        if (client.deliveryDays && client.deliveryDays[dayOfWeek as keyof typeof client.deliveryDays] === false) {
+                            return;
+                        }
+
+                        const calories = client.calories || 2000;
+                        // Map to nearest tier
+=======
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
                 setAllClients(clients);
 
                 // Calculate tomorrow's distribution for display
@@ -205,6 +263,10 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                         if (deliveryDays && deliveryDays[dayOfWeek] === false) return;
 
                         const calories = client.calories || 2000;
+<<<<<<< HEAD
+=======
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
                         if (calories <= 1400) distribution[1200]++;
                         else if (calories <= 1800) distribution[1600]++;
                         else if (calories <= 2200) distribution[2000]++;
@@ -267,6 +329,12 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                     setDishQuantities(data.dishes);
                 }
             }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
             // Fetch active set
             const setsResponse = await fetch('/api/admin/sets');
             if (setsResponse.ok) {
@@ -279,6 +347,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                     const dayData = active.calorieGroups[tomorrowMenuNumber.toString()];
                     if (dayData && Array.isArray(dayData)) {
                         const uniqueDishesMap = new Map<number, Dish>();
+<<<<<<< HEAD
 
                         // Helper to find original dish for fallback ingredients
                         const getAllDishes = () => MENUS.flatMap(m => m.dishes);
@@ -295,11 +364,23 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                         mealType: d.mealType,
                                         ingredients: d.customIngredients || original?.ingredients || [],
                                         // Keep other props if needed
+=======
+                        dayData.forEach((group: any) => {
+                            group.dishes.forEach((d: any) => {
+                                if (!uniqueDishesMap.has(d.dishId)) {
+                                    uniqueDishesMap.set(d.dishId, {
+                                        id: d.dishId,
+                                        name: d.dishName,
+                                        mealType: d.mealType
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
                                     } as any);
                                 }
                             });
                         });
+<<<<<<< HEAD
 
+=======
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
                         if (uniqueDishesMap.size > 0) {
                             setTomorrowMenu({
                                 menuNumber: tomorrowMenuNumber,
@@ -309,6 +390,10 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                     }
                 }
             }
+<<<<<<< HEAD
+=======
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
         } catch (error) {
             console.error('Error fetching warehouse data:', error);
             toast.error('Ошибка загрузки данных склада');
@@ -344,8 +429,17 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         const ingredients = calculateIngredientsForMenu(
             tomorrowMenuNumber,
             clientsByCalorie,
+<<<<<<< HEAD
             dishQuantities,
             activeSet
+=======
+<<<<<<< HEAD
+            dishQuantities
+=======
+            dishQuantities,
+            activeSet
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
         );
         setCalculatedIngredients(ingredients);
 
@@ -366,6 +460,15 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         for (const dateStr of selectedDates) {
             const date = new Date(dateStr);
             const menuNumber = getMenuNumber(date);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+            const menuIngredients = calculateIngredientsForMenu(
+                menuNumber,
+                clientsByCalorie,
+                dishQuantities
+=======
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
 
             // DYNAMICALLY calculate distribution for this specific date
             const distributionForDate = getDistributionForDate(date);
@@ -375,6 +478,10 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                 distributionForDate,
                 dishQuantities, // User overrides (usually for tomorrow)
                 activeSet
+<<<<<<< HEAD
+=======
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
             );
 
             for (const [name, { amount, unit }] of menuIngredients) {
@@ -517,15 +624,32 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                 </CardHeader>
                 <CardContent>
                     <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
+<<<<<<< HEAD
                         <TabsList className="grid w-full grid-cols-5 mb-6">
+=======
+<<<<<<< HEAD
+                        <TabsList className="grid w-full grid-cols-4 mb-6">
+=======
+                        <TabsList className="grid w-full grid-cols-5 mb-6">
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
                             <TabsTrigger value="cooking" className="flex items-center gap-2">
                                 <ChefHat className="w-4 h-4" />
                                 <span className="hidden sm:inline">{t.warehouse.cooking}</span>
                             </TabsTrigger>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
                             <TabsTrigger value="sets" className="flex items-center gap-2">
                                 <UtensilsCrossed className="w-4 h-4" />
                                 <span className="hidden sm:inline">Сеты</span>
                             </TabsTrigger>
+<<<<<<< HEAD
+=======
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
                             <TabsTrigger value="inventory" className="flex items-center gap-2">
                                 <Package className="w-4 h-4" />
                                 <span className="hidden sm:inline">{t.warehouse.inventory}</span>
@@ -563,14 +687,27 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 menuNumber={tomorrowMenuNumber}
                                 clientsByCalorie={clientsByCalorie}
                                 onCook={fetchData} // Refresh inventory on cook
+<<<<<<< HEAD
                                 activeSet={activeSet}
                             />
                         </TabsContent>
 
+=======
+                            />
+                        </TabsContent>
+
+<<<<<<< HEAD
+=======
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
                         {/* Sets Tab */}
                         <TabsContent value="sets" className="space-y-4">
                             <SetsTab />
                         </TabsContent>
+<<<<<<< HEAD
+=======
+
+>>>>>>> d755eebc69ee105753ed380f9f4e21f72c394b01
+>>>>>>> bc9732351346bfe1945cdb6da10415959bd7ddc3
                         {/* Inventory Tab - Managed by IngredientsManager */}
                         <TabsContent value="inventory" className="space-y-4">
                             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
