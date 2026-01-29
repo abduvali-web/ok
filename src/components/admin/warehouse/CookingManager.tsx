@@ -40,17 +40,36 @@ interface MenuSet {
     isActive: boolean;
 }
 
+
+
+interface ClientData {
+    id: string;
+    calories: number;
+    assignedSetId?: string | null;
+    isActive: boolean;
+    deliveryDays: any;
+}
+
+interface OrderData {
+    customerId: string;
+    quantity: number;
+    calories: number;
+    deliveryDate: string;
+}
+
 interface CookingManagerProps {
     date: string;
     menuNumber: number;
     clientsByCalorie: Record<number, number>;
+    clients?: ClientData[]; // Optional for backward compatibility if needed, but required for filtering
+    orders?: OrderData[];
     onCook?: () => void;
     orderInfo?: { total: number; byCalorie: Record<number, number> };
 }
 
 const CALORIE_GROUPS = [1200, 1600, 2000, 2500, 3000];
 
-export function CookingManager({ date, menuNumber, clientsByCalorie, onCook, orderInfo }: CookingManagerProps) {
+export function CookingManager({ date, menuNumber, clientsByCalorie: globalClientsByCalorie, clients = [], orders = [], onCook, orderInfo }: CookingManagerProps) {
     const [dishes, setDishes] = useState<Dish[]>([]);
     const [loading, setLoading] = useState(true);
     const [cookingPlan, setCookingPlan] = useState<any>(null); // { cookedStats: { dishId: { 1200: 5 } } }
@@ -62,6 +81,63 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook, ord
     const [availableSets, setAvailableSets] = useState<MenuSet[]>([]);
     const [selectedSetId, setSelectedSetId] = useState<string>('active');
 
+    // Memoize the effective caloric distribution based on selected set
+    const clientsByCalorie = useMemo(() => {
+        // If showing active/global set, use the pre-calculated global stats
+        if (!selectedSetId || selectedSetId === 'active') {
+            return globalClientsByCalorie;
+        }
+
+        // Otherwise filter for the specific set
+        const distribution: Record<number, number> = {};
+
+        // Helper to add with tier mapping
+        const add = (cal: number, qty: number) => {
+            let tier = 2000;
+            if (cal <= 1400) tier = 1200;
+            else if (cal <= 1800) tier = 1600;
+            else if (cal <= 2200) tier = 2000;
+            else if (cal <= 2800) tier = 2500;
+            else tier = 3000;
+
+            distribution[tier] = (distribution[tier] || 0) + qty;
+        };
+
+        // 1. Filter clients who are assigned to this set
+        const relevantClients = clients.filter(c => c.assignedSetId === selectedSetId);
+        const relevantClientIds = new Set(relevantClients.map(c => c.id));
+
+        // 2. Filter orders for this date
+        const dayOrders = orders.filter(o => o.deliveryDate && o.deliveryDate.startsWith(date));
+
+        if (dayOrders.length > 0) {
+            // Count orders from relevant clients
+            dayOrders.forEach(order => {
+                if (relevantClientIds.has(order.customerId)) {
+                    add(order.calories, order.quantity || 1);
+                }
+            });
+        } else {
+            // Fallback: Use client schedule
+            const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+            relevantClients.forEach(client => {
+                if (client.isActive !== false) {
+                    let dDays = client.deliveryDays;
+                    if (typeof dDays === 'string') {
+                        try { dDays = JSON.parse(dDays); } catch (e) { dDays = {}; }
+                    }
+                    // Check if explicitly disabled for this day
+                    if (dDays && dDays[dayOfWeek] === false) return;
+
+                    add(client.calories, 1);
+                }
+            });
+        }
+
+        return distribution;
+    }, [selectedSetId, globalClientsByCalorie, clients, orders, date]);
+
+    // Custom set integration defined above
     const activeSet = useMemo(() => {
         if (selectedSetId === 'active') return availableSets.find(s => s.isActive) || null;
         return availableSets.find(s => s.id === selectedSetId) || null;

@@ -588,6 +588,8 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 date={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]} // Tomorrow
                                 menuNumber={tomorrowMenuNumber}
                                 clientsByCalorie={clientsByCalorie}
+                                clients={allClients}
+                                orders={allOrders}
                                 onCook={fetchData} // Refresh inventory on cook
                                 orderInfo={{
                                     total: Object.values(clientsByCalorie).reduce((a, b) => a + b, 0),
