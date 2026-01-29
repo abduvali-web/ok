@@ -3029,10 +3029,6 @@ export default function MiddleAdminPage() {
             </Card>
           </TabsContent >
 
-          {/* Finance Tab */}
-          <TabsContent value="finance" className="space-y-6">
-            <FinanceTab />
-          </TabsContent>
 
           {/* Order Details Modal */}
           < Dialog open={isOrderDetailsModalOpen} onOpenChange={setIsOrderDetailsModalOpen} >

@@ -185,77 +185,75 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                 fetch('/api/orders')
             ]);
 
+            let clients: any[] = [];
+            let orders: any[] = [];
+
             if (clientsResponse.ok) {
-                const clients = await clientsResponse.json();
+                clients = await clientsResponse.json();
                 setAllClients(clients);
             }
 
             if (ordersResponse.ok) {
                 const ordersData = await ordersResponse.json();
-                setAllOrders(ordersData.orders || ordersData || []);
+                orders = ordersData.orders || ordersData || [];
+                setAllOrders(orders);
             }
 
-            // Refetch distribution after setting state
-            // Calculate tomorrow's distribution for display
+            // Calculate tomorrow's distribution for CookingManager
             const today = new Date();
             const tomorrow = new Date(today);
             tomorrow.setDate(today.getDate() + 1);
 
-            // We'll calculate it using the same logic we just added
-            // But since state hasn't updated yet, we use the local variable
             const distribution: Record<number, number> = {
                 1200: 0, 1600: 0, 2000: 0, 2500: 0, 3000: 0,
             };
             const dayOfWeek = tomorrow.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
             const tomorrowDateStr = tomorrow.toISOString().split('T')[0];
 
-            // Try using orders first
-            if (ordersResponse.ok) {
-                const ordersData = await ordersResponse.json().catch(() => []);
-                const orders = ordersData.orders || ordersData || [];
-                const tomorrowOrders = orders.filter((o: any) => {
-                    const oDate = o.deliveryDate ? new Date(o.deliveryDate).toISOString().split('T')[0] : '';
-                    return oDate === tomorrowDateStr;
+            // Try using orders first (they're the source of truth)
+            const tomorrowOrders = orders.filter((o: any) => {
+                const oDate = o.deliveryDate ? new Date(o.deliveryDate).toISOString().split('T')[0] : '';
+                return oDate === tomorrowDateStr;
+            });
+
+            if (tomorrowOrders.length > 0) {
+                tomorrowOrders.forEach((order: any) => {
+                    const cals = order.calories || 2000;
+                    const qty = order.quantity || 1;
+                    if (cals <= 1400) distribution[1200] += qty;
+                    else if (cals <= 1800) distribution[1600] += qty;
+                    else if (cals <= 2200) distribution[2000] += qty;
+                    else if (cals <= 2800) distribution[2500] += qty;
+                    else distribution[3000] += qty;
                 });
-
-                if (tomorrowOrders.length > 0) {
-                    tomorrowOrders.forEach((order: any) => {
-                        const cals = order.calories || 2000;
-                        if (cals <= 1400) distribution[1200]++;
-                        else if (cals <= 1800) distribution[1600]++;
-                        else if (cals <= 2200) distribution[2000]++;
-                        else if (cals <= 2800) distribution[2500]++;
-                        else distribution[3000]++;
-                    });
-                    setClientsByCalorie(distribution);
-                    toast.success('Данные обновлены из заказов');
-                    return;
-                }
-            }
-
-            // Fallback to client patterns
-            if (clientsResponse.ok) {
-                const clients = await clientsResponse.json().catch(() => []);
-                clients.forEach((client: any) => {
-                    if (client.isActive !== false) {
-                        let deliveryDays = client.deliveryDays;
-                        if (typeof deliveryDays === 'string') {
-                            try { deliveryDays = JSON.parse(deliveryDays); } catch (e) { deliveryDays = {}; }
-                        }
-                        if (deliveryDays && deliveryDays[dayOfWeek] === false) return;
-
-                        const calories = client.calories || 2000;
-                        if (calories <= 1400) distribution[1200]++;
-                        else if (calories <= 1800) distribution[1600]++;
-                        else if (calories <= 2200) distribution[2000]++;
-                        else if (calories <= 2800) distribution[2500]++;
-                        else distribution[3000]++;
-                    }
-                });
-
                 setClientsByCalorie(distribution);
-                toast.success('Данные клиентов обновлены');
+                console.log('Distribution from orders:', distribution, 'Orders count:', tomorrowOrders.length);
+                toast.success(`Загружено ${tomorrowOrders.length} заказов на завтра`);
+                return;
             }
+
+            // Fallback to active client patterns if no orders for tomorrow
+            clients.forEach((client: any) => {
+                if (client.isActive !== false) {
+                    let deliveryDays = client.deliveryDays;
+                    if (typeof deliveryDays === 'string') {
+                        try { deliveryDays = JSON.parse(deliveryDays); } catch (e) { deliveryDays = {}; }
+                    }
+                    if (deliveryDays && deliveryDays[dayOfWeek] === false) return;
+
+                    const calories = client.calories || 2000;
+                    if (calories <= 1400) distribution[1200]++;
+                    else if (calories <= 1800) distribution[1600]++;
+                    else if (calories <= 2200) distribution[2000]++;
+                    else if (calories <= 2800) distribution[2500]++;
+                    else distribution[3000]++;
+                }
+            });
+
+            setClientsByCalorie(distribution);
+            const totalClients = Object.values(distribution).reduce((a, b) => a + b, 0);
+            console.log('Distribution from clients:', distribution, 'Total:', totalClients);
+            toast.success(`Загружено ${totalClients} активных клиентов`);
         } catch (error) {
             console.error('Error fetching client data:', error);
             toast.error('Ошибка загрузки данных клиентов');
