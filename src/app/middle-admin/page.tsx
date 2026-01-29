@@ -142,6 +142,9 @@ interface Client {
   deletedBy?: string
   defaultCourierId?: string
   defaultCourierName?: string
+  assignedSetId?: string
+  assignedSetName?: string
+  googleMapsLink?: string
   googleMapsLink?: string
   latitude?: number | null
   longitude?: number | null
@@ -191,6 +194,7 @@ export default function MiddleAdminPage() {
   const [couriers, setCouriers] = useState<Admin[]>([])
   const [binClients, setBinClients] = useState<Client[]>([])
   const [binOrders, setBinOrders] = useState<Order[]>([])
+  const [availableSets, setAvailableSets] = useState<any[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set())
@@ -274,7 +278,9 @@ export default function MiddleAdminPage() {
     defaultCourierId: '',
     googleMapsLink: '',
     latitude: null as number | null,
-    longitude: null as number | null
+    latitude: null as number | null,
+    longitude: null as number | null,
+    assignedSetId: ''
   })
   const [orderFormData, setOrderFormData] = useState({
     customerName: '',
@@ -401,10 +407,11 @@ export default function MiddleAdminPage() {
         fetch(ordersUrl, { headers }),
         fetch('/api/admin/clients', { headers }),
         fetch('/api/admin/statistics', { headers }),
-        fetch('/api/admin/couriers', { headers })
+        fetch('/api/admin/couriers', { headers }),
+        fetch('/api/admin/sets', { headers })
       ])
 
-      const [ordersRes, clientsRes, statsRes, couriersRes] = await Promise.race([fetchPromise, timeoutPromise]) as [Response, Response, Response, Response]
+      const [ordersRes, clientsRes, statsRes, couriersRes, setsRes] = await Promise.race([fetchPromise, timeoutPromise]) as [Response, Response, Response, Response, Response]
 
       // Handle 401 Unauthorized
       if (ordersRes.status === 401 || clientsRes.status === 401) {
@@ -431,6 +438,11 @@ export default function MiddleAdminPage() {
       if (couriersRes.ok) {
         const couriersData = await couriersRes.json()
         setCouriers(couriersData)
+      }
+
+      if (setsRes && setsRes.ok) {
+        const setsData = await setsRes.json()
+        setAvailableSets(setsData)
       }
 
       // Fetch bin clients
@@ -1252,7 +1264,10 @@ export default function MiddleAdminPage() {
       defaultCourierId: client.defaultCourierId || '',
       googleMapsLink: client.googleMapsLink || '',
       latitude: client.latitude || null,
-      longitude: client.longitude || null
+      googleMapsLink: client.googleMapsLink || '',
+      latitude: client.latitude || null,
+      longitude: client.longitude || null,
+      assignedSetId: client.assignedSetId || ''
     })
     setEditingClientId(client.id)
     setIsCreateClientModalOpen(true)
@@ -2714,6 +2729,24 @@ export default function MiddleAdminPage() {
                                       {couriers.map((courier) => (
                                         <option key={courier.id} value={courier.id}>
                                           {courier.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </Label>
+                                </div>
+                                <div className="flex items-center space-x-2 pt-2">
+                                  <Label htmlFor="assignedSet" className="text-sm w-full">
+                                    Назначенный сет (меню):
+                                    <select
+                                      id="assignedSet"
+                                      value={clientFormData.assignedSetId}
+                                      onChange={(e) => setClientFormData(prev => ({ ...prev, assignedSetId: e.target.value }))}
+                                      className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                      <option value="">Авто (Активный глобальный)</option>
+                                      {availableSets.map((set) => (
+                                        <option key={set.id} value={set.id}>
+                                          {set.name} {set.isActive ? '(Активный)' : ''}
                                         </option>
                                       ))}
                                     </select>

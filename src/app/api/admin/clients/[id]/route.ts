@@ -56,7 +56,8 @@ export async function PATCH(
       deliveryDays,
       autoOrdersEnabled,
       isActive,
-      defaultCourierId
+      defaultCourierId,
+      assignedSetId
     } = body
 
     // Prepare update data
@@ -67,6 +68,7 @@ export async function PATCH(
     if (specialFeatures !== undefined) updateData.preferences = specialFeatures
     if (isActive !== undefined) updateData.isActive = isActive
     if (defaultCourierId !== undefined) updateData.defaultCourierId = defaultCourierId || null
+    if (assignedSetId !== undefined) updateData.assignedSetId = assignedSetId || null
     if (calories !== undefined) updateData.calories = parseInt(calories) || 2000
     if (autoOrdersEnabled !== undefined) updateData.autoOrdersEnabled = autoOrdersEnabled
 

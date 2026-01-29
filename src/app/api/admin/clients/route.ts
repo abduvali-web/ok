@@ -46,6 +46,12 @@ export async function GET(request: NextRequest) {
             id: true,
             name: true
           }
+        },
+        assignedSet: {
+          select: {
+            id: true,
+            name: true
+          }
         }
       },
       orderBy: { createdAt: 'desc' }
@@ -78,7 +84,9 @@ export async function GET(request: NextRequest) {
       latitude: dbClient.latitude,
       longitude: dbClient.longitude,
       defaultCourierId: dbClient.defaultCourierId,
-      defaultCourierName: (dbClient as any).defaultCourier?.name
+      defaultCourierName: (dbClient as any).defaultCourier?.name,
+      assignedSetId: dbClient.assignedSetId,
+      assignedSetName: dbClient.assignedSet?.name
     }))
 
     return NextResponse.json(clients)
@@ -115,7 +123,8 @@ export async function POST(request: NextRequest) {
       autoOrdersEnabled,
       latitude,
       longitude,
-      defaultCourierId
+      defaultCourierId,
+      assignedSetId
     } = body
 
     // Assign to outer variable for error handling and usage
@@ -165,10 +174,17 @@ export async function POST(request: NextRequest) {
         latitude,
         longitude,
         defaultCourierId: (defaultCourierId === '' || defaultCourierId === 'null') ? null : defaultCourierId,
+        assignedSetId: (assignedSetId === '' || assignedSetId === 'null') ? null : assignedSetId,
         createdBy: (user.role === 'MIDDLE_ADMIN' || user.role === 'LOW_ADMIN') ? user.id : null
       } as any,
       include: {
         defaultCourier: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        assignedSet: {
           select: {
             id: true,
             name: true
@@ -196,7 +212,9 @@ export async function POST(request: NextRequest) {
       latitude: dbClient.latitude,
       longitude: dbClient.longitude,
       defaultCourierId: dbClient.defaultCourierId,
-      defaultCourierName: (dbClient as any).defaultCourier?.name
+      defaultCourierName: (dbClient as any).defaultCourier?.name,
+      assignedSetId: dbClient.assignedSetId,
+      assignedSetName: dbClient.assignedSet?.name
     }
 
     return NextResponse.json({

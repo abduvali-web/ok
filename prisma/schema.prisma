@@ -92,6 +92,9 @@ model Customer {
   transactions      Transaction[]
 
   orders            Order[]
+  
+  assignedSetId     String?
+  assignedSet       MenuSet? @relation("ClientAssignedSet", fields: [assignedSetId], references: [id])
 
   // Phone is unique per admin, but allow re-creation after deletion (deletedAt is null for active)
   @@unique([phone, createdBy, deletedAt])
@@ -336,6 +339,7 @@ model MenuSet {
   
   adminId       String?
   admin         Admin?   @relation(fields: [adminId], references: [id])
+  assignedClients Customer[] @relation("ClientAssignedSet")
 
   @@map("menu_sets")
   @@index([adminId])
