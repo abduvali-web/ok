@@ -247,6 +247,39 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook, ord
         return cookingPlan?.cookedStats?.[dishId]?.[calorie] || 0;
     };
 
+    const isDishInGroup = (dishId: string | number, calorie: number) => {
+        // Custom Set Logic
+        if (activeSet) {
+            let group: CalorieGroup | undefined;
+            const groups = activeSet.calorieGroups as unknown as Record<string, CalorieGroup[]>;
+
+            if (Array.isArray(groups)) {
+                group = groups.find((g: any) => g.calories === calorie);
+            } else {
+                const dayGroups = groups[menuNumber.toString()];
+                if (dayGroups) {
+                    group = dayGroups.find(g => g.calories === calorie);
+                }
+            }
+
+            if (!group) return false;
+            return group.dishes.some(d => d.dishId == dishId);
+        }
+
+        // Standard Menu Logic
+        const dish = dishes.find(d => d.id == dishId);
+        if (!dish) return false;
+
+        if (dish.calorieMappings) {
+            const allowedGroups = dish.calorieMappings[menuNumber.toString()] || [];
+            if (!allowedGroups.includes(calorie.toString())) {
+                return false;
+            }
+        }
+
+        return true;
+    };
+
     const getNeededAmount = (dishId: string | number, calorie: number) => {
         // If we are using a custom set
         if (activeSet) {
@@ -369,7 +402,13 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook, ord
                         );
                     })}
                     {Object.values(clientsByCalorie).every(v => v === 0) && (
-                        <span className="text-sm text-blue-600">Нет заказов на эту дату</span>
+                        <span className="text-sm text-blue-600">Нет заказов на эту дату (Глобально)</span>
+                    )}
+                    {activeSet && selectedSetId !== 'active' && activeSet.id !== selectedSetId && (
+                        <div className="w-full text-xs text-amber-600 mt-1 flex items-center">
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            Внимание: Выбранный сет отличается от активного. Заказы отображаются для Активного сета.
+                        </div>
                     )}
                 </div>
             </div>
@@ -409,8 +448,10 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook, ord
                                         const remaining = Math.max(0, needed - cooked);
                                         const inputVal = cookingAmounts[dish.id.toString()]?.[cal] || '';
 
-                                        // If not needed for this column, show greyed out or empty
-                                        if (needed === 0) {
+                                        const isAvailable = isDishInGroup(dish.id, cal);
+
+                                        // If not configured for this column, show greyed out or empty
+                                        if (!isAvailable) {
                                             return (
                                                 <TableCell key={cal} className="p-2 bg-slate-50/50">
                                                     <div className="h-full flex items-center justify-center text-slate-300 text-xs text-center">
@@ -422,9 +463,9 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook, ord
 
                                         return (
                                             <TableCell key={cal} className="p-2">
-                                                <div className="bg-slate-50 rounded-lg p-2 space-y-2 border">
+                                                <div className={`rounded-lg p-2 space-y-2 border ${needed === 0 ? 'bg-slate-50 border-dashed' : 'bg-slate-50 border'}`}>
                                                     <div className="flex justify-between text-xs">
-                                                        <span className={cooked >= needed ? "text-green-600 font-medium" : "text-amber-600"}>
+                                                        <span className={cooked >= needed && needed > 0 ? "text-green-600 font-medium" : "text-amber-600"}>
                                                             Ready: {cooked}
                                                         </span>
                                                         <span className="text-slate-500">Left: {remaining}</span>
