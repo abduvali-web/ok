@@ -78,7 +78,9 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
     const [activeSet, setActiveSet] = useState<any>(null);
     const [allClients, setAllClients] = useState<any[]>([]);
+    const [allClients, setAllClients] = useState<any[]>([]);
     const [allOrders, setAllOrders] = useState<any[]>([]);
+    const [availableSets, setAvailableSets] = useState<any[]>([]);
 
     // Calculation state
     const [selectedDates, setSelectedDates] = useState<string[]>([]);
@@ -310,6 +312,8 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             const setsResponse = await fetch('/api/admin/sets');
             if (setsResponse.ok) {
                 const sets = await setsResponse.json();
+                setAvailableSets(sets);
+
                 const active = sets.find((s: any) => s.isActive);
                 if (active) {
                     setActiveSet(active);
@@ -370,15 +374,212 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
 
 
     const calculateForTomorrow = () => {
-        const ingredients = calculateIngredientsForMenu(
+        // Helper to map calories to tier
+        const getTier = (c: number) => c <= 1400 ? 1200 : c <= 1800 ? 1600 : c <= 2200 ? 2000 : c <= 2800 ? 2500 : 3000;
+
+        // 1. Calculate Split Distribution
+        const standardStats: Record<number, number> = { 1200: 0, 1600: 0, 2000: 0, 2500: 0, 3000: 0 };
+        const setStats: Record<string, Record<number, number>> = {};
+
+        availableSets.forEach(s => {
+            setStats[s.id] = { 1200: 0, 1600: 0, 2000: 0, 2500: 0, 3000: 0 };
+        });
+
+        // Determine target date (Tomorrow)
+        const date = new Date();
+        date.setDate(date.getDate() + 1);
+        const dateStr = date.toISOString().split('T')[0];
+        const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+
+        // Filter valid orders
+        const dayOrders = allOrders.filter(o => o.deliveryDate && o.deliveryDate.startsWith(dateStr));
+
+        if (dayOrders.length > 0) {
+            dayOrders.forEach(order => {
+                const client = allClients.find(c => c.id === order.customerId);
+                const tier = getTier(order.calories || 2000);
+
+                // If client has assigned set, add to that set's stats
+                if (client?.assignedSetId && setStats[client.assignedSetId]) {
+                    setStats[client.assignedSetId][tier] = (setStats[client.assignedSetId][tier] || 0) + (order.quantity || 1);
+                } else {
+                    // Else add to standard stats (or Active Global Set if we treat 'assignedSetId=null' as Active Set)
+                    // Logic: If assignedSetId is null, they get the "Active Global Set" effectively.
+                    // But 'calculateIngredientsForMenu' without 'activeSet' arg calculates Standard Menu. 
+                    // Does 'activeSet' state in this component represent the Global Active Set? YES.
+                    // So if we pass 'activeSet' to calculateIngredientsForMenu, it uses it.
+                    // If we pass NULL, it uses Standard.
+                    // Correct Logic: 
+                    // - Unassigned clients usage should be calculated using the `activeSet` state (Global Active).
+                    // - Assigned clients usage should be calculated using their specific Set.
+
+                    // Actually, if an Active Set exists, UNASSIGNED clients should use IT.
+                    // If NO Active Set exists, they use Standard.
+                    // So we accumulate them in 'standardStats', but we will calculate 'standardStats' ingredients using 'activeSet' (Global).
+                    standardStats[tier] = (standardStats[tier] || 0) + (order.quantity || 1);
+                }
+            });
+        } else {
+            // Fallback to Clients
+            allClients.forEach(client => {
+                if (client.isActive !== false) {
+                    let dDays = client.deliveryDays;
+                    if (typeof dDays === 'string') {
+                        try { dDays = JSON.parse(dDays); } catch (e) { dDays = {}; }
+                    }
+                    if (dDays && dDays[dayOfWeek] === false) return;
+
+                    const tier = getTier(client.calories || 2000);
+
+                    if (client.assignedSetId && setStats[client.assignedSetId]) {
+                        setStats[client.assignedSetId][tier]++;
+                    } else {
+                        standardStats[tier]++;
+                    }
+                }
+            });
+        }
+
+        // 2. Aggregate Ingredients
+        const totalIngredients = new Map<string, { amount: number; unit: string }>();
+
+        const mergeIngredients = (source: Map<string, { amount: number; unit: string }>) => {
+            for (const [name, { amount, unit }] of source) {
+                const existing = totalIngredients.get(name);
+                if (existing) {
+                    existing.amount += amount;
+                } else {
+                    totalIngredients.set(name, { amount, unit });
+                }
+            }
+        };
+
+        // Calculate for Standard/Global Active
+        const globalIngredients = calculateIngredientsForMenu(
             tomorrowMenuNumber,
-            clientsByCalorie,
+            standardStats,
             dishQuantities,
+            activeSet // Use the Global Active Set for unassigned clients
+        );
+        mergeIngredients(globalIngredients);
+
+        // Calculate for Assigned Sets
+        for (const set of availableSets) {
+            // Skip if this is the active set (already handled in global?)
+            // Wait: 'activeSet' passed above IS the object found in 'availableSets' with .isActive=true.
+            // So if we iterate 'availableSets' again, we will double count the active set IF 'setStats' captured data for it.
+            // BUT: 'setStats' is populated by `client.assignedSetId`. 
+            // Does `client.assignedSetId` get set to the Active Set ID automatically? 
+            // New clients have `assignedSetId: ''` or `null`.
+            // If a client is Explicitly Assigned to the Active Set, they have `assignedSetId = 'id-of-active'`.
+            // Those counts went into `setStats['id-of-active']`.
+            // The `standardStats` captured clients with `assignedSetId = null`.
+
+            // So: 
+            // 1. `standardStats` (Unassigned) -> Use `activeSet`.
+            // 2. `setStats['non-active-id']` -> Use that set.
+            // 3. `setStats['active-id']` -> Use that set (Active Set).
+
+            // Issue: If we use `activeSet` for StandardStats, and also calculate `setStats['active-id']` separately, 
+            // using `calculateIngredientsForMenu(..., set)`, it works fine. They are just two batches of people using the same set.
+            // Merging them implies summing ingredients.
+
+            // HOWEVER, `calculateIngredientsForMenu` takes `dishQuantities`. 
+            // `dishQuantities` is GLOBAL dish IDs.
+            // If Set A and Set B share Dish ID 100, and we adjusted its quantity...
+            // `calculateIngredientsForMenu` uses `dishQuantities` logic: 
+            // `const dishQty = dishQuantities?.[dish.id] ?? totalClients;`.
+            // If we iterate multiple times, `dishQuantities` (e.g. 50 portions) will be applied EACH TIME?
+            // E.g. Set A uses Dish 100. Set B uses Dish 100.
+            // We configured "Dish 100 = 50 portions".
+            // Loop 1 (Set A): Uses 50 portions? 
+            // Loop 2 (Set B): Uses 50 portions?
+            // Total = 100? This is wrong if we meant 50 TOTAL.
+
+            // BUT: `dishQuantities` in standard usage is "Total portions to cook".
+            // If we are calculating ingredients based on CLIENT COUNT (Predictive), we usually IGNORE `dishQuantities` unless we are in "Manual Override" mode.
+            // The logic in `calculateIngredientsForMenu` uses `dishQuantities` if present.
+            // If `dishQuantities` is set, `portionsForTier` depends on it.
+
+            // Warning: If usage of `dishQuantities` overrides client counts, then splitting calculation breaks the logic 
+            // because "Dish Qty 50" means "50 total", but we apply it to "Subset A" then "Subset B".
+
+            // If `dishQuantities` are derived from TOTAL clients (which they are in useEffect), then:
+            // We should NOT use global `dishQuantities` when calculating subsets, 
+            // OR we should split `dishQuantities` too.
+            // OR we should rely on `clientsByCalorie` count which logic falls back to if `dishQuantities` is matching?
+
+            // Let's check `calculateIngredientsForMenu`:
+            // `const dishQty = dishQuantities?.[dish.id] ?? totalClients;`
+            // `const portionsForTier = (dishQty / totalClients) * clientCount;`
+            // It scales `dishQty` by `clientCount / totalClients`.
+            // `totalClients` here is SUM of `clientsByCalorie` passed to function.
+
+            // So: 
+            // Call 1: `clientsByCalorie` = {1200: 5}. `totalClients` = 5.
+            // `dishQty` = 50 (Global).
+            // `portions` = (50 / 5) * 5 = 50.
+
+            // Call 2: `clientsByCalorie` = {1200: 10}. `totalClients` = 10.
+            // `dishQty` = 50 (Global).
+            // `portions` = (50 / 10) * 10 = 50.
+
+            // Total Ingredients = 50 portions + 50 portions = 100 portions!
+            // Double counting!
+
+            // Fix: We must NOT pass the global `dishQuantities` when doing split calculation, 
+            // unless we can split `dishQuantities` per set.
+            // Since we effectively want to calculate ingredients based on "Number of People", 
+            // checks `dishQuantities` is risky.
+
+            // However, `dishQuantities` defaults to `totalClients` if undefined.
+            // If we pass `undefined` for `dishQuantities`, it uses `totalClients` (sum of subset).
+            // This effectively calculates "Exact Ingredients for these clients".
+            // This is what we want for "Calculator".
+
+            // So: pass `undefined` (or empty object) as `dishQuantities` to `calculateIngredientsForMenu` 
+            // to force it to use the `clientsByCalorie` count strictly.
+
+            // Only issue: If user MANUALLY adjusted quantities in UI for "Extra portions", we lose that.
+            // The UI `dishQuantities` reflects "Total planned to cook".
+            // If we want to respect that, we need to handle it.
+            // But traditionally, "Calculator" tells you "What you NEED to buy based on clients".
+            // Manual adjustments are usually for "Cooking Plan".
+
+            // I will pass `undefined` for `dishQuantities` to prioritize Client Count based calculation.
+            // If the user wants to calculate based on `dishQuantities`, they assume global toggle?
+            // Given the complexity, counting based on clients is stricter and safer for "Shopping List".
+
+            const dist = setStats[set.id];
+            const hasClients = Object.values(dist || {}).some(v => v > 0);
+            if (!hasClients) continue;
+
+            const setIng = calculateIngredientsForMenu(
+                tomorrowMenuNumber,
+                dist,
+                undefined, // Ignore manual quantities, use client count
+                set
+            );
+            mergeIngredients(setIng);
+        }
+
+        // Refine Global call:
+        // Also pass undefined?
+        // If I pass dishQuantities, I get the scaling issue.
+        // So I will pass undefined to global too.
+
+        // Re-do Global Call Logic inside this block
+        const globalIngredients2 = calculateIngredientsForMenu(
+            tomorrowMenuNumber,
+            standardStats,
+            undefined,
             activeSet
         );
-        setCalculatedIngredients(ingredients);
+        mergeIngredients(globalIngredients2);
 
-        const shopping = calculateShoppingList(ingredients, inventory);
+        setCalculatedIngredients(totalIngredients);
+
+        const shopping = calculateShoppingList(totalIngredients, inventory);
         setShoppingList(shopping);
 
         toast.success(`Расчёт для меню ${tomorrowMenuNumber} выполнен`);
