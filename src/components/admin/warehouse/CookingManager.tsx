@@ -107,13 +107,14 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
 
                 if (dayData && Array.isArray(dayData)) {
                     // Determine all unique dishes from this day's set config
-                    const uniqueDishesMap = new Map<number, Dish>();
+                    const uniqueDishesMap = new Map<string, Dish>(); // Use string keys for flexibility
 
                     dayData.forEach(group => {
                         if (group && group.dishes) {
                             group.dishes.forEach(d => {
-                                if (!uniqueDishesMap.has(d.dishId)) {
-                                    uniqueDishesMap.set(d.dishId, {
+                                const dishKey = d.dishId.toString();
+                                if (!uniqueDishesMap.has(dishKey)) {
+                                    uniqueDishesMap.set(dishKey, {
                                         id: d.dishId,
                                         name: d.dishName,
                                         mealType: d.mealType

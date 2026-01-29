@@ -426,7 +426,20 @@ export function SetsTab() {
     };
 
     const getOriginalIngredients = (dishId: string | number): Ingredient[] => {
-        const dish = availableDishes.find(d => d.id == dishId); // Use loose equality for string/number compatibility
+        // Try to find in availableDishes first (from DB)
+        let dish = availableDishes.find(d => d.id == dishId); // Use loose equality for string/number compatibility
+
+        // Fallback to static MENUS if not found or availableDishes is empty
+        if (!dish && MENUS) {
+            for (const menu of MENUS) {
+                const found = menu.dishes.find(d => d.id == dishId);
+                if (found) {
+                    dish = found;
+                    break;
+                }
+            }
+        }
+
         return dish?.ingredients || [];
     };
 
