@@ -78,7 +78,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
     const [activeSet, setActiveSet] = useState<any>(null);
     const [allClients, setAllClients] = useState<any[]>([]);
-    const [allClients, setAllClients] = useState<any[]>([]);
+
     const [allOrders, setAllOrders] = useState<any[]>([]);
     const [availableSets, setAvailableSets] = useState<any[]>([]);
 
