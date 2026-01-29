@@ -170,12 +170,9 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
             }
 
             // 2. Determine dishes based on Set or Standard Menu
-            let foundSetDishes = false;
-
             if (currentActiveSet) {
                 // Get data for the CURRENT menuNumber (day)
                 // calorieGroups is now Record<string, CalorieGroup[]>
-                // Ensure we access it safely as it might be typed loosely from JSON
                 const setGroups = currentActiveSet.calorieGroups as unknown as Record<string, CalorieGroup[]>;
 
                 let dayData: CalorieGroup[] | undefined;
@@ -193,7 +190,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
                                 const dishKey = d.dishId.toString();
                                 if (!uniqueDishesMap.has(dishKey)) {
                                     uniqueDishesMap.set(dishKey, {
-                                        id: d.dishId,
+                                        id: d.dishId, // Keep original ID (number/string)
                                         name: d.dishName,
                                         mealType: d.mealType
                                     });
@@ -202,15 +199,13 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
                         }
                     });
 
-                    if (uniqueDishesMap.size > 0) {
-                        setDishes(Array.from(uniqueDishesMap.values()));
-                        foundSetDishes = true;
-                    }
+                    setDishes(Array.from(uniqueDishesMap.values()));
+                } else {
+                    // Custom set exists but has no data for this day
+                    setDishes([]);
                 }
-            }
-
-            if (!foundSetDishes) {
-                // Fallback to standard menu if no active set OR set has no data for this day
+            } else {
+                // Standard Menu Logic (No Custom Set Active/Selected)
                 let gotDishes = false;
                 try {
                     const menuRes = await fetch(`/api/admin/menus?number=${menuNumber}`);
@@ -339,7 +334,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
             }
 
             if (!group) return false;
-            return group.dishes.some(d => d.dishId == dishId);
+            return group.dishes.some(d => String(d.dishId) === String(dishId));
         }
 
         // Standard Menu Logic
@@ -575,7 +570,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
             </div>
             {dishes.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground bg-slate-50 rounded-lg border border-dashed">
-                    Нет блюд для отображения
+                    Нет блюд для отображения (Меню {menuNumber}). Проверьте настройки выбранного сета.
                 </div>
             )}
         </div>
