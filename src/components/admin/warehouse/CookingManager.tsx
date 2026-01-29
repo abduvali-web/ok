@@ -7,8 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { Loader2, ChefHat, Check, AlertTriangle, UtensilsCrossed } from 'lucide-react';
+import { Loader2, ChefHat, Check, AlertTriangle, UtensilsCrossed, Users } from 'lucide-react';
 import { toast } from 'sonner';
+import { MENUS } from '@/lib/menuData';
 
 interface Dish {
     id: string | number; // Support both for compatibility
@@ -44,11 +45,12 @@ interface CookingManagerProps {
     menuNumber: number;
     clientsByCalorie: Record<number, number>;
     onCook?: () => void;
+    orderInfo?: { total: number; byCalorie: Record<number, number> };
 }
 
 const CALORIE_GROUPS = [1200, 1600, 2000, 2500, 3000];
 
-export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: CookingManagerProps) {
+export function CookingManager({ date, menuNumber, clientsByCalorie, onCook, orderInfo }: CookingManagerProps) {
     const [dishes, setDishes] = useState<Dish[]>([]);
     const [loading, setLoading] = useState(true);
     const [cookingPlan, setCookingPlan] = useState<any>(null); // { cookedStats: { dishId: { 1200: 5 } } }
@@ -133,11 +135,29 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
 
             if (!foundSetDishes) {
                 // Fallback to standard menu if no active set OR set has no data for this day
-                const menuRes = await fetch(`/api/admin/menus?number=${menuNumber}`);
-                if (menuRes.ok) {
-                    const menuData = await menuRes.json();
-                    if (menuData && menuData.dishes) {
-                        setDishes(menuData.dishes);
+                let gotDishes = false;
+                try {
+                    const menuRes = await fetch(`/api/admin/menus?number=${menuNumber}`);
+                    if (menuRes.ok) {
+                        const menuData = await menuRes.json();
+                        if (menuData && menuData.dishes && menuData.dishes.length > 0) {
+                            setDishes(menuData.dishes);
+                            gotDishes = true;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch menu from API:', e);
+                }
+
+                // Ultimate fallback: use static MENUS data
+                if (!gotDishes) {
+                    const staticMenu = MENUS.find(m => m.menuNumber === menuNumber);
+                    if (staticMenu && staticMenu.dishes.length > 0) {
+                        setDishes(staticMenu.dishes.map(d => ({
+                            id: d.id,
+                            name: d.name,
+                            mealType: d.mealType,
+                        })));
                     }
                 }
             }
@@ -326,6 +346,31 @@ export function CookingManager({ date, menuNumber, clientsByCalorie, onCook }: C
                             </SelectContent>
                         </Select>
                     </div>
+                </div>
+            </div>
+
+            {/* Order Context Info */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                    <Users className="w-4 h-4 text-blue-600" />
+                    <span className="font-medium text-blue-800">Заказы на завтра:</span>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                        {Object.values(clientsByCalorie).reduce((a, b) => a + b, 0)} порций
+                    </Badge>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {CALORIE_GROUPS.map(cal => {
+                        const count = clientsByCalorie[cal] || 0;
+                        if (count === 0) return null;
+                        return (
+                            <Badge key={cal} variant="outline" className="bg-white">
+                                {cal} ккал: <span className="font-bold ml-1">{count}</span>
+                            </Badge>
+                        );
+                    })}
+                    {Object.values(clientsByCalorie).every(v => v === 0) && (
+                        <span className="text-sm text-blue-600">Нет заказов на эту дату</span>
+                    )}
                 </div>
             </div>
 

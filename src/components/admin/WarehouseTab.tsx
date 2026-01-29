@@ -38,7 +38,7 @@ import {
     type DailyMenu,
     type Dish,
 } from '@/lib/menuData';
-import { DishesManager } from './warehouse/DishesManager';
+
 import { IngredientsManager } from './warehouse/IngredientsManager';
 import { CookingManager } from './warehouse/CookingManager'; // Integrated
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -563,10 +563,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 <Calculator className="w-4 h-4" />
                                 <span className="hidden sm:inline">{t.warehouse.calculator}</span>
                             </TabsTrigger>
-                            <TabsTrigger value="dishes" className="flex items-center gap-2">
-                                <Utensils className="w-4 h-4" />
-                                <span className="hidden sm:inline">{t.warehouse.dishes}</span>
-                            </TabsTrigger>
+
                         </TabsList>
 
                         {/* Cooking Tab - Dishes to prepare for tomorrow */}
@@ -592,6 +589,10 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 menuNumber={tomorrowMenuNumber}
                                 clientsByCalorie={clientsByCalorie}
                                 onCook={fetchData} // Refresh inventory on cook
+                                orderInfo={{
+                                    total: Object.values(clientsByCalorie).reduce((a, b) => a + b, 0),
+                                    byCalorie: clientsByCalorie
+                                }}
                             />
                         </TabsContent>
 
@@ -704,10 +705,6 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                             </div>
                         </TabsContent>
 
-                        {/* NEW: Dishes Management Tab */}
-                        <TabsContent value="dishes">
-                            <DishesManager />
-                        </TabsContent>
 
 
                     </Tabs>

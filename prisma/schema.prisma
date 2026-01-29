@@ -66,7 +66,7 @@ model Customer {
   id                String   @id @default(cuid())
   name              String
   nickName          String?  // Short name or alias
-  phone             String   @unique
+  phone             String   // Removed @unique, will use composite key below
   address           String
   preferences       String?
   orderPattern      String?
@@ -93,6 +93,8 @@ model Customer {
 
   orders            Order[]
 
+  // Phone is unique per admin, but allow re-creation after deletion (deletedAt is null for active)
+  @@unique([phone, createdBy, deletedAt])
   @@map("customers")
 }
 

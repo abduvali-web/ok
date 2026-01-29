@@ -117,14 +117,43 @@ export function SetsTab() {
             const response = await fetch('/api/admin/sets');
             if (response.ok) {
                 const data = await response.json();
-                setSets(data);
-                if (data.length > 0 && !selectedSet) {
-                    setSelectedSet(data[0]);
+
+                if (data.length === 0) {
+                    await createDefaultSet();
+                } else {
+                    setSets(data);
+                    if (!selectedSet) {
+                        // Prefer active set, otherwise first
+                        const active = data.find((s: MenuSet) => s.isActive);
+                        setSelectedSet(active || data[0]);
+                    }
                 }
             }
         } catch (error) {
             console.error('Error fetching sets:', error);
             toast.error('Ошибка загрузки сетов');
+        }
+    };
+
+    const createDefaultSet = async () => {
+        try {
+            const response = await fetch('/api/admin/sets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: 'Стандартный сет',
+                    description: 'Автоматически созданный сет'
+                })
+            });
+
+            if (response.ok) {
+                const newSet = await response.json();
+                setSets([newSet]);
+                setSelectedSet(newSet);
+                toast.success('Создан стандартный сет по умолчанию');
+            }
+        } catch (e) {
+            console.error('Failed to create default set', e);
         }
     };
 
