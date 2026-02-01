@@ -1,9 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { AdminSettingsProvider } from '@/contexts/AdminSettingsContext';
+import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
+import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -79,6 +81,26 @@ export const metadata: Metadata = {
     google: '-E7Q1ex1NuRnBvPvZqMNLA8EaDPjb__gxkOqXXuQ4Lk',
   },
   category: 'business',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'AutoFood',
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
+};
+
+// Viewport configuration for PWA
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+  ],
 };
 
 export default function RootLayout({
@@ -88,12 +110,34 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* PWA Meta Tags */}
+        <meta name="application-name" content="AutoFood" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="AutoFood" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-TileColor" content="#4f46e5" />
+        <meta name="msapplication-tap-highlight" content="no" />
+
+        {/* Apple Touch Icons */}
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icon-152.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/icon-192.png" />
+
+        {/* Splash Screens for iOS */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
         <LanguageProvider>
           <AdminSettingsProvider>
+            <ServiceWorkerRegistration />
             {children}
+            <PWAInstallPrompt />
             <Toaster />
           </AdminSettingsProvider>
         </LanguageProvider>

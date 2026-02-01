@@ -32,7 +32,7 @@ async function createMoreTestData() {
         specialFeatures: JSON.stringify({ vegetarian: true, noSpicy: true }),
         paymentStatus: PaymentStatus.PAID,
         paymentMethod: PaymentMethod.CARD,
-        orderStatus: OrderStatus.DELIVERED,
+        status: OrderStatus.DELIVERED,
         isPrepaid: true
       },
       {
@@ -46,7 +46,7 @@ async function createMoreTestData() {
         specialFeatures: JSON.stringify({ extraSauce: true }),
         paymentStatus: PaymentStatus.UNPAID,
         paymentMethod: PaymentMethod.CASH,
-        orderStatus: OrderStatus.FAILED,
+        status: OrderStatus.FAILED,
         isPrepaid: false
       },
       {
@@ -60,7 +60,7 @@ async function createMoreTestData() {
         specialFeatures: JSON.stringify({ spicy: true, doublePortion: true }),
         paymentStatus: PaymentStatus.PAID,
         paymentMethod: PaymentMethod.CASH,
-        orderStatus: OrderStatus.IN_DELIVERY,
+        status: OrderStatus.IN_DELIVERY,
         isPrepaid: true
       },
       {
@@ -74,7 +74,7 @@ async function createMoreTestData() {
         specialFeatures: null,
         paymentStatus: PaymentStatus.UNPAID,
         paymentMethod: PaymentMethod.CARD,
-        orderStatus: OrderStatus.PENDING,
+        status: OrderStatus.PENDING,
         isPrepaid: false
       },
       {
@@ -88,7 +88,7 @@ async function createMoreTestData() {
         specialFeatures: JSON.stringify({ glutenFree: true }),
         paymentStatus: PaymentStatus.PAID,
         paymentMethod: PaymentMethod.CARD,
-        orderStatus: OrderStatus.DELIVERED,
+        status: OrderStatus.DELIVERED,
         isPrepaid: true
       }
     ]
@@ -155,23 +155,17 @@ async function createMoreTestData() {
         {
           adminId: superAdmin.id,
           action: 'CREATE_ADMIN',
-          entityType: 'ADMIN',
-          entityId: middleAdmin.id,
-          description: 'Created middle admin: Тестовый Средний Администратор'
+          details: 'Created middle admin: Тестовый Средний Администратор'
         },
         {
           adminId: middleAdmin.id,
           action: 'CREATE_ADMIN',
-          entityType: 'ADMIN',
-          entityId: lowAdmin.id,
-          description: 'Created low admin: Тестовый Низкий Администратор'
+          details: 'Created low admin: Тестовый Низкий Администратор'
         },
         {
           adminId: middleAdmin.id,
           action: 'CREATE_ADMIN',
-          entityType: 'ADMIN',
-          entityId: courier.id,
-          description: 'Created courier: Тестовый Курьер'
+          details: 'Created courier: Тестовый Курьер'
         }
       ]
     })

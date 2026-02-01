@@ -1,21 +1,117 @@
 {
-    "name": "AutoFood Delivery System",
+    "name": "AutoFood - Delivery Management System",
     "short_name": "AutoFood",
-    "description": "Smart delivery management system for restaurants in Uzbekistan",
+    "description": "O'zbekistonda restoran va kafelar uchun eng zamonaviy yetkazib berishni avtomatlashtirish tizimi. Kuryerlar nazorati, CRM va hisobotlar.",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#ffffff",
+    "orientation": "portrait-primary",
+    "background_color": "#0f172a",
     "theme_color": "#4f46e5",
+    "scope": "/",
+    "lang": "uz",
+    "categories": [
+        "business",
+        "food",
+        "productivity"
+    ],
     "icons": [
         {
-            "src": "/icon.png",
-            "sizes": "192x192",
-            "type": "image/png"
+            "src": "/icon-72.png",
+            "sizes": "72x72",
+            "type": "image/png",
+            "purpose": "any"
         },
         {
-            "src": "/icon.png",
+            "src": "/icon-96.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon-128.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon-144.png",
+            "sizes": "144x144",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon-152.png",
+            "sizes": "152x152",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icon-384.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon-512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
         }
-    ]
+    ],
+    "screenshots": [
+        {
+            "src": "/og-image.png",
+            "sizes": "1200x630",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "AutoFood Dashboard"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Orders",
+            "short_name": "Orders",
+            "description": "View all orders",
+            "url": "/middle-admin?tab=orders",
+            "icons": [
+                {
+                    "src": "/icon-96.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Clients",
+            "short_name": "Clients",
+            "description": "Manage clients",
+            "url": "/middle-admin?tab=clients",
+            "icons": [
+                {
+                    "src": "/icon-96.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Statistics",
+            "short_name": "Stats",
+            "description": "View statistics",
+            "url": "/middle-admin?tab=statistics",
+            "icons": [
+                {
+                    "src": "/icon-96.png",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ],
+    "related_applications": [],
+    "prefer_related_applications": false,
+    "handle_links": "auto"
 }

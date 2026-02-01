@@ -76,6 +76,8 @@ import { WarehouseTab } from '@/components/admin/WarehouseTab'
 import { FinanceTab } from '@/components/admin/FinanceTab'
 import { SetsTab } from '@/components/admin/SetsTab'
 import { RouteOptimizeButton } from '@/components/admin/RouteOptimizeButton'
+import { MobileSidebar } from '@/components/MobileSidebar'
+import { MobileTabIndicator } from '@/components/MobileTabIndicator'
 
 interface Admin {
   id: string
@@ -1779,7 +1781,16 @@ export default function MiddleAdminPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Mobile Sidebar Navigation */}
+      <MobileSidebar
+        activeTab={activeTab}
+        onTabChange={(tab) => setActiveTab(tab)}
+      />
+
+      {/* Mobile Tab Indicator - shows current tab on mobile */}
+      <MobileTabIndicator activeTab={activeTab} />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mobile-bottom-space md:pt-8 pt-4">
         <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-bold tracking-tight text-gradient">
             {t.admin.dashboard}
@@ -1789,8 +1800,8 @@ export default function MiddleAdminPage() {
           </p>
         </div>
 
-        <Tabs defaultValue="orders" className="space-y-6" onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-9 h-auto gap-2 p-1 bg-muted/50 backdrop-blur-sm rounded-xl">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="desktop-tabs-list hidden md:grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-9 h-auto gap-2 p-1 bg-muted/50 backdrop-blur-sm rounded-xl">
             <TabsTrigger
               value="orders"
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
