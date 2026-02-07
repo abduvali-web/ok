@@ -40,7 +40,7 @@ export async function DELETE(request: NextRequest) {
             const deletedOrdersResult = await db.order.deleteMany({
               where: {
                 customerId: clientId,
-                isAutoOrder: true,
+                fromAutoOrder: true,
                 deliveryDate: {
                   gte: today
                 }

@@ -4,10 +4,10 @@ import { getAuthUser, hasRole } from '@/lib/auth-utils'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ adminId: string; adminId2: string }> }
+  context: { params: Promise<{ adminId: string; adminId2: string }> }
 ) {
   try {
-    const { adminId, adminId2 } = await params
+    const { adminId: _adminId, adminId2 } = await context.params
     const user = await getAuthUser(request)
 
     if (!user || !hasRole(user, ['SUPER_ADMIN'])) {

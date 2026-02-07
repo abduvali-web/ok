@@ -23,28 +23,20 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
     Plus,
     Trash2,
     Edit,
-    Save,
     UtensilsCrossed,
-    ChefHat,
     Flame,
-    Clock,
     Copy,
-    MoreVertical,
-    X,
     Scale,
-    AlertTriangle,
     Calendar,
     ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { MENUS, MEAL_TYPES, getDishImageUrl, type Dish, type DailyMenu, type Ingredient } from '@/lib/menuData';
+import { MENUS, MEAL_TYPES, getDishImageUrl, type Dish, type Ingredient } from '@/lib/menuData';
 
 // Types for custom sets
 // Types for custom sets
@@ -77,7 +69,6 @@ interface MenuSet {
 const CALORIE_OPTIONS = [1200, 1600, 2000, 2500, 3000];
 
 export function SetsTab() {
-    const { t } = useLanguage();
     const [sets, setSets] = useState<MenuSet[]>([]);
     const [selectedSet, setSelectedSet] = useState<MenuSet | null>(null);
     const [activeDay, setActiveDay] = useState<string>("1"); // Current day being edited (1-21)
@@ -199,7 +190,7 @@ export function SetsTab() {
             } else {
                 toast.error('Ошибка создания');
             }
-        } catch (error) {
+        } catch {
             toast.error('Ошибка создания');
         }
     };
@@ -443,7 +434,7 @@ export function SetsTab() {
 
                 toast.success('Статус обновлен');
             }
-        } catch (e) { toast.error('Ошибка'); }
+        } catch { toast.error('Ошибка'); }
     };
 
     const deleteSet = async (id: string) => {
@@ -625,6 +616,7 @@ export function SetsTab() {
                                                                     <div className="w-20 h-20 rounded-lg bg-slate-100 overflow-hidden shrink-0">
                                                                         <img
                                                                             src={getDishImageUrl(typeof dish.dishId === 'number' ? dish.dishId : parseInt(dish.dishId.toString()) || 0)}
+                                                                            alt={dish.dishName}
                                                                             className="w-full h-full object-cover"
                                                                             onError={(e) => (e.target as HTMLImageElement).src = '/dashboard/placeholder-dish.png'}
                                                                         />

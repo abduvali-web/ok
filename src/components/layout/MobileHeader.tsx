@@ -9,7 +9,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, Bell, Settings, User, LogOut, ChevronDown } from "lucide-react";
+import { Menu, Bell, Settings, User, LogOut } from "lucide-react";
 
 interface MobileHeaderProps {
     onMenuClick: () => void;

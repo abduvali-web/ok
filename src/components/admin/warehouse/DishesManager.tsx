@@ -120,7 +120,7 @@ function IngredientSelector({
 const CALORIE_GROUPS = [1200, 1600, 2000, 2500, 3000];
 
 export function DishesManager() {
-    const { t } = useLanguage();
+    const { t: _t } = useLanguage();
     const [dishes, setDishes] = useState<Dish[]>([]);
     const [warehouseItems, setWarehouseItems] = useState<WarehouseItem[]>([]);
     const [loading, setLoading] = useState(true);

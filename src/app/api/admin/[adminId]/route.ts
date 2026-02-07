@@ -5,7 +5,7 @@ import { getAuthUser, hasRole } from '@/lib/auth-utils'
 // DELETE admin
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { adminId: string } }
+  context: { params: Promise<{ adminId: string }> }
 ) {
   try {
     const user = await getAuthUser(request)
@@ -16,7 +16,7 @@ export async function DELETE(
       )
     }
 
-    const { adminId } = await params
+    const { adminId } = await context.params
 
     // Check if admin exists and is middle admin
     const admin = await db.admin.findUnique({

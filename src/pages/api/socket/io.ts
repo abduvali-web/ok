@@ -64,7 +64,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponseWithSoc
             }
             socket.data.customerId = decoded.id
             next()
-        } catch (err) {
+        } catch {
             next(new Error('Invalid token'))
         }
     })

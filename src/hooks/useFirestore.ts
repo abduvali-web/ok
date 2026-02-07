@@ -12,8 +12,7 @@ import {
     Tab,
     Sheet,
     Column,
-    Row,
-    orderBy
+    Row
 } from '@/lib/firestore'
 import { CollectionReference } from 'firebase/firestore'
 

@@ -1,8 +1,6 @@
 import {
     ref,
     set,
-    get,
-    push,
     update,
     remove,
     onValue,
@@ -11,8 +9,6 @@ import {
     onChildRemoved,
     off,
     serverTimestamp,
-    DataSnapshot,
-    DatabaseReference
 } from 'firebase/database'
 import { rtdb } from './firebase'
 
@@ -95,7 +91,7 @@ export function subscribeToPresence(
         callback(data)
     })
 
-    return () => off(presenceRef)
+    return unsubscribe
 }
 
 // ============================================

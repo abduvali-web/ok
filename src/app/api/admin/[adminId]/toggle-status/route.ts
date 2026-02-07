@@ -4,7 +4,7 @@ import { getAuthUser, hasRole } from '@/lib/auth-utils'
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { adminId: string } }
+  context: { params: Promise<{ adminId: string }> }
 ) {
   try {
     const user = await getAuthUser(request)
@@ -15,7 +15,7 @@ export async function PATCH(
       )
     }
 
-    const { adminId } = params
+    const { adminId } = await context.params
     const { isActive } = await request.json()
 
     // Prevent self-modification

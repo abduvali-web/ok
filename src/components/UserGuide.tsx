@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { HelpCircle, X, ChevronRight } from 'lucide-react'
+import { HelpCircle, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface GuideItem {

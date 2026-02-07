@@ -8,7 +8,6 @@ import {
     AlignLeft,
     AlignCenter,
     AlignRight,
-    Palette,
     Save,
     Undo,
     Redo,
@@ -17,7 +16,6 @@ import {
     SortDesc,
     Download,
     Upload,
-    Settings,
     Sparkles
 } from 'lucide-react'
 import {

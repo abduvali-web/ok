@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { getAuthUser } from '@/lib/auth-utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
 
-    let where: any = {}
+    const where: any = {}
 
     // Role-based filtering logic
     if (user.role === 'SUPER_ADMIN') {

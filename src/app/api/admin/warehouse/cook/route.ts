@@ -1,8 +1,7 @@
-
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/auth';
-import { scaleIngredients, MEAL_TYPES, CALORIE_MULTIPLIERS } from '@/lib/menuData';
+import { scaleIngredients, MEAL_TYPES } from '@/lib/menuData';
 
 // Helper to manually scale ingredients since we might need more control here or reuse existing
 // Reusing scaleIngredients from lib is fine, but we need to fetch specific Dish content from DB

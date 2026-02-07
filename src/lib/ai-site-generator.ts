@@ -151,7 +151,7 @@ For icons, use valid Lucide React icon names (e.g., "Zap", "Shield", "Heart", "L
         // Ensure chatEnabled is set based on our detection
         parsed.chatEnabled = chatEnabled
         return parsed
-    } catch (error) {
+    } catch {
         console.error('Failed to parse AI response:', text)
         throw new Error('Failed to generate valid JSON content')
     }

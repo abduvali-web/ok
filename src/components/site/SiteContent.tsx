@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
-import { Globe, Phone, LogIn, Check, Zap, Shield, Heart, Leaf } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
+import { Phone, LogIn, Check, Zap, Shield, Heart, Leaf } from 'lucide-react'
 import Link from 'next/link'
 import { GeneratedSiteContent } from '@/lib/ai-site-generator'
 

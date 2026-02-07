@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -9,9 +9,6 @@ import {
     Edit2,
     X,
     Check,
-    GripVertical,
-    ChevronDown,
-    Settings
 } from 'lucide-react'
 import {
     ContextMenu,

@@ -6,6 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
     testDir: './tests',
+    outputDir: 'test-results',
 
     /* Run tests in files in parallel */
     fullyParallel: true,
@@ -21,7 +22,7 @@ export default defineConfig({
 
     /* Reporter to use. See https://playwright.dev/docs/test-reporters */
     reporter: [
-        ['html', { outputFolder: 'test-results/html-report' }],
+        ['html', { outputFolder: 'playwright-report' }],
         ['json', { outputFile: 'test-results/results.json' }],
         ['list']
     ],
@@ -78,11 +79,18 @@ export default defineConfig({
 
     /* Run your local dev server before starting the tests */
     webServer: {
-        command: 'npm run dev',
+        command: 'corepack yarn dev',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
         timeout: 120000,
         stdout: 'ignore',
         stderr: 'pipe',
+        env: {
+            ...process.env,
+            AUTH_SECRET: process.env.AUTH_SECRET || 'test-auth-secret',
+            NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || 'test-nextauth-secret',
+            JWT_SECRET: process.env.JWT_SECRET || 'test-jwt-secret',
+            DATABASE_URL: process.env.DATABASE_URL || 'postgresql://user:pass@localhost:5432/db',
+        },
     },
 });

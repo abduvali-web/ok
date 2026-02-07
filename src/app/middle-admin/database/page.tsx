@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ExcelEditor } from '@/components/excel'
 import { AIChatInterface } from '@/components/ai/ChatInterface'
 import { UserList } from '@/components/collaboration/UserList'
 import { usePresence } from '@/hooks/useCollaboration'
-import { Database, Table2, MessageSquare, Settings, Sparkles } from 'lucide-react'
+import { Database, Table2, Settings, Sparkles } from 'lucide-react'
 
 interface DatabasePageProps {
     adminId: string
@@ -20,7 +20,7 @@ export default function DatabasePage({ adminId, adminName }: DatabasePageProps) 
     const [showAIChat, setShowAIChat] = useState(false)
 
     // Real-time presence
-    const { users: onlineUsers, myColor } = usePresence(adminId, adminId, adminName)
+    const { users: onlineUsers } = usePresence(adminId, adminId, adminName)
 
     return (
         <div className="space-y-6">

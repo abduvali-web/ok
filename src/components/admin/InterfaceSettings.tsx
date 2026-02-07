@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { useAdminSettings } from '@/hooks/useAdminSettings'
-import { Save, RefreshCw, Monitor, Moon, Sun } from 'lucide-react'
+import { Save, Monitor, Moon, Sun } from 'lucide-react'
 import { toast } from 'sonner'
 import { useLanguage } from '@/contexts/LanguageContext'
 

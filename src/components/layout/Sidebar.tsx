@@ -7,16 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import {
     BarChart3,
     ShoppingCart,
-    Map,
     Package,
     ChefHat,
     DollarSign,
     Users,
     Truck,
-    UtensilsCrossed,
     MessageSquare,
     Settings,
-    Globe,
     LogOut,
     X,
     History,
@@ -41,7 +38,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
         { id: 'orders', label: t.admin.orders, icon: ShoppingCart, group: 'main', badge: 0 },
         { id: 'clients', label: t.admin.clients, icon: Users, group: 'main' },
         { id: 'admins', label: t.admin.admins, icon: Users, group: 'main' },
-        { id: 'couriers', label: 'Курьеры', icon: Truck, group: 'main' },
+        { id: 'couriers', label: t.admin.couriers, icon: Truck, group: 'main' },
         { id: 'divider1', type: 'divider' },
         { id: 'warehouse', label: t.warehouse.title, icon: Package, group: 'operations' },
         { id: 'cooking', label: t.warehouse.cooking, icon: ChefHat, group: 'operations' },
@@ -49,12 +46,11 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
         { id: 'finance', label: t.finance.title, icon: DollarSign, group: 'finance' },
         { id: 'history', label: t.admin.history, icon: History, group: 'finance' },
         { id: 'divider3', type: 'divider' },
-        { id: 'chat', label: 'Чат', icon: MessageSquare, group: 'tools' },
-        { id: 'website', label: 'Сайт', icon: Globe, group: 'tools' },
+        { id: 'chat', label: t.courier.chat, icon: MessageSquare, group: 'tools' },
         { id: 'bin', label: t.admin.bin, icon: Trash2, group: 'tools' },
         { id: 'divider4', type: 'divider' },
         { id: 'profile', label: t.common.profile, icon: User, group: 'settings' },
-        { id: 'settings', label: 'Настройки', icon: Settings, group: 'settings' },
+        { id: 'settings', label: t.admin.settings, icon: Settings, group: 'settings' },
     ];
 
     return (
@@ -97,7 +93,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                     {/* Navigation */}
                     <ScrollArea className="flex-1 py-2">
                         <nav className="space-y-0.5 px-2">
-                            {menuItems.map((item, index) => {
+                            {menuItems.map((item) => {
                                 if (item.type === 'divider') {
                                     return <div key={item.id} className="h-px bg-slate-800/50 my-2 mx-2" />;
                                 }

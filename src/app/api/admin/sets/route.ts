@@ -4,10 +4,12 @@ import { auth } from '@/auth';
 import { MENUS } from '@/lib/menuData';
 
 // GET - Fetch all sets
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
     try {
         const session = await auth();
-        // Allow courier/admins to view sets
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
         const sets = await db.menuSet.findMany({
             orderBy: { createdAt: 'desc' }

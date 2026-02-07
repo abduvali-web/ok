@@ -2,12 +2,11 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { Loader2, ChefHat, Check, AlertTriangle, UtensilsCrossed, Users } from 'lucide-react';
+import { Loader2, ChefHat, AlertTriangle, UtensilsCrossed, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { MENUS } from '@/lib/menuData';
 
@@ -69,7 +68,7 @@ interface CookingManagerProps {
 
 const CALORIE_GROUPS = [1200, 1600, 2000, 2500, 3000];
 
-export function CookingManager({ date, menuNumber, clientsByCalorie: globalClientsByCalorie, clients = [], orders = [], onCook, orderInfo }: CookingManagerProps) {
+export function CookingManager({ date, menuNumber, clientsByCalorie: globalClientsByCalorie, clients = [], orders = [], onCook, orderInfo: _orderInfo }: CookingManagerProps) {
     const [dishes, setDishes] = useState<Dish[]>([]);
     const [loading, setLoading] = useState(true);
     const [cookingPlan, setCookingPlan] = useState<any>(null); // { cookedStats: { dishId: { 1200: 5 } } }
@@ -124,7 +123,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
                 if (client.isActive !== false) {
                     let dDays = client.deliveryDays;
                     if (typeof dDays === 'string') {
-                        try { dDays = JSON.parse(dDays); } catch (e) { dDays = {}; }
+                        try { dDays = JSON.parse(dDays); } catch { dDays = {}; }
                     }
                     // Check if explicitly disabled for this day
                     if (dDays && dDays[dayOfWeek] === false) return;
@@ -502,10 +501,10 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
                     <TableBody>
                         {dishes.map(dish => {
                             // Check if this dish is needed for ANY of the filtered calorie groups
-                            const isNeededAnywhere = filteredCalorieGroups.some(cal => getNeededAmount(dish.id, cal) > 0);
+                            const _isNeededAnywhere = filteredCalorieGroups.some(cal => getNeededAmount(dish.id, cal) > 0);
 
                             // Optional: Hide dishes that aren't needed for any displayed column to clean up view
-                            // if (!isNeededAnywhere) return null; 
+                            // if (!_isNeededAnywhere) return null; 
 
                             return (
                                 <TableRow key={dish.id}>

@@ -39,7 +39,7 @@ export async function POST(req: Request) {
             if (customerId) {
                 // CLIENT TRANSACTION
                 // Update Client Balance
-                const updatedClient = await tx.customer.update({
+                await tx.customer.update({
                     where: { id: customerId },
                     data: {
                         balance: { increment: balanceChange }
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
             } else {
                 // COMPANY TRANSACTION
                 // Update Admin (Company) Balance
-                const updatedAdmin = await tx.admin.update({
+                await tx.admin.update({
                     where: { id: adminId },
                     data: {
                         companyBalance: { increment: balanceChange }

@@ -6,7 +6,7 @@ import { hashPassword } from '@/lib/customer-auth'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getAuthUser(request)
@@ -14,7 +14,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
     }
 
-    const clientId = params.id
+    const { id } = await context.params
+    const clientId = id
 
     const client = await db.customer.findUnique({ where: { id: clientId } })
     if (!client) {
@@ -37,7 +38,7 @@ export async function DELETE(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getAuthUser(request)
@@ -45,7 +46,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
     }
 
-    const clientId = params.id
+    const { id } = await context.params
+    const clientId = id
     const body = await request.json()
     const {
       name,

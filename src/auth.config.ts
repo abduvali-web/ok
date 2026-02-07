@@ -1,12 +1,19 @@
 import type { NextAuthConfig } from "next-auth"
 import Google from "next-auth/providers/google"
 
+const googleClientId = process.env.GOOGLE_CLIENT_ID
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET
+
 export default {
     providers: [
-        Google({
-            clientId: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-        })
+        ...(googleClientId && googleClientSecret
+            ? [
+                  Google({
+                      clientId: googleClientId,
+                      clientSecret: googleClientSecret,
+                  }),
+              ]
+            : []),
     ],
     pages: {
         signIn: "/login",

@@ -22,7 +22,7 @@ interface OrchestratorResult {
 // Gemini Pro Orchestrator - breaks down complex tasks into subtasks
 export async function orchestrateTask(
     userRequest: string,
-    context: {
+    _context: {
         adminId: string
         workspaceData?: unknown
         websiteData?: unknown

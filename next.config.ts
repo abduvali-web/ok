@@ -1,16 +1,18 @@
 import type { NextConfig } from "next";
 
+const isCI = process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true";
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  reactStrictMode: true,
+
   typescript: {
-    ignoreBuildErrors: true,
+    // Keep local builds unblocked, but fail fast on CI.
+    ignoreBuildErrors: !isCI,
   },
-  // 禁用 Next.js 热重载，由 nodemon 处理重编译
-  reactStrictMode: false,
 
   eslint: {
-    // 构建时忽略ESLint错误
-    ignoreDuringBuilds: true,
+    // Keep local builds unblocked, but fail fast on CI.
+    ignoreDuringBuilds: !isCI,
   },
 };
 

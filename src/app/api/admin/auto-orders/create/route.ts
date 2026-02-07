@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
             deliveryDays = typeof (c as any).deliveryDays === 'string'
               ? JSON.parse((c as any).deliveryDays)
               : (c as any).deliveryDays
-          } catch (e) {
+          } catch {
             // Fallback to defaults or log error
           }
         }
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
             paymentStatus: PaymentStatus.UNPAID,
             paymentMethod: PaymentMethod.CASH,
             isPrepaid: false,
-            status: OrderStatus.PENDING,
+            orderStatus: OrderStatus.PENDING,
             fromAutoOrder: true // Mark as auto-order
           },
           include: { customer: { select: { name: true, phone: true } } }

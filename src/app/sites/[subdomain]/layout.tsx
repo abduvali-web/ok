@@ -7,12 +7,13 @@ export const dynamic = 'force-dynamic'
 
 interface SiteLayoutProps {
     children: React.ReactNode
-    params: { subdomain: string }
+    params: Promise<{ subdomain: string }>
 }
 
-export async function generateMetadata({ params }: { params: { subdomain: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ subdomain: string }> }): Promise<Metadata> {
+    const { subdomain } = await params
     const website = await db.website.findUnique({
-        where: { subdomain: params.subdomain }
+        where: { subdomain }
     })
 
     if (!website) return { title: 'Site Not Found' }
@@ -25,8 +26,9 @@ export async function generateMetadata({ params }: { params: { subdomain: string
 }
 
 export default async function SiteLayout({ children, params }: SiteLayoutProps) {
+    const { subdomain } = await params
     const website = await db.website.findUnique({
-        where: { subdomain: params.subdomain }
+        where: { subdomain }
     })
 
     if (!website) {

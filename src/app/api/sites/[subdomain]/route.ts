@@ -3,11 +3,12 @@ import { db } from '@/lib/db'
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { subdomain: string } }
+    context: { params: Promise<{ subdomain: string }> }
 ) {
     try {
+        const { subdomain } = await context.params
         const website = await db.website.findUnique({
-            where: { subdomain: params.subdomain },
+            where: { subdomain },
             select: {
                 id: true,
                 subdomain: true,

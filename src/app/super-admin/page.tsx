@@ -23,7 +23,6 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   Users,
-  Settings,
   BarChart3,
   History,
   User,
@@ -33,8 +32,6 @@ import {
   Pause,
   Play,
   Eye,
-  Edit,
-  Save,
   MessageSquare,
   LayoutDashboard
 } from 'lucide-react'
@@ -51,17 +48,6 @@ interface Admin {
   role: string
   isActive: boolean
   createdAt: string
-}
-
-interface ActionLog {
-  id: string
-  action: string
-  entityType: string
-  description: string
-  createdAt: string
-  admin: {
-    name: string
-  }
 }
 
 interface OrderStatistics {
@@ -91,9 +77,7 @@ export default function SuperAdminPage() {
   const { t } = useLanguage()
   const [activeTab, setActiveTab] = useState('admins')
   const [middleAdmins, setMiddleAdmins] = useState<Admin[]>([])
-  const [actionLogs, setActionLogs] = useState<ActionLog[]>([])
   const [orderStatistics, setOrderStatistics] = useState<OrderStatistics | null>(null)
-  const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [createFormData, setCreateFormData] = useState({
@@ -148,7 +132,7 @@ export default function SuperAdminPage() {
         const error = await response.json()
         toast.error(error.error || 'Ошибка обновления профиля')
       }
-    } catch (error) {
+    } catch {
       toast.error('Ошибка соединения с сервером')
     }
   }
@@ -170,18 +154,6 @@ export default function SuperAdminPage() {
       if (adminsResponse.ok) {
         const adminsData = await adminsResponse.json()
         setMiddleAdmins(adminsData)
-      }
-
-      // Fetch action logs
-      const logsResponse = await fetch('/api/admin/action-logs', {
-        headers: {
-        }
-      })
-
-      if (logsResponse.ok) {
-        const logsData = await logsResponse.json()
-        // API returns { logs: [...], total: ..., hasMore: ... }
-        setActionLogs(logsData.logs || logsData)
       }
 
       // Fetch order statistics
@@ -272,7 +244,7 @@ export default function SuperAdminPage() {
       } else {
         setCreateError(data.error || 'Ошибка создания администратора')
       }
-    } catch (error) {
+    } catch {
       setCreateError('Ошибка соединения с сервером')
     } finally {
       setIsCreating(false)

@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
               paymentMethod: PaymentMethod.CASH,
               isPrepaid: false,
               orderStatus: OrderStatus.PENDING,
-              isAutoOrder: true,
+              fromAutoOrder: true,
               courierId: (client as any).defaultCourierId || null
             }
           })
@@ -156,8 +156,8 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    const autoOrders = orders.filter(o => o.isAutoOrder)
-    const manualOrders = orders.filter(o => !o.isAutoOrder)
+    const autoOrders = orders.filter(o => o.fromAutoOrder)
+    const manualOrders = orders.filter(o => !o.fromAutoOrder)
 
     return NextResponse.json({
       status: 'Планировщик активен (Database)',

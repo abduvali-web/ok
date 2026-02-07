@@ -86,7 +86,7 @@ export default function SignUpPage() {
                 setError(data.error || 'Failed to create account')
                 toast.error('Error', { description: data.error || 'Failed to create account' })
             }
-        } catch (err) {
+        } catch {
             setError('Could not connect to server')
             toast.error('Error', { description: 'Could not connect to server' })
         } finally {

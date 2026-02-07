@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useSheet } from '@/hooks/useFirestore'
-import type { Column, Row } from '@/lib/firestore'
+import type { Column } from '@/lib/firestore'
 import { executeFormula, isFormula, AVAILABLE_FUNCTIONS } from '@/lib/excel/formulas'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,11 +13,6 @@ import {
     ContextMenuTrigger,
     ContextMenuSeparator,
 } from '@/components/ui/context-menu'
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover'
 import { Plus, Trash2, GripVertical, FunctionSquare } from 'lucide-react'
 
 interface SheetProps {
@@ -29,8 +24,8 @@ interface SheetProps {
 function Cell({
     value,
     column,
-    rowId,
-    colId,
+    rowId: _rowId,
+    colId: _colId,
     onUpdate,
     isSelected,
     onSelect,
@@ -188,7 +183,7 @@ function ColumnHeader({
     column,
     onUpdate,
     onDelete,
-    onResize
+    onResize: _onResize
 }: {
     column: Column
     onUpdate: (updates: Partial<Column>) => void

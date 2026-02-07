@@ -26,7 +26,6 @@ const TAB_LABELS: Record<string, string> = {
     'couriers': 'Курьеры',
     'chat': 'Чат',
     'settings': 'Настройки',
-    'website': 'Сайт',
     'admins': 'Администраторы',
     'bin': 'Корзина',
     'history': 'История',

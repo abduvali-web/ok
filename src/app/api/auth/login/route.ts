@@ -4,12 +4,13 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
 const JWT_SECRET = process.env.JWT_SECRET
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET is not set in environment')
-}
 
 export async function POST(request: NextRequest) {
   try {
+    if (!JWT_SECRET) {
+      return NextResponse.json({ error: 'JWT_SECRET is not set in environment' }, { status: 500 })
+    }
+
     const { email, password } = await request.json()
 
     if (!email || !password) {
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     const token = jwt.sign(
       { id: admin.id, email: admin.email, role: admin.role },
-      JWT_SECRET as string, // Safe: we validate JWT_SECRET exists at module load
+      JWT_SECRET as string,
       { expiresIn: '24h' }
     )
 

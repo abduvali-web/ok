@@ -1,3 +1,5 @@
+import type { DailyMenu } from './menuData'
+
 export const MENUS: DailyMenu[] = [
   {
     "menuNumber": 1,

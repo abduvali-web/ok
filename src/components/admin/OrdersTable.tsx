@@ -9,8 +9,8 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Trash2, Eye, Edit, Calendar, MapPin, Phone, User } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Trash2, Eye, Edit, Calendar, MapPin, User } from 'lucide-react'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 interface Order {

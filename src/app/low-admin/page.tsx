@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   BarChart3,
   Package,
@@ -21,7 +20,6 @@ import {
   Settings,
   MapPin,
   Phone,
-  Calendar,
   Clock
 } from 'lucide-react'
 import { HistoryTable } from '@/components/admin/HistoryTable'

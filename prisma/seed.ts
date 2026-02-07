@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { MENUS, getDishImageUrl, EXTRA_DISHES } from '../src/lib/menuData';
 
 const prisma = new PrismaClient();
@@ -29,7 +29,7 @@ async function main() {
         name: dish.name,
         mealType: dish.mealType,
         imageUrl: imageUrl,
-        ingredients: dish.ingredients || [],
+        ingredients: (dish.ingredients || []) as unknown as Prisma.InputJsonValue,
       }
     });
     dishMap.set(dishId, createdDish);

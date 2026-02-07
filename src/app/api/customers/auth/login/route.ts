@@ -11,8 +11,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Phone and password are required' }, { status: 400 })
         }
 
-        const customer = await db.customer.findUnique({
-            where: { phone }
+        const customer = await db.customer.findFirst({
+            where: { phone, deletedAt: null }
         })
 
         if (!customer) {

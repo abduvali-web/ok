@@ -31,7 +31,6 @@ import {
   BarChart3,
   Package,
   Users,
-  Settings,
   History,
   User,
   LogOut,
@@ -41,8 +40,6 @@ import {
   Play,
   Eye,
   EyeOff,
-  FileText,
-  Save,
   Filter,
   ChevronLeft,
   ChevronRight,
@@ -50,19 +47,14 @@ import {
   CalendarDays,
   MapPin,
   Edit,
-  Globe,
   DollarSign,
   Clock,
   Truck,
-  UtensilsCrossed
 } from 'lucide-react'
-import { motion } from 'framer-motion'
 import { toast } from 'sonner'
-import { StatsCards } from '@/components/admin/StatsCards'
 import { OrdersTable } from '@/components/admin/OrdersTable'
 import { HistoryTable } from '@/components/admin/HistoryTable'
 import { InterfaceSettings } from '@/components/admin/InterfaceSettings'
-import WebsiteBuilderPage from '@/app/middle-admin/website/page'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { UserGuide } from '@/components/UserGuide'
@@ -74,7 +66,6 @@ import { getDailyPrice, PLAN_TYPES } from '@/lib/menuData'
 
 import { WarehouseTab } from '@/components/admin/WarehouseTab'
 import { FinanceTab } from '@/components/admin/FinanceTab'
-import { SetsTab } from '@/components/admin/SetsTab'
 import { RouteOptimizeButton } from '@/components/admin/RouteOptimizeButton'
 import { MobileSidebar } from '@/components/MobileSidebar'
 import { MobileTabIndicator } from '@/components/MobileTabIndicator'
@@ -147,20 +138,8 @@ interface Client {
   assignedSetId?: string
   assignedSetName?: string
   googleMapsLink?: string
-  googleMapsLink?: string
   latitude?: number | null
   longitude?: number | null
-}
-
-interface BinClient {
-  id: string
-  name: string
-  phone: string
-  address: string
-  isActive: boolean
-  deletedAt: string
-  deletedBy?: string
-  createdAt: string
 }
 
 interface Stats {
@@ -242,7 +221,7 @@ export default function MiddleAdminPage() {
     password: '',
     role: 'LOW_ADMIN',
     allowedTabs: [] as string[],
-    salary: ''
+    salary: 0
   })
   const [courierFormData, setCourierFormData] = useState({
     name: '',
@@ -280,7 +259,6 @@ export default function MiddleAdminPage() {
     defaultCourierId: '',
     googleMapsLink: '',
     latitude: null as number | null,
-    latitude: null as number | null,
     longitude: null as number | null,
     assignedSetId: ''
   })
@@ -300,7 +278,7 @@ export default function MiddleAdminPage() {
     longitude: null as number | null,
     courierId: ''
   })
-  const [parsedCoords, setParsedCoords] = useState<{ lat: number, lng: number } | null>(null)
+  const [_parsedCoords, setParsedCoords] = useState<{ lat: number, lng: number } | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [isCreatingOrder, setIsCreatingOrder] = useState(false)
   const [isCreatingCourier, setIsCreatingCourier] = useState(false)
@@ -309,8 +287,6 @@ export default function MiddleAdminPage() {
   const [isCreatingClient, setIsCreatingClient] = useState(false)
   const [createError, setCreateError] = useState('')
   const [orderError, setOrderError] = useState('')
-  const [courierFilter, setCourierFilter] = useState<string>('all')
-
   // Set current date on client side to avoid hydration mismatch
   useEffect(() => {
     setCurrentDate(new Date().toLocaleDateString('ru-RU', {
@@ -698,13 +674,13 @@ export default function MiddleAdminPage() {
 
       if (response.ok) {
         setIsCreateModalOpen(false)
-        setCreateFormData({ name: '', email: '', password: '', role: 'LOW_ADMIN', allowedTabs: [] })
+        setCreateFormData({ name: '', email: '', password: '', role: 'LOW_ADMIN', allowedTabs: [] as string[], salary: 0 })
         fetchData()
         toast.success('Администратор успешно создан')
       } else {
         setCreateError(data.error || 'Ошибка создания администратора')
       }
-    } catch (error) {
+    } catch {
       setCreateError('Ошибка соединения с сервером')
     } finally {
       setIsCreating(false)
@@ -1063,7 +1039,7 @@ export default function MiddleAdminPage() {
       } else {
         setOrderError(data.error || 'Ошибка сохранения заказа')
       }
-    } catch (error) {
+    } catch {
       setOrderError('Ошибка соединения с сервером')
     } finally {
       setIsCreatingOrder(false)
@@ -1112,13 +1088,13 @@ export default function MiddleAdminPage() {
 
       if (response.ok) {
         setIsCreateCourierModalOpen(false)
-        setCourierFormData({ name: '', email: '', password: '' })
+        setCourierFormData({ name: '', email: '', password: '', salary: '' })
         fetchData()
         toast.success('Курьер успешно создан')
       } else {
         setCourierError(data.error || 'Ошибка создания курьера')
       }
-    } catch (error) {
+    } catch {
       setCourierError('Ошибка соединения с сервером')
     } finally {
       setIsCreatingCourier(false)
@@ -1153,7 +1129,7 @@ export default function MiddleAdminPage() {
       } else {
         setFeatureError(data.error || 'Ошибка создания особенности')
       }
-    } catch (error) {
+    } catch {
       setFeatureError('Ошибка соединения с сервером')
     } finally {
       setIsCreatingFeature(false)
@@ -1208,13 +1184,14 @@ export default function MiddleAdminPage() {
           defaultCourierId: '',
           googleMapsLink: '',
           latitude: null,
-          longitude: null
+          longitude: null,
+          assignedSetId: ''
         })
         setEditingClientId(null)
 
         // Show success message
         const action = editingClientId ? 'обновлен' : 'создан'
-        let message = `Клиент "${data.client?.name || clientFormData.name}" успешно ${action}!`
+        const message = `Клиент "${data.client?.name || clientFormData.name}" успешно ${action}!`
         let description = ''
         if (!editingClientId && data.autoOrdersCreated && data.autoOrdersCreated > 0) {
           description = `Автоматически создано заказов: ${data.autoOrdersCreated} (на следующие 30 дней)`
@@ -1228,7 +1205,7 @@ export default function MiddleAdminPage() {
         setClientError(`${errorMessage}${errorDetails}`)
         toast.error(errorMessage, { description: data.details })
       }
-    } catch (error) {
+    } catch {
       setClientError('Ошибка соединения с сервером')
     } finally {
       setIsCreatingClient(false)
@@ -1266,8 +1243,6 @@ export default function MiddleAdminPage() {
       defaultCourierId: client.defaultCourierId || '',
       googleMapsLink: client.googleMapsLink || '',
       latitude: client.latitude || null,
-      googleMapsLink: client.googleMapsLink || '',
-      latitude: client.latitude || null,
       longitude: client.longitude || null,
       assignedSetId: client.assignedSetId || ''
     })
@@ -1297,7 +1272,7 @@ export default function MiddleAdminPage() {
     }
   }
 
-  const handleDeleteClient = async (clientId: string) => {
+  const _handleDeleteClient = async (clientId: string) => {
     try {
       const response = await fetch(`/api/admin/clients/${clientId}`, {
         method: 'DELETE',
@@ -1549,7 +1524,7 @@ export default function MiddleAdminPage() {
     }
   }
 
-  const handlePermanentDeleteSelected = async () => {
+  const _handlePermanentDeleteSelected = async () => {
     if (selectedBinClients.size === 0) {
       toast.error('Пожалуйста, выберите клиентов для окончательного удаления')
       return
@@ -1622,7 +1597,7 @@ export default function MiddleAdminPage() {
     }
   }
 
-  const handleToggleBinClientSelection = (clientId: string) => {
+  const _handleToggleBinClientSelection = (clientId: string) => {
     setSelectedBinClients(prev => {
       const newSet = new Set(prev)
       if (newSet.has(clientId)) {
@@ -1644,7 +1619,7 @@ export default function MiddleAdminPage() {
     }))
   }
 
-  const handleOpenOrder = (orderId: string) => {
+  const _handleOpenOrder = (orderId: string) => {
     // Find the order
     const order = orders.find(o => o.id === orderId)
     if (order) {
@@ -1653,7 +1628,7 @@ export default function MiddleAdminPage() {
     }
   }
 
-  const handleOpenRoute = (orderId: string) => {
+  const _handleOpenRoute = (orderId: string) => {
     // Find the order
     const order = orders.find(o => o.id === orderId)
     if (order) {
@@ -2211,6 +2186,15 @@ export default function MiddleAdminPage() {
                   </div>
                   <Button variant="outline" size="sm">
                     <ChevronRight className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowFilters(prev => !prev)}
+                    className="whitespace-nowrap"
+                  >
+                    <Filter className="w-4 h-4 mr-2" />
+                    {t.admin.filters}
                   </Button>
                 </div>
 
@@ -3229,11 +3213,6 @@ export default function MiddleAdminPage() {
             </DialogContent>
           </Dialog >
 
-          {/* Website Builder Tab */}
-          <TabsContent value="website" className="space-y-6">
-            <WebsiteBuilderPage />
-          </TabsContent>
-
           {/* Admins Tab */}
           < TabsContent value="admins" className="space-y-6" >
             <Card className="glass-card border-none">
@@ -3334,10 +3313,10 @@ export default function MiddleAdminPage() {
                             <Label htmlFor="salary" className="text-right">
                               Зарплата
                             </Label>
-                            <Input
-                              id="salary"
-                              type="number"
-                              value={createFormData.salary || ''}
+                              <Input
+                                id="salary"
+                                type="number"
+                              value={createFormData.salary}
                               onChange={(e) => setCreateFormData(prev => ({ ...prev, salary: parseInt(e.target.value) || 0 }))}
                               className="col-span-3"
                               placeholder="0"
@@ -3468,7 +3447,7 @@ export default function MiddleAdminPage() {
                               } else {
                                 toast.error('Ошибка получения пароля')
                               }
-                            } catch (error) {
+                            } catch {
                               toast.error('Ошибка соединения с сервером')
                             }
                           }}
@@ -3494,7 +3473,7 @@ export default function MiddleAdminPage() {
                               } else {
                                 toast.error('Ошибка изменения статуса')
                               }
-                            } catch (error) {
+                            } catch {
                               toast.error('Ошибка соединения с сервером')
                             }
                           }}
@@ -3526,7 +3505,7 @@ export default function MiddleAdminPage() {
                                 const data = await response.json()
                                 toast.error(data.error || 'Ошибка удаления администратора')
                               }
-                            } catch (error) {
+                            } catch {
                               toast.error('Ошибка соединения с сервером')
                             }
                           }}
@@ -3591,7 +3570,7 @@ export default function MiddleAdminPage() {
                                 } else {
                                   toast.error('Ошибка получения пароля')
                                 }
-                              } catch (error) {
+                              } catch {
                                 toast.error('Ошибка соединения с сервером')
                               }
                             }}
@@ -3630,7 +3609,7 @@ export default function MiddleAdminPage() {
                                 } else {
                                   toast.error('Ошибка изменения статуса')
                                 }
-                              } catch (error) {
+                              } catch {
                                 toast.error('Ошибка соединения с сервером')
                               }
                             }}
@@ -3660,7 +3639,7 @@ export default function MiddleAdminPage() {
                                   } else {
                                     toast.error('Ошибка удаления')
                                   }
-                                } catch (error) {
+                                } catch {
                                   toast.error('Ошибка соединения с сервером')
                                 }
                               }
@@ -4108,14 +4087,14 @@ export default function MiddleAdminPage() {
                   </div>
                 )}
 
-                {selectedOrder.courier && (
+                {selectedOrder.courierName && (
                   <div className="border-t pt-4 space-y-2">
                     <h4 className="font-semibold text-sm">Курьер</h4>
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center">
                         <Truck className="w-4 h-4 text-blue-500" />
                       </div>
-                      <p className="text-sm">{selectedOrder.courier.name}</p>
+                      <p className="text-sm">{selectedOrder.courierName}</p>
                     </div>
                   </div>
                 )}

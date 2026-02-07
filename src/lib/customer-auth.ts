@@ -3,11 +3,7 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
 
-const JWT_SECRET = process.env.JWT_SECRET!
-
-if (!JWT_SECRET) {
-    throw new Error('JWT_SECRET is not defined')
-}
+const JWT_SECRET = process.env.JWT_SECRET
 
 export interface CustomerTokenPayload {
     id: string
@@ -25,6 +21,9 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 export function createCustomerToken(payload: Omit<CustomerTokenPayload, 'role'>): string {
+    if (!JWT_SECRET) {
+        throw new Error('JWT_SECRET is not set in environment')
+    }
     const tokenPayload: CustomerTokenPayload = {
         ...payload,
         role: 'CUSTOMER'
@@ -34,8 +33,9 @@ export function createCustomerToken(payload: Omit<CustomerTokenPayload, 'role'>)
 
 export function verifyCustomerToken(token: string): CustomerTokenPayload | null {
     try {
+        if (!JWT_SECRET) return null
         return jwt.verify(token, JWT_SECRET) as CustomerTokenPayload
-    } catch (error) {
+    } catch {
         return null
     }
 }

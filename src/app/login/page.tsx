@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Loader2, Mail, Lock, ArrowRight, CheckCircle2, Truck, ShieldCheck, BarChart3 } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Loader2, Mail, Lock, ArrowRight, Truck, ShieldCheck, BarChart3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,13 +22,10 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
 
   // Check for URL error parameters (e.g. from Google Auth failure)
-  const [urlError, setUrlError] = useState('')
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const errorParam = params.get('error')
     if (errorParam) {
-      setUrlError(errorParam)
       toast.error(t.common.error, {
         description: errorParam === 'Configuration' ? 'Server configuration error' : errorParam
       })
@@ -83,7 +80,7 @@ export default function Home() {
           }
         }, 800)
       }
-    } catch (err) {
+    } catch {
       toast.error(t.common.error, { description: 'Не удалось соединиться с сервером' })
     } finally {
       setIsLoading(false)

@@ -104,7 +104,7 @@ model Customer {
 model Order {
   id              String         @id @default(cuid())
   orderNumber     Int            @unique
-  status          OrderStatus    @default(NEW)
+  orderStatus     OrderStatus    @map("status") @default(NEW)
   customerId      String
   customer        Customer       @relation(fields: [customerId], references: [id])
   deliveryDate    DateTime?      @default(now())
@@ -119,6 +119,8 @@ model Order {
   paymentStatus   PaymentStatus  @default(UNPAID)
   paymentMethod   PaymentMethod  @default(CASH)
   isPrepaid       Boolean        @default(false)
+  deliveredAt     DateTime?
+  amountReceived  Float?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   orderType       OrderType      @default(MORNING)
@@ -139,6 +141,7 @@ enum OrderStatus {
   PENDING
   IN_PROCESS
   IN_DELIVERY
+  PAUSED
   DELIVERED
   CANCELED
   FAILED
@@ -167,12 +170,18 @@ model ActionLog {
   id        String   @id @default(cuid())
   adminId   String
   action    String
+  entityType  String?
+  entityId    String?
+  oldValues   String?
+  newValues   String?
+  description String?
   details   String?
   createdAt DateTime @default(now())
   
   admin     Admin    @relation(fields: [adminId], references: [id])
 
   @@map("action_logs")
+  @@index([adminId])
 }
 
 model InterfaceConfig {

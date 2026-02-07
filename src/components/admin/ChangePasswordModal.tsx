@@ -91,7 +91,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
                 setError(data.error || 'Failed to change password')
                 toast.error('Error', { description: data.error || 'Failed to change password' })
             }
-        } catch (err) {
+        } catch {
             setError('Could not connect to server')
             toast.error('Error', { description: 'Could not connect to server' })
         } finally {

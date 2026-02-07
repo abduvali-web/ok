@@ -8,7 +8,7 @@ import { z } from 'zod'
 // PATCH - Update admin
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
         const user = await getAuthUser(request)
@@ -16,7 +16,7 @@ export async function PATCH(
             return NextResponse.json({ error: 'Доступ запрещен' }, { status: 403 })
         }
 
-        const { id } = await params
+        const { id } = await context.params
         const data = await request.json()
 
         // Verify target admin exists and user has permission to edit them
@@ -98,7 +98,7 @@ export async function PATCH(
 // DELETE - Delete admin
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
         const user = await getAuthUser(request)
@@ -106,7 +106,7 @@ export async function DELETE(
             return NextResponse.json({ error: 'Доступ запрещен' }, { status: 403 })
         }
 
-        const { id } = await params
+        const { id } = await context.params
 
         // Verify target admin exists and user has permission to delete them
         const targetAdmin = await db.admin.findUnique({

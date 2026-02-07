@@ -14,7 +14,7 @@ export async function GET(req: Request) {
         const filter = searchParams.get('filter') // 'all', 'positive', 'negative', 'zero'
         const search = searchParams.get('search') || ''
 
-        let whereClause: any = {
+        const whereClause: any = {
             deletedAt: null // Only active clients
         }
 
@@ -27,8 +27,6 @@ export async function GET(req: Request) {
             })
             const lowAdminIds = lowAdmins.map(a => a.id)
             whereClause.createdBy = { in: [session.user.id, ...lowAdminIds] }
-        } else if (session.user.role === 'LOW_ADMIN') {
-            whereClause.createdBy = session.user.id
         }
         // Super Admin sees all
 

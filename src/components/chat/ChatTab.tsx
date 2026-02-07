@@ -46,7 +46,6 @@ export function ChatTab() {
     const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
     const [messages, setMessages] = useState<Message[]>([])
     const [newMessage, setNewMessage] = useState('')
-    const [loading, setLoading] = useState(false)
     const [showUserList, setShowUserList] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const currentUserId = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}').id : null
@@ -141,7 +140,6 @@ export function ChatTab() {
 
     const startConversation = async (userId: string) => {
         try {
-            setLoading(true)
             const token = localStorage.getItem('token')
             const response = await fetch('/api/chat/conversations', {
                 method: 'POST',
@@ -159,10 +157,9 @@ export function ChatTab() {
                 await fetchConversations()
                 await fetchMessages(data.conversation.id)
             }
-        } catch (error) {
+        } catch {
             toast.error('Ошибка создания разговора')
         } finally {
-            setLoading(false)
         }
     }
 
@@ -190,7 +187,7 @@ export function ChatTab() {
             } else {
                 toast.error('Ошибка отправки сообщения')
             }
-        } catch (error) {
+        } catch {
             toast.error('Ошибка соединения')
         }
     }

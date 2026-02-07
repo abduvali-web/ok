@@ -4,7 +4,7 @@ import { getAuthUser, hasRole } from '@/lib/auth-utils'
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ adminId: string; adminId2: string }> }
+  context: { params: Promise<{ adminId: string; adminId2: string }> }
 ) {
   try {
     const user = await getAuthUser(request)
@@ -12,7 +12,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
     }
 
-    const { adminId, adminId2 } = await params
+    const { adminId, adminId2 } = await context.params
     const body = await request.json()
     const { isActive } = body
 

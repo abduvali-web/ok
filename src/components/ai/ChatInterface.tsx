@@ -5,9 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Badge } from '@/components/ui/badge'
 import {
-    MessageCircle,
     Send,
     X,
     Loader2,
@@ -129,7 +127,7 @@ export function AIChatInterface({ adminId, websiteId, onTaskExecute }: AIChatInt
                             }
                             return msg
                         }))
-                    } catch (error) {
+                    } catch {
                         // Update status to failed
                         setMessages(prev => prev.map(msg => {
                             if (msg.id === assistantMessage.id && msg.tasks) {
@@ -147,7 +145,7 @@ export function AIChatInterface({ adminId, websiteId, onTaskExecute }: AIChatInt
 
                 await Promise.all(taskPromises)
             }
-        } catch (error) {
+        } catch {
             setMessages(prev => [...prev, {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',

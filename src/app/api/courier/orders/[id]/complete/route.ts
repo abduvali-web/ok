@@ -4,7 +4,7 @@ import { getAuthUser, hasRole } from '@/lib/auth-utils'
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
         const user = await getAuthUser(request)
@@ -12,7 +12,8 @@ export async function POST(
             return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
         }
 
-        const orderId = params.id
+        const { id } = await context.params
+        const orderId = id
 
         const order = await db.order.findUnique({
             where: { id: orderId }

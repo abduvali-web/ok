@@ -71,6 +71,7 @@ export const MEAL_TYPES = {
   SNACK: 'Poldnik',
   DINNER: 'Kechki ovqat',
   SIXTH_MEAL: '6-Taom',
+  UNKNOWN: 'Noma’lum',
 } as const;
 
 export interface Ingredient {
@@ -1533,12 +1534,10 @@ export function calculateIngredientsForMenu(
           let ingredientsToUse = setDish.customIngredients;
           if (!ingredientsToUse) {
             // Fallback to searching standard menus for this dish
-            let found = false;
             for (const menu of MENUS) {
               const d = menu.dishes.find(d => d.id === setDish.dishId);
               if (d) {
                 ingredientsToUse = d.ingredients;
-                found = true;
                 break;
               }
             }

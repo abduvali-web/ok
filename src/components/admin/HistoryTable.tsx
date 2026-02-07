@@ -50,7 +50,7 @@ interface HistoryTableProps {
     compactMode?: boolean
 }
 
-export function HistoryTable({ role, limit = 10, compactMode = false }: HistoryTableProps) {
+export function HistoryTable({ role: _role, limit = 10, compactMode = false }: HistoryTableProps) {
     const { t, language } = useLanguage()
     const [logs, setLogs] = useState<ActionLog[]>([])
     const [users, setUsers] = useState<User[]>([])
@@ -124,15 +124,15 @@ export function HistoryTable({ role, limit = 10, compactMode = false }: HistoryT
         return 'bg-slate-100 text-slate-800'
     }
 
-    const getRoleLabel = (role: string) => {
-        switch (role) {
-            case 'SUPER_ADMIN': return t.admin.superAdmin
-            case 'MIDDLE_ADMIN': return t.admin.middleAdmin
-            case 'LOW_ADMIN': return t.admin.lowAdmin
-            case 'COURIER': return t.common.courier
-            default: return role
+        const getRoleLabel = (role: string) => {
+            switch (role) {
+                case 'SUPER_ADMIN': return t.admin.superAdmin
+                case 'MIDDLE_ADMIN': return t.admin.middleAdmin
+                case 'LOW_ADMIN': return t.admin.lowAdmin
+                case 'COURIER': return t.courier.title
+                default: return role
+            }
         }
-    }
 
     return (
         <Card className="glass-card border-none">

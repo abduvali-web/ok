@@ -23,7 +23,7 @@ export async function GET(req: Request) {
             return new NextResponse('Admin not found', { status: 404 })
         }
 
-        let whereClause: any = {
+        const whereClause: any = {
             adminId: session.user.id
         }
 

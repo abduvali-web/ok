@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
                         paymentMethod: 'CASH',
                         isPrepaid: false,
                         orderStatus: 'PENDING',
-                        isAutoOrder: true // Mark as auto-generated
+                        fromAutoOrder: true // Mark as auto-generated
                     }
                 })
                 totalOrdersCreated++

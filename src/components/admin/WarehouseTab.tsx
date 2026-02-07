@@ -4,36 +4,25 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     Package,
     Calculator,
     ShoppingCart,
-    Save,
-    Plus,
-    Minus,
-    Calendar,
     ChefHat,
     Loader2,
     RefreshCw,
-    Utensils,
-    AlertTriangle,
-    Check
+    UtensilsCrossed
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
     getTomorrowsMenuNumber,
     getTomorrowsMenu,
-    getMenu,
     getMenuNumber,
-    getDishImageUrl,
     calculateIngredientsForMenu,
     calculateShoppingList,
-    getAllIngredients,
     scaleIngredients,
-    CALORIE_MULTIPLIERS,
     MEAL_TYPES,
     type DailyMenu,
     type Dish,
@@ -43,21 +32,9 @@ import { IngredientsManager } from './warehouse/IngredientsManager';
 import { CookingManager } from './warehouse/CookingManager'; // Integrated
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SetsTab } from './SetsTab';
-import { UtensilsCrossed } from 'lucide-react';
 
 interface WarehouseTabProps {
     className?: string;
-}
-
-interface DishQuantity {
-    dishId: number;
-    quantity: number;
-}
-
-interface InventoryItem {
-    name: string;
-    amount: number;
-    unit: string;
 }
 
 export function WarehouseTab({ className }: WarehouseTabProps) {
@@ -75,7 +52,6 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         3000: 0,
     });
     const [isLoadingClients, setIsLoadingClients] = useState(false);
-    const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
     const [activeSet, setActiveSet] = useState<any>(null);
     const [allClients, setAllClients] = useState<any[]>([]);
 
@@ -156,7 +132,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                 // Parse deliveryDays if it's a string
                 let deliveryDays = client.deliveryDays;
                 if (typeof deliveryDays === 'string') {
-                    try { deliveryDays = JSON.parse(deliveryDays); } catch (e) { deliveryDays = {}; }
+                    try { deliveryDays = JSON.parse(deliveryDays); } catch { deliveryDays = {}; }
                 }
 
                 // Filter by delivery day if available
@@ -239,7 +215,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                 if (client.isActive !== false) {
                     let deliveryDays = client.deliveryDays;
                     if (typeof deliveryDays === 'string') {
-                        try { deliveryDays = JSON.parse(deliveryDays); } catch (e) { deliveryDays = {}; }
+                        try { deliveryDays = JSON.parse(deliveryDays); } catch { deliveryDays = {}; }
                     }
                     if (deliveryDays && deliveryDays[dayOfWeek] === false) return;
 
@@ -348,26 +324,6 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         }
     };
 
-    const handleImageError = (dishId: number) => {
-        setImageErrors(prev => new Set(prev).add(dishId));
-    };
-
-    const updateDishQuantity = (dishId: number, delta: number) => {
-        setDishQuantities(prev => ({
-            ...prev,
-            [dishId]: Math.max(0, (prev[dishId] || 0) + delta),
-        }));
-    };
-
-    const handleQuantityChange = (dishId: number, value: string) => {
-        const num = parseInt(value) || 0;
-        setDishQuantities(prev => ({
-            ...prev,
-            [dishId]: Math.max(0, num),
-        }));
-    };
-
-
     // updateInventory removed
 
 
@@ -425,7 +381,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                 if (client.isActive !== false) {
                     let dDays = client.deliveryDays;
                     if (typeof dDays === 'string') {
-                        try { dDays = JSON.parse(dDays); } catch (e) { dDays = {}; }
+                        try { dDays = JSON.parse(dDays); } catch { dDays = {}; }
                     }
                     if (dDays && dDays[dayOfWeek] === false) return;
 
@@ -649,18 +605,19 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         return days;
     };
 
-    const mealTypeIcons: Record<keyof typeof MEAL_TYPES, string> = {
+    const _mealTypeIcons: Record<keyof typeof MEAL_TYPES, string> = {
         BREAKFAST: '🌅',
         SECOND_BREAKFAST: '🥐',
         LUNCH: '🍽️',
         SNACK: '🍎',
         DINNER: '🌙',
         SIXTH_MEAL: '🥗',
+        UNKNOWN: '❓',
     };
 
     // Calculate required ingredients with CALORIE-SCALED amounts
     // For each dish, sum ingredients across all calorie tiers based on client distribution
-    const requiredIngredients = useMemo(() => {
+    const _requiredIngredients = useMemo(() => {
         if (!tomorrowMenu) return new Map<string, { amount: number; unit: string }>();
         const required = new Map<string, { amount: number; unit: string }>();
 
@@ -714,7 +671,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     // Inventory check disabled - handled by server
     // const insufficientIngredients = useMemo(() => { ... }, []);
     // const hasEnoughStock = true;
-    const totalDishesToCook = Object.values(dishQuantities).reduce((sum, qty) => sum + qty, 0);
+    const _totalDishesToCook = Object.values(dishQuantities).reduce((sum, qty) => sum + qty, 0);
 
     return (
         <div className={`space-y-6 ${className}`}>

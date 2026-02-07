@@ -57,18 +57,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     ],
     callbacks: {
         ...authConfig.callbacks,
-        async signIn({ user, account, profile }) {
-            console.log("SignIn Callback:", { provider: account?.provider, email: user.email })
+        async signIn({ user, account, profile: _profile }) {
             if (account?.provider === "google") {
                 try {
                     // Check if user exists
                     let admin = await db.admin.findUnique({
                         where: { email: user.email! }
                     })
-                    console.log("Admin found:", !!admin)
 
                     if (!admin) {
-                        console.log("Creating new Google user...")
                         // Create new user with Google OAuth
                         const trialEndsAt = new Date()
                         trialEndsAt.setDate(trialEndsAt.getDate() + 30)
@@ -85,9 +82,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                                 isActive: true, // Will be disabled after 30 days by cron
                             }
                         })
-                        console.log("New user created:", admin.id)
                     } else if (!admin.googleId) {
-                        console.log("Linking Google account...")
                         // Link Google account to existing user
                         await db.admin.update({
                             where: { id: admin.id },
@@ -97,25 +92,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
                     // Check if trial has expired
                     if (admin.trialEndsAt && new Date() > admin.trialEndsAt && !admin.isActive) {
-                        console.log("Trial expired")
                         return false
                     }
 
                     // Check if account is active
                     if (!admin.isActive) {
-                        console.log("Account inactive")
                         return false
                     }
 
                     return true
                 } catch (error) {
-                    console.error("Error in signIn callback:", error)
+                    if (process.env.NODE_ENV !== "production") {
+                        console.error("Error in signIn callback:", error)
+                    }
                     return false
                 }
             }
             return true
         },
-        async jwt({ token, user, account }) {
+        async jwt({ token, user, account: _account }) {
             if (user) {
                 token.role = user.role as string
                 token.id = user.id as string

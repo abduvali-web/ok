@@ -7,15 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Slider } from '@/components/ui/slider';
 import {
     DollarSign,
     TrendingUp,
     TrendingDown,
     Search,
     Filter,
-    ArrowUpRight,
-    ArrowDownLeft,
     Wallet,
     History,
     Users,
@@ -40,7 +37,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog";
 import {
     Select,
@@ -104,7 +100,6 @@ export function FinanceTab({ className }: FinanceTabProps) {
     const [isCompanyFundsModalOpen, setIsCompanyFundsModalOpen] = useState(false);
     const [isClientBalanceModalOpen, setIsClientBalanceModalOpen] = useState(false);
     const [isBuyIngredientsModalOpen, setIsBuyIngredientsModalOpen] = useState(false);
-    const [isPaySalaryModalOpen, setIsPaySalaryModalOpen] = useState(false);
 
     // Form Data
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -116,7 +111,6 @@ export function FinanceTab({ className }: FinanceTabProps) {
 
     // Salary Form
     const [selectedStaffId, setSelectedStaffId] = useState('');
-    const [salaryAmount, setSalaryAmount] = useState('');
 
     // Buy Ingredients Form
     const [purchaseItems, setPurchaseItems] = useState<{ name: string; amount: string; costPerUnit: string }[]>([
@@ -128,8 +122,6 @@ export function FinanceTab({ className }: FinanceTabProps) {
     }, []);
 
     useEffect(() => {
-        fetchCompanyFinance();
-        fetchClients();
         fetchCompanyFinance();
         fetchClients();
         fetchStaff();
@@ -368,7 +360,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                 const data = await response.json();
                 toast.error(data.error || t.finance.paymentError);
             }
-        } catch (error) {
+        } catch {
             toast.error('Ошибка соединения');
         } finally {
             setIsSubmitting(false);
@@ -827,7 +819,6 @@ export function FinanceTab({ className }: FinanceTabProps) {
                         <Button variant="outline" onClick={() => setIsCompanyFundsModalOpen(false)}>Отмена</Button>
                         <Button onClick={() => {
                             if (transactionCategory === 'SALARY') {
-                                setSalaryAmount(transactionAmount); // Sync for legacy handler check if needed, but better to call unified handler
                                 handlePaySalarySubmit();
                             } else {
                                 handleTransactionSubmit(true);

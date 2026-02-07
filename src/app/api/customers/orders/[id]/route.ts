@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
         const customerId = request.headers.get('x-customer-id')
@@ -11,8 +11,9 @@ export async function GET(
             return NextResponse.json({ error: 'Customer ID required' }, { status: 401 })
         }
 
+        const { id } = await context.params
         const order = await db.order.findUnique({
-            where: { id: params.id },
+            where: { id },
             include: {
                 courier: {
                     select: {

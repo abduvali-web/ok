@@ -107,7 +107,7 @@ export async function GET(req: Request) {
                             paymentMethod: PaymentMethod.CASH,
                             isPrepaid: false,
                             orderStatus: OrderStatus.PENDING,
-                            isAutoOrder: true,
+                            fromAutoOrder: true,
                             courierId: (client as any).defaultCourierId || null
                         }
                     })

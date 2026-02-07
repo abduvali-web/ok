@@ -28,7 +28,7 @@ export function ExcelEditor({ adminId, onAIAssist }: ExcelEditorProps) {
             // Data is auto-saved to Firestore, this is just for manual save confirmation
             await new Promise(r => setTimeout(r, 500))
             toast.success('Все изменения сохранены')
-        } catch (error) {
+        } catch {
             toast.error('Ошибка сохранения')
         } finally {
             setIsSaving(false)

@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
-import { Phone, LogIn, Check, Zap, Shield, Heart, Leaf, MessageCircle, Users, Clock } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
+import { Phone, LogIn, Check, Zap, Shield, Heart, Leaf, MessageCircle, Users } from 'lucide-react'
 import Link from 'next/link'
 
 // Pre-built example content matching the showcase prompt

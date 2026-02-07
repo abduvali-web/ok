@@ -20,8 +20,6 @@ export function LanguageSwitcher() {
         { code: 'en', label: 'English', flag: '🇺🇸' },
     ]
 
-    const currentLang = languages.find(l => l.code === language)
-
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>

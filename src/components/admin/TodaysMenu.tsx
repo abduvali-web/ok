@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
     getTodaysMenuNumber,
@@ -11,20 +11,21 @@ import {
     type DailyMenu,
     type Dish
 } from '@/lib/menuData';
-import { Calendar, Utensils } from 'lucide-react';
+import { Utensils } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TodaysMenuProps {
     className?: string;
 }
 
-const mealTypeColors: Record<keyof typeof MEAL_TYPES, string> = {
+const _mealTypeColors: Record<keyof typeof MEAL_TYPES, string> = {
     BREAKFAST: 'bg-amber-100 text-amber-800 border-amber-200',
     SECOND_BREAKFAST: 'bg-orange-100 text-orange-800 border-orange-200',
     LUNCH: 'bg-green-100 text-green-800 border-green-200',
     SNACK: 'bg-purple-100 text-purple-800 border-purple-200',
     DINNER: 'bg-blue-100 text-blue-800 border-blue-200',
     SIXTH_MEAL: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+    UNKNOWN: 'bg-slate-100 text-slate-700 border-slate-200',
     // SEVENTH_MEAL: 'bg-pink-100 text-pink-800 border-pink-200', // Example if needed
 };
 
@@ -35,6 +36,7 @@ const mealTypeIcons: Record<keyof typeof MEAL_TYPES, string> = {
     SNACK: '🍎',
     DINNER: '🌙',
     SIXTH_MEAL: '🥗',
+    UNKNOWN: '❓',
     // SEVENTH_MEAL: '🥣',
 };
 
@@ -154,5 +156,3 @@ export function TodaysMenu({ className }: TodaysMenuProps) {
         </Card>
     );
 }
-
-

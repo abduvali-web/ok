@@ -5,7 +5,7 @@ import { Prisma } from '@prisma/client'
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { orderId: string } }
+  context: { params: Promise<{ orderId: string }> }
 ) {
   try {
     const user = await getAuthUser(request)
@@ -13,7 +13,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Недействительный токен' }, { status: 401 })
     }
 
-    const { orderId } = params
+    const { orderId } = await context.params
     const body = await request.json()
     const { action } = body
 
@@ -43,7 +43,7 @@ export async function PATCH(
         })
         const allowedAdminIds = [user.id, ...lowAdmins.map(a => a.id)]
 
-        if (!allowedAdminIds.includes(order.adminId)) {
+        if (!order.adminId || !allowedAdminIds.includes(order.adminId)) {
           return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
         }
       }
@@ -62,44 +62,44 @@ export async function PATCH(
         if (!hasRole(user, ['COURIER'])) {
           return NextResponse.json({ error: 'Только курьер может начать доставку' }, { status: 403 })
         }
-        if (order.status !== 'PENDING') {
+        if (order.orderStatus !== 'PENDING') {
           return NextResponse.json({ error: 'Можно начать только ожидающий заказ' }, { status: 400 })
         }
-        updateData.status = 'IN_DELIVERY'
+        updateData.orderStatus = 'IN_DELIVERY'
         updateData.courierId = user.id
         break
       case 'pause_delivery':
         if (!hasRole(user, ['COURIER'])) {
           return NextResponse.json({ error: 'Только курьер может приостановить доставку' }, { status: 403 })
         }
-        if (order.status !== 'IN_DELIVERY') {
+        if (order.orderStatus !== 'IN_DELIVERY') {
           return NextResponse.json({ error: 'Можно приостановить только активную доставку' }, { status: 400 })
         }
-        updateData.status = 'PAUSED'
+        updateData.orderStatus = 'PAUSED'
         break
       case 'resume_delivery':
         if (!hasRole(user, ['COURIER'])) {
           return NextResponse.json({ error: 'Только курьер может возобновить доставку' }, { status: 403 })
         }
-        if (order.status !== 'PAUSED') {
+        if (order.orderStatus !== 'PAUSED') {
           return NextResponse.json({ error: 'Можно возобновить только приостановленную доставку' }, { status: 400 })
         }
-        updateData.status = 'IN_DELIVERY'
+        updateData.orderStatus = 'IN_DELIVERY'
         break
       case 'complete_delivery':
         if (!hasRole(user, ['COURIER'])) {
           return NextResponse.json({ error: 'Только курьер может завершить доставку' }, { status: 403 })
         }
 
-        if (order.status === 'DELIVERED') {
+        if (order.orderStatus === 'DELIVERED') {
           return NextResponse.json({ error: 'Заказ уже доставлен' }, { status: 400 })
         }
 
         const { amountReceived } = body
-        updateData.status = 'DELIVERED'
+        updateData.orderStatus = 'DELIVERED'
         updateData.deliveredAt = new Date()
 
-        const transactionOps = []
+        const transactionOps: Prisma.PrismaPromise<unknown>[] = []
 
         // 1. Deduct Daily Price (Expense)
         const dailyPrice = (order.customer as any)?.dailyPrice || 84000
@@ -141,12 +141,17 @@ export async function PATCH(
             db.customer.update({
               where: { id: order.customerId },
               data: { balance: { increment: parsedAmount } }
-            }),
-            db.admin.update({
-              where: { id: order.adminId },
-              data: { companyBalance: { increment: parsedAmount } }
             })
           )
+
+          if (order.adminId) {
+            transactionOps.push(
+              db.admin.update({
+                where: { id: order.adminId },
+                data: { companyBalance: { increment: parsedAmount } }
+              })
+            )
+          }
         }
 
         // 3. Update Payment Status based on received amount
@@ -167,8 +172,8 @@ export async function PATCH(
         }
 
         const {
-          customerName,
-          customerPhone,
+          customerName: _customerName,
+          customerPhone: _customerPhone,
           deliveryAddress,
           deliveryTime,
           quantity,
@@ -264,7 +269,7 @@ export async function PATCH(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { orderId: string } }
+  context: { params: Promise<{ orderId: string }> }
 ) {
   try {
     const user = await getAuthUser(request)
@@ -272,7 +277,7 @@ export async function GET(
       return NextResponse.json({ error: 'Недействительный токен' }, { status: 401 })
     }
 
-    const { orderId } = params
+    const { orderId } = await context.params
 
     const order = await db.order.findUnique({
       where: { id: orderId },
@@ -297,7 +302,7 @@ export async function GET(
       })
       const allowedAdminIds = [user.id, ...lowAdmins.map(a => a.id)]
 
-      if (!allowedAdminIds.includes(order.adminId)) {
+      if (!order.adminId || !allowedAdminIds.includes(order.adminId)) {
         return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
       }
     } else if (user.role === 'COURIER') {

@@ -3,9 +3,6 @@ import { auth } from '@/auth'
 import jwt from 'jsonwebtoken'
 
 const JWT_SECRET = process.env.JWT_SECRET
-if (!JWT_SECRET) {
-    throw new Error('JWT_SECRET is not set in environment')
-}
 
 export interface AuthUser {
     id: string
@@ -28,7 +25,7 @@ export async function getAuthUser(request: NextRequest): Promise<AuthUser | null
                 role: session.user.role
             }
         }
-    } catch (error) {
+    } catch {
         // NextAuth not available in this context, continue to JWT
     }
 
@@ -40,6 +37,7 @@ export async function getAuthUser(request: NextRequest): Promise<AuthUser | null
 
     const token = authHeader.substring(7)
     try {
+        if (!JWT_SECRET) return null
         const decoded = jwt.verify(token, JWT_SECRET!) as any
         return {
             id: decoded.id,

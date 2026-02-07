@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
           // Apply grouped logic (OR within category, AND between categories)
 
           // Delivery Status
-          if (deliveryStatusFilters.length > 0 && !deliveryStatusFilters.includes(order.status)) return false
+          if (deliveryStatusFilters.length > 0 && !deliveryStatusFilters.includes(order.orderStatus)) return false
 
           // Payment Status
           if (paymentStatusFilters.length > 0 && !paymentStatusFilters.includes(order.paymentStatus)) return false
@@ -139,7 +139,7 @@ export async function GET(request: NextRequest) {
 
     const transformedOrders = filteredOrders.map(order => ({
       ...order,
-      orderStatus: order.status,
+      orderStatus: order.orderStatus,
       isAutoOrder: order.fromAutoOrder,
       customerName: order.customer?.name || 'Неизвестный клиент',
       customerPhone: order.customer?.phone || 'Нет телефона',
@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
       if (selectedClientId && selectedClientId !== 'manual') {
         customer = await tx.customer.findUnique({ where: { id: selectedClientId } })
       } else {
-        customer = await tx.customer.findUnique({ where: { phone: customerPhone } })
+        customer = await tx.customer.findFirst({ where: { phone: customerPhone, deletedAt: null } })
         if (!customer) {
           // Create new customer as inactive for one-time orders
           customer = await tx.customer.create({
@@ -265,7 +265,7 @@ export async function POST(request: NextRequest) {
           paymentStatus: paymentStatus || PaymentStatus.UNPAID,
           paymentMethod: paymentMethod || PaymentMethod.CASH,
           isPrepaid: isPrepaid || false,
-          status: OrderStatus.PENDING,
+          orderStatus: OrderStatus.PENDING,
           latitude: sanitizedLatitude,
           longitude: sanitizedLongitude
         },

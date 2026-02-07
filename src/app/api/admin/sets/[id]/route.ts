@@ -4,10 +4,10 @@ import { auth } from '@/auth';
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = params.id;
+        const { id } = await context.params;
         const set = await db.menuSet.findUnique({
             where: { id }
         });
@@ -17,14 +17,14 @@ export async function GET(
         }
 
         return NextResponse.json(set);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth();
@@ -32,7 +32,7 @@ export async function PATCH(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const id = params.id;
+        const { id } = await context.params;
         const body = await request.json();
 
         // Allowed fields to update
@@ -72,7 +72,7 @@ export async function PATCH(
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth();
@@ -80,7 +80,7 @@ export async function DELETE(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const id = params.id;
+        const { id } = await context.params;
         await db.menuSet.delete({
             where: { id }
         });

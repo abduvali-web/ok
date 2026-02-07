@@ -20,7 +20,7 @@ async function orderExistsForDate(clientId: string, targetDate: Date): Promise<b
   const existingOrder = await db.order.findFirst({
     where: {
       customerId: clientId,
-      createdAt: {
+      deliveryDate: {
         gte: compareDate,
         lt: nextDay
       }
@@ -66,6 +66,7 @@ async function createAutoOrdersForClient(client: any, startDate: Date, endDate: 
             customerId: client.id,
             adminId: adminId,
             deliveryAddress: client.address,
+            deliveryDate: new Date(currentDate),
             deliveryTime: generateDeliveryTime(),
             quantity: 1,
             calories: client.calories,
@@ -74,7 +75,6 @@ async function createAutoOrdersForClient(client: any, startDate: Date, endDate: 
             paymentMethod: PaymentMethod.CASH,
             orderStatus: OrderStatus.PENDING,
             isPrepaid: false,
-            createdAt: new Date(currentDate)
           },
           include: {
             customer: true,
