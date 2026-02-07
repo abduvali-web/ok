@@ -24,8 +24,8 @@ interface Order {
         phone: string
     }
     deliveryAddress: string
-    latitude: number
-    longitude: number
+    latitude: number | null
+    longitude: number | null
     deliveryTime: string
     quantity: number
     calories: number
@@ -62,7 +62,7 @@ export default function CourierMap({ orders, currentLocation, onMarkerClick }: C
     // Calculate center based on current location or first order or default
     const center: [number, number] = currentLocation
         ? [currentLocation.lat, currentLocation.lng]
-        : orders.length > 0 && orders[0].latitude && orders[0].longitude
+        : orders.length > 0 && orders[0].latitude != null && orders[0].longitude != null
             ? [orders[0].latitude, orders[0].longitude]
             : [41.2995, 69.2401] // Default to Tashkent
 
@@ -78,7 +78,7 @@ export default function CourierMap({ orders, currentLocation, onMarkerClick }: C
             />
 
             {orders.map(order => (
-                order.latitude && order.longitude && (
+                order.latitude != null && order.longitude != null && (
                     <Marker
                         key={order.id}
                         position={[order.latitude, order.longitude]}
