@@ -40,7 +40,7 @@ export default function SignUpPage() {
     }
 
     const handleGoogleSignUp = () => {
-        signIn('google')
+        signIn('google', { callbackUrl: '/auth/redirect' })
     }
 
     const handleSignup = async (e: React.FormEvent) => {
