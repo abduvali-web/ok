@@ -78,6 +78,7 @@ import { SetsTab } from '@/components/admin/SetsTab'
 import { RouteOptimizeButton } from '@/components/admin/RouteOptimizeButton'
 import { MobileSidebar } from '@/components/MobileSidebar'
 import { MobileTabIndicator } from '@/components/MobileTabIndicator'
+import { MobileBottomNav } from '@/components/MobileBottomNav'
 
 interface Admin {
   id: string
@@ -4650,6 +4651,13 @@ export default function MiddleAdminPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        onTabChange={(tab) => setActiveTab(tab)}
+        variant="admin"
+      />
     </div>
   )
 }
