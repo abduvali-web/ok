@@ -18,6 +18,7 @@ export async function PATCH(
 
         const { id } = await context.params
         const data = await request.json()
+        const hasAllowedTabs = Object.prototype.hasOwnProperty.call(data, 'allowedTabs')
 
         // Verify target admin exists and user has permission to edit them
         const targetAdmin = await db.admin.findUnique({
@@ -39,7 +40,12 @@ export async function PATCH(
         if (data.email) updateData.email = data.email
         if (data.role) updateData.role = data.role
         if (data.isActive !== undefined) updateData.isActive = data.isActive
-        if (data.allowedTabs) updateData.allowedTabs = JSON.stringify(data.allowedTabs)
+        if (hasAllowedTabs) {
+            updateData.allowedTabs =
+                Array.isArray(data.allowedTabs) && data.allowedTabs.length > 0
+                    ? JSON.stringify(data.allowedTabs)
+                    : null
+        }
         if (data.salary !== undefined) updateData.salary = data.salary
 
         if (data.password) {

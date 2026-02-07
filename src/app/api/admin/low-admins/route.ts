@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
         role,
         isActive: true,
         createdBy: user.id,
-        allowedTabs: allowedTabs ? JSON.stringify(allowedTabs) : null,
+        allowedTabs: allowedTabs && allowedTabs.length > 0 ? JSON.stringify(allowedTabs) : null,
         salary: salary ? parseInt(salary) : 0,
         hasPassword: !!password
       }

@@ -87,6 +87,8 @@ interface Order {
   customer: {
     name: string
     phone: string
+    assignedSetId?: string | null
+    assignedSetName?: string | null
   }
   deliveryAddress: string
   latitude?: number
@@ -106,6 +108,8 @@ interface Order {
   customerPhone?: string
   courierId?: string
   courierName?: string
+  assignedSetId?: string | null
+  assignedSetName?: string | null
 }
 
 interface Client {
@@ -276,7 +280,8 @@ export default function MiddleAdminPage() {
     selectedClientId: '',
     latitude: null as number | null,
     longitude: null as number | null,
-    courierId: ''
+    courierId: '',
+    assignedSetId: ''
   })
   const [_parsedCoords, setParsedCoords] = useState<{ lat: number, lng: number } | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -911,7 +916,8 @@ export default function MiddleAdminPage() {
           customerPhone: selectedClient.phone,
           deliveryAddress: selectedClient.address,
           calories: selectedClient.calories,
-          specialFeatures: selectedClient.specialFeatures
+          specialFeatures: selectedClient.specialFeatures,
+          assignedSetId: selectedClient.assignedSetId || ''
         }))
 
         // Также парсим координаты из адреса клиента
@@ -940,7 +946,8 @@ export default function MiddleAdminPage() {
         customerPhone: '',
         deliveryAddress: '',
         calories: 1200,
-        specialFeatures: ''
+        specialFeatures: '',
+        assignedSetId: ''
       }))
       setParsedCoords(null)
     }
@@ -1032,7 +1039,8 @@ export default function MiddleAdminPage() {
           selectedClientId: '',
           latitude: null,
           longitude: null,
-          courierId: ''
+          courierId: '',
+          assignedSetId: ''
         })
         setEditingOrderId(null)
         fetchData()
@@ -1048,6 +1056,9 @@ export default function MiddleAdminPage() {
 
   const handleEditOrder = (order: Order) => {
     setEditingOrderId(order.id)
+    const inferredAssignedSetId =
+      order.customer.assignedSetId ||
+      (clients.find(c => c.phone === order.customer.phone)?.assignedSetId ?? '')
     setOrderFormData({
       customerName: order.customer.name,
       customerPhone: order.customer.phone,
@@ -1062,7 +1073,8 @@ export default function MiddleAdminPage() {
       selectedClientId: '', // We don't link back to client selection for now to avoid overwriting
       latitude: order.latitude || null,
       longitude: order.longitude || null,
-      courierId: order.courierId || ''
+      courierId: order.courierId || '',
+      assignedSetId: inferredAssignedSetId
     })
     setIsCreateOrderModalOpen(true)
   }
@@ -1707,47 +1719,54 @@ export default function MiddleAdminPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-slate-900">{t.admin.dashboard}</h1>
+              <h1 className="text-xl font-semibold text-slate-900 hidden md:block">{t.admin.dashboard}</h1>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-sm text-muted-foreground hidden md:block">
                 {currentDate || ' '}
               </div>
               <LanguageSwitcher />
-              <UserGuide guides={[
-                {
-                  title: t.admin.createOrder,
-                  description: t.admin.manageOrdersDesc, // Using generic desc as placeholder or need specific key
-                  buttonName: "+ " + t.admin.createOrder,
-                  icon: <Plus className="w-5 h-5 text-primary" />
-                },
-                {
-                  title: t.admin.createClient,
-                  description: t.admin.manageClientsDesc,
-                  buttonName: "+ " + t.admin.createClient,
-                  icon: <User className="w-5 h-5 text-primary" />
-                },
-                {
-                  title: t.admin.createAutoOrders,
-                  description: t.admin.manageOrdersDesc,
-                  buttonName: t.admin.auto,
-                  icon: <Route className="w-5 h-5 text-primary" />
-                },
-                {
-                  title: t.admin.delete,
-                  description: t.admin.bin,
-                  buttonName: t.admin.bin,
-                  icon: <Trash2 className="w-5 h-5 text-primary" />
-                },
-                {
-                  title: t.admin.history,
-                  description: t.admin.history,
-                  buttonName: t.admin.history,
-                  icon: <History className="w-5 h-5 text-primary" />
-                }
-              ]} />
-              <TrialStatus compact />
-              <Button variant="outline" size="sm" onClick={handleLogout}>
+              <div className="hidden md:block">
+                <UserGuide guides={[
+                  {
+                    title: t.admin.createOrder,
+                    description: t.admin.manageOrdersDesc, // Using generic desc as placeholder or need specific key
+                    buttonName: "+ " + t.admin.createOrder,
+                    icon: <Plus className="w-5 h-5 text-primary" />
+                  },
+                  {
+                    title: t.admin.createClient,
+                    description: t.admin.manageClientsDesc,
+                    buttonName: "+ " + t.admin.createClient,
+                    icon: <User className="w-5 h-5 text-primary" />
+                  },
+                  {
+                    title: t.admin.createAutoOrders,
+                    description: t.admin.manageOrdersDesc,
+                    buttonName: t.admin.auto,
+                    icon: <Route className="w-5 h-5 text-primary" />
+                  },
+                  {
+                    title: t.admin.delete,
+                    description: t.admin.bin,
+                    buttonName: t.admin.bin,
+                    icon: <Trash2 className="w-5 h-5 text-primary" />
+                  },
+                  {
+                    title: t.admin.history,
+                    description: t.admin.history,
+                    buttonName: t.admin.history,
+                    icon: <History className="w-5 h-5 text-primary" />
+                  }
+                ]} />
+              </div>
+              <div className="hidden md:block">
+                <TrialStatus compact />
+              </div>
+              <Button variant="outline" size="icon" className="md:hidden" onClick={handleLogout} aria-label={t.common.logout}>
+                <LogOut className="w-4 h-4" />
+              </Button>
+              <Button variant="outline" size="sm" className="hidden md:inline-flex" onClick={handleLogout}>
                 <LogOut className="w-4 h-4 mr-2" />
                 {t.common.logout}
               </Button>
@@ -1765,8 +1784,8 @@ export default function MiddleAdminPage() {
       {/* Mobile Tab Indicator - shows current tab on mobile */}
       <MobileTabIndicator activeTab={activeTab} />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mobile-bottom-space md:pt-8 pt-4">
-        <div className="flex flex-col gap-4">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8 mobile-bottom-space md:pt-8 pt-4">
+        <div className="hidden md:flex flex-col gap-4">
           <h1 className="text-3xl font-bold tracking-tight text-gradient">
             {t.admin.dashboard}
           </h1>
@@ -3387,6 +3406,36 @@ export default function MiddleAdminPage() {
                                     Чат
                                   </label>
                                 </div>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id="tab-interface"
+                                    checked={createFormData.allowedTabs.includes('interface')}
+                                    onCheckedChange={(checked) => {
+                                      const tabs = checked
+                                        ? [...createFormData.allowedTabs, 'interface']
+                                        : createFormData.allowedTabs.filter(t => t !== 'interface')
+                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
+                                    }}
+                                  />
+                                  <label htmlFor="tab-interface" className="text-sm cursor-pointer">
+                                    Интерфейс
+                                  </label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id="tab-history"
+                                    checked={createFormData.allowedTabs.includes('history')}
+                                    onCheckedChange={(checked) => {
+                                      const tabs = checked
+                                        ? [...createFormData.allowedTabs, 'history']
+                                        : createFormData.allowedTabs.filter(t => t !== 'history')
+                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
+                                    }}
+                                  />
+                                  <label htmlFor="tab-history" className="text-sm cursor-pointer">
+                                    История
+                                  </label>
+                                </div>
                               </div>
                             </div>
                           )}
@@ -4221,6 +4270,19 @@ export default function MiddleAdminPage() {
                   <div className="col-span-3 space-y-2 border rounded-md p-3">
                     <div className="flex items-center space-x-2">
                       <Checkbox
+                        id="tab-statistics"
+                        checked={editAdminFormData.allowedTabs.includes('statistics')}
+                        onCheckedChange={(checked) => {
+                          const tabs = checked
+                            ? [...editAdminFormData.allowedTabs, 'statistics']
+                            : editAdminFormData.allowedTabs.filter(t => t !== 'statistics')
+                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
+                        }}
+                      />
+                      <label htmlFor="tab-statistics" className="text-sm">Статистика</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
                         id="tab-orders"
                         checked={editAdminFormData.allowedTabs.includes('orders')}
                         onCheckedChange={(checked) => {
@@ -4257,6 +4319,32 @@ export default function MiddleAdminPage() {
                         }}
                       />
                       <label htmlFor="tab-chat" className="text-sm">Чат</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="tab-interface"
+                        checked={editAdminFormData.allowedTabs.includes('interface')}
+                        onCheckedChange={(checked) => {
+                          const tabs = checked
+                            ? [...editAdminFormData.allowedTabs, 'interface']
+                            : editAdminFormData.allowedTabs.filter(t => t !== 'interface')
+                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
+                        }}
+                      />
+                      <label htmlFor="tab-interface" className="text-sm">Интерфейс</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="tab-history"
+                        checked={editAdminFormData.allowedTabs.includes('history')}
+                        onCheckedChange={(checked) => {
+                          const tabs = checked
+                            ? [...editAdminFormData.allowedTabs, 'history']
+                            : editAdminFormData.allowedTabs.filter(t => t !== 'history')
+                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
+                        }}
+                      />
+                      <label htmlFor="tab-history" className="text-sm">История</label>
                     </div>
                   </div>
                 </div>
@@ -4319,6 +4407,36 @@ export default function MiddleAdminPage() {
                     </p>
                   </div>
                 </div>
+                {availableSets.length > 0 && (
+                  <div className="grid grid-cols-4 items-center gap-2">
+                    <Label htmlFor="orderSet" className="text-right">
+                      Сет
+                    </Label>
+                    <div className="col-span-3">
+                      <Select
+                        value={orderFormData.assignedSetId || 'none'}
+                        onValueChange={(value) =>
+                          setOrderFormData(prev => ({ ...prev, assignedSetId: value === 'none' ? '' : value }))
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Выберите сет (опционально)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">-- Не выбирать --</SelectItem>
+                          {availableSets.map((set: any) => (
+                            <SelectItem key={set.id} value={set.id}>
+                              {set.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Если выбрать сет, он будет закреплён за клиентом
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div className="grid grid-cols-4 items-center gap-2">
                   <Label htmlFor="customerName" className="text-right">
                     Имя клиента

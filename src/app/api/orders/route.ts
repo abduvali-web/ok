@@ -53,7 +53,14 @@ export async function GET(request: NextRequest) {
     const orders = await db.order.findMany({
       where: whereClause,
       include: {
-        customer: { select: { name: true, phone: true } },
+        customer: {
+          select: {
+            name: true,
+            phone: true,
+            assignedSetId: true,
+            assignedSet: { select: { id: true, name: true } }
+          }
+        },
         courier: { select: { id: true, name: true } }
       },
       orderBy: { createdAt: 'desc' }
@@ -143,7 +150,14 @@ export async function GET(request: NextRequest) {
       isAutoOrder: order.fromAutoOrder,
       customerName: order.customer?.name || 'Неизвестный клиент',
       customerPhone: order.customer?.phone || 'Нет телефона',
-      customer: { name: order.customer?.name || 'Неизвестный клиент', phone: order.customer?.phone || 'Нет телефона' },
+      assignedSetId: order.customer?.assignedSetId || null,
+      assignedSetName: order.customer?.assignedSet?.name || null,
+      customer: {
+        name: order.customer?.name || 'Неизвестный клиент',
+        phone: order.customer?.phone || 'Нет телефона',
+        assignedSetId: order.customer?.assignedSetId || null,
+        assignedSetName: order.customer?.assignedSet?.name || null
+      },
       deliveryDate: order.deliveryDate ? new Date(order.deliveryDate).toISOString().split('T')[0] : new Date(order.createdAt).toISOString().split('T')[0],
       courierName: order.courier?.name || null
     }))
@@ -166,7 +180,30 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { customerName, customerPhone, deliveryAddress, deliveryTime, quantity, calories, specialFeatures, paymentStatus, paymentMethod, isPrepaid, date, selectedClientId, courierId, latitude, longitude } = body
+    const hasAssignedSetId = Object.prototype.hasOwnProperty.call(body, 'assignedSetId')
+    const {
+      customerName,
+      customerPhone,
+      deliveryAddress,
+      deliveryTime,
+      quantity,
+      calories,
+      specialFeatures,
+      paymentStatus,
+      paymentMethod,
+      isPrepaid,
+      date,
+      selectedClientId,
+      courierId,
+      latitude,
+      longitude,
+      assignedSetId: rawAssignedSetId
+    } = body
+
+    const sanitizedAssignedSetId =
+      rawAssignedSetId === '' || rawAssignedSetId === 'null' || rawAssignedSetId === undefined
+        ? null
+        : String(rawAssignedSetId)
 
     if (!customerName || !customerPhone || !deliveryAddress || !calories) {
       return NextResponse.json({ error: 'Не все обязательные поля заполнены' }, { status: 400 })
@@ -214,13 +251,57 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    let ownerAdminId: string | null = null
+    if (user.role === 'MIDDLE_ADMIN') {
+      ownerAdminId = user.id
+    } else if (user.role === 'LOW_ADMIN') {
+      const lowAdmin = await db.admin.findUnique({ where: { id: user.id }, select: { createdBy: true } })
+      ownerAdminId = lowAdmin?.createdBy ?? null
+    }
+
+    if (hasAssignedSetId && sanitizedAssignedSetId && user.role !== 'SUPER_ADMIN') {
+      if (!ownerAdminId) {
+        return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
+      }
+      const set = await db.menuSet.findFirst({
+        where: { id: sanitizedAssignedSetId, adminId: ownerAdminId },
+        select: { id: true }
+      })
+      if (!set) {
+        return NextResponse.json({ error: 'Указан неверный сет' }, { status: 400 })
+      }
+    }
+
+    let allowedCustomerCreatorIds: string[] | null = null
+    if (user.role === 'MIDDLE_ADMIN') {
+      const lowAdmins = await db.admin.findMany({
+        where: { createdBy: user.id, role: 'LOW_ADMIN' },
+        select: { id: true }
+      })
+      allowedCustomerCreatorIds = [user.id, ...lowAdmins.map(a => a.id)]
+    } else if (user.role === 'LOW_ADMIN') {
+      allowedCustomerCreatorIds = [user.id]
+    }
+
     // Use transaction to prevent race condition in order number generation
     const newOrder = await db.$transaction(async (tx) => {
       let customer
       if (selectedClientId && selectedClientId !== 'manual') {
-        customer = await tx.customer.findUnique({ where: { id: selectedClientId } })
+        customer = await tx.customer.findFirst({
+          where: {
+            id: selectedClientId,
+            deletedAt: null,
+            ...(allowedCustomerCreatorIds ? { createdBy: { in: allowedCustomerCreatorIds } } : {})
+          }
+        })
       } else {
-        customer = await tx.customer.findFirst({ where: { phone: customerPhone, deletedAt: null } })
+        customer = await tx.customer.findFirst({
+          where: {
+            phone: customerPhone,
+            deletedAt: null,
+            ...(allowedCustomerCreatorIds ? { createdBy: { in: allowedCustomerCreatorIds } } : {})
+          }
+        })
         if (!customer) {
           // Create new customer as inactive for one-time orders
           customer = await tx.customer.create({
@@ -232,7 +313,9 @@ export async function POST(request: NextRequest) {
               orderPattern: 'manual',
               isActive: false,  // One-time order - client is disabled by default
               latitude: sanitizedLatitude,
-              longitude: sanitizedLongitude
+              longitude: sanitizedLongitude,
+              assignedSetId: hasAssignedSetId ? sanitizedAssignedSetId : null,
+              createdBy: (user.role === 'MIDDLE_ADMIN' || user.role === 'LOW_ADMIN') ? user.id : null
             }
           })
         }
@@ -240,6 +323,13 @@ export async function POST(request: NextRequest) {
 
       if (!customer) {
         throw new Error('Failed to find or create customer')
+      }
+
+      if (hasAssignedSetId) {
+        customer = await tx.customer.update({
+          where: { id: customer.id },
+          data: { assignedSetId: sanitizedAssignedSetId }
+        })
       }
 
       // Get next order number atomically within transaction
@@ -270,7 +360,14 @@ export async function POST(request: NextRequest) {
           longitude: sanitizedLongitude
         },
         include: {
-          customer: { select: { name: true, phone: true } },
+          customer: {
+            select: {
+              name: true,
+              phone: true,
+              assignedSetId: true,
+              assignedSet: { select: { id: true, name: true } }
+            }
+          },
           courier: { select: { id: true, name: true } }
         }
       })
@@ -285,7 +382,9 @@ export async function POST(request: NextRequest) {
       deliveryDate: date || new Date(newOrder.createdAt).toISOString().split('T')[0],
       isAutoOrder: false,
       latitude: latitude ? parseFloat(String(latitude)) : null,
-      longitude: longitude ? parseFloat(String(longitude)) : null
+      longitude: longitude ? parseFloat(String(longitude)) : null,
+      assignedSetId: newOrder.customer?.assignedSetId || null,
+      assignedSetName: (newOrder.customer as any)?.assignedSet?.name || null
     }
 
     console.log(`✅ Created manual order: ${transformedOrder.customerName} (#${newOrder.orderNumber})`)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,6 +11,7 @@ import {
   Package,
   History,
   User,
+  MessageSquare,
   LogOut,
   Plus,
   Trash2,
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react'
 import { HistoryTable } from '@/components/admin/HistoryTable'
 import { InterfaceSettings } from '@/components/admin/InterfaceSettings'
+import { ChatTab } from '@/components/chat/ChatTab'
 
 interface Order {
   id: string
@@ -73,8 +75,11 @@ interface Stats {
   pausedOrders: number
 }
 
+const ALL_TABS = ['statistics', 'orders', 'chat', 'interface', 'history'] as const
+
 export default function LowAdminPage() {
   const [activeTab, setActiveTab] = useState('statistics')
+  const [allowedTabs, setAllowedTabs] = useState<string[] | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -102,35 +107,63 @@ export default function LowAdminPage() {
   })
   const [isLoading, setIsLoading] = useState(true)
 
+  const effectiveAllowedTabs = useMemo(() => {
+    return allowedTabs && allowedTabs.length > 0 ? allowedTabs : [...ALL_TABS]
+  }, [allowedTabs])
+
+  useEffect(() => {
+    const loadPermissions = async () => {
+      try {
+        const res = await fetch('/api/admin/me')
+        if (!res.ok) return
+        const data = await res.json()
+        setAllowedTabs(Array.isArray(data.allowedTabs) ? data.allowedTabs : [])
+      } catch (error) {
+        console.error('Error fetching permissions:', error)
+      }
+    }
+
+    loadPermissions()
+  }, [])
+
+  useEffect(() => {
+    if (effectiveAllowedTabs.length === 0) return
+    if (!effectiveAllowedTabs.includes(activeTab)) {
+      setActiveTab(effectiveAllowedTabs[0])
+    }
+  }, [activeTab, effectiveAllowedTabs])
+
   useEffect(() => {
     // Fetch data on initial load
     // Authentication is handled by NextAuth middleware
     fetchData()
-  }, [selectedDate, filters])
+  }, [selectedDate, filters, allowedTabs])
 
   const fetchData = async () => {
     try {
-      // Fetch orders
-      const ordersResponse = await fetch(`/api/orders?date=${selectedDate.toISOString()}&filters=${JSON.stringify(filters)}`, {
-        headers: {
-        }
-      })
+      const fetches: Promise<void>[] = []
 
-      if (ordersResponse.ok) {
-        const ordersData = await ordersResponse.json()
-        setOrders(ordersData)
+      if (effectiveAllowedTabs.includes('orders')) {
+        fetches.push((async () => {
+          const ordersResponse = await fetch(`/api/orders?date=${selectedDate.toISOString()}&filters=${JSON.stringify(filters)}`)
+          if (ordersResponse.ok) {
+            const ordersData = await ordersResponse.json()
+            setOrders(ordersData)
+          }
+        })())
       }
 
-      // Fetch stats
-      const statsResponse = await fetch('/api/admin/statistics', {
-        headers: {
-        }
-      })
-
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json()
-        setStats(statsData)
+      if (effectiveAllowedTabs.includes('statistics')) {
+        fetches.push((async () => {
+          const statsResponse = await fetch('/api/admin/statistics')
+          if (statsResponse.ok) {
+            const statsData = await statsResponse.json()
+            setStats(statsData)
+          }
+        })())
       }
+
+      await Promise.all(fetches)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -214,35 +247,52 @@ export default function LowAdminPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto gap-2 p-1 bg-muted/50 backdrop-blur-sm rounded-xl">
-            <TabsTrigger
-              value="statistics"
-              className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
-            >
-              <BarChart3 className="w-4 h-4" />
-              Статистика
-            </TabsTrigger>
-            <TabsTrigger
-              value="orders"
-              className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
-            >
-              <Package className="w-4 h-4" />
-              Заказы
-            </TabsTrigger>
-            <TabsTrigger
-              value="interface"
-              className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
-            >
-              <Settings className="w-4 h-4" />
-              Интерфейс
-            </TabsTrigger>
-            <TabsTrigger
-              value="history"
-              className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
-            >
-              <History className="w-4 h-4" />
-              История
-            </TabsTrigger>
+          <TabsList className="flex flex-wrap w-full h-auto gap-2 p-1 bg-muted/50 backdrop-blur-sm rounded-xl">
+            {effectiveAllowedTabs.includes('statistics') && (
+              <TabsTrigger
+                value="statistics"
+                className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
+              >
+                <BarChart3 className="w-4 h-4" />
+                Статистика
+              </TabsTrigger>
+            )}
+            {effectiveAllowedTabs.includes('orders') && (
+              <TabsTrigger
+                value="orders"
+                className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
+              >
+                <Package className="w-4 h-4" />
+                Заказы
+              </TabsTrigger>
+            )}
+            {effectiveAllowedTabs.includes('chat') && (
+              <TabsTrigger
+                value="chat"
+                className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Чат
+              </TabsTrigger>
+            )}
+            {effectiveAllowedTabs.includes('interface') && (
+              <TabsTrigger
+                value="interface"
+                className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
+              >
+                <Settings className="w-4 h-4" />
+                Интерфейс
+              </TabsTrigger>
+            )}
+            {effectiveAllowedTabs.includes('history') && (
+              <TabsTrigger
+                value="history"
+                className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
+              >
+                <History className="w-4 h-4" />
+                История
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Statistics Tab */}
@@ -695,6 +745,11 @@ export default function LowAdminPage() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Chat Tab */}
+          <TabsContent value="chat" className="space-y-6">
+            <ChatTab />
           </TabsContent>
 
           {/* Interface Tab */}

@@ -19,7 +19,17 @@ export async function PATCH(
 
     const order = await db.order.findUnique({
       where: { id: orderId },
-      include: { customer: { select: { name: true, phone: true, dailyPrice: true } } }
+      include: {
+        customer: {
+          select: {
+            name: true,
+            phone: true,
+            dailyPrice: true,
+            assignedSetId: true,
+            assignedSet: { select: { id: true, name: true } }
+          }
+        }
+      }
     })
 
     if (!order) {
@@ -171,6 +181,7 @@ export async function PATCH(
           return NextResponse.json({ error: 'Недостаточно прав для редактирования' }, { status: 403 })
         }
 
+        const hasAssignedSetId = Object.prototype.hasOwnProperty.call(body, 'assignedSetId')
         const {
           customerName: _customerName,
           customerPhone: _customerPhone,
@@ -183,8 +194,31 @@ export async function PATCH(
           paymentMethod,
           isPrepaid,
           date,
-          courierId
+          courierId,
+          assignedSetId: rawAssignedSetId
         } = body
+
+        const sanitizedAssignedSetId =
+          rawAssignedSetId === '' || rawAssignedSetId === 'null' || rawAssignedSetId === undefined
+            ? null
+            : String(rawAssignedSetId)
+
+        if (hasAssignedSetId) {
+          if (sanitizedAssignedSetId && user.role !== 'SUPER_ADMIN') {
+            const set = await db.menuSet.findFirst({
+              where: { id: sanitizedAssignedSetId, adminId: user.id },
+              select: { id: true }
+            })
+            if (!set) {
+              return NextResponse.json({ error: 'Указан неверный сет' }, { status: 400 })
+            }
+          }
+
+          await db.customer.update({
+            where: { id: order.customerId },
+            data: { assignedSetId: sanitizedAssignedSetId }
+          })
+        }
 
         // Validate numeric fields if provided
         let parsedCalories
@@ -233,7 +267,14 @@ export async function PATCH(
       where: { id: orderId },
       data: updateData,
       include: {
-        customer: { select: { name: true, phone: true } },
+        customer: {
+          select: {
+            name: true,
+            phone: true,
+            assignedSetId: true,
+            assignedSet: { select: { id: true, name: true } }
+          }
+        },
         courier: { select: { id: true, name: true } }
       }
     })
@@ -242,7 +283,14 @@ export async function PATCH(
       ...updatedOrder,
       customerName: updatedOrder.customer?.name || 'Неизвестный клиент',
       customerPhone: updatedOrder.customer?.phone || 'Нет телефона',
-      customer: { name: updatedOrder.customer?.name || 'Неизвестный клиент', phone: updatedOrder.customer?.phone || 'Нет телефона' },
+      assignedSetId: updatedOrder.customer?.assignedSetId || null,
+      assignedSetName: (updatedOrder.customer as any)?.assignedSet?.name || null,
+      customer: {
+        name: updatedOrder.customer?.name || 'Неизвестный клиент',
+        phone: updatedOrder.customer?.phone || 'Нет телефона',
+        assignedSetId: updatedOrder.customer?.assignedSetId || null,
+        assignedSetName: (updatedOrder.customer as any)?.assignedSet?.name || null
+      },
       deliveryDate: updatedOrder.deliveryDate ? new Date(updatedOrder.deliveryDate).toISOString().split('T')[0] : new Date(updatedOrder.createdAt).toISOString().split('T')[0],
       isAutoOrder: updatedOrder.fromAutoOrder,
       courierName: updatedOrder.courier?.name || null
@@ -281,7 +329,16 @@ export async function GET(
 
     const order = await db.order.findUnique({
       where: { id: orderId },
-      include: { customer: { select: { name: true, phone: true } } }
+      include: {
+        customer: {
+          select: {
+            name: true,
+            phone: true,
+            assignedSetId: true,
+            assignedSet: { select: { id: true, name: true } }
+          }
+        }
+      }
     })
 
     if (!order) {
@@ -317,7 +374,14 @@ export async function GET(
       ...order,
       customerName: order.customer?.name || 'Неизвестный клиент',
       customerPhone: order.customer?.phone || 'Нет телефона',
-      customer: { name: order.customer?.name || 'Неизвестный клиент', phone: order.customer?.phone || 'Нет телефона' },
+      assignedSetId: order.customer?.assignedSetId || null,
+      assignedSetName: (order.customer as any)?.assignedSet?.name || null,
+      customer: {
+        name: order.customer?.name || 'Неизвестный клиент',
+        phone: order.customer?.phone || 'Нет телефона',
+        assignedSetId: order.customer?.assignedSetId || null,
+        assignedSetName: (order.customer as any)?.assignedSet?.name || null
+      },
       deliveryDate: order.deliveryDate ? new Date(order.deliveryDate).toISOString().split('T')[0] : new Date(order.createdAt).toISOString().split('T')[0],
       isAutoOrder: order.fromAutoOrder
     }
