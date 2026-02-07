@@ -78,7 +78,6 @@ import { SetsTab } from '@/components/admin/SetsTab'
 import { RouteOptimizeButton } from '@/components/admin/RouteOptimizeButton'
 import { MobileSidebar } from '@/components/MobileSidebar'
 import { MobileTabIndicator } from '@/components/MobileTabIndicator'
-import { MobileBottomNav } from '@/components/MobileBottomNav'
 
 interface Admin {
   id: string
@@ -1872,52 +1871,52 @@ export default function MiddleAdminPage() {
           {/* Statistics Tab */}
           <TabsContent value="statistics" className="space-y-6">
             {/* Order Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.successful}</CardTitle>
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+              <Card className="glass-card border-none shadow-sm">
+                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.successful}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
+                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
+                  <div className="text-xl md:text-2xl font-bold text-green-600">
                     {stats?.successfulOrders || 0}
                   </div>
-                  <p className="text-xs text-slate-500">Доставлено</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">Доставлено</p>
                 </CardContent>
               </Card>
 
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.failed}</CardTitle>
+              <Card className="glass-card border-none shadow-sm">
+                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.failed}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-red-600">
+                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
+                  <div className="text-xl md:text-2xl font-bold text-red-600">
                     {stats?.failedOrders || 0}
                   </div>
-                  <p className="text-xs text-slate-500">Отменено</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">Отменено</p>
                 </CardContent>
               </Card>
 
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.inDelivery}</CardTitle>
+              <Card className="glass-card border-none shadow-sm">
+                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.inDelivery}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-blue-600">
+                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
+                  <div className="text-xl md:text-2xl font-bold text-blue-600">
                     {stats?.inDeliveryOrders || 0}
                   </div>
-                  <p className="text-xs text-slate-500">В процессе</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">В процессе</p>
                 </CardContent>
               </Card>
 
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.pending}</CardTitle>
+              <Card className="glass-card border-none shadow-sm">
+                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.pending}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-orange-600">
+                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
+                  <div className="text-xl md:text-2xl font-bold text-orange-600">
                     {stats?.pendingOrders || 0}
                   </div>
-                  <p className="text-xs text-slate-500">В очереди</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">В очереди</p>
                 </CardContent>
               </Card>
             </div>
@@ -2025,64 +2024,64 @@ export default function MiddleAdminPage() {
             </div>
 
             {/* Calories Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.lowCal}</CardTitle>
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-6">
+              <Card className="glass-card border-none shadow-sm">
+                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.lowCal}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-red-600">
+                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
+                  <div className="text-xl md:text-2xl font-bold text-red-600">
                     {stats?.orders1200 || 0}
                   </div>
-                  <p className="text-xs text-slate-500">Низкокалорийные</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">1200 ккал</p>
                 </CardContent>
               </Card>
 
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.standard}</CardTitle>
+              <Card className="glass-card border-none shadow-sm">
+                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.standard}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-orange-600">
+                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
+                  <div className="text-xl md:text-2xl font-bold text-orange-600">
                     {stats?.orders1600 || 0}
                   </div>
-                  <p className="text-xs text-slate-500">Стандарт</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">1600 ккал</p>
                 </CardContent>
               </Card>
 
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.medium}</CardTitle>
+              <Card className="glass-card border-none shadow-sm">
+                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.medium}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-yellow-600">
+                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
+                  <div className="text-xl md:text-2xl font-bold text-yellow-600">
                     {stats?.orders2000 || 0}
                   </div>
-                  <p className="text-xs text-slate-500">Средние</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">2000 ккал</p>
                 </CardContent>
               </Card>
 
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.high}</CardTitle>
+              <Card className="glass-card border-none shadow-sm">
+                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.high}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
+                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
+                  <div className="text-xl md:text-2xl font-bold text-green-600">
                     {stats?.orders2500 || 0}
                   </div>
-                  <p className="text-xs text-slate-500">Сытные</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">2500 ккал</p>
                 </CardContent>
               </Card>
 
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.max}</CardTitle>
+              <Card className="glass-card border-none shadow-sm col-span-2 md:col-span-1">
+                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.max}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-blue-600">
+                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
+                  <div className="text-xl md:text-2xl font-bold text-blue-600">
                     {stats?.orders3000 || 0}
                   </div>
-                  <p className="text-xs text-slate-500">Максимальные</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">3000 ккал</p>
                 </CardContent>
               </Card>
             </div>
@@ -2131,7 +2130,34 @@ export default function MiddleAdminPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-wrap items-center gap-2">
+                {/* Mobile Actions - Compact */}
+                <div className="md:hidden flex flex-col gap-3 mb-4">
+                  <Button onClick={() => setIsCreateOrderModalOpen(true)} className="w-full h-12 text-base font-semibold shadow-md">
+                    <Plus className="w-5 h-5 mr-2" />
+                    Создать заказ
+                  </Button>
+                  <div className="grid grid-cols-3 gap-2">
+                    <RouteOptimizeButton
+                      orders={orders}
+                      onOptimized={(orderedIds) => {
+                        const orderedOrders = orderedIds
+                          .map(id => orders.find(o => o.id === id))
+                          .filter(Boolean) as typeof orders;
+                        setOrders(orderedOrders);
+                      }}
+                      variant="outline"
+                    />
+                    <Button variant="outline" className="h-12 w-full" onClick={() => setIsBulkEditOrdersModalOpen(true)} disabled={selectedOrders.size === 0}>
+                      <Edit className="w-5 h-5" />
+                    </Button>
+                    <Button variant="outline" className="h-12 w-full border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-900" onClick={handleDeleteSelectedOrders} disabled={selectedOrders.size === 0}>
+                      <Trash2 className="w-5 h-5 text-red-500" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Desktop Actions */}
+                <div className="hidden md:flex flex-wrap items-center gap-2">
                   <Button onClick={() => setIsCreateOrderModalOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Создать заказ
@@ -2158,7 +2184,7 @@ export default function MiddleAdminPage() {
                   </Button>
                 </div>
                 {/* Date Selector */}
-                <div className="flex items-center justify-center mb-6 space-x-2">
+                <div className="flex items-center justify-center mb-6 space-x-2 overflow-x-auto py-2 mobile-scroll-container">
                   <Button
                     variant="outline"
                     size="sm"
@@ -4651,13 +4677,6 @@ export default function MiddleAdminPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav
-        activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab)}
-        variant="admin"
-      />
     </div>
   )
 }

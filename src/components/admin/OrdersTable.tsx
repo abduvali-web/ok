@@ -167,65 +167,82 @@ export function OrdersTable({
             </div>
 
             {/* Mobile View */}
-            <div className="md:hidden space-y-4">
+            <div className="md:hidden space-y-3">
                 {orders.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
+                    <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
                         {t.admin.noOrders}
                     </div>
                 ) : (
                     orders.map((order) => (
-                        <Card key={order.id} className="overflow-hidden">
-                            <CardHeader className="pb-2 bg-muted/30">
-                                <div className="flex justify-between items-start">
-                                    <div className="flex items-center gap-2">
+                        <Card key={order.id} className="overflow-hidden border shadow-sm">
+                            <CardHeader className="p-3 bg-muted/30 pb-2">
+                                <div className="flex justify-between items-center">
+                                    <div className="flex items-center gap-3">
                                         <Checkbox
                                             checked={selectedOrders.has(order.id)}
                                             onCheckedChange={() => onSelectOrder(order.id)}
+                                            className="h-5 w-5"
                                         />
-                                        <CardTitle className="text-base">
-                                            {t.courier.orderNumber}{order.orderNumber}
-                                        </CardTitle>
+                                        <span className="font-semibold text-sm">#{order.orderNumber}</span>
                                     </div>
-                                    <Badge variant={
-                                        order.orderStatus === 'DELIVERED' ? 'default' :
-                                            order.orderStatus === 'PENDING' ? 'secondary' :
-                                                order.orderStatus === 'IN_DELIVERY' ? 'outline' : 'destructive'
-                                    }>
+                                    <Badge
+                                        variant="outline"
+                                        className={`${order.orderStatus === 'DELIVERED' ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400' :
+                                            order.orderStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                                                order.orderStatus === 'IN_DELIVERY' ? 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400' :
+                                                    'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400'
+                                            }`}
+                                    >
                                         {order.orderStatus}
                                     </Badge>
                                 </div>
                             </CardHeader>
-                            <CardContent className="pt-4 space-y-3">
-                                <div className="flex items-start gap-3">
-                                    <User className="w-4 h-4 mt-1 text-muted-foreground" />
-                                    <div>
-                                        <div className="font-medium">{order.customer.name}</div>
-                                        <div className="text-sm text-muted-foreground">{order.customer.phone}</div>
+                            <CardContent className="p-3 pt-3 space-y-2.5">
+                                {/* Customer Info */}
+                                <div className="flex items-start gap-2.5">
+                                    <div className="mt-0.5 bg-primary/10 p-1.5 rounded-full">
+                                        <User className="w-3.5 h-3.5 text-primary" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-medium text-sm truncate">{order.customer.name}</div>
+                                        <div className="text-xs text-muted-foreground truncate">{order.customer.phone}</div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-start gap-3">
-                                    <MapPin className="w-4 h-4 mt-1 text-muted-foreground" />
-                                    <div className="text-sm">{order.deliveryAddress}</div>
+                                {/* Address */}
+                                <div className="flex items-start gap-2.5">
+                                    <div className="mt-0.5 bg-orange-100 dark:bg-orange-900/30 p-1.5 rounded-full">
+                                        <MapPin className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+                                    </div>
+                                    <div className="text-sm line-clamp-2 leading-tight">{order.deliveryAddress}</div>
                                 </div>
 
-                                <div className="flex items-center gap-3">
-                                    <Calendar className="w-4 h-4 text-muted-foreground" />
-                                    <div className="text-sm">
+                                {/* Time Information */}
+                                <div className="flex items-center gap-2.5">
+                                    <div className="bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-full">
+                                        <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                    </div>
+                                    <div className="text-xs font-medium">
                                         {order.deliveryTime}
-                                        {order.deliveryDate && ` • ${order.deliveryDate}`}
+                                        {order.deliveryDate && <span className="text-muted-foreground font-normal"> • {order.deliveryDate}</span>}
                                     </div>
                                 </div>
 
-                                <div className="flex justify-between items-center pt-2 border-t mt-2">
-                                    <Badge variant={order.paymentStatus === 'PAID' ? 'default' : 'destructive'}>
+                                {/* Footer Actions */}
+                                <div className="flex items-center justify-between pt-2 mt-2 border-t gap-2">
+                                    <Badge
+                                        variant="outline"
+                                        className={order.paymentStatus === 'PAID' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}
+                                    >
                                         {order.paymentStatus === 'PAID' ? t.common.paid : t.common.notPaid}
                                     </Badge>
-                                    <div className="flex gap-1">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewOrder?.(order)}>
-                                            <Eye className="w-4 h-4" />
+
+                                    <div className="flex gap-2">
+                                        <Button variant="outline" className="h-10 px-4 flex-1" onClick={() => onViewOrder?.(order)}>
+                                            <Eye className="w-4 h-4 mr-2" />
+                                            View
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditOrder?.(order)}>
+                                        <Button variant="secondary" className="h-10 w-10 p-0 shrink-0" onClick={() => onEditOrder?.(order)}>
                                             <Edit className="w-4 h-4" />
                                         </Button>
                                     </div>
