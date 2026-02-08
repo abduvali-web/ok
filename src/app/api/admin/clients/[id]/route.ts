@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
 import { Prisma } from '@prisma/client'
 import { hashPassword } from '@/lib/customer-auth'
+import { getGroupAdminIds } from '@/lib/admin-scope'
 
 export async function DELETE(
   request: NextRequest,
@@ -23,10 +24,32 @@ export async function DELETE(
     }
 
     // Hard delete orders and client (consider soft delete instead)
-    await db.order.deleteMany({ where: { customerId: clientId } })
-    await db.customer.delete({ where: { id: clientId } })
+    const groupAdminIds = user.role === 'SUPER_ADMIN' ? null : await getGroupAdminIds(user)
+    if (groupAdminIds && (!client.createdBy || !groupAdminIds.includes(client.createdBy))) {
+      return NextResponse.json({ error: 'ÐšÐ»Ð¸ÐµÐ½Ñ‚ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½' }, { status: 404 })
+    }
 
-    return NextResponse.json({ message: 'Клиент успешно удален', client })
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    let deletedOrders = 0
+    if (client.isActive) {
+      const deletedOrdersResult = await db.order.deleteMany({
+        where: {
+          customerId: clientId,
+          fromAutoOrder: true,
+          deliveryDate: { gte: today }
+        }
+      })
+      deletedOrders = deletedOrdersResult.count
+    }
+
+    await db.customer.update({
+      where: { id: clientId },
+      data: { deletedAt: new Date(), deletedBy: user.id }
+    })
+
+    return NextResponse.json({ success: true, movedTobin: 1, deletedOrders })
   } catch (error) {
     console.error('Error deleting client:', error)
     return NextResponse.json({
@@ -61,6 +84,17 @@ export async function PATCH(
       defaultCourierId,
       assignedSetId
     } = body
+
+    const groupAdminIds = user.role === 'SUPER_ADMIN' ? null : await getGroupAdminIds(user)
+    if (groupAdminIds) {
+      const existingClient = await db.customer.findUnique({
+        where: { id: clientId },
+        select: { createdBy: true }
+      })
+      if (!existingClient || !existingClient.createdBy || !groupAdminIds.includes(existingClient.createdBy)) {
+        return NextResponse.json({ error: 'Клиент не найден' }, { status: 404 })
+      }
+    }
 
     // Prepare update data
     const updateData: any = {}

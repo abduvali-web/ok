@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
 import { MENUS } from '@/lib/menuData'
+import { getOwnerAdminId } from '@/lib/admin-scope'
 
 // GET - Fetch all sets
 export async function GET(request: NextRequest) {
@@ -18,11 +19,7 @@ export async function GET(request: NextRequest) {
         if (user.role === 'MIDDLE_ADMIN') {
             ownerAdminId = user.id
         } else if (user.role === 'LOW_ADMIN') {
-            const lowAdmin = await db.admin.findUnique({
-                where: { id: user.id },
-                select: { createdBy: true }
-            })
-            ownerAdminId = lowAdmin?.createdBy ?? null
+            ownerAdminId = await getOwnerAdminId(user)
         } else if (user.role === 'SUPER_ADMIN') {
             ownerAdminId = requestedAdminId
         }

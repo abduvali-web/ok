@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser } from '@/lib/auth-utils'
+import { getGroupAdminIds } from '@/lib/admin-scope'
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,27 +23,18 @@ export async function GET(request: NextRequest) {
       if (targetAdminId && targetAdminId !== 'all') {
         where.adminId = targetAdminId
       }
-    } else if (user.role === 'MIDDLE_ADMIN') {
-      // Middle Admin can see their own logs and logs of users they created
-      const createdUsers = await db.admin.findMany({
-        where: { createdBy: user.id },
-        select: { id: true }
-      })
-      const allowedIds = [user.id, ...createdUsers.map(u => u.id)]
+    } else {
+      const groupAdminIds = await getGroupAdminIds(user)
+      const allowedIds = groupAdminIds ?? [user.id]
 
       if (targetAdminId && targetAdminId !== 'all') {
-        // If requesting specific user, verify access
         if (!allowedIds.includes(targetAdminId)) {
           return NextResponse.json({ error: 'Access denied to this user logs' }, { status: 403 })
         }
         where.adminId = targetAdminId
       } else {
-        // If no specific user, show logs for all allowed users
         where.adminId = { in: allowedIds }
       }
-    } else {
-      // Low Admin and Courier can ONLY see their own logs
-      where.adminId = user.id
     }
 
     const actionLogs = await db.actionLog.findMany({

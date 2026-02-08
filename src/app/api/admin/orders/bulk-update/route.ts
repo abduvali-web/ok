@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { getGroupAdminIds } from '@/lib/admin-scope'
 
 export async function PATCH(request: NextRequest) {
     try {
         const user = await getAuthUser(request)
-        if (!user || !hasRole(user, ['SUPER_ADMIN', 'MIDDLE_ADMIN'])) {
+        if (!user || !hasRole(user, ['SUPER_ADMIN', 'MIDDLE_ADMIN', 'LOW_ADMIN'])) {
             return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
         }
 
@@ -23,24 +24,33 @@ export async function PATCH(request: NextRequest) {
         // Prepare update data
         const updateData: any = {}
 
-        if (updates.orderStatus) updateData.status = updates.orderStatus
+        if (updates.orderStatus) updateData.orderStatus = updates.orderStatus
         if (updates.paymentStatus) updateData.paymentStatus = updates.paymentStatus
         if (updates.courierId) updateData.courierId = updates.courierId === 'none' ? null : updates.courierId
         if (updates.deliveryDate) updateData.deliveryDate = new Date(updates.deliveryDate)
 
+        const groupAdminIds = user.role === 'SUPER_ADMIN' ? null : await getGroupAdminIds(user)
+
+        const eligibleOrders = await db.order.findMany({
+            where: {
+                id: { in: orderIds },
+                ...(groupAdminIds ? { adminId: { in: groupAdminIds } } : {})
+            },
+            select: { id: true }
+        })
+        const eligibleOrderIds = eligibleOrders.map(o => o.id)
+        const skippedCount = orderIds.length - eligibleOrderIds.length
+
         // Update orders
         const result = await db.order.updateMany({
-            where: {
-                id: {
-                    in: orderIds
-                }
-            },
+            where: { id: { in: eligibleOrderIds } },
             data: updateData
         })
 
         return NextResponse.json({
             message: 'Заказы успешно обновлены',
-            updatedCount: result.count
+            updatedCount: result.count,
+            skippedCount
         })
 
     } catch (error) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser } from '@/lib/auth-utils'
+import { getGroupAdminIds } from '@/lib/admin-scope'
 
 export async function GET(request: NextRequest) {
     try {
@@ -12,19 +13,11 @@ export async function GET(request: NextRequest) {
         let where: any = {}
 
         if (user.role === 'SUPER_ADMIN') {
-            // Super Admin sees everyone
             where = {}
-        } else if (user.role === 'MIDDLE_ADMIN') {
-            // Middle Admin sees themselves and users they created
-            where = {
-                OR: [
-                    { id: user.id },
-                    { createdBy: user.id }
-                ]
-            }
         } else {
-            // Others see only themselves
-            where = { id: user.id }
+            const groupAdminIds = await getGroupAdminIds(user)
+            const allowedIds = groupAdminIds ?? [user.id]
+            where = { id: { in: allowedIds } }
         }
 
         const users = await db.admin.findMany({

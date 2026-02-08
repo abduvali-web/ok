@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { getGroupAdminIds } from '@/lib/admin-scope'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,27 +15,13 @@ export async function GET(request: NextRequest) {
     // Build where clause for filtering
     const whereClause: any = {}
 
-    // Data isolation: MIDDLE_ADMIN can only see stats for their own orders and orders from their low admins
-    if (user.role === 'MIDDLE_ADMIN') {
-      // Get all low admins created by this middle admin
-      const lowAdmins = await db.admin.findMany({
-        where: {
-          createdBy: user.id,
-          role: 'LOW_ADMIN'
-        },
-        select: { id: true }
-      })
-      const lowAdminIds = lowAdmins.map(admin => admin.id)
-
-      // Filter orders: only those created by this middle admin or their low admins
-      whereClause.adminId = {
-        in: [user.id, ...lowAdminIds]
+    if (user.role !== 'SUPER_ADMIN') {
+      const groupAdminIds = await getGroupAdminIds(user)
+      if (groupAdminIds) {
+        whereClause.adminId = { in: groupAdminIds }
+      } else {
+        whereClause.adminId = user.id
       }
-    }
-
-    // Data isolation: LOW_ADMIN can only see stats for their own orders
-    if (user.role === 'LOW_ADMIN') {
-      whereClause.adminId = user.id
     }
 
     // Get all orders

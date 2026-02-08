@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { getOwnerAdminId } from '@/lib/admin-scope'
 
 export async function GET(
     request: NextRequest,
@@ -26,11 +27,8 @@ export async function GET(
                 return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
             }
         } else if (user.role === 'LOW_ADMIN') {
-            const lowAdmin = await db.admin.findUnique({
-                where: { id: user.id },
-                select: { createdBy: true }
-            })
-            if (!lowAdmin?.createdBy || set.adminId !== lowAdmin.createdBy) {
+            const ownerAdminId = await getOwnerAdminId(user)
+            if (!ownerAdminId || set.adminId !== ownerAdminId) {
                 return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
             }
         } else if (user.role !== 'SUPER_ADMIN') {

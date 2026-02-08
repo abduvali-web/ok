@@ -46,6 +46,11 @@ export async function PATCH(
       )
     }
 
+    // Middle admins can only manage admins they created
+    if (user.role === 'MIDDLE_ADMIN' && admin.createdBy !== user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     // Super admins can only manage MIDDLE_ADMIN (for this route)
     if (user.role === 'SUPER_ADMIN' && admin.role !== 'MIDDLE_ADMIN') {
       return NextResponse.json(

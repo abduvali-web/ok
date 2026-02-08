@@ -598,6 +598,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   }
 
   const handlePermanentDeleteOrders = async () => {
+    if (isLowAdminView) {
+      toast.error('Not allowed')
+      return
+    }
     if (selectedOrders.size === 0) {
       toast.error('Пожалуйста, выберите заказы для удаления')
       return
@@ -681,6 +685,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   }
 
   const handlePermanentDeleteClients = async () => {
+    if (isLowAdminView) {
+      toast.error('Not allowed')
+      return
+    }
     if (selectedBinClients.size === 0) {
       toast.error('Пожалуйста, выберите клиентов для удаления')
       return
@@ -751,6 +759,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     }
   }
 
+  const normalizeAllowedTabsForForm = (tabs: string[] | null | undefined) => {
+    const inputTabs = Array.isArray(tabs) ? tabs : []
+    const mapped = inputTabs.map((tab) => {
+      if (tab === 'chat') return 'profile'
+      if (tab === 'settings') return 'interface'
+      return tab
+    })
+    return Array.from(new Set(mapped))
+  }
+
   const handleEditAdmin = (admin: Admin) => {
     setEditingAdmin(admin)
     setEditAdminFormData({
@@ -759,7 +777,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       password: '',
       role: admin.role,
       isActive: admin.isActive,
-      allowedTabs: admin.allowedTabs || [],
+      allowedTabs: normalizeAllowedTabsForForm(admin.allowedTabs),
       salary: admin.salary || 0
     })
     setIsEditAdminModalOpen(true)
@@ -3518,17 +3536,77 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <Checkbox
-                                    id="tab-chat"
-                                    checked={createFormData.allowedTabs.includes('chat')}
+                                    id="tab-profile"
+                                    checked={createFormData.allowedTabs.includes('profile')}
                                     onCheckedChange={(checked) => {
                                       const tabs = checked
-                                        ? [...createFormData.allowedTabs, 'chat']
-                                        : createFormData.allowedTabs.filter(t => t !== 'chat')
+                                        ? [...createFormData.allowedTabs, 'profile']
+                                        : createFormData.allowedTabs.filter(t => t !== 'profile')
                                       setCreateFormData({ ...createFormData, allowedTabs: tabs })
                                     }}
                                   />
-                                  <label htmlFor="tab-chat" className="text-sm cursor-pointer">
-                                    Чат
+                                  <label htmlFor="tab-profile" className="text-sm cursor-pointer">
+                                    Профиль
+                                  </label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id="tab-admins"
+                                    checked={createFormData.allowedTabs.includes('admins')}
+                                    onCheckedChange={(checked) => {
+                                      const tabs = checked
+                                        ? [...createFormData.allowedTabs, 'admins']
+                                        : createFormData.allowedTabs.filter(t => t !== 'admins')
+                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
+                                    }}
+                                  />
+                                  <label htmlFor="tab-admins" className="text-sm cursor-pointer">
+                                    Админы
+                                  </label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id="tab-bin"
+                                    checked={createFormData.allowedTabs.includes('bin')}
+                                    onCheckedChange={(checked) => {
+                                      const tabs = checked
+                                        ? [...createFormData.allowedTabs, 'bin']
+                                        : createFormData.allowedTabs.filter(t => t !== 'bin')
+                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
+                                    }}
+                                  />
+                                  <label htmlFor="tab-bin" className="text-sm cursor-pointer">
+                                    Корзина
+                                  </label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id="tab-warehouse"
+                                    checked={createFormData.allowedTabs.includes('warehouse')}
+                                    onCheckedChange={(checked) => {
+                                      const tabs = checked
+                                        ? [...createFormData.allowedTabs, 'warehouse']
+                                        : createFormData.allowedTabs.filter(t => t !== 'warehouse')
+                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
+                                    }}
+                                  />
+                                  <label htmlFor="tab-warehouse" className="text-sm cursor-pointer">
+                                    Склад
+                                  </label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id="tab-finance"
+                                    checked={createFormData.allowedTabs.includes('finance')}
+                                    onCheckedChange={(checked) => {
+                                      const tabs = checked
+                                        ? [...createFormData.allowedTabs, 'finance']
+                                        : createFormData.allowedTabs.filter(t => t !== 'finance')
+                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
+                                    }}
+                                  />
+                                  <label htmlFor="tab-finance" className="text-sm cursor-pointer">
+                                    Финансы
                                   </label>
                                 </div>
                                 <div className="flex items-center space-x-2">
@@ -3614,7 +3692,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           onClick={async () => {
                             try {
                               const response = await fetch(`/api/admin/${admin.id}/password`, {
+                                method: 'POST',
                                 headers: {
+                                  'Content-Type': 'application/json'
                                 }
                               })
                               if (response.ok) {
@@ -3669,7 +3749,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                               return
                             }
                             try {
-                              const response = await fetch(`/api/admin/${admin.id}/delete`, {
+                              const response = await fetch(`/api/admin/low-admins/${admin.id}`, {
                                 method: 'DELETE',
                                 headers: {
                                 }
@@ -3739,7 +3819,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             onClick={async () => {
                               try {
                                 const response = await fetch(`/api/admin/${admin.id}/password`, {
+                                  method: 'POST',
                                   headers: {
+                                    'Content-Type': 'application/json'
                                   }
                                 })
                                 if (response.ok) {
@@ -3808,7 +3890,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             onClick={async () => {
                               if (confirm('Вы уверены, что хотите удалить этого пользователя?')) {
                                 try {
-                                  const response = await fetch(`/api/admin/${admin.id}/delete`, {
+                                  const response = await fetch(`/api/admin/low-admins/${admin.id}`, {
                                     method: 'DELETE',
                                     headers: {
                                     }
@@ -3846,7 +3928,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
           {/* History Tab */}
           < TabsContent value="history" className="space-y-6" >
-            <HistoryTable role="MIDDLE_ADMIN" />
+            <HistoryTable role={meRole || 'MIDDLE_ADMIN'} />
           </TabsContent >
 
           {/* Profile Tab with Chat and Settings */}
@@ -4441,16 +4523,68 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id="tab-chat"
-                        checked={editAdminFormData.allowedTabs.includes('chat')}
+                        id="tab-profile"
+                        checked={editAdminFormData.allowedTabs.includes('profile')}
                         onCheckedChange={(checked) => {
                           const tabs = checked
-                            ? [...editAdminFormData.allowedTabs, 'chat']
-                            : editAdminFormData.allowedTabs.filter(t => t !== 'chat')
+                            ? [...editAdminFormData.allowedTabs, 'profile']
+                            : editAdminFormData.allowedTabs.filter(t => t !== 'profile')
                           setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
                         }}
                       />
-                      <label htmlFor="tab-chat" className="text-sm">Чат</label>
+                      <label htmlFor="tab-profile" className="text-sm">Профиль</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="tab-admins"
+                        checked={editAdminFormData.allowedTabs.includes('admins')}
+                        onCheckedChange={(checked) => {
+                          const tabs = checked
+                            ? [...editAdminFormData.allowedTabs, 'admins']
+                            : editAdminFormData.allowedTabs.filter(t => t !== 'admins')
+                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
+                        }}
+                      />
+                      <label htmlFor="tab-admins" className="text-sm">Админы</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="tab-bin"
+                        checked={editAdminFormData.allowedTabs.includes('bin')}
+                        onCheckedChange={(checked) => {
+                          const tabs = checked
+                            ? [...editAdminFormData.allowedTabs, 'bin']
+                            : editAdminFormData.allowedTabs.filter(t => t !== 'bin')
+                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
+                        }}
+                      />
+                      <label htmlFor="tab-bin" className="text-sm">Корзина</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="tab-warehouse"
+                        checked={editAdminFormData.allowedTabs.includes('warehouse')}
+                        onCheckedChange={(checked) => {
+                          const tabs = checked
+                            ? [...editAdminFormData.allowedTabs, 'warehouse']
+                            : editAdminFormData.allowedTabs.filter(t => t !== 'warehouse')
+                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
+                        }}
+                      />
+                      <label htmlFor="tab-warehouse" className="text-sm">Склад</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="tab-finance"
+                        checked={editAdminFormData.allowedTabs.includes('finance')}
+                        onCheckedChange={(checked) => {
+                          const tabs = checked
+                            ? [...editAdminFormData.allowedTabs, 'finance']
+                            : editAdminFormData.allowedTabs.filter(t => t !== 'finance')
+                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
+                        }}
+                      />
+                      <label htmlFor="tab-finance" className="text-sm">Финансы</label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
