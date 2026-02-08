@@ -20,6 +20,31 @@ export async function PATCH(
         const data = await request.json()
         const hasAllowedTabs = Object.prototype.hasOwnProperty.call(data, 'allowedTabs')
 
+        const validTabs = [
+            'orders',
+            'clients',
+            'admins',
+            'bin',
+            'statistics',
+            'history',
+            'profile',
+            'warehouse',
+            'finance',
+            'interface',
+            // legacy aliases
+            'chat',
+            'settings'
+        ]
+
+        if (hasAllowedTabs) {
+            if (data.allowedTabs != null && !Array.isArray(data.allowedTabs)) {
+                return NextResponse.json({ error: 'Invalid allowedTabs' }, { status: 400 })
+            }
+            if (Array.isArray(data.allowedTabs) && data.allowedTabs.some((tab: string) => !validTabs.includes(tab))) {
+                return NextResponse.json({ error: 'Invalid allowedTabs values' }, { status: 400 })
+            }
+        }
+
         // Verify target admin exists and user has permission to edit them
         const targetAdmin = await db.admin.findUnique({
             where: { id }

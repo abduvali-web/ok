@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { filterCustomerIdsInGroup, getGroupAdminIds } from '@/lib/admin-scope'
 
 export async function PATCH(request: NextRequest) {
     try {
@@ -33,10 +34,14 @@ export async function PATCH(request: NextRequest) {
 
         // Let's handle simple fields first.
 
+        const groupAdminIds = user.role === 'SUPER_ADMIN' ? null : await getGroupAdminIds(user)
+        const allowedIds = groupAdminIds ? await filterCustomerIdsInGroup(clientIds, groupAdminIds) : clientIds
+        const skippedCount = clientIds.length - allowedIds.length
+
         const result = await db.customer.updateMany({
             where: {
                 id: {
-                    in: clientIds
+                    in: allowedIds
                 }
             },
             data: updateData
@@ -44,7 +49,8 @@ export async function PATCH(request: NextRequest) {
 
         return NextResponse.json({
             message: 'Клиенты успешно обновлены',
-            updatedCount: result.count
+            updatedCount: result.count,
+            skippedCount
         })
 
     } catch (error) {
@@ -55,4 +61,3 @@ export async function PATCH(request: NextRequest) {
         }, { status: 500 })
     }
 }
-

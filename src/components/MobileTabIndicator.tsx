@@ -8,7 +8,8 @@ import {
     History,
     User,
     Trash2,
-    DollarSign
+    DollarSign,
+    Settings
 } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
 
@@ -33,6 +34,8 @@ export function MobileTabIndicator({ activeTab }: MobileTabIndicatorProps) {
                 return { icon: BarChart3, label: t.admin.statistics, color: 'from-green-500 to-emerald-500' }
             case 'history':
                 return { icon: History, label: t.admin.history, color: 'from-yellow-500 to-amber-500' }
+            case 'interface':
+                return { icon: Settings, label: t.admin.interface, color: 'from-slate-600 to-slate-800' }
             case 'profile':
                 return { icon: User, label: t.common.profile, color: 'from-indigo-500 to-violet-500' }
             case 'warehouse':
@@ -52,7 +55,7 @@ export function MobileTabIndicator({ activeTab }: MobileTabIndicatorProps) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             key={activeTab}
-            className="md:hidden sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700 px-4 py-3"
+            className="md:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-lg border-b border-border px-4 py-3"
         >
             <div className="flex items-center space-x-3">
                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${tabInfo.color} flex items-center justify-center shadow-lg`}>

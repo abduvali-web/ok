@@ -5,11 +5,12 @@ import { getAuthUser, hasRole } from '@/lib/auth-utils'
 import { passwordSchema, emailSchema } from '@/lib/validations'
 import { z } from 'zod'
 import { Prisma } from '@prisma/client'
+import { getOwnerAdminId } from '@/lib/admin-scope'
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
-    if (!user || !hasRole(user, ['MIDDLE_ADMIN', 'SUPER_ADMIN'])) {
+    if (!user || !hasRole(user, ['MIDDLE_ADMIN', 'SUPER_ADMIN', 'LOW_ADMIN'])) {
       return NextResponse.json(
         { error: 'Доступ запрещен' },
         { status: 403 }
@@ -24,6 +25,8 @@ export async function GET(request: NextRequest) {
 
     if (user.role === 'MIDDLE_ADMIN') {
       where.createdBy = user.id
+    } else if (user.role === 'LOW_ADMIN') {
+      where.createdBy = (await getOwnerAdminId(user)) ?? user.id
     }
 
     const lowAdmins = await db.admin.findMany({
@@ -98,7 +101,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const validTabs = ['statistics', 'orders', 'clients', 'chat', 'interface', 'history']
+    const validTabs = [
+      'orders',
+      'clients',
+      'admins',
+      'bin',
+      'statistics',
+      'history',
+      'profile',
+      'warehouse',
+      'finance',
+      'interface',
+      // legacy aliases
+      'chat',
+      'settings'
+    ]
     if (allowedTabs && allowedTabs.some((tab: string) => !validTabs.includes(tab))) {
       return NextResponse.json(
         { error: 'Недопустимое значение в allowedTabs' },

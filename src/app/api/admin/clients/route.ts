@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { getGroupAdminIds } from '@/lib/admin-scope'
 import { Prisma } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
@@ -32,8 +33,9 @@ export async function GET(request: NextRequest) {
         in: [user.id, ...lowAdminIds]
       }
     } else if (user.role === 'LOW_ADMIN') {
-      // LOW_ADMIN can only see clients they created themselves
-      whereClause.createdBy = user.id
+      // LOW_ADMIN sees clients for their owner group
+      const groupAdminIds = await getGroupAdminIds(user)
+      whereClause.createdBy = { in: groupAdminIds && groupAdminIds.length > 0 ? groupAdminIds : [user.id] }
     }
     // SUPER_ADMIN sees all clients (no additional filter)
 

@@ -73,6 +73,7 @@ export default function CourierPage() {
   const [isOrderOpen, setIsOrderOpen] = useState(false)
   const [isOrderPaused, setIsOrderPaused] = useState(false)
   const [amountReceived, setAmountReceived] = useState('')
+  const [isCompleting, setIsCompleting] = useState(false)
 
   useEffect(() => {
     const loadCourierData = async () => {
@@ -200,6 +201,7 @@ export default function CourierPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ action: 'start_delivery' }),
       })
 
@@ -224,12 +226,16 @@ export default function CourierPage() {
     const confirmClose = window.confirm(`${t.courier.completeDelivery}?`)
     if (!confirmClose) return
 
+    if (isCompleting) return
+    setIsCompleting(true)
+
     try {
       const response = await fetch(`/api/orders/${selectedOrder.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           action: 'complete_delivery',
           amountReceived: amountReceived ? parseFloat(amountReceived) : null,
@@ -240,10 +246,17 @@ export default function CourierPage() {
         toast.success(t.common.success)
         handleCloseOrderDetailSheet()
         void fetchOrders()
+      } else if (response.status === 401) {
+        window.location.href = '/login'
+      } else {
+        const data = await response.json().catch(() => ({}))
+        toast.error(data.error || t.common.error)
       }
     } catch (error) {
       console.error('Error completing delivery:', error)
       toast.error(t.common.error)
+    } finally {
+      setIsCompleting(false)
     }
   }
 
@@ -256,6 +269,7 @@ export default function CourierPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ action: 'pause_delivery' }),
       })
 
@@ -280,6 +294,7 @@ export default function CourierPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ action: 'resume_delivery' }),
       })
 
@@ -323,7 +338,7 @@ export default function CourierPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="mb-4">
           <RefreshCw className="w-8 h-8 text-primary" />
         </motion.div>
@@ -333,8 +348,8 @@ export default function CourierPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 safe-top">
+    <div className="min-h-screen bg-background pb-20">
+      <header className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50 safe-top">
         <div className="max-w-md mx-auto px-4 h-16 flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary">
@@ -407,8 +422,8 @@ export default function CourierPage() {
 
               <AnimatePresence mode="popLayout">
                 {orders.length === 0 ? (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 bg-white rounded-2xl shadow-sm">
-                    <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 bg-card rounded-2xl shadow-sm">
+                    <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Package className="w-8 h-8 text-slate-400" />
                     </div>
                     <h3 className="text-lg font-medium text-slate-900">{t.courier.noOrders}</h3>
@@ -429,7 +444,7 @@ export default function CourierPage() {
                     >
                       <Card
                         className={`overflow-hidden border-none shadow-md transition-all duration-200 active:scale-[0.98] ${
-                          order.orderStatus === 'DELIVERED' ? 'bg-slate-50/50' : 'bg-white'
+                          order.orderStatus === 'DELIVERED' ? 'bg-muted/50' : 'bg-card'
                         }`}
                         onClick={() => handleOpenOrder(order)}
                       >
@@ -469,7 +484,7 @@ export default function CourierPage() {
                             </div>
                           </div>
 
-                          <div className="mt-4 flex items-center justify-between pt-4 border-t border-slate-100">
+                          <div className="mt-4 flex items-center justify-between pt-4 border-t border-border">
                             <div className="flex items-center gap-4 text-sm text-slate-600">
                               <div className="flex items-center">
                                 <Utensils className="w-4 h-4 mr-1.5 text-slate-400" />
@@ -509,7 +524,7 @@ export default function CourierPage() {
                 <SheetHeader className="mb-6">
                   <div className="flex justify-between items-start">
                     <div>
-                      <Badge variant="outline" className="mb-2 border-slate-200 text-slate-500">
+                      <Badge variant="outline" className="mb-2 border-border text-muted-foreground">
                         #{selectedOrder.orderNumber}
                       </Badge>
                       <SheetTitle className="text-2xl font-bold text-slate-900">{selectedOrder.customer.name}</SheetTitle>
@@ -535,7 +550,7 @@ export default function CourierPage() {
                 </SheetHeader>
 
                 <div className="space-y-4">
-                  <div className="flex items-start p-3 bg-slate-50 rounded-xl">
+                  <div className="flex items-start p-3 bg-muted rounded-xl">
                     <MapPin className="w-5 h-5 text-primary mt-0.5 mr-3 shrink-0" />
                     <div>
                       <p className="text-sm text-slate-500 mb-0.5">{t.courier.deliveryAddress}</p>
@@ -543,7 +558,7 @@ export default function CourierPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center p-3 bg-slate-50 rounded-xl">
+                  <div className="flex items-center p-3 bg-muted rounded-xl">
                     <Phone className="w-5 h-5 text-primary mr-3 shrink-0" />
                     <div>
                       <p className="text-sm text-slate-500 mb-0.5">{t.common.phone}</p>
@@ -554,14 +569,14 @@ export default function CourierPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-slate-50 rounded-xl">
+                    <div className="p-3 bg-muted rounded-xl">
                       <div className="flex items-center mb-1">
                         <Package className="w-4 h-4 text-primary mr-2" />
                         <span className="text-xs text-slate-500">{t.common.quantity}</span>
                       </div>
                       <p className="font-semibold text-slate-900">{selectedOrder.quantity} шт.</p>
                     </div>
-                    <div className="p-3 bg-slate-50 rounded-xl">
+                    <div className="p-3 bg-muted rounded-xl">
                       <div className="flex items-center mb-1">
                         <Utensils className="w-4 h-4 text-primary mr-2" />
                         <span className="text-xs text-slate-500">{t.common.calories}</span>
@@ -582,9 +597,9 @@ export default function CourierPage() {
                 </div>
               </div>
 
-              <div className="mt-auto p-6 bg-slate-50 border-t border-slate-100 space-y-3">
+              <div className="mt-auto p-6 bg-muted/50 border-t border-border space-y-3">
                 {(selectedOrder.orderStatus === 'IN_DELIVERY' || selectedOrder.orderStatus === 'PAUSED') && (
-                  <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm mb-2">
+                  <div className="bg-card p-3 rounded-xl border border-border shadow-sm mb-2">
                     <label className="text-sm font-medium text-slate-700 mb-1 block">Получено от клиента</label>
                     <div className="relative">
                       <input
@@ -592,7 +607,7 @@ export default function CourierPage() {
                         value={amountReceived}
                         onChange={(e) => setAmountReceived(e.target.value)}
                         placeholder="0"
-                        className="w-full h-10 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        className="w-full h-10 px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                       />
                       <span className="absolute right-3 top-2.5 text-slate-400 text-sm">сум</span>
                     </div>
@@ -634,9 +649,10 @@ export default function CourierPage() {
                   <Button
                     className="w-full h-14 text-lg font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-xl"
                     onClick={handleCompleteDelivery}
+                    disabled={isCompleting}
                   >
                     <CheckCircle className="w-6 h-6 mr-2" />
-                    {t.courier.completeDelivery}
+                    {isCompleting ? t.common.loading : t.courier.completeDelivery}
                   </Button>
                 )}
               </div>

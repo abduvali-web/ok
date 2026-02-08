@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { getGroupAdminIds } from '@/lib/admin-scope'
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -18,8 +19,11 @@ export async function DELETE(request: NextRequest) {
 
     let movedTobin = 0
     let deletedOrders = 0
+    let skippedCount = 0
     const today = new Date()
     today.setHours(0, 0, 0, 0)
+
+    const groupAdminIds = user.role === 'SUPER_ADMIN' ? null : await getGroupAdminIds(user)
 
     try {
       // Process each client
@@ -32,6 +36,11 @@ export async function DELETE(request: NextRequest) {
 
           if (!client) {
             console.log(`⚠️ Client ${clientId} not found`)
+            continue
+          }
+
+          if (groupAdminIds && (!client.createdBy || !groupAdminIds.includes(client.createdBy))) {
+            skippedCount++
             continue
           }
 
@@ -74,6 +83,7 @@ export async function DELETE(request: NextRequest) {
         success: true,
         movedTobin,
         deletedOrders,
+        skippedCount,
         message: `Успешно перемещено в корзину: ${movedTobin} клиентов. Удалено будущих авто-заказов: ${deletedOrders}`
       })
 

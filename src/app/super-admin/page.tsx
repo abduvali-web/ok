@@ -273,7 +273,7 @@ export default function SuperAdminPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-slate-600">Загрузка...</p>
@@ -283,9 +283,9 @@ export default function SuperAdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200">
+      <header className="bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -366,35 +366,35 @@ export default function SuperAdminPage() {
             <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto gap-2 p-1 bg-muted/50 backdrop-blur-sm rounded-xl">
               <TabsTrigger
                 value="admins"
-                className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
+                className="flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-200"
               >
                 <Users className="w-4 h-4" />
                 {t.admin.admins}
               </TabsTrigger>
               <TabsTrigger
                 value="interface"
-                className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
+                className="flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-200"
               >
                 <LayoutDashboard className="w-4 h-4" />
                 {t.admin.interface}
               </TabsTrigger>
               <TabsTrigger
                 value="chat"
-                className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
+                className="flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-200"
               >
                 <MessageSquare className="w-4 h-4" />
                 Чат
               </TabsTrigger>
               <TabsTrigger
                 value="statistics"
-                className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
+                className="flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-200"
               >
                 <BarChart3 className="w-4 h-4" />
                 {t.admin.statistics}
               </TabsTrigger>
               <TabsTrigger
                 value="history"
-                className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm transition-all duration-200"
+                className="flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-200"
               >
                 <History className="w-4 h-4" />
                 {t.admin.history}

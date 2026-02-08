@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { getGroupAdminIds } from '@/lib/admin-scope'
 
 export async function POST(request: NextRequest) {
     try {
@@ -17,6 +18,8 @@ export async function POST(request: NextRequest) {
         }
 
         let restoredClients = 0
+        let skippedCount = 0
+        const groupAdminIds = user.role === 'SUPER_ADMIN' ? null : await getGroupAdminIds(user)
 
         try {
             for (const clientId of clientIds) {
@@ -27,6 +30,11 @@ export async function POST(request: NextRequest) {
 
                 if (!client || !client.deletedAt) {
                     console.log(`⚠️ Client ${clientId} not found in bin`)
+                    continue
+                }
+
+                if (groupAdminIds && (!client.createdBy || !groupAdminIds.includes(client.createdBy))) {
+                    skippedCount++
                     continue
                 }
 
@@ -46,6 +54,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({
                 success: true,
                 restoredClients,
+                skippedCount,
                 message: `Успешно восстановлено: ${restoredClients} клиентов`
             })
 

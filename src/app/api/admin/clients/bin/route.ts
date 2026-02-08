@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { getGroupAdminIds } from '@/lib/admin-scope'
 
 export async function GET(request: NextRequest) {
     try {
@@ -10,12 +11,17 @@ export async function GET(request: NextRequest) {
         }
 
         // Get deleted clients (where deletedAt is not null)
+        const whereClause: any = {
+            deletedAt: { not: null }
+        }
+
+        if (user.role === 'MIDDLE_ADMIN' || user.role === 'LOW_ADMIN') {
+            const groupAdminIds = await getGroupAdminIds(user)
+            whereClause.createdBy = { in: groupAdminIds && groupAdminIds.length > 0 ? groupAdminIds : [user.id] }
+        }
+
         const deletedClients = await db.customer.findMany({
-            where: {
-                deletedAt: {
-                    not: null
-                }
-            },
+            where: whereClause,
             orderBy: { deletedAt: 'desc' }
         })
 

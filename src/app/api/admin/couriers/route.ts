@@ -5,11 +5,12 @@ import { getAuthUser, hasRole } from '@/lib/auth-utils'
 import { passwordSchema, emailSchema } from '@/lib/validations'
 import { z } from 'zod'
 import { Prisma } from '@prisma/client'
+import { getGroupAdminIds, getOwnerAdminId } from '@/lib/admin-scope'
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
-    if (!user || !hasRole(user, ['MIDDLE_ADMIN', 'SUPER_ADMIN'])) {
+    if (!user || !hasRole(user, ['MIDDLE_ADMIN', 'SUPER_ADMIN', 'LOW_ADMIN'])) {
       return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
     }
 
@@ -18,9 +19,14 @@ export async function GET(request: NextRequest) {
       isActive: true
     }
 
-    // Data isolation: MIDDLE_ADMIN can only see couriers they created
-    if (user.role === 'MIDDLE_ADMIN') {
-      whereClause.createdBy = user.id
+    // Data isolation: non-super admins can only see couriers in their group
+    if (user.role !== 'SUPER_ADMIN') {
+      const groupAdminIds = await getGroupAdminIds(user)
+      if (groupAdminIds) {
+        whereClause.createdBy = { in: groupAdminIds }
+      } else {
+        whereClause.createdBy = user.id
+      }
     }
 
     const couriers = await db.admin.findMany({
@@ -56,7 +62,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
-    if (!user || !hasRole(user, ['MIDDLE_ADMIN', 'SUPER_ADMIN'])) {
+    if (!user || !hasRole(user, ['MIDDLE_ADMIN', 'SUPER_ADMIN', 'LOW_ADMIN'])) {
       return NextResponse.json(
         { error: 'Доступ запрещен' },
         { status: 403 }
@@ -105,6 +111,9 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
+    const ownerAdminId = (await getOwnerAdminId(user)) ?? user.id
+    const createdByAdminId = user.role === 'SUPER_ADMIN' ? user.id : ownerAdminId
+
     // Create courier
     const newCourier = await db.admin.create({
       data: {
@@ -113,7 +122,7 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         role: 'COURIER',
         isActive: true,
-        createdBy: user.id,
+        createdBy: createdByAdminId,
         allowedTabs: null,
         salary: salary ? parseInt(salary) : 0
       },

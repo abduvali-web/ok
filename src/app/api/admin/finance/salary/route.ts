@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { db as prisma } from '@/lib/db'
 import { auth } from '@/auth'
+import { getGroupAdminIds, getOwnerAdminId } from '@/lib/admin-scope'
 
 export async function POST(request: Request) {
     try {
         const session = await auth()
-        if (!session || (session.user.role !== 'MAIN_ADMIN' && session.user.role !== 'MIDDLE_ADMIN')) {
+        if (!session || !session.user || !['SUPER_ADMIN', 'MIDDLE_ADMIN', 'LOW_ADMIN'].includes(session.user.role)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
@@ -15,6 +16,13 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
         }
 
+        const effectiveAdminId =
+            session.user.role === 'LOW_ADMIN'
+                ? (await getOwnerAdminId(session.user)) ?? session.user.id
+                : session.user.id
+
+        const groupAdminIds = await getGroupAdminIds(session.user)
+
         // Get the admin/courier details
         const staff = await prisma.admin.findUnique({
             where: { id: adminId }
@@ -22,6 +30,12 @@ export async function POST(request: Request) {
 
         if (!staff) {
             return NextResponse.json({ error: 'Staff not found' }, { status: 404 })
+        }
+
+        if (session.user.role !== 'SUPER_ADMIN') {
+            if (!staff.createdBy || !groupAdminIds || !groupAdminIds.includes(staff.createdBy)) {
+                return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+            }
         }
 
         // Perform transaction
@@ -34,7 +48,7 @@ export async function POST(request: Request) {
 
         // Check current user's balance
         const currentUser = await prisma.admin.findUnique({
-            where: { id: session.user.id }
+            where: { id: effectiveAdminId }
         })
 
         if (!currentUser) {
@@ -54,12 +68,26 @@ export async function POST(request: Request) {
                 type: 'EXPENSE',
                 category: 'SALARY',
                 description: `Выплата зарплаты: ${staff.name} (${staff.role === 'COURIER' ? 'Курьер' : 'Админ'})`,
-                adminId: currentUser.id,
+                adminId: effectiveAdminId,
                 // We can optionally link to the staff member if there was a relation, 
                 // but currently Transaction only links to Admin (creator) and Customer.
                 // We'll store the staff name in description.
             }
         })
+
+        try {
+            await prisma.actionLog.create({
+                data: {
+                    adminId: session.user.id,
+                    action: 'PAY_SALARY',
+                    entityType: 'ADMIN',
+                    entityId: staff.id,
+                    description: `Paid salary ${amount}`
+                }
+            })
+        } catch {
+            // ignore logging failures
+        }
 
         // Optionally: Update staff's own balance? 
         // They don't have a "personal wallet" in the system, just "salary" field which is their rate.

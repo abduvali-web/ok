@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/auth';
 import { z } from 'zod';
+import { getOwnerAdminId } from '@/lib/admin-scope';
 
 const BuyIngredientsSchema = z.object({
     items: z.array(z.object({
@@ -22,7 +23,7 @@ const BuyIngredientsSchema = z.object({
 export async function POST(request: Request) {
     try {
         const session = await auth();
-        if (!session || !['SUPER_ADMIN', 'MIDDLE_ADMIN'].includes(session.user.role)) {
+        if (!session || !['SUPER_ADMIN', 'MIDDLE_ADMIN', 'LOW_ADMIN'].includes(session.user.role)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -34,7 +35,11 @@ export async function POST(request: Request) {
         }
 
         const { items } = validation.data;
-        const adminId = session.user.id;
+        const effectiveAdminId =
+            session.user.role === 'LOW_ADMIN'
+                ? (await getOwnerAdminId(session.user)) ?? session.user.id
+                : session.user.id;
+        const adminId = effectiveAdminId;
 
         let totalCost = 0;
         const inventoryUpdates: Record<string, number> = {};
@@ -92,6 +97,20 @@ export async function POST(request: Request) {
 
             return transaction;
         });
+
+        try {
+            await db.actionLog.create({
+                data: {
+                    adminId: session.user.id,
+                    action: 'BUY_INGREDIENTS',
+                    entityType: 'TRANSACTION',
+                    entityId: result.id,
+                    description: 'Bought ingredients'
+                }
+            })
+        } catch {
+            // ignore logging failures
+        }
 
         return NextResponse.json({ success: true, transaction: result });
 

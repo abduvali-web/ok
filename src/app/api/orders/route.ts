@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { getGroupAdminIds, getOwnerAdminId } from '@/lib/admin-scope'
 import { Prisma, PaymentStatus, PaymentMethod, OrderStatus } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
@@ -45,8 +46,9 @@ export async function GET(request: NextRequest) {
         in: [user.id, ...lowAdminIds]
       }
     } else if (user.role === 'LOW_ADMIN') {
-      // LOW_ADMIN can only see orders they created themselves
-      whereClause.adminId = user.id
+      // LOW_ADMIN sees orders for their owner group (parent middle admin + all its low admins)
+      const groupAdminIds = await getGroupAdminIds(user)
+      whereClause.adminId = { in: groupAdminIds && groupAdminIds.length > 0 ? groupAdminIds : [user.id] }
     }
     // SUPER_ADMIN and COURIER see orders based on other filters (no admin restriction)
 
@@ -230,6 +232,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Неверный формат даты' }, { status: 400 })
     }
 
+    // Validate enums early to avoid Prisma throwing internal errors
+    if (paymentStatus && !['PAID', 'UNPAID', 'PARTIAL'].includes(String(paymentStatus))) {
+      return NextResponse.json({ error: 'ÐÐµÐ²ÐµÑ€Ð½Ñ‹Ð¹ ÑÑ‚Ð°Ñ‚ÑƒÑ Ð¾Ð¿Ð»Ð°Ñ‚Ñ‹' }, { status: 400 })
+    }
+    if (paymentMethod && !['CASH', 'CARD', 'TRANSFER'].includes(String(paymentMethod))) {
+      return NextResponse.json({ error: 'ÐÐµÐ²ÐµÑ€Ð½Ñ‹Ð¹ ÑÐ¿Ð¾ÑÐ¾Ð± Ð¾Ð¿Ð»Ð°Ñ‚Ñ‹' }, { status: 400 })
+    }
+
     // Sanitize courierId
     const sanitizedCourierId = (courierId === '' || courierId === 'null') ? null : courierId
 
@@ -251,13 +261,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    let ownerAdminId: string | null = null
-    if (user.role === 'MIDDLE_ADMIN') {
-      ownerAdminId = user.id
-    } else if (user.role === 'LOW_ADMIN') {
-      const lowAdmin = await db.admin.findUnique({ where: { id: user.id }, select: { createdBy: true } })
-      ownerAdminId = lowAdmin?.createdBy ?? null
-    }
+    const ownerAdminId = await getOwnerAdminId(user)
+    const groupAdminIds =
+      user.role === 'MIDDLE_ADMIN' || user.role === 'LOW_ADMIN'
+        ? await getGroupAdminIds(user)
+        : null
 
     if (hasAssignedSetId && sanitizedAssignedSetId && user.role !== 'SUPER_ADMIN') {
       if (!ownerAdminId) {
@@ -272,108 +280,111 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    let allowedCustomerCreatorIds: string[] | null = null
-    if (user.role === 'MIDDLE_ADMIN') {
-      const lowAdmins = await db.admin.findMany({
-        where: { createdBy: user.id, role: 'LOW_ADMIN' },
-        select: { id: true }
+    const allowedCustomerCreatorIds = groupAdminIds
+
+    let customer: any | null = null
+    if (selectedClientId && selectedClientId !== 'manual') {
+      customer = await db.customer.findFirst({
+        where: {
+          id: selectedClientId,
+          deletedAt: null,
+          ...(allowedCustomerCreatorIds ? { createdBy: { in: allowedCustomerCreatorIds } } : {})
+        }
       })
-      allowedCustomerCreatorIds = [user.id, ...lowAdmins.map(a => a.id)]
-    } else if (user.role === 'LOW_ADMIN') {
-      allowedCustomerCreatorIds = [user.id]
+      if (!customer) {
+        return NextResponse.json({ error: 'ÐšÐ»Ð¸ÐµÐ½Ñ‚ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½' }, { status: 404 })
+      }
+    } else {
+      customer = await db.customer.findFirst({
+        where: {
+          phone: customerPhone,
+          deletedAt: null,
+          ...(allowedCustomerCreatorIds ? { createdBy: { in: allowedCustomerCreatorIds } } : {})
+        }
+      })
+      if (!customer) {
+        // Create new customer as inactive for one-time orders
+        customer = await db.customer.create({
+          data: {
+            name: customerName,
+            phone: customerPhone,
+            address: deliveryAddress,
+            preferences: specialFeatures,
+            orderPattern: 'manual',
+            isActive: false,  // One-time order - client is disabled by default
+            latitude: sanitizedLatitude,
+            longitude: sanitizedLongitude,
+            assignedSetId: hasAssignedSetId ? sanitizedAssignedSetId : null,
+            createdBy: (user.role === 'MIDDLE_ADMIN' || user.role === 'LOW_ADMIN') ? user.id : null
+          }
+        })
+      }
     }
 
-    // Use transaction to prevent race condition in order number generation
-    const newOrder = await db.$transaction(async (tx) => {
-      let customer
-      if (selectedClientId && selectedClientId !== 'manual') {
-        customer = await tx.customer.findFirst({
-          where: {
-            id: selectedClientId,
-            deletedAt: null,
-            ...(allowedCustomerCreatorIds ? { createdBy: { in: allowedCustomerCreatorIds } } : {})
-          }
-        })
-      } else {
-        customer = await tx.customer.findFirst({
-          where: {
-            phone: customerPhone,
-            deletedAt: null,
-            ...(allowedCustomerCreatorIds ? { createdBy: { in: allowedCustomerCreatorIds } } : {})
-          }
-        })
-        if (!customer) {
-          // Create new customer as inactive for one-time orders
-          customer = await tx.customer.create({
-            data: {
-              name: customerName,
-              phone: customerPhone,
-              address: deliveryAddress,
-              preferences: specialFeatures,
-              orderPattern: 'manual',
-              isActive: false,  // One-time order - client is disabled by default
-              latitude: sanitizedLatitude,
-              longitude: sanitizedLongitude,
-              assignedSetId: hasAssignedSetId ? sanitizedAssignedSetId : null,
-              createdBy: (user.role === 'MIDDLE_ADMIN' || user.role === 'LOW_ADMIN') ? user.id : null
-            }
-          })
+    if (hasAssignedSetId) {
+      customer = await db.customer.update({
+        where: { id: customer.id },
+        data: { assignedSetId: sanitizedAssignedSetId }
+      })
+    }
+
+    const orderInclude = {
+      customer: {
+        select: {
+          name: true,
+          phone: true,
+          assignedSetId: true,
+          assignedSet: { select: { id: true, name: true } }
         }
-      }
+      },
+      courier: { select: { id: true, name: true } }
+    } as const
 
-      if (!customer) {
-        throw new Error('Failed to find or create customer')
-      }
-
-      if (hasAssignedSetId) {
-        customer = await tx.customer.update({
-          where: { id: customer.id },
-          data: { assignedSetId: sanitizedAssignedSetId }
-        })
-      }
-
-      // Get next order number atomically within transaction
-      const lastOrder = await tx.order.findFirst({
+    const getNextOrderNumber = async () => {
+      const lastOrder = await db.order.findFirst({
         orderBy: { orderNumber: 'desc' },
         select: { orderNumber: true }
       })
-      const nextOrderNumber = lastOrder ? lastOrder.orderNumber + 1 : 1
+      return lastOrder ? lastOrder.orderNumber + 1 : 1
+    }
 
-      // Create order with the next order number and coordinates
-      const order = await tx.order.create({
-        data: {
-          orderNumber: nextOrderNumber,
-          customerId: customer.id,
-          adminId: user.id,
-          courierId: sanitizedCourierId || (customer as any).defaultCourierId || null,
-          deliveryAddress,
-          deliveryDate: date ? new Date(date) : null,
-          deliveryTime: deliveryTime || '12:00',
-          quantity: parsedQuantity,
-          calories: parsedCalories,
-          specialFeatures: specialFeatures || '',
-          paymentStatus: paymentStatus || PaymentStatus.UNPAID,
-          paymentMethod: paymentMethod || PaymentMethod.CASH,
-          isPrepaid: isPrepaid || false,
-          orderStatus: OrderStatus.PENDING,
-          latitude: sanitizedLatitude,
-          longitude: sanitizedLongitude
-        },
-        include: {
-          customer: {
-            select: {
-              name: true,
-              phone: true,
-              assignedSetId: true,
-              assignedSet: { select: { id: true, name: true } }
-            }
+    let newOrder: any | null = null
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const nextOrderNumber = await getNextOrderNumber()
+      try {
+        newOrder = await db.order.create({
+          data: {
+            orderNumber: nextOrderNumber,
+            customerId: customer.id,
+            adminId: user.id,
+            courierId: sanitizedCourierId || (customer as any).defaultCourierId || null,
+            deliveryAddress,
+            deliveryDate: date ? new Date(date) : null,
+            deliveryTime: deliveryTime || '12:00',
+            quantity: parsedQuantity,
+            calories: parsedCalories,
+            specialFeatures: specialFeatures || '',
+            paymentStatus: (paymentStatus ? String(paymentStatus) : PaymentStatus.UNPAID) as PaymentStatus,
+            paymentMethod: (paymentMethod ? String(paymentMethod) : PaymentMethod.CASH) as PaymentMethod,
+            isPrepaid: isPrepaid || false,
+            orderStatus: OrderStatus.PENDING,
+            latitude: sanitizedLatitude,
+            longitude: sanitizedLongitude
           },
-          courier: { select: { id: true, name: true } }
+          include: orderInclude
+        })
+        break
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+          continue
         }
-      })
+        throw error
+      }
+    }
 
-      return order
-    })
+    if (!newOrder) {
+      return NextResponse.json({ error: 'ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ ÑÐ³ÐµÐ½ÐµÑ€Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ Ð½Ð¾Ð¼ÐµÑ€ Ð·Ð°ÐºÐ°Ð·Ð°' }, { status: 500 })
+    }
 
     const transformedOrder = {
       ...newOrder,

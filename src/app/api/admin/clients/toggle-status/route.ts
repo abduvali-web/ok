@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { filterCustomerIdsInGroup, getGroupAdminIds } from '@/lib/admin-scope'
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -20,9 +21,13 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Не указан статус активности' }, { status: 400 })
     }
 
+    const groupAdminIds = user.role === 'SUPER_ADMIN' ? null : await getGroupAdminIds(user)
+    const allowedIds = groupAdminIds ? await filterCustomerIdsInGroup(clientIds, groupAdminIds) : clientIds
+    const skippedCount = clientIds.length - allowedIds.length
+
     // Update clients in database
     let updatedCount = 0
-    for (const clientId of clientIds) {
+    for (const clientId of allowedIds) {
       try {
         // Update in database
         const updatedClient = await db.customer.update({
@@ -41,7 +46,8 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({
       message: `Статус ${isActive ? 'возобновлен' : 'приостановлен'} для ${updatedCount} клиентов`,
-      updatedCount
+      updatedCount,
+      skippedCount
     })
 
   } catch (error) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { getGroupAdminIds, getOwnerAdminId } from '@/lib/admin-scope'
 import { Prisma } from '@prisma/client'
 
 export async function PATCH(
@@ -38,8 +39,10 @@ export async function PATCH(
 
     // Authorization check: Verify user has permission to modify this order
     if (user.role === 'LOW_ADMIN') {
-      // LOW_ADMIN can only modify their own orders
-      if (order.adminId !== user.id && action !== 'start_delivery') {
+      // LOW_ADMIN can only modify orders within their owner group
+      const groupAdminIds = await getGroupAdminIds(user)
+      const inGroup = !!order.adminId && !!groupAdminIds && groupAdminIds.includes(order.adminId)
+      if (!inGroup && action !== 'start_delivery') {
         return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
       }
     } else if (user.role === 'MIDDLE_ADMIN') {
@@ -177,7 +180,7 @@ export async function PATCH(
         }
         break
       case 'update_details':
-        if (!hasRole(user, ['MIDDLE_ADMIN', 'SUPER_ADMIN'])) {
+        if (!hasRole(user, ['LOW_ADMIN', 'MIDDLE_ADMIN', 'SUPER_ADMIN'])) {
           return NextResponse.json({ error: 'Недостаточно прав для редактирования' }, { status: 403 })
         }
 
@@ -206,7 +209,7 @@ export async function PATCH(
         if (hasAssignedSetId) {
           if (sanitizedAssignedSetId && user.role !== 'SUPER_ADMIN') {
             const set = await db.menuSet.findFirst({
-              where: { id: sanitizedAssignedSetId, adminId: user.id },
+              where: { id: sanitizedAssignedSetId, adminId: (await getOwnerAdminId(user)) ?? user.id },
               select: { id: true }
             })
             if (!set) {
@@ -347,8 +350,10 @@ export async function GET(
 
     // Authorization check: Verify user has permission to view this order
     if (user.role === 'LOW_ADMIN') {
-      // LOW_ADMIN can only view their own orders
-      if (order.adminId !== user.id) {
+      // LOW_ADMIN can only view orders within their owner group
+      const groupAdminIds = await getGroupAdminIds(user)
+      const inGroup = !!order.adminId && !!groupAdminIds && groupAdminIds.includes(order.adminId)
+      if (!inGroup) {
         return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
       }
     } else if (user.role === 'MIDDLE_ADMIN') {

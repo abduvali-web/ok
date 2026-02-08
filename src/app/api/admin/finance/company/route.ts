@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server'
 import { db as prisma } from '@/lib/db'
 import { auth } from '@/auth'
+import { getOwnerAdminId } from '@/lib/admin-scope'
 
 export async function GET(req: Request) {
     try {
         const session = await auth()
-        if (!session || !session.user || (session.user.role !== 'MIDDLE_ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+        if (!session || !session.user || (session.user.role !== 'MIDDLE_ADMIN' && session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'LOW_ADMIN')) {
             return new NextResponse('Unauthorized', { status: 401 })
         }
+
+        const effectiveAdminId =
+            session.user.role === 'LOW_ADMIN'
+                ? (await getOwnerAdminId(session.user)) ?? session.user.id
+                : session.user.id
 
         const { searchParams } = new URL(req.url)
         const limit = parseInt(searchParams.get('limit') || '50')
@@ -15,7 +21,7 @@ export async function GET(req: Request) {
 
         // Fetch the admin to get current company balance
         const adminWithBalance = await prisma.admin.findUnique({
-            where: { id: session.user.id },
+            where: { id: effectiveAdminId },
             select: { companyBalance: true }
         })
 
@@ -24,7 +30,7 @@ export async function GET(req: Request) {
         }
 
         const whereClause: any = {
-            adminId: session.user.id
+            adminId: effectiveAdminId
         }
 
         // If type is specifically 'company', show only company fund transactions (no client associated)

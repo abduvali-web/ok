@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
-import { OrderStatus, PaymentStatus, PaymentMethod } from '@prisma/client'
+import { OrderStatus, PaymentStatus, PaymentMethod, Prisma } from '@prisma/client'
 
 function isEligibleByPattern(orderPattern: string | null | undefined, date: Date) {
   const day = date.getDate()
@@ -19,6 +19,12 @@ function isEligibleByPattern(orderPattern: string | null | undefined, date: Date
 function startOfDay(date: Date) { const d = new Date(date); d.setHours(0, 0, 0, 0); return d }
 function endOfDay(date: Date) { const d = new Date(date); d.setHours(23, 59, 59, 999); return d }
 function defaultDeliveryTime(): string { const h = 11 + Math.floor(Math.random() * 3); const m = Math.floor(Math.random() * 60); return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}` }
+const weekdayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+
+async function getNextOrderNumber(): Promise<number> {
+  const lastOrder = await db.order.findFirst({ orderBy: { orderNumber: 'desc' }, select: { orderNumber: true } })
+  return lastOrder ? lastOrder.orderNumber + 1 : 1
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,11 +56,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Администратор не найден' }, { status: 400 })
     }
 
-    const customers = await db.customer.findMany({ where: { isActive: true, deletedAt: null } })
+    const customersWhere: any = { isActive: true, deletedAt: null }
+    if (user.role === 'MIDDLE_ADMIN') {
+      const lowAdmins = await db.admin.findMany({
+        where: { createdBy: user.id, role: 'LOW_ADMIN' },
+        select: { id: true }
+      })
+      customersWhere.createdBy = { in: [user.id, ...lowAdmins.map(a => a.id)] }
+    }
+
+    const customers = await db.customer.findMany({ where: customersWhere })
     console.log(`Generating auto-orders for ${customers.length} customers starting from ${startDate.toDateString()}`)
 
     let totalCreated = 0
+    let totalFailed = 0
     const createdOrdersSummary: any[] = []
+    let nextOrderNumber = await getNextOrderNumber()
 
     // Loop for 30 days
     for (let i = 0; i < 30; i++) {
@@ -64,7 +81,7 @@ export async function POST(request: NextRequest) {
       const dayStart = startOfDay(processDate)
       const dayEnd = endOfDay(processDate)
 
-      const dayOfWeek = processDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
+      const dayOfWeek = weekdayKeys[processDate.getDay()]
 
       for (const c of customers) {
         // Check eligibility based on deliveryDays
@@ -110,28 +127,43 @@ export async function POST(request: NextRequest) {
           continue
         }
 
-        const lastOrder = await db.order.findFirst({ orderBy: { orderNumber: 'desc' }, select: { orderNumber: true } })
-        const nextOrderNumber = lastOrder ? lastOrder.orderNumber + 1 : 1
+        let createdOrder: any | null = null
+        for (let attempt = 0; attempt < 5; attempt++) {
+          try {
+            createdOrder = await db.order.create({
+              data: {
+                orderNumber: nextOrderNumber,
+                customerId: c.id,
+                adminId: c.createdBy || defaultAdmin.id,
+                deliveryAddress: c.address,
+                deliveryDate: new Date(dayStart),
+                deliveryTime: defaultDeliveryTime(),
+                quantity: 1,
+                calories: c.calories ?? 1600,
+                specialFeatures: c.preferences || '',
+                paymentStatus: PaymentStatus.UNPAID,
+                paymentMethod: PaymentMethod.CASH,
+                isPrepaid: false,
+                orderStatus: OrderStatus.PENDING,
+                fromAutoOrder: true // Mark as auto-order
+              },
+              include: { customer: { select: { name: true, phone: true } } }
+            })
+            nextOrderNumber += 1
+            break
+          } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+              nextOrderNumber = await getNextOrderNumber()
+              continue
+            }
+            throw error
+          }
+        }
 
-        const createdOrder = await db.order.create({
-          data: {
-            orderNumber: nextOrderNumber,
-            customerId: c.id,
-            adminId: c.createdBy || defaultAdmin.id,
-            deliveryAddress: c.address,
-            deliveryDate: new Date(dayStart),
-            deliveryTime: defaultDeliveryTime(),
-            quantity: 1,
-            calories: c.calories ?? 1600,
-            specialFeatures: c.preferences || '',
-            paymentStatus: PaymentStatus.UNPAID,
-            paymentMethod: PaymentMethod.CASH,
-            isPrepaid: false,
-            orderStatus: OrderStatus.PENDING,
-            fromAutoOrder: true // Mark as auto-order
-          },
-          include: { customer: { select: { name: true, phone: true } } }
-        })
+        if (!createdOrder) {
+          totalFailed += 1
+          continue
+        }
 
         totalCreated++
         if (createdOrdersSummary.length < 50) { // Limit response size
@@ -148,6 +180,7 @@ export async function POST(request: NextRequest) {
       message: `Автоматически создано ${totalCreated} заказов на 30 дней`,
       startDate: startDate.toDateString(),
       createdCount: totalCreated,
+      failedCount: totalFailed,
       sampleOrders: createdOrdersSummary
     })
   } catch (error: any) {

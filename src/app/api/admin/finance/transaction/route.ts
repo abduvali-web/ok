@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { db as prisma } from '@/lib/db'
 import { auth } from '@/auth'
 import { z } from 'zod'
+import { getGroupAdminIds, getOwnerAdminId } from '@/lib/admin-scope'
 
 const TransactionSchema = z.object({
     customerId: z.string().optional(),
@@ -14,7 +15,7 @@ const TransactionSchema = z.object({
 export async function POST(req: Request) {
     try {
         const session = await auth()
-        if (!session || !session.user || (session.user.role !== 'MIDDLE_ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+        if (!session || !session.user || (session.user.role !== 'MIDDLE_ADMIN' && session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'LOW_ADMIN')) {
             return new NextResponse('Unauthorized', { status: 401 })
         }
 
@@ -26,7 +27,25 @@ export async function POST(req: Request) {
         }
 
         const { customerId, amount, type, description, category } = validation.data
-        const adminId = session.user.id
+
+        const effectiveAdminId =
+            session.user.role === 'LOW_ADMIN'
+                ? (await getOwnerAdminId(session.user)) ?? session.user.id
+                : session.user.id
+
+        const groupAdminIds = await getGroupAdminIds(session.user)
+        if (customerId && groupAdminIds) {
+            const customer = await prisma.customer.findFirst({
+                where: {
+                    id: customerId,
+                    createdBy: { in: groupAdminIds }
+                },
+                select: { id: true }
+            })
+            if (!customer) {
+                return new NextResponse('Not Found', { status: 404 })
+            }
+        }
 
         // Use a transaction to ensure balance update and log creation happen together
         const result = await prisma.$transaction(async (tx) => {
@@ -53,7 +72,7 @@ export async function POST(req: Request) {
                         type,
                         description,
                         category: category || 'MANUAL_ADJUSTMENT',
-                        adminId: adminId, // The admin who performed the action
+                        adminId: effectiveAdminId, // The admin whose finance scope is affected
                         customerId: customerId,
                     }
                 })
@@ -61,7 +80,7 @@ export async function POST(req: Request) {
                 // COMPANY TRANSACTION
                 // Update Admin (Company) Balance
                 await tx.admin.update({
-                    where: { id: adminId },
+                    where: { id: effectiveAdminId },
                     data: {
                         companyBalance: { increment: balanceChange }
                     }
@@ -74,13 +93,27 @@ export async function POST(req: Request) {
                         type,
                         description,
                         category: category || 'COMPANY_FUNDS',
-                        adminId: adminId, // The admin whose company funds are updated
+                        adminId: effectiveAdminId, // The admin whose company funds are updated
                     }
                 })
             }
 
             return transactionRecord
         })
+
+        try {
+            await prisma.actionLog.create({
+                data: {
+                    adminId: session.user.id,
+                    action: 'CREATE_TRANSACTION',
+                    entityType: 'TRANSACTION',
+                    entityId: result.id,
+                    description: `Created finance transaction${customerId ? ' for customer' : ''}`
+                }
+            })
+        } catch {
+            // ignore logging failures
+        }
 
         return NextResponse.json(result)
     } catch (error) {

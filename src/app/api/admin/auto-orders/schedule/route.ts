@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
-import { PaymentStatus, PaymentMethod, OrderStatus } from '@prisma/client'
+import { PaymentStatus, PaymentMethod, OrderStatus, Prisma } from '@prisma/client'
 
 // Function to get day of week in Russian
 function getDayOfWeek(date: Date): string {
@@ -40,19 +40,18 @@ function generateDeliveryTime(): string {
   return now.toTimeString().slice(0, 5)
 }
 
+async function getNextOrderNumber(): Promise<number> {
+  const lastOrder = await db.order.findFirst({ orderBy: { orderNumber: 'desc' }, select: { orderNumber: true } })
+  return lastOrder ? lastOrder.orderNumber + 1 : 1
+}
+
 // Function to create auto orders for a client for specified date range
 async function createAutoOrdersForClient(client: any, startDate: Date, endDate: Date, adminId: string): Promise<any[]> {
   const createdOrders: any[] = []
   const currentDate = new Date(startDate)
 
   // Get the next order number
-  const lastOrder = await db.order.findFirst({
-    orderBy: {
-      orderNumber: 'desc'
-    }
-  })
-
-  let nextOrderNumber = lastOrder ? lastOrder.orderNumber + 1 : 1
+  let nextOrderNumber = await getNextOrderNumber()
 
   while (currentDate <= endDate) {
     const dayOfWeek = getDayOfWeek(currentDate)
@@ -60,27 +59,44 @@ async function createAutoOrdersForClient(client: any, startDate: Date, endDate: 
     // Check if client should receive order on this day
     if (client.deliveryDays[dayOfWeek] && !(await orderExistsForDate(client.id, currentDate))) {
       try {
-        const newOrder = await db.order.create({
-          data: {
-            orderNumber: nextOrderNumber++,
-            customerId: client.id,
-            adminId: adminId,
-            deliveryAddress: client.address,
-            deliveryDate: new Date(currentDate),
-            deliveryTime: generateDeliveryTime(),
-            quantity: 1,
-            calories: client.calories,
-            specialFeatures: client.preferences,
-            paymentStatus: PaymentStatus.UNPAID,
-            paymentMethod: PaymentMethod.CASH,
-            orderStatus: OrderStatus.PENDING,
-            isPrepaid: false,
-          },
-          include: {
-            customer: true,
-            admin: true
+        let newOrder: any | null = null
+        for (let attempt = 0; attempt < 5; attempt++) {
+          try {
+            newOrder = await db.order.create({
+              data: {
+                orderNumber: nextOrderNumber,
+                customerId: client.id,
+                adminId: adminId,
+                deliveryAddress: client.address,
+                deliveryDate: new Date(currentDate),
+                deliveryTime: generateDeliveryTime(),
+                quantity: 1,
+                calories: client.calories,
+                specialFeatures: client.preferences,
+                paymentStatus: PaymentStatus.UNPAID,
+                paymentMethod: PaymentMethod.CASH,
+                orderStatus: OrderStatus.PENDING,
+                isPrepaid: false,
+              },
+              include: {
+                customer: true,
+                admin: true
+              }
+            })
+            nextOrderNumber += 1
+            break
+          } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+              nextOrderNumber = await getNextOrderNumber()
+              continue
+            }
+            throw error
           }
-        })
+        }
+
+        if (!newOrder) {
+          continue
+        }
 
         createdOrders.push({
           id: newOrder.id,

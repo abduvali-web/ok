@@ -12,7 +12,8 @@ import {
     User,
     Trash2,
     DollarSign,
-    ChevronRight
+    ChevronRight,
+    Settings
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -20,9 +21,10 @@ import { useLanguage } from '@/contexts/LanguageContext'
 interface MobileSidebarProps {
     activeTab: string
     onTabChange: (tab: string) => void
+    visibleTabs?: string[]
 }
 
-export function MobileSidebar({ activeTab, onTabChange }: MobileSidebarProps) {
+export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSidebarProps) {
     const [isOpen, setIsOpen] = useState(false)
     const { t } = useLanguage()
 
@@ -51,10 +53,16 @@ export function MobileSidebar({ activeTab, onTabChange }: MobileSidebarProps) {
         { id: 'bin', icon: Trash2, label: t.admin.bin },
         { id: 'statistics', icon: BarChart3, label: t.admin.statistics },
         { id: 'history', icon: History, label: t.admin.history },
+        { id: 'interface', icon: Settings, label: t.admin.interface },
         { id: 'profile', icon: User, label: t.common.profile },
         { id: 'warehouse', icon: Package, label: t.warehouse.title },
         { id: 'finance', icon: DollarSign, label: t.finance.title },
     ]
+
+    const effectiveTabs =
+        visibleTabs && visibleTabs.length > 0
+            ? tabs.filter(tab => visibleTabs.includes(tab.id))
+            : tabs
 
     const handleTabClick = (tabId: string) => {
         onTabChange(tabId)
@@ -118,10 +126,10 @@ export function MobileSidebar({ activeTab, onTabChange }: MobileSidebarProps) {
                         animate={{ x: 0 }}
                         exit={{ x: '-100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="md:hidden fixed left-0 top-0 bottom-0 w-72 bg-white dark:bg-slate-900 shadow-2xl z-50 overflow-y-auto"
+                        className="md:hidden fixed left-0 top-0 bottom-0 w-72 bg-background shadow-2xl z-50 overflow-y-auto"
                     >
                         {/* Sidebar Header */}
-                        <div className="sticky top-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 p-4">
+                        <div className="sticky top-0 bg-background/90 backdrop-blur-md border-b border-border p-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-3">
                                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center">
@@ -145,7 +153,7 @@ export function MobileSidebar({ activeTab, onTabChange }: MobileSidebarProps) {
 
                         {/* Navigation */}
                         <nav className="p-4 space-y-2">
-                            {tabs.map((tab, index) => {
+                            {effectiveTabs.map((tab, index) => {
                                 const Icon = tab.icon
                                 const isActive = activeTab === tab.id
 
@@ -161,7 +169,7 @@ export function MobileSidebar({ activeTab, onTabChange }: MobileSidebarProps) {
                       transition-all duration-200
                       ${isActive
                                                 ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                                                : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                                                : 'hover:bg-muted text-foreground'
                                             }
                     `}
                                     >
@@ -178,7 +186,7 @@ export function MobileSidebar({ activeTab, onTabChange }: MobileSidebarProps) {
                         </nav>
 
                         {/* Bottom Section */}
-                        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 backdrop-blur-sm">
+                        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border bg-background/50 backdrop-blur-sm">
                             <p className="text-xs text-center text-slate-500 dark:text-slate-400">
                                 © {new Date().getFullYear()} AutoFood
                             </p>

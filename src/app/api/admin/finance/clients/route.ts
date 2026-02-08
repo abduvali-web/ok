@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { db as prisma } from '@/lib/db'
 import { auth } from '@/auth'
+import { getGroupAdminIds } from '@/lib/admin-scope'
 
 export async function GET(req: Request) {
     try {
         const session = await auth()
-        if (!session || !session.user || (session.user.role !== 'MIDDLE_ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+        if (!session || !session.user || (session.user.role !== 'MIDDLE_ADMIN' && session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'LOW_ADMIN')) {
             return new NextResponse('Unauthorized', { status: 401 })
         }
 
@@ -18,17 +19,11 @@ export async function GET(req: Request) {
             deletedAt: null // Only active clients
         }
 
-        // Data isolation: Different isolation rules for each role
-        // For Middle Admin: see clients created by self or own low admins
-        if (session.user.role === 'MIDDLE_ADMIN') {
-            const lowAdmins = await prisma.admin.findMany({
-                where: { createdBy: session.user.id, role: 'LOW_ADMIN' },
-                select: { id: true }
-            })
-            const lowAdminIds = lowAdmins.map(a => a.id)
-            whereClause.createdBy = { in: [session.user.id, ...lowAdminIds] }
+        // Data isolation: non-super admins see clients within their group
+        const groupAdminIds = await getGroupAdminIds(session.user)
+        if (groupAdminIds) {
+            whereClause.createdBy = { in: groupAdminIds }
         }
-        // Super Admin sees all
 
         // Add search filter
         if (search) {
