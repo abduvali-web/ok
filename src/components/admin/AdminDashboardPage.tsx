@@ -29,9 +29,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
-  BarChart3,
-  Package,
-  Users,
   History,
   User,
   LogOut,
@@ -48,10 +45,8 @@ import {
   CalendarDays,
   MapPin,
   Edit,
-  DollarSign,
   Clock,
   Truck,
-  Settings,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
@@ -62,6 +57,7 @@ import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal'
 import { getDailyPrice, PLAN_TYPES } from '@/lib/menuData'
 import { deriveVisibleTabs } from '@/components/admin/dashboard/tabs'
 import type { Admin, Client, Order, Stats } from '@/components/admin/dashboard/types'
+import { DesktopTabsNav } from '@/components/admin/dashboard/DesktopTabsNav'
 
 import { MobileSidebar } from '@/components/MobileSidebar'
 import { MobileTabIndicator } from '@/components/MobileTabIndicator'
@@ -1797,98 +1793,21 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="desktop-tabs-list hidden md:grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-10 h-auto gap-2 p-1 bg-muted/50 backdrop-blur-sm rounded-xl">
-            {visibleTabs.includes('orders') && (
-              <TabsTrigger
-                value="orders"
-                className="data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                <Package className="w-4 h-4 mr-2" />
-                {t.admin.orders}
-              </TabsTrigger>
-            )}
-            {visibleTabs.includes('clients') && (
-              <TabsTrigger
-                value="clients"
-                className="data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                <Users className="w-4 h-4 mr-2" />
-                {t.admin.clients}
-              </TabsTrigger>
-            )}
-            {visibleTabs.includes('admins') && (
-              <TabsTrigger
-                value="admins"
-                className="data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                <Users className="w-4 h-4 mr-2" />
-                {t.admin.admins}
-              </TabsTrigger>
-            )}
-            {visibleTabs.includes('bin') && (
-              <TabsTrigger
-                value="bin"
-                className="data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                {t.admin.bin}
-              </TabsTrigger>
-            )}
-            {visibleTabs.includes('statistics') && (
-              <TabsTrigger
-                value="statistics"
-                className="data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                <BarChart3 className="w-4 h-4 mr-2" />
-                {t.admin.statistics}
-              </TabsTrigger>
-            )}
-            {visibleTabs.includes('history') && (
-              <TabsTrigger
-                value="history"
-                className="data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                <History className="w-4 h-4 mr-2" />
-                {t.admin.history}
-              </TabsTrigger>
-            )}
-            {visibleTabs.includes('interface') && (
-              <TabsTrigger
-                value="interface"
-                className="data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                {t.admin.interface}
-              </TabsTrigger>
-            )}
-            {visibleTabs.includes('profile') && (
-              <TabsTrigger
-                value="profile"
-                className="data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                <User className="w-4 h-4 mr-2" />
-                {t.common.profile}
-              </TabsTrigger>
-            )}
-            {visibleTabs.includes('warehouse') && (
-              <TabsTrigger
-                value="warehouse"
-                className="data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                <Package className="w-4 h-4 mr-2" />
-                {t.warehouse.title}
-              </TabsTrigger>
-            )}
-            {visibleTabs.includes('finance') && (
-              <TabsTrigger
-                value="finance"
-                className="data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                <DollarSign className="w-4 h-4 mr-2" />
-                {t.finance.title}
-              </TabsTrigger>
-            )}
-          </TabsList>
+          <DesktopTabsNav
+            visibleTabs={visibleTabs}
+            copy={{
+              orders: t.admin.orders,
+              clients: t.admin.clients,
+              admins: t.admin.admins,
+              bin: t.admin.bin,
+              statistics: t.admin.statistics,
+              history: t.admin.history,
+              profile: t.common.profile,
+              warehouse: t.warehouse.title,
+              finance: t.finance.title,
+              interface: t.admin.interface,
+            }}
+          />
 
           {/* Statistics Tab */}
           <TabsContent value="statistics" className="space-y-6">

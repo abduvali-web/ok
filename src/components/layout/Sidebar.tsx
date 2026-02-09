@@ -71,7 +71,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
             )}>
                 <div className="flex flex-col h-full">
                     {/* Header */}
-                    <div className="flex items-center justify-between p-4 border-b border-slate-800/50">
+                    <div className="flex items-center justify-between p-4 border-b border-border/50">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                                 <ChefHat className="w-5 h-5 text-white" />
@@ -131,7 +131,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                     </ScrollArea>
 
                     {/* Footer */}
-                    <div className="p-3 border-t border-slate-800/50">
+                    <div className="p-3 border-t border-border/50">
                         <Button
                             variant="ghost"
                             className="w-full justify-start gap-3 text-red-400 hover:bg-red-950/30 hover:text-red-300 rounded-lg py-2.5"
