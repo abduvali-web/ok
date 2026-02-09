@@ -107,7 +107,7 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center bg-white p-4 rounded-lg border">
+            <div className="flex justify-between items-center bg-card p-4 rounded-lg border border-border">
                 <div className="relative w-72">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
                     <Input
@@ -122,9 +122,9 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                 </Button>
             </div>
 
-            <div className="bg-white rounded-lg border max-h-[600px] overflow-y-auto relative">
+            <div className="bg-card rounded-lg border border-border max-h-[600px] overflow-y-auto relative">
                 <Table>
-                    <TableHeader className="sticky top-0 bg-white z-10 shadow-sm">
+                    <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
                         <TableRow>
                             <TableHead>Name</TableHead>
                             <TableHead>Amount (In Stock)</TableHead>

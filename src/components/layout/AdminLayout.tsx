@@ -58,7 +58,7 @@ export function AdminLayout({
     }, []);
 
     return (
-        <div className="flex min-h-screen bg-slate-50">
+        <div className="flex min-h-screen bg-background">
             {/* Sidebar */}
             <Sidebar
                 activeTab={activeTab}
@@ -111,7 +111,7 @@ export function AdminLayout({
                 </main>
 
                 {/* Mobile Bottom Navigation (optional quick actions) */}
-                <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 py-2 safe-area-inset-bottom">
+                <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur border-t border-border px-2 py-2 safe-area-inset-bottom">
                     <div className="flex justify-around items-center max-w-md mx-auto">
                         <MobileNavItem
                             isActive={activeTab === 'orders'}
@@ -162,7 +162,7 @@ function MobileNavItem({ isActive, onClick, label, icon }: MobileNavItemProps) {
                 "flex flex-col items-center justify-center py-1 px-3 rounded-lg transition-colors min-w-[56px]",
                 isActive
                     ? "bg-primary/10 text-primary"
-                    : "text-slate-500 hover:text-slate-700"
+                    : "text-muted-foreground hover:text-foreground"
             )}
         >
             <span className="text-lg">{icon}</span>

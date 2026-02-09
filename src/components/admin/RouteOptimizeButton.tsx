@@ -194,14 +194,14 @@ export function RouteOptimizeButton({
 
                             {/* Waypoints List */}
                             <div className="flex-1 overflow-auto">
-                                <h4 className="text-sm font-medium text-slate-700 mb-2 sticky top-0 bg-white py-1">
+                                <h4 className="text-sm font-medium text-foreground mb-2 sticky top-0 bg-card py-1">
                                     Порядок доставки ({optimizedRoute.waypoints.length} точек):
                                 </h4>
                                 <div className="space-y-2">
                                     {optimizedRoute.waypoints.map((waypoint, index) => (
                                         <div
                                             key={waypoint.orderId}
-                                            className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                                            className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors"
                                         >
                                             <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-sm font-bold flex items-center justify-center shadow-sm">
                                                 {index + 1}
@@ -252,7 +252,7 @@ export function RouteOptimizeButton({
                             </div>
 
                             {/* Secondary action */}
-                            <div className="pt-2 border-t border-slate-100">
+                            <div className="pt-2 border-t border-border">
                                 <p className="text-xs text-center text-slate-400">
                                     Заказы отсортированы • Нажмите на кнопку выше для навигации
                                 </p>

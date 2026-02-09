@@ -466,7 +466,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
                         const count = clientsByCalorie[cal] || 0;
                         if (count === 0) return null;
                         return (
-                            <Badge key={cal} variant="outline" className="bg-white">
+                            <Badge key={cal} variant="outline" className="bg-card">
                                 {cal} ккал: <span className="font-bold ml-1">{count}</span>
                             </Badge>
                         );
@@ -483,7 +483,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
                 </div>
             </div>
 
-            <div className="bg-white rounded-lg border overflow-x-auto">
+            <div className="bg-card rounded-lg border border-border overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -523,7 +523,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
                                         // If not configured for this column, show greyed out or empty
                                         if (!isAvailable) {
                                             return (
-                                                <TableCell key={cal} className="p-2 bg-slate-50/50">
+                                                <TableCell key={cal} className="p-2 bg-muted/20">
                                                     <div className="h-full flex items-center justify-center text-slate-300 text-xs text-center">
                                                         -
                                                     </div>
@@ -533,7 +533,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
 
                                         return (
                                             <TableCell key={cal} className="p-2">
-                                                <div className={`rounded-lg p-2 space-y-2 border ${needed === 0 ? 'bg-slate-50 border-dashed' : 'bg-slate-50 border'}`}>
+                                                <div className={`rounded-lg p-2 space-y-2 border ${needed === 0 ? 'bg-muted/20 border-dashed' : 'bg-muted/20 border'}`}>
                                                     <div className="flex justify-between text-xs">
                                                         <span className={cooked >= needed && needed > 0 ? "text-green-600 font-medium" : "text-amber-600"}>
                                                             Ready: {cooked}
@@ -568,7 +568,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
                 </Table>
             </div>
             {dishes.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground bg-slate-50 rounded-lg border border-dashed">
+                <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg border border-border border-dashed">
                     Нет блюд для отображения (Меню {menuNumber}). Проверьте настройки выбранного сета.
                 </div>
             )}

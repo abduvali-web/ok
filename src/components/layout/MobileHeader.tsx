@@ -27,7 +27,7 @@ export function MobileHeader({
     onLogout
 }: MobileHeaderProps) {
     return (
-        <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-lg border-b border-slate-200 lg:hidden">
+        <header className="sticky top-0 z-40 w-full bg-background/80 backdrop-blur-lg border-b border-border lg:hidden">
             <div className="flex items-center justify-between h-14 px-4">
                 {/* Left: Menu Button */}
                 <Button
@@ -41,7 +41,7 @@ export function MobileHeader({
 
                 {/* Center: Current Tab */}
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-slate-900">
+                    <span className="text-sm font-semibold text-foreground">
                         {tabLabels[currentTab] || currentTab}
                     </span>
                 </div>

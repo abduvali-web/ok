@@ -25,7 +25,7 @@ const _mealTypeColors: Record<keyof typeof MEAL_TYPES, string> = {
     SNACK: 'bg-purple-100 text-purple-800 border-purple-200',
     DINNER: 'bg-blue-100 text-blue-800 border-blue-200',
     SIXTH_MEAL: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-    UNKNOWN: 'bg-slate-100 text-slate-700 border-slate-200',
+    UNKNOWN: 'bg-muted/50 text-muted-foreground border-border',
     // SEVENTH_MEAL: 'bg-pink-100 text-pink-800 border-pink-200', // Example if needed
 };
 
@@ -109,9 +109,9 @@ export function TodaysMenu({ className }: TodaysMenuProps) {
                         return dishes.map((dish) => (
                             <div
                                 key={dish.id}
-                                className="flex-none w-[200px] group relative bg-white rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-row h-20"
+                                className="flex-none w-[200px] group relative bg-card rounded-lg border border-border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-row h-20"
                             >
-                                <div className="w-20 h-full relative bg-slate-100 flex-shrink-0">
+                                <div className="w-20 h-full relative bg-muted/50 flex-shrink-0">
                                     {!imageErrors.has(dish.id) ? (
                                         <img
                                             src={getDishImageUrl(dish.id)}
@@ -121,7 +121,7 @@ export function TodaysMenu({ className }: TodaysMenuProps) {
                                             loading="lazy"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-xl bg-slate-100">
+                                        <div className="w-full h-full flex items-center justify-center text-xl bg-muted/50">
                                             {mealTypeIcons[dish.mealType]}
                                         </div>
                                     )}
@@ -129,7 +129,7 @@ export function TodaysMenu({ className }: TodaysMenuProps) {
                                 <div className="p-2 flex flex-col justify-between flex-1 min-w-0">
                                     <div>
                                         <div className="flex items-center gap-1 mb-1">
-                                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">
+                                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted/50 text-muted-foreground font-medium">
                                                 {/* Use label directly as it seems to be hardcoded, or map it if possible. 
                                                     For now if MEAL_TYPES values are Russian, they will be Russian.
                                                     Better to rely on the key if possible, but label is passed from map. */}

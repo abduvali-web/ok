@@ -731,7 +731,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                             </div>
 
                             {/* Client distribution info */}
-                            <div className="grid grid-cols-5 gap-2 p-3 bg-slate-50 rounded-lg">
+                            <div className="grid grid-cols-5 gap-2 p-3 bg-muted/30 rounded-lg">
                                 {Object.entries(clientsByCalorie).map(([cal, count]) => (
                                     <div key={cal} className="text-center">
                                         <div className="text-xs text-slate-500">{cal} {t.warehouse.kcal}</div>
@@ -793,7 +793,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                     onClick={() => handleDateToggle(date)}
                                                     className={`p-2 text-left rounded-lg border transition-colors ${selectedDates.includes(date)
                                                         ? 'bg-primary text-white border-primary'
-                                                        : 'bg-white hover:bg-slate-50 border-slate-200'
+                                                        : 'bg-card hover:bg-muted/30 border-border'
                                                         }`}
                                                 >
                                                     <div className="text-sm font-medium">{label}</div>
@@ -822,7 +822,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                     <Package className="w-4 h-4" />
                                                     {t.warehouse.requiredIngredients}
                                                 </h4>
-                                                <div className="bg-white rounded-lg border max-h-48 overflow-y-auto">
+                                                <div className="bg-card rounded-lg border border-border max-h-48 overflow-y-auto">
                                                     {Array.from(calculatedIngredients.entries()).map(([name, { amount, unit }]) => (
                                                         <div key={name} className="flex justify-between p-2 border-b last:border-0 text-sm">
                                                             <span className="text-slate-700">{name}</span>

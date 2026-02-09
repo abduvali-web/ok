@@ -485,7 +485,7 @@ export function SetsTab() {
                 {/* Sidebar List */}
                 <div className="lg:col-span-3">
                     <Card className="h-[calc(100vh-200px)] flex flex-col">
-                        <CardHeader className="bg-slate-50 border-b py-3">
+                        <CardHeader className="bg-muted/30 border-b border-border py-3">
                             <CardTitle className="text-sm">Список Сетов</CardTitle>
                         </CardHeader>
                         <ScrollArea className="flex-1 p-2">
@@ -493,7 +493,7 @@ export function SetsTab() {
                                 {sets.map(set => (
                                     <div
                                         key={set.id}
-                                        className={`p-3 rounded-lg border transition-all cursor-pointer ${selectedSet?.id === set.id ? 'bg-primary/5 border-primary shadow-sm' : 'hover:bg-slate-50 border-transparent'}`}
+                                        className={`p-3 rounded-lg border transition-all cursor-pointer ${selectedSet?.id === set.id ? 'bg-primary/5 border-primary shadow-sm' : 'hover:bg-muted/30 border-transparent'}`}
                                         onClick={() => setSelectedSet(set)}
                                     >
                                         <div className="flex justify-between items-center mb-1">
@@ -546,7 +546,7 @@ export function SetsTab() {
                             </Card>
 
                             <Card className="min-h-[600px] flex flex-col">
-                                <CardHeader className="border-b bg-slate-50 flex flex-row items-center justify-between py-3">
+                                <CardHeader className="border-b border-border bg-muted/30 flex flex-row items-center justify-between py-3">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary font-bold text-lg">
                                             {activeDay}
@@ -595,7 +595,7 @@ export function SetsTab() {
                                                 const groupIdx = currentDayData.findIndex(g => g.calories === cal);
 
                                                 return (
-                                                    <TabsContent key={cal} value={cal.toString()} className="flex-1 p-6 m-0 bg-slate-50/30">
+                                                    <TabsContent key={cal} value={cal.toString()} className="flex-1 p-6 m-0 bg-muted/20">
                                                         <div className="flex justify-between items-center mb-4">
                                                             <div className="flex items-center gap-2">
                                                                 <Flame className="w-5 h-5 text-orange-500" />
@@ -612,7 +612,7 @@ export function SetsTab() {
                                                         {/* Dishes Grid */}
                                                         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                                                             {group?.dishes.map((dish, idx) => (
-                                                                <div key={`${dish.dishId}-${idx}`} className="bg-white p-3 rounded-xl border hover:shadow-md transition-all flex gap-3 group relative">
+                                                                <div key={`${dish.dishId}-${idx}`} className="bg-card p-3 rounded-xl border border-border hover:shadow-md transition-all flex gap-3 group relative">
                                                                     <div className="w-20 h-20 rounded-lg bg-slate-100 overflow-hidden shrink-0">
                                                                         <img
                                                                             src={getDishImageUrl(typeof dish.dishId === 'number' ? dish.dishId : parseInt(dish.dishId.toString()) || 0)}
@@ -754,7 +754,7 @@ export function SetsTab() {
                     {editingDish && (
                         <div className="flex-1 overflow-auto">
                             <Table>
-                                <TableHeader className="bg-slate-50 sticky top-0">
+                                <TableHeader className="bg-muted/30 sticky top-0">
                                     <TableRow>
                                         <TableHead className="pl-6">Название</TableHead>
                                         <TableHead>Кол-во</TableHead>
@@ -807,7 +807,7 @@ export function SetsTab() {
                         </div>
                     )}
 
-                    <div className="p-4 border-t bg-slate-50/50 space-y-3">
+                    <div className="p-4 border-t border-border bg-muted/20 space-y-3">
                         <div className="space-y-2">
                             <Label className="text-xs text-muted-foreground uppercase font-bold">Добавить ингредиент</Label>
                             <Select onValueChange={(val) => {
@@ -815,7 +815,7 @@ export function SetsTab() {
                                 // Hack to reset select not needed if we want to add multiple? No, value stays.
                                 // It's fine for now.
                             }}>
-                                <SelectTrigger className="bg-white">
+                                <SelectTrigger className="bg-card">
                                     <SelectValue placeholder="Выберите ингредиент из списка..." />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-60">

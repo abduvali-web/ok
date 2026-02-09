@@ -246,7 +246,7 @@ export function DishesManager() {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center bg-white p-4 rounded-lg border">
+            <div className="flex justify-between items-center bg-card p-4 rounded-lg border border-border">
                 <div className="relative w-72">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
                     <Input
@@ -261,7 +261,7 @@ export function DishesManager() {
                 </Button>
             </div>
 
-            <div className="bg-white rounded-lg border">
+            <div className="bg-card rounded-lg border border-border">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -390,14 +390,14 @@ export function DishesManager() {
 
                         <div className="space-y-2">
                             <Label>Menus & Calorie Groups (1-21)</Label>
-                            <div className="space-y-3 p-3 border rounded-lg bg-slate-50 max-h-64 overflow-y-auto">
+                            <div className="space-y-3 p-3 border border-border rounded-lg bg-muted/20 max-h-64 overflow-y-auto">
                                 {Array.from({ length: 21 }, (_, i) => i + 1).map(num => {
                                     const dayStr = num.toString();
                                     const isSelected = currentDish.menuNumbers?.includes(num);
                                     const dayMappings = currentDish.calorieMappings?.[dayStr] || [];
 
                                     return (
-                                        <div key={num} className="bg-white p-2 rounded border space-y-2">
+                                        <div key={num} className="bg-card p-2 rounded border border-border space-y-2">
                                             <div className="flex items-center justify-between">
                                                 <div
                                                     onClick={() => {
@@ -416,7 +416,7 @@ export function DishesManager() {
                                                         "cursor-pointer px-3 py-1 rounded-md text-sm border transition-colors flex items-center gap-2",
                                                         isSelected
                                                             ? "bg-blue-600 text-white border-blue-600 font-medium"
-                                                            : "bg-slate-100 text-slate-600 border-slate-200"
+                                                            : "bg-muted/50 text-muted-foreground border-border"
                                                     )}
                                                 >
                                                     Day {num}
@@ -446,7 +446,7 @@ export function DishesManager() {
                                                                     "cursor-pointer text-[10px] px-1.5 py-0.5 rounded border transition-colors",
                                                                     dayMappings.includes(cal.toString())
                                                                         ? "bg-green-600 text-white border-green-600"
-                                                                        : "bg-slate-50 text-slate-500 border-slate-200"
+                                                                        : "bg-muted/30 text-muted-foreground border-border"
                                                                 )}
                                                             >
                                                                 {cal}
@@ -469,7 +469,7 @@ export function DishesManager() {
                                     <Plus className="h-3 w-3 mr-1" /> Add
                                 </Button>
                             </div>
-                            <div className="space-y-2 border rounded-lg p-2 bg-slate-50">
+                            <div className="space-y-2 border border-border rounded-lg p-2 bg-muted/20">
                                 {currentDish.ingredients?.map((ing, idx) => (
                                     <div key={idx} className="flex gap-2 items-end">
                                         <div className="flex-1 space-y-1">

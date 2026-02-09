@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -53,23 +54,48 @@ import {
   Settings,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { OrdersTable } from '@/components/admin/OrdersTable'
-import { HistoryTable } from '@/components/admin/HistoryTable'
-import { InterfaceSettings } from '@/components/admin/InterfaceSettings'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { UserGuide } from '@/components/UserGuide'
 import { TrialStatus } from '@/components/admin/TrialStatus'
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal'
-import { ChatTab } from '@/components/chat/ChatTab'
-import { TodaysMenu } from '@/components/admin/TodaysMenu'
 import { getDailyPrice, PLAN_TYPES } from '@/lib/menuData'
 
-import { WarehouseTab } from '@/components/admin/WarehouseTab'
-import { FinanceTab } from '@/components/admin/FinanceTab'
-import { RouteOptimizeButton } from '@/components/admin/RouteOptimizeButton'
 import { MobileSidebar } from '@/components/MobileSidebar'
 import { MobileTabIndicator } from '@/components/MobileTabIndicator'
+
+const OrdersTable = dynamic(
+  () => import('@/components/admin/OrdersTable').then((mod) => mod.OrdersTable),
+  { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading…</div> }
+)
+const HistoryTable = dynamic(
+  () => import('@/components/admin/HistoryTable').then((mod) => mod.HistoryTable),
+  { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading…</div> }
+)
+const InterfaceSettings = dynamic(
+  () => import('@/components/admin/InterfaceSettings').then((mod) => mod.InterfaceSettings),
+  { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading…</div> }
+)
+const ChatTab = dynamic(
+  () => import('@/components/chat/ChatTab').then((mod) => mod.ChatTab),
+  { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading…</div> }
+)
+const TodaysMenu = dynamic(
+  () => import('@/components/admin/TodaysMenu').then((mod) => mod.TodaysMenu),
+  { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading…</div> }
+)
+const WarehouseTab = dynamic(
+  () => import('@/components/admin/WarehouseTab').then((mod) => mod.WarehouseTab),
+  { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading…</div> }
+)
+const FinanceTab = dynamic(
+  () => import('@/components/admin/FinanceTab').then((mod) => mod.FinanceTab),
+  { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading…</div> }
+)
+const RouteOptimizeButton = dynamic(
+  () => import('@/components/admin/RouteOptimizeButton').then((mod) => mod.RouteOptimizeButton),
+  { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading…</div> }
+)
 
 interface Admin {
   id: string
@@ -3028,7 +3054,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-12">
                             <input
                               type="checkbox"
-                              className="rounded border-slate-300"
+                              className="rounded border-border"
                               onChange={(e) => {
                                 const filteredClients = clients.filter(client => {
                                   if (clientStatusFilter === 'active') return client.isActive
@@ -3083,7 +3109,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                               <td className="px-4 py-2 whitespace-nowrap text-sm">
                                 <input
                                   type="checkbox"
-                                  className="rounded border-slate-300"
+                                  className="rounded border-border"
                                   checked={selectedClients.has(client.id)}
                                   onChange={() => handleToggleClientSelection(client.id)}
                                 />
