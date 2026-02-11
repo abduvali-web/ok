@@ -1,13 +1,14 @@
 'use client'
 
 import { TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { BarChart3, DollarSign, History, Package, Settings, Trash2, User, Users } from 'lucide-react'
+import { BarChart3, DollarSign, History, Package, Settings, Sparkles, Trash2, User, Users } from 'lucide-react'
 import { type CanonicalTabId } from '@/components/admin/dashboard/tabs'
 
 type Copy = {
   orders: string
   clients: string
   admins: string
+  features: string
   bin: string
   statistics: string
   history: string
@@ -27,7 +28,7 @@ export function DesktopTabsNav({
   const has = (tab: CanonicalTabId) => visibleTabs.includes(tab)
 
   return (
-    <TabsList className="desktop-tabs-list hidden md:grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-10 h-auto gap-2 p-1 bg-muted/50 backdrop-blur-sm rounded-xl">
+    <TabsList className="desktop-tabs-list hidden md:grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-11 h-auto gap-2 p-1 bg-muted/50 backdrop-blur-sm rounded-xl">
       {has('orders') && (
         <TabsTrigger
           value="orders"
@@ -53,6 +54,15 @@ export function DesktopTabsNav({
         >
           <Users className="w-4 h-4 mr-2" />
           {copy.admins}
+        </TabsTrigger>
+      )}
+      {has('features') && (
+        <TabsTrigger
+          value="features"
+          className="data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-200"
+        >
+          <Sparkles className="w-4 h-4 mr-2" />
+          {copy.features}
         </TabsTrigger>
       )}
       {has('bin') && (

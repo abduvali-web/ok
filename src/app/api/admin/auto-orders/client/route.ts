@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { safeJsonParse } from '@/lib/safe-json'
 import { PaymentStatus, PaymentMethod, OrderStatus, Prisma } from '@prisma/client'
 
 // Function to get day of week in Russian
@@ -160,14 +161,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse delivery days
-    let deliveryDays = {}
-    try {
-      if (client.deliveryDays) {
-        deliveryDays = JSON.parse(client.deliveryDays)
-      }
-    } catch (e) {
-      console.error('Error parsing client delivery days:', e)
-    }
+    const deliveryDays = safeJsonParse<Record<string, boolean>>(client.deliveryDays, {})
 
     // Calculate date range (next 30 days from today)
     const startDate = new Date()
@@ -235,14 +229,7 @@ export async function GET(request: NextRequest) {
 
     for (const client of clients) {
       if (client.autoOrdersEnabled) {
-        let deliveryDays = {}
-        try {
-          if (client.deliveryDays) {
-            deliveryDays = JSON.parse(client.deliveryDays)
-          }
-        } catch (e) {
-          console.error('Error parsing client delivery days:', e)
-        }
+        const deliveryDays = safeJsonParse<Record<string, boolean>>(client.deliveryDays, {})
 
         const today = new Date()
         const endDate = new Date()

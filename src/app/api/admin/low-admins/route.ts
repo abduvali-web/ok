@@ -6,6 +6,7 @@ import { passwordSchema, emailSchema } from '@/lib/validations'
 import { z } from 'zod'
 import { Prisma } from '@prisma/client'
 import { getOwnerAdminId } from '@/lib/admin-scope'
+import { safeJsonParse } from '@/lib/safe-json'
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,7 +44,10 @@ export async function GET(request: NextRequest) {
 
     const transformedLowAdmins = lowAdmins.map(admin => ({
       ...admin,
-      allowedTabs: admin.allowedTabs ? JSON.parse(admin.allowedTabs) : []
+      allowedTabs: (() => {
+        const parsed = safeJsonParse<unknown>(admin.allowedTabs, [])
+        return Array.isArray(parsed) ? parsed.filter((t): t is string => typeof t === 'string') : []
+      })()
     }))
 
     return NextResponse.json(transformedLowAdmins)
@@ -105,6 +109,7 @@ export async function POST(request: NextRequest) {
       'orders',
       'clients',
       'admins',
+      'features',
       'bin',
       'statistics',
       'history',
@@ -196,7 +201,10 @@ export async function POST(request: NextRequest) {
       role: newAdmin.role,
       isActive: newAdmin.isActive,
       createdAt: newAdmin.createdAt,
-      allowedTabs: newAdmin.allowedTabs ? JSON.parse(newAdmin.allowedTabs) : []
+      allowedTabs: (() => {
+        const parsed = safeJsonParse<unknown>(newAdmin.allowedTabs, [])
+        return Array.isArray(parsed) ? parsed.filter((t): t is string => typeof t === 'string') : []
+      })()
     })
   } catch (error) {
     console.error('Error creating low admin:', error)

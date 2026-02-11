@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { safeJsonParse } from '@/lib/safe-json'
 import { PaymentStatus, PaymentMethod, OrderStatus, Prisma } from '@prisma/client'
 
 // Function to get day of week in Russian
@@ -153,14 +154,7 @@ async function extendOrdersForNextMonth(adminId: string) {
 
   for (const customer of customers) {
     if (customer.autoOrdersEnabled) {
-      let deliveryDays = {}
-      try {
-        if (customer.deliveryDays) {
-          deliveryDays = JSON.parse(customer.deliveryDays)
-        }
-      } catch (e) {
-        console.error('Error parsing customer delivery days:', e)
-      }
+      const deliveryDays = safeJsonParse<Record<string, boolean>>(customer.deliveryDays, {})
 
       activeClients.push({
         id: customer.id,
@@ -263,20 +257,13 @@ export async function GET(request: NextRequest) {
     const customers = await db.customer.findMany()
     const clientStatuses: any[] = []
 
-    for (const customer of customers) {
-      if (customer.autoOrdersEnabled) {
-        let deliveryDays = {}
-        try {
-          if (customer.deliveryDays) {
-            deliveryDays = JSON.parse(customer.deliveryDays)
-          }
-        } catch (e) {
-          console.error('Error parsing customer delivery days:', e)
-        }
+  for (const customer of customers) {
+    if (customer.autoOrdersEnabled) {
+      const deliveryDays = safeJsonParse<Record<string, boolean>>(customer.deliveryDays, {})
 
-        const clientOrders = await createAutoOrdersForClient(
-          {
-            ...customer,
+      const clientOrders = await createAutoOrdersForClient(
+        {
+          ...customer,
             deliveryDays: deliveryDays,
             calories: customer.calories,
             preferences: customer.preferences,

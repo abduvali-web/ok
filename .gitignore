@@ -54,3 +54,4 @@ prompt
 /playwright-report
 
 server.log
+.eslintcache

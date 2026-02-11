@@ -35,6 +35,7 @@ model Admin {
   createdClients        Customer[]     @relation("ClientCreator")
   actionLogs            ActionLog[]
   interfaceConfig       InterfaceConfig?
+  features              Feature[]      @relation("AdminFeatures")
   accounts              Account[]
   sentMessages          Message[]      @relation("MessageSender")
   conversationsAsP1     Conversation[] @relation("ConversationParticipant1")
@@ -60,6 +61,11 @@ enum PlanType {
   CLASSIC
   INDIVIDUAL
   DIABETIC
+}
+
+enum FeatureType {
+  TEXT
+  SELECT
 }
 
 model Customer {
@@ -193,6 +199,22 @@ model InterfaceConfig {
   admin     Admin    @relation(fields: [adminId], references: [id])
 
   @@map("interface_configs")
+}
+
+model Feature {
+  id           String      @id @default(cuid())
+  ownerAdminId String
+  name         String
+  description  String
+  type         FeatureType
+  options      Json?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  ownerAdmin   Admin       @relation("AdminFeatures", fields: [ownerAdminId], references: [id], onDelete: Cascade)
+
+  @@index([ownerAdminId])
+  @@map("features")
 }
 
 model Account {

@@ -2,6 +2,7 @@ export const CANONICAL_TABS = [
   'orders',
   'clients',
   'admins',
+  'features',
   'bin',
   'statistics',
   'history',

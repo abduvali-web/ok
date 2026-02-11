@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import {
     Package,
     Users,
+    Sparkles,
     BarChart3,
     History,
     User,
@@ -28,6 +29,8 @@ export function MobileTabIndicator({ activeTab }: MobileTabIndicatorProps) {
                 return { icon: Users, label: t.admin.clients, color: 'from-purple-500 to-pink-500' }
             case 'admins':
                 return { icon: Users, label: t.admin.admins, color: 'from-orange-500 to-red-500' }
+            case 'features':
+                return { icon: Sparkles, label: t.admin.features, color: 'from-violet-500 to-fuchsia-500' }
             case 'bin':
                 return { icon: Trash2, label: t.admin.bin, color: 'from-red-500 to-rose-500' }
             case 'statistics':

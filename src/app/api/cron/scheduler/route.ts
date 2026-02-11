@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { PaymentStatus, PaymentMethod, OrderStatus } from '@prisma/client'
+import { safeJsonParse } from '@/lib/safe-json'
 
 function getDayOfWeek(date: Date): string {
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
@@ -49,17 +50,16 @@ export async function GET(req: Request) {
 
         for (const client of customers) {
             // Parse delivery days from database (stored as JSON string)
-            const deliveryDays = (client as any).deliveryDays
-                ? JSON.parse((client as any).deliveryDays)
-                : {
-                    monday: true,
-                    tuesday: true,
-                    wednesday: true,
-                    thursday: true,
-                    friday: true,
-                    saturday: true,
-                    sunday: true
-                }
+            const defaultDeliveryDays = {
+                monday: true,
+                tuesday: true,
+                wednesday: true,
+                thursday: true,
+                friday: true,
+                saturday: true,
+                sunday: true
+            }
+            const deliveryDays = safeJsonParse<Record<string, boolean>>(client.deliveryDays, defaultDeliveryDays)
 
             // Get calories from database
             const calories = (client as any).calories || 2000

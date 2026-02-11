@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
+import { z } from 'zod'
 
 const JWT_SECRET = process.env.JWT_SECRET
 
@@ -34,7 +35,16 @@ export function createCustomerToken(payload: Omit<CustomerTokenPayload, 'role'>)
 export function verifyCustomerToken(token: string): CustomerTokenPayload | null {
     try {
         if (!JWT_SECRET) return null
-        return jwt.verify(token, JWT_SECRET) as CustomerTokenPayload
+        const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] })
+        const parsed = z
+            .object({
+                id: z.string().min(1),
+                phone: z.string().min(1),
+                role: z.literal('CUSTOMER')
+            })
+            .safeParse(decoded)
+        if (!parsed.success) return null
+        return parsed.data
     } catch {
         return null
     }

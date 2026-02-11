@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
 import { PaymentStatus, PaymentMethod, OrderStatus } from '@prisma/client'
+import { safeJsonParse } from '@/lib/safe-json'
 
 function getDayOfWeek(date: Date): string {
   const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
@@ -38,7 +39,10 @@ export async function POST(request: NextRequest) {
         id: true,
         address: true,
         preferences: true,
-        createdBy: true
+        createdBy: true,
+        deliveryDays: true,
+        calories: true,
+        defaultCourierId: true,
       }
     }))
 
@@ -46,20 +50,19 @@ export async function POST(request: NextRequest) {
 
     for (const client of customers) {
       // Parse delivery days from database
-      const deliveryDays = (client as any).deliveryDays
-        ? JSON.parse((client as any).deliveryDays)
-        : {
-          monday: true,
-          tuesday: true,
-          wednesday: true,
-          thursday: true,
-          friday: true,
-          saturday: true,
-          sunday: true
-        }
+      const defaultDeliveryDays = {
+        monday: true,
+        tuesday: true,
+        wednesday: true,
+        thursday: true,
+        friday: true,
+        saturday: true,
+        sunday: true
+      }
+      const deliveryDays = safeJsonParse<Record<string, boolean>>(client.deliveryDays, defaultDeliveryDays)
 
       // Get calories from database
-      const calories = (client as any).calories || 2000
+      const calories = client.calories || 2000
 
       // Iterate through each day in the next 30 days
       for (let d = new Date(today); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -108,7 +111,7 @@ export async function POST(request: NextRequest) {
               isPrepaid: false,
               orderStatus: OrderStatus.PENDING,
               fromAutoOrder: true,
-              courierId: (client as any).defaultCourierId || null
+              courierId: client.defaultCourierId || null
             }
           })
           totalOrdersCreated++

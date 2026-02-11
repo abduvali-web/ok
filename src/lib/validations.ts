@@ -91,3 +91,20 @@ export const bulkUpdateSchema = z.object({
     ids: z.array(z.string()).min(1, 'Необходимо выбрать хотя бы один элемент'),
     data: z.record(z.string(), z.any())
 })
+
+export const featureIdSchema = z.string().min(1, 'ID обязателен')
+
+export const featureCreateSchema = z.object({
+    name: z.string().min(1, 'Название обязательно').max(200, 'Название слишком длинное'),
+    description: z.string().min(1, 'Описание обязательно').max(1000, 'Описание слишком длинное'),
+    type: z.enum(['TEXT', 'SELECT']),
+    options: z.string().max(2000, 'Слишком много вариантов').optional()
+}).superRefine((val, ctx) => {
+    if (val.type === 'SELECT' && (!val.options || val.options.trim() === '')) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Для типа "Выбор из списка" необходимо указать варианты',
+            path: ['options']
+        })
+    }
+})

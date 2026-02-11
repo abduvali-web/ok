@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
 import { getGroupAdminIds } from '@/lib/admin-scope'
 import { Prisma } from '@prisma/client'
+import { safeJsonParse } from '@/lib/safe-json'
 
 export async function GET(request: NextRequest) {
   try {
@@ -60,6 +61,16 @@ export async function GET(request: NextRequest) {
     })
 
     // Return clients with all data from database
+    const defaultDeliveryDays = {
+      monday: false,
+      tuesday: false,
+      wednesday: false,
+      thursday: false,
+      friday: false,
+      saturday: false,
+      sunday: false
+    }
+
     const clients = dbClients.map(dbClient => ({
       id: dbClient.id,
       name: dbClient.name,
@@ -71,15 +82,10 @@ export async function GET(request: NextRequest) {
       dailyPrice: (dbClient as any).dailyPrice || 84000,
       notes: (dbClient as any).notes || '',
       specialFeatures: dbClient.preferences || '',
-      deliveryDays: dbClient.deliveryDays ? JSON.parse(dbClient.deliveryDays) : {
-        monday: false,
-        tuesday: false,
-        wednesday: false,
-        thursday: false,
-        friday: false,
-        saturday: false,
-        sunday: false
-      },
+      deliveryDays: (() => {
+        const parsed = safeJsonParse<unknown>(dbClient.deliveryDays, defaultDeliveryDays)
+        return typeof parsed === 'object' && parsed ? parsed : defaultDeliveryDays
+      })(),
       autoOrdersEnabled: dbClient.autoOrdersEnabled,
       isActive: dbClient.isActive,
       createdAt: dbClient.createdAt.toISOString(),
@@ -207,7 +213,7 @@ export async function POST(request: NextRequest) {
       dailyPrice: (dbClient as any).dailyPrice || 84000,
       notes: (dbClient as any).notes || '',
       specialFeatures: dbClient.preferences || '',
-      deliveryDays: dbClient.deliveryDays ? JSON.parse(dbClient.deliveryDays) : {},
+      deliveryDays: safeJsonParse<Record<string, boolean>>(dbClient.deliveryDays, {}),
       autoOrdersEnabled: dbClient.autoOrdersEnabled,
       isActive: dbClient.isActive,
       createdAt: dbClient.createdAt.toISOString(),

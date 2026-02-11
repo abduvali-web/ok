@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
 import { passwordSchema } from '@/lib/validations'
 import { z } from 'zod'
+import { safeJsonParse } from '@/lib/safe-json'
 
 // PATCH - Update admin
 export async function PATCH(
@@ -24,6 +25,7 @@ export async function PATCH(
             'orders',
             'clients',
             'admins',
+            'features',
             'bin',
             'statistics',
             'history',
@@ -114,7 +116,10 @@ export async function PATCH(
 
         return NextResponse.json({
             ...updatedAdmin,
-            allowedTabs: updatedAdmin.allowedTabs ? JSON.parse(updatedAdmin.allowedTabs) : []
+            allowedTabs: (() => {
+                const parsed = safeJsonParse<unknown>(updatedAdmin.allowedTabs, [])
+                return Array.isArray(parsed) ? parsed.filter((t): t is string => typeof t === 'string') : []
+            })()
         })
 
     } catch (error) {

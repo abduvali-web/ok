@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser } from '@/lib/auth-utils'
+import { safeJsonParse } from '@/lib/safe-json'
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,13 +27,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    const parsedAllowedTabs = safeJsonParse<unknown>(admin.allowedTabs, [])
+    const allowedTabs = Array.isArray(parsedAllowedTabs)
+      ? parsedAllowedTabs.filter((t): t is string => typeof t === 'string')
+      : []
+
     return NextResponse.json({
       ...admin,
-      allowedTabs: admin.allowedTabs ? JSON.parse(admin.allowedTabs) : []
+      allowedTabs
     })
   } catch (error) {
     console.error('Error fetching current admin:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

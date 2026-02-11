@@ -6,6 +6,7 @@ import { passwordSchema, emailSchema } from '@/lib/validations'
 import { z } from 'zod'
 import { Prisma } from '@prisma/client'
 import { getGroupAdminIds, getOwnerAdminId } from '@/lib/admin-scope'
+import { safeJsonParse } from '@/lib/safe-json'
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,7 +47,10 @@ export async function GET(request: NextRequest) {
 
     const transformedCouriers = couriers.map(courier => ({
       ...courier,
-      allowedTabs: courier.allowedTabs ? JSON.parse(courier.allowedTabs) : []
+      allowedTabs: (() => {
+        const parsed = safeJsonParse<unknown>(courier.allowedTabs, [])
+        return Array.isArray(parsed) ? parsed.filter((t): t is string => typeof t === 'string') : []
+      })()
     }))
 
     return NextResponse.json(transformedCouriers)
@@ -156,7 +160,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       ...newCourier,
-      allowedTabs: newCourier.allowedTabs ? JSON.parse(newCourier.allowedTabs) : []
+      allowedTabs: (() => {
+        const parsed = safeJsonParse<unknown>(newCourier.allowedTabs, [])
+        return Array.isArray(parsed) ? parsed.filter((t): t is string => typeof t === 'string') : []
+      })()
     })
   } catch (error) {
     console.error('Error creating courier:', error)

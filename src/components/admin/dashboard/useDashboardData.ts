@@ -1,0 +1,176 @@
+'use client'
+
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
+import type { Admin, Client, Order, Stats } from '@/components/admin/dashboard/types'
+
+type DashboardFilters = Record<string, unknown>
+
+function isAbortError(error: unknown) {
+  return typeof error === 'object' && error !== null && 'name' in error && (error as any).name === 'AbortError'
+}
+
+export function useDashboardData({
+  selectedDate,
+  filters,
+}: {
+  selectedDate: Date | null
+  filters: DashboardFilters
+}) {
+  const [meRole, setMeRole] = useState<string | null>(null)
+  const [allowedTabs, setAllowedTabs] = useState<string[] | null>(null)
+
+  const [isLoading, setIsLoading] = useState(true)
+  const [lowAdmins, setLowAdmins] = useState<Admin[]>([])
+  const [orders, setOrders] = useState<Order[]>([])
+  const [clients, setClients] = useState<Client[]>([])
+  const [couriers, setCouriers] = useState<Admin[]>([])
+  const [binClients, setBinClients] = useState<Client[]>([])
+  const [binOrders, setBinOrders] = useState<Order[]>([])
+  const [availableSets, setAvailableSets] = useState<any[]>([])
+  const [stats, setStats] = useState<Stats | null>(null)
+
+  const abortRef = useRef<AbortController | null>(null)
+
+  const loadMe = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const res = await fetch('/api/admin/me', { signal })
+      if (!res.ok) return
+      const data = await res.json().catch(() => null)
+      setMeRole(data && typeof data.role === 'string' ? data.role : null)
+      setAllowedTabs(data && Array.isArray(data.allowedTabs) ? data.allowedTabs : [])
+    } catch (error) {
+      if (isAbortError(error)) return
+      console.error('Error fetching permissions:', error)
+    }
+  }, [])
+
+  const refreshLowAdmins = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const response = await fetch('/api/admin/low-admins', { signal })
+      if (response.ok) {
+        const adminsData = await response.json()
+        setLowAdmins(adminsData)
+      }
+    } catch (error) {
+      if (isAbortError(error)) return
+      console.error('Error fetching low admins:', error)
+    }
+  }, [])
+
+  const refreshBinOrders = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const response = await fetch('/api/orders?deletedOnly=true', { signal })
+      if (response.ok) {
+        const data = await response.json()
+        setBinOrders(data)
+      }
+    } catch (error) {
+      if (isAbortError(error)) return
+      console.error('Error fetching bin orders:', error)
+    }
+  }, [])
+
+  const refreshBinClients = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const response = await fetch('/api/admin/clients/bin', { signal })
+      if (response.ok) {
+        const data = await response.json()
+        setBinClients(data)
+      }
+    } catch (error) {
+      if (isAbortError(error)) return
+      console.error('Error fetching bin clients:', error)
+    }
+  }, [])
+
+  const refreshAll = useCallback(async () => {
+    if (typeof window === 'undefined') return
+
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+    const { signal } = controller
+
+    setIsLoading(true)
+    try {
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout')), 15000)
+      )
+
+      await Promise.race([refreshLowAdmins(signal), timeoutPromise])
+
+      const ordersUrl = selectedDate
+        ? `/api/orders?date=${selectedDate.toISOString().split('T')[0]}&filters=${encodeURIComponent(
+            JSON.stringify(filters)
+          )}`
+        : `/api/orders?filters=${encodeURIComponent(JSON.stringify(filters))}`
+
+      const fetchPromise = Promise.all([
+        fetch(ordersUrl, { signal }),
+        fetch('/api/admin/clients', { signal }),
+        fetch('/api/admin/statistics', { signal }),
+        fetch('/api/admin/couriers', { signal }),
+        fetch('/api/admin/sets', { signal }),
+      ])
+
+      const [ordersRes, clientsRes, statsRes, couriersRes, setsRes] = (await Promise.race([
+        fetchPromise,
+        timeoutPromise,
+      ])) as [Response, Response, Response, Response, Response]
+
+      if (ordersRes.status === 401 || clientsRes.status === 401) {
+        localStorage.removeItem('token')
+        window.location.href = '/login'
+        return
+      }
+
+      if (ordersRes.ok) setOrders(await ordersRes.json())
+      if (clientsRes.ok) setClients(await clientsRes.json())
+      if (statsRes.ok) setStats(await statsRes.json())
+      if (couriersRes.ok) setCouriers(await couriersRes.json())
+      if (setsRes.ok) setAvailableSets(await setsRes.json())
+
+      await refreshBinClients(signal)
+      await refreshBinOrders(signal)
+    } catch (error) {
+      if (isAbortError(error)) return
+      console.error('Error fetching data:', error)
+      toast.error('Ошибка загрузки данных', {
+        description: error instanceof Error ? error.message : 'Проверьте соединение с интернетом',
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [filters, refreshBinClients, refreshBinOrders, refreshLowAdmins, selectedDate])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    loadMe(controller.signal)
+    return () => controller.abort()
+  }, [loadMe])
+
+  useEffect(() => {
+    refreshAll()
+  }, [refreshAll])
+
+  return {
+    meRole,
+    allowedTabs,
+    isLoading,
+    lowAdmins,
+    orders,
+    setOrders,
+    clients,
+    couriers,
+    availableSets,
+    stats,
+    binClients,
+    binOrders,
+    refreshAll,
+    refreshLowAdmins,
+    refreshBinClients,
+    refreshBinOrders,
+  }
+}
+

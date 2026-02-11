@@ -1,14 +1,22 @@
 import { NextRequest } from 'next/server'
 import { auth } from '@/auth'
 import jwt from 'jsonwebtoken'
+import { z } from 'zod'
+import { type AdminRole, isAdminRole, ADMIN_ROLE_LEVEL } from '@/lib/roles'
 
 const JWT_SECRET = process.env.JWT_SECRET
 
 export interface AuthUser {
     id: string
     email: string
-    role: string
+    role: AdminRole
 }
+
+const adminJwtPayloadSchema = z.object({
+  id: z.string().min(1),
+  email: z.string().min(1),
+  role: z.string().min(1),
+})
 
 /**
  * Unified authentication helper that supports both NextAuth sessions and JWT tokens
@@ -17,8 +25,9 @@ export interface AuthUser {
 export async function getAuthUser(request: NextRequest): Promise<AuthUser | null> {
     // Try NextAuth session first
     try {
-        const session = await auth()
+        const session = await auth(request as any)
         if (session?.user) {
+            if (!isAdminRole(session.user.role)) return null
             return {
                 id: session.user.id,
                 email: session.user.email!,
@@ -38,11 +47,14 @@ export async function getAuthUser(request: NextRequest): Promise<AuthUser | null
     const token = authHeader.substring(7)
     try {
         if (!JWT_SECRET) return null
-        const decoded = jwt.verify(token, JWT_SECRET!) as any
+        const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] })
+        const parsed = adminJwtPayloadSchema.safeParse(decoded)
+        if (!parsed.success) return null
+        if (!isAdminRole(parsed.data.role)) return null
         return {
-            id: decoded.id,
-            email: decoded.email,
-            role: decoded.role
+            id: parsed.data.id,
+            email: parsed.data.email,
+            role: parsed.data.role
         }
     } catch {
         return null
@@ -52,23 +64,18 @@ export async function getAuthUser(request: NextRequest): Promise<AuthUser | null
 /**
  * Check if user has required role
  */
-export function hasRole(user: AuthUser, allowedRoles: string[]): boolean {
+export function hasRole(user: AuthUser, allowedRoles: readonly AdminRole[]): boolean
+export function hasRole(user: AuthUser, allowedRoles: readonly string[]): boolean
+export function hasRole(user: AuthUser, allowedRoles: readonly string[]): boolean {
     return allowedRoles.includes(user.role)
 }
 
 /**
  * Check if user can modify target admin (role hierarchy)
  */
-export function canModifyAdmin(user: AuthUser, targetRole: string): boolean {
-    const roleHierarchy = {
-        'SUPER_ADMIN': 4,
-        'MIDDLE_ADMIN': 3,
-        'LOW_ADMIN': 2,
-        'COURIER': 1
-    }
-
-    const userLevel = roleHierarchy[user.role as keyof typeof roleHierarchy] || 0
-    const targetLevel = roleHierarchy[targetRole as keyof typeof roleHierarchy] || 0
-
+export function canModifyAdmin(user: AuthUser, targetRole: AdminRole | string): boolean {
+    const target = isAdminRole(targetRole) ? targetRole : null
+    const userLevel = ADMIN_ROLE_LEVEL[user.role] ?? 0
+    const targetLevel = target ? (ADMIN_ROLE_LEVEL[target] ?? 0) : 0
     return userLevel > targetLevel
 }

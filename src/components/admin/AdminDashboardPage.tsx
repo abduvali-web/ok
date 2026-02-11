@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   Dialog,
   DialogContent,
@@ -36,8 +35,6 @@ import {
   Trash2,
   Pause,
   Play,
-  Eye,
-  EyeOff,
   Filter,
   ChevronLeft,
   ChevronRight,
@@ -56,8 +53,11 @@ import { TrialStatus } from '@/components/admin/TrialStatus'
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal'
 import { getDailyPrice, PLAN_TYPES } from '@/lib/menuData'
 import { deriveVisibleTabs } from '@/components/admin/dashboard/tabs'
-import type { Admin, Client, Order, Stats } from '@/components/admin/dashboard/types'
+import type { Client, Order } from '@/components/admin/dashboard/types'
 import { DesktopTabsNav } from '@/components/admin/dashboard/DesktopTabsNav'
+import { useDashboardData } from '@/components/admin/dashboard/useDashboardData'
+import { AdminsTab } from '@/components/admin/dashboard/tabs-content/AdminsTab'
+import { OrderModal } from '@/components/admin/dashboard/modals/OrderModal'
 
 import { MobileSidebar } from '@/components/MobileSidebar'
 import { MobileTabIndicator } from '@/components/MobileTabIndicator'
@@ -94,38 +94,25 @@ const RouteOptimizeButton = dynamic(
   () => import('@/components/admin/RouteOptimizeButton').then((mod) => mod.RouteOptimizeButton),
   { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading…</div> }
 )
+const FeaturesTab = dynamic(
+  () => import('@/components/admin/features/FeaturesTab').then((mod) => mod.FeaturesTab),
+  { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading…</div> }
+)
 
 export type AdminDashboardMode = 'middle' | 'low'
 
 export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const { t, language } = useLanguage()
-  const [meRole, setMeRole] = useState<string | null>(null)
-  const [allowedTabs, setAllowedTabs] = useState<string[] | null>(null)
-
-  const visibleTabs = useMemo(() => deriveVisibleTabs(allowedTabs), [allowedTabs])
-
-  const isLowAdminView = mode === 'low' || meRole === 'LOW_ADMIN'
   const [activeTab, setActiveTab] = useState('statistics')
   const [currentDate, setCurrentDate] = useState('')
-  const [lowAdmins, setLowAdmins] = useState<Admin[]>([])
-  const [orders, setOrders] = useState<Order[]>([])
-  const [clients, setClients] = useState<Client[]>([])
-  const [couriers, setCouriers] = useState<Admin[]>([])
-  const [binClients, setBinClients] = useState<Client[]>([])
-  const [binOrders, setBinOrders] = useState<Order[]>([])
-  const [availableSets, setAvailableSets] = useState<any[]>([])
-  const [stats, setStats] = useState<Stats | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set())
   const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set())
   const [clientStatusFilter, setClientStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [showFilters, setShowFilters] = useState(false)
   const [optimizeCourierId, setOptimizeCourierId] = useState('all')
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isCreateOrderModalOpen, setIsCreateOrderModalOpen] = useState(false)
   const [isCreateCourierModalOpen, setIsCreateCourierModalOpen] = useState(false)
-  const [isCreateFeatureModalOpen, setIsCreateFeatureModalOpen] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
   const [isCreateClientModalOpen, setIsCreateClientModalOpen] = useState(false)
   const [isBulkEditOrdersModalOpen, setIsBulkEditOrdersModalOpen] = useState(false)
   const [isBulkEditClientsModalOpen, setIsBulkEditClientsModalOpen] = useState(false)
@@ -143,36 +130,24 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const [isOrderDetailsModalOpen, setIsOrderDetailsModalOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
-  const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null)
-  const [isEditAdminModalOpen, setIsEditAdminModalOpen] = useState(false)
-  const [editAdminFormData, setEditAdminFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    role: 'LOW_ADMIN',
-    isActive: true,
-    allowedTabs: [] as string[],
-    salary: 0
-  })
-  const [createFormData, setCreateFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    role: 'LOW_ADMIN',
-    allowedTabs: [] as string[],
-    salary: 0
-  })
+  const tabsCopy = {
+    orders: t.admin.orders,
+    clients: t.admin.clients,
+    admins: t.admin.admins,
+    features: t.admin.features,
+    bin: t.admin.bin,
+    statistics: t.admin.statistics,
+    history: t.admin.history,
+    profile: t.common.profile,
+    warehouse: t.warehouse.title,
+    finance: t.finance.title,
+    interface: t.admin.interface,
+  }
   const [courierFormData, setCourierFormData] = useState({
     name: '',
     email: '',
     password: '',
     salary: ''
-  })
-  const [featureFormData, setFeatureFormData] = useState({
-    name: '',
-    description: '',
-    type: 'TEXT',
-    options: ''
   })
   const [clientFormData, setClientFormData] = useState({
     name: '',
@@ -219,13 +194,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     assignedSetId: ''
   })
   const [_parsedCoords, setParsedCoords] = useState<{ lat: number, lng: number } | null>(null)
-  const [isCreating, setIsCreating] = useState(false)
   const [isCreatingOrder, setIsCreatingOrder] = useState(false)
   const [isCreatingCourier, setIsCreatingCourier] = useState(false)
   const [editingClientId, setEditingClientId] = useState<string | null>(null)
-  const [isCreatingFeature, setIsCreatingFeature] = useState(false)
   const [isCreatingClient, setIsCreatingClient] = useState(false)
-  const [createError, setCreateError] = useState('')
   const [orderError, setOrderError] = useState('')
   // Set current date on client side to avoid hydration mismatch
   useEffect(() => {
@@ -237,7 +209,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     }))
   }, [])
   const [courierError, setCourierError] = useState('')
-  const [featureError, setFeatureError] = useState('')
   const [clientError, setClientError] = useState('')
   const [filters, setFilters] = useState({
     successful: false,
@@ -264,8 +235,32 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     manualOrders: false
   })
   const [searchTerm, setSearchTerm] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
   const [selectedBinClients, setSelectedBinClients] = useState<Set<string>>(new Set())
+
+  const {
+    meRole,
+    allowedTabs,
+    isLoading,
+    lowAdmins,
+    orders,
+    setOrders,
+    clients,
+    couriers,
+    availableSets,
+    stats,
+    binClients,
+    binOrders,
+    refreshAll,
+    refreshBinClients,
+    refreshBinOrders,
+  } = useDashboardData({ selectedDate, filters })
+
+  const fetchData = () => refreshAll()
+  const fetchBinClients = () => refreshBinClients()
+  const fetchBinOrders = () => refreshBinOrders()
+
+  const visibleTabs = useMemo(() => deriveVisibleTabs(allowedTabs), [allowedTabs])
+  const isLowAdminView = mode === 'low' || meRole === 'LOW_ADMIN'
 
   // Add effect to reset selected clients when filter changes
   useEffect(() => {
@@ -273,163 +268,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   }, [clientStatusFilter])
 
   useEffect(() => {
-    const loadMe = async () => {
-      try {
-        const res = await fetch('/api/admin/me')
-        if (!res.ok) return
-        const data = await res.json()
-        setMeRole(typeof data.role === 'string' ? data.role : null)
-        setAllowedTabs(Array.isArray(data.allowedTabs) ? data.allowedTabs : [])
-      } catch (error) {
-        console.error('Error fetching permissions:', error)
-      }
-    }
-
-    loadMe()
-  }, [])
-
-  useEffect(() => {
     if (visibleTabs.length === 0) return
     if (!visibleTabs.includes(activeTab)) {
       setActiveTab(visibleTabs[0])
     }
   }, [activeTab, visibleTabs])
-
-  useEffect(() => {
-    // Fetch data on initial load
-    // Authentication is handled by NextAuth middleware
-    fetchData()
-  }, []) // Initial load
-
-  useEffect(() => {
-    // Re-fetch data when date or filters change
-    if (selectedDate || filters) {
-      fetchData()
-    }
-  }, [selectedDate, filters])
-
-  const fetchLowAdmins = async () => {
-    try {
-      const response = await fetch('/api/admin/low-admins', {
-        headers: {
-        }
-      })
-
-      if (response.ok) {
-        const adminsData = await response.json()
-        setLowAdmins(adminsData)
-      }
-    } catch (error) {
-      console.error('Error fetching low admins:', error)
-    }
-  }
-
-  const fetchData = async () => {
-    if (typeof window === 'undefined') return
-
-    try {
-      // Set a timeout to prevent infinite loading
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Request timeout')), 15000)
-      )
-
-      // Fetch low admins
-      await Promise.race([fetchLowAdmins(), timeoutPromise])
-
-      // Fetch orders
-      const ordersUrl = selectedDate
-        ? `/api/orders?date=${selectedDate.toISOString().split('T')[0]}&filters=${JSON.stringify(filters)}`
-        : `/api/orders?filters=${JSON.stringify(filters)}`
-
-      const headers = {
-      }
-
-      const fetchPromise = Promise.all([
-        fetch(ordersUrl, { headers }),
-        fetch('/api/admin/clients', { headers }),
-        fetch('/api/admin/statistics', { headers }),
-        fetch('/api/admin/couriers', { headers }),
-        fetch('/api/admin/sets', { headers })
-      ])
-
-      const [ordersRes, clientsRes, statsRes, couriersRes, setsRes] = await Promise.race([fetchPromise, timeoutPromise]) as [Response, Response, Response, Response, Response]
-
-      // Handle 401 Unauthorized
-      if (ordersRes.status === 401 || clientsRes.status === 401) {
-        localStorage.removeItem('token')
-        window.location.href = '/login'
-        return
-      }
-
-      if (ordersRes.ok) {
-        const ordersData = await ordersRes.json()
-        setOrders(ordersData)
-      }
-
-      if (clientsRes.ok) {
-        const clientsData = await clientsRes.json()
-        setClients(clientsData)
-      }
-
-      if (statsRes.ok) {
-        const statsData = await statsRes.json()
-        setStats(statsData)
-      }
-
-      if (couriersRes.ok) {
-        const couriersData = await couriersRes.json()
-        setCouriers(couriersData)
-      }
-
-      if (setsRes && setsRes.ok) {
-        const setsData = await setsRes.json()
-        setAvailableSets(setsData)
-      }
-
-      // Fetch bin clients
-      await fetchBinClients()
-
-      // Fetch bin orders
-      await fetchBinOrders()
-    } catch (error) {
-      console.error('Error fetching data:', error)
-      toast.error('Ошибка загрузки данных', {
-        description: error instanceof Error ? error.message : 'Проверьте соединение с интернетом'
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const fetchBinOrders = async () => {
-    try {
-      const response = await fetch('/api/orders?deletedOnly=true', {
-        headers: {
-        }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setBinOrders(data)
-      }
-    } catch (error) {
-      console.error('Error fetching bin orders:', error)
-    }
-  }
-
-  const fetchBinClients = async () => {
-    try {
-      const response = await fetch('/api/admin/clients/bin', {
-        headers: {
-        }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setBinClients(data)
-      }
-    } catch (error) {
-      console.error('Error fetching bin clients:', error)
-    }
-  }
 
   const handleLogout = async () => {
     // Clear localStorage (for backward compatibility)
@@ -624,99 +467,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     } catch (error) {
       console.error('Permanent delete clients error:', error)
       toast.error('Ошибка соединения с сервером')
-    }
-  }
-
-  const handleCreateAdmin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsCreating(true)
-    setCreateError('')
-
-    try {
-      const response = await fetch('/api/admin/low-admins', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(createFormData)
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setIsCreateModalOpen(false)
-        setCreateFormData({ name: '', email: '', password: '', role: 'LOW_ADMIN', allowedTabs: [] as string[], salary: 0 })
-        fetchData()
-        toast.success('Администратор успешно создан')
-      } else {
-        setCreateError(data.error || 'Ошибка создания администратора')
-      }
-    } catch {
-      setCreateError('Ошибка соединения с сервером')
-    } finally {
-      setIsCreating(false)
-    }
-  }
-
-  const normalizeAllowedTabsForForm = (tabs: string[] | null | undefined) => {
-    const inputTabs = Array.isArray(tabs) ? tabs : []
-    const mapped = inputTabs.map((tab) => {
-      if (tab === 'chat') return 'profile'
-      if (tab === 'settings') return 'interface'
-      return tab
-    })
-    return Array.from(new Set(mapped))
-  }
-
-  const handleEditAdmin = (admin: Admin) => {
-    setEditingAdmin(admin)
-    setEditAdminFormData({
-      name: admin.name,
-      email: admin.email,
-      password: '',
-      role: admin.role,
-      isActive: admin.isActive,
-      allowedTabs: normalizeAllowedTabsForForm(admin.allowedTabs),
-      salary: admin.salary || 0
-    })
-    setIsEditAdminModalOpen(true)
-  }
-
-  const handleUpdateAdmin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!editingAdmin) return
-
-    try {
-      const response = await fetch(`/api/admin/low-admins/${editingAdmin.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: editAdminFormData.name,
-          email: editAdminFormData.email,
-          role: editAdminFormData.role,
-          isActive: editAdminFormData.isActive,
-          allowedTabs: editAdminFormData.allowedTabs,
-          salary: editAdminFormData.salary,
-          ...(editAdminFormData.password ? { password: editAdminFormData.password } : {})
-        })
-      })
-
-      if (response.ok) {
-        setIsEditAdminModalOpen(false)
-        setEditingAdmin(null)
-        fetchData()
-        toast.success('Администратор успешно обновлен')
-      } else {
-        const data = await response.json()
-        toast.error(data.error || 'Ошибка обновления администратора', {
-          description: data.details || undefined
-        })
-      }
-    } catch (error) {
-      console.error('Error updating admin:', error)
-      toast.error('Ошибка обновления администратора')
     }
   }
 
@@ -1086,41 +836,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       setCourierError('Ошибка соединения с сервером')
     } finally {
       setIsCreatingCourier(false)
-    }
-  }
-
-  const handleCreateFeature = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsCreatingFeature(true)
-    setFeatureError('')
-
-    try {
-      const response = await fetch('/api/admin/features', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(featureFormData)
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setIsCreateFeatureModalOpen(false)
-        setFeatureFormData({
-          name: '',
-          description: '',
-          type: 'TEXT',
-          options: ''
-        })
-        // Show success message or refresh data
-      } else {
-        setFeatureError(data.error || 'Ошибка создания особенности')
-      }
-    } catch {
-      setFeatureError('Ошибка соединения с сервером')
-    } finally {
-      setIsCreatingFeature(false)
     }
   }
 
@@ -1795,18 +1510,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <DesktopTabsNav
             visibleTabs={visibleTabs}
-            copy={{
-              orders: t.admin.orders,
-              clients: t.admin.clients,
-              admins: t.admin.admins,
-              bin: t.admin.bin,
-              statistics: t.admin.statistics,
-              history: t.admin.history,
-              profile: t.common.profile,
-              warehouse: t.warehouse.title,
-              finance: t.finance.title,
-              interface: t.admin.interface,
-            }}
+            copy={tabsCopy}
           />
 
           {/* Statistics Tab */}
@@ -3197,549 +2901,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
           </Dialog >
 
           {/* Admins Tab */}
-          < TabsContent value="admins" className="space-y-6" >
-            <Card className="glass-card border-none">
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>Управление Низкими Администраторами и Курьерами</CardTitle>
-                    <CardDescription>
-                      Добавляйте, удаляйте и управляйте низкими администраторами и курьерами
-                    </CardDescription>
-                  </div>
-                  {!isLowAdminView && (
-                    <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-                    <DialogTrigger asChild>
-                      <Button>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Добавить
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle>Добавить Администратора или Курьера</DialogTitle>
-                        <DialogDescription>
-                          Создайте нового низкого администратора или курьера
-                        </DialogDescription>
-                      </DialogHeader>
-                      <form onSubmit={handleCreateAdmin}>
-                        <div className="grid gap-4 py-4">
-                          <div className="grid grid-cols-4 items-center gap-2">
-                            <Label htmlFor="name" className="text-right">
-                              Имя
-                            </Label>
-                            <Input
-                              id="name"
-                              value={createFormData.name}
-                              onChange={(e) => setCreateFormData(prev => ({ ...prev, name: e.target.value }))}
-                              className="col-span-3"
-                              required
-                            />
-                          </div>
-                          <div className="grid grid-cols-4 items-center gap-2">
-                            <Label htmlFor="email" className="text-right">
-                              Email
-                            </Label>
-                            <Input
-                              id="email"
-                              type="email"
-                              value={createFormData.email}
-                              onChange={(e) => setCreateFormData(prev => ({ ...prev, email: e.target.value }))}
-                              className="col-span-3"
-                              required
-                            />
-                          </div>
-                          <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="password" className="text-right">
-                              Пароль
-                            </Label>
-                            <div className="col-span-3 relative">
-                              <Input
-                                id="password"
-                                type={showPassword ? "text" : "password"}
-                                value={createFormData.password}
-                                onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
-                                required={createFormData.role !== 'WORKER'}
-                                minLength={6}
-                                placeholder={createFormData.role === 'WORKER' ? 'Необязательно' : ''}
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                onClick={() => setShowPassword(!showPassword)}
-                              >
-                                {showPassword ? (
-                                  <EyeOff className="h-4 w-4 text-muted-foreground" />
-                                ) : (
-                                  <Eye className="h-4 w-4 text-muted-foreground" />
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-4 items-center gap-2">
-                            <Label htmlFor="role" className="text-right">
-                              Роль
-                            </Label>
-                            <select
-                              id="role"
-                              value={createFormData.role}
-                              onChange={(e) => setCreateFormData(prev => ({ ...prev, role: e.target.value }))}
-                              className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              <option value="LOW_ADMIN">Низкий администратор</option>
-                              <option value="COURIER">Курьер</option>
-                              <option value="WORKER">Работник</option>
-                            </select>
-                          </div>
-                          <div className="grid grid-cols-4 items-center gap-2">
-                            <Label htmlFor="salary" className="text-right">
-                              Зарплата
-                            </Label>
-                              <Input
-                                id="salary"
-                                type="number"
-                              value={createFormData.salary}
-                              onChange={(e) => setCreateFormData(prev => ({ ...prev, salary: parseInt(e.target.value) || 0 }))}
-                              className="col-span-3"
-                              placeholder="0"
-                            />
-                          </div>
-                          {createFormData.role === 'LOW_ADMIN' && (
-                            <div className="col-span-4 space-y-3 border-t pt-4">
-                              <Label className="text-sm font-medium">Разрешенные вкладки</Label>
-                              <p className="text-xs text-muted-foreground">Выберите, какие вкладки будут доступны для этого администратора</p>
-                              <div className="space-y-2">
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id="tab-statistics"
-                                    checked={createFormData.allowedTabs.includes('statistics')}
-                                    onCheckedChange={(checked) => {
-                                      const tabs = checked
-                                        ? [...createFormData.allowedTabs, 'statistics']
-                                        : createFormData.allowedTabs.filter(t => t !== 'statistics')
-                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
-                                    }}
-                                  />
-                                  <label htmlFor="tab-statistics" className="text-sm cursor-pointer">
-                                    Статистика
-                                  </label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id="tab-orders"
-                                    checked={createFormData.allowedTabs.includes('orders')}
-                                    onCheckedChange={(checked) => {
-                                      const tabs = checked
-                                        ? [...createFormData.allowedTabs, 'orders']
-                                        : createFormData.allowedTabs.filter(t => t !== 'orders')
-                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
-                                    }}
-                                  />
-                                  <label htmlFor="tab-orders" className="text-sm cursor-pointer">
-                                    Заказы
-                                  </label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id="tab-clients"
-                                    checked={createFormData.allowedTabs.includes('clients')}
-                                    onCheckedChange={(checked) => {
-                                      const tabs = checked
-                                        ? [...createFormData.allowedTabs, 'clients']
-                                        : createFormData.allowedTabs.filter(t => t !== 'clients')
-                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
-                                    }}
-                                  />
-                                  <label htmlFor="tab-clients" className="text-sm cursor-pointer">
-                                    Клиенты
-                                  </label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id="tab-profile"
-                                    checked={createFormData.allowedTabs.includes('profile')}
-                                    onCheckedChange={(checked) => {
-                                      const tabs = checked
-                                        ? [...createFormData.allowedTabs, 'profile']
-                                        : createFormData.allowedTabs.filter(t => t !== 'profile')
-                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
-                                    }}
-                                  />
-                                  <label htmlFor="tab-profile" className="text-sm cursor-pointer">
-                                    Профиль
-                                  </label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id="tab-admins"
-                                    checked={createFormData.allowedTabs.includes('admins')}
-                                    onCheckedChange={(checked) => {
-                                      const tabs = checked
-                                        ? [...createFormData.allowedTabs, 'admins']
-                                        : createFormData.allowedTabs.filter(t => t !== 'admins')
-                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
-                                    }}
-                                  />
-                                  <label htmlFor="tab-admins" className="text-sm cursor-pointer">
-                                    Админы
-                                  </label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id="tab-bin"
-                                    checked={createFormData.allowedTabs.includes('bin')}
-                                    onCheckedChange={(checked) => {
-                                      const tabs = checked
-                                        ? [...createFormData.allowedTabs, 'bin']
-                                        : createFormData.allowedTabs.filter(t => t !== 'bin')
-                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
-                                    }}
-                                  />
-                                  <label htmlFor="tab-bin" className="text-sm cursor-pointer">
-                                    Корзина
-                                  </label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id="tab-warehouse"
-                                    checked={createFormData.allowedTabs.includes('warehouse')}
-                                    onCheckedChange={(checked) => {
-                                      const tabs = checked
-                                        ? [...createFormData.allowedTabs, 'warehouse']
-                                        : createFormData.allowedTabs.filter(t => t !== 'warehouse')
-                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
-                                    }}
-                                  />
-                                  <label htmlFor="tab-warehouse" className="text-sm cursor-pointer">
-                                    Склад
-                                  </label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id="tab-finance"
-                                    checked={createFormData.allowedTabs.includes('finance')}
-                                    onCheckedChange={(checked) => {
-                                      const tabs = checked
-                                        ? [...createFormData.allowedTabs, 'finance']
-                                        : createFormData.allowedTabs.filter(t => t !== 'finance')
-                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
-                                    }}
-                                  />
-                                  <label htmlFor="tab-finance" className="text-sm cursor-pointer">
-                                    Финансы
-                                  </label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id="tab-interface"
-                                    checked={createFormData.allowedTabs.includes('interface')}
-                                    onCheckedChange={(checked) => {
-                                      const tabs = checked
-                                        ? [...createFormData.allowedTabs, 'interface']
-                                        : createFormData.allowedTabs.filter(t => t !== 'interface')
-                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
-                                    }}
-                                  />
-                                  <label htmlFor="tab-interface" className="text-sm cursor-pointer">
-                                    Интерфейс
-                                  </label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id="tab-history"
-                                    checked={createFormData.allowedTabs.includes('history')}
-                                    onCheckedChange={(checked) => {
-                                      const tabs = checked
-                                        ? [...createFormData.allowedTabs, 'history']
-                                        : createFormData.allowedTabs.filter(t => t !== 'history')
-                                      setCreateFormData({ ...createFormData, allowedTabs: tabs })
-                                    }}
-                                  />
-                                  <label htmlFor="tab-history" className="text-sm cursor-pointer">
-                                    История
-                                  </label>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          {createError && (
-                            <div className="col-span-4">
-                              <Alert variant="destructive">
-                                <AlertDescription>{createError}</AlertDescription>
-                              </Alert>
-                            </div>
-                          )}
-                        </div>
-                        <DialogFooter>
-                          <Button type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
-                            Отмена
-                          </Button>
-                          <Button type="submit" disabled={isCreating}>
-                            {isCreating ? 'Создание...' : 'Создать'}
-                          </Button>
-                        </DialogFooter>
-                      </form>
-                    </DialogContent>
-                    </Dialog>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {/* Desktop View */}
-                <div className="hidden md:block space-y-4">
-                  {lowAdmins.map((admin) => (
-                    <div key={admin.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <Avatar>
-                          <AvatarFallback>{admin.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{admin.name}</p>
-                          <p className="text-sm text-slate-500">{admin.email}</p>
-                          <Badge variant={admin.isActive ? "default" : "secondary"}>
-                            {admin.role === 'COURIER' ? 'Курьер' : admin.role === 'WORKER' ? 'Работник' : 'Низкий администратор'}
-                          </Badge>
-                          <Badge variant={admin.isActive ? "default" : "secondary"} className="ml-2">
-                            {admin.isActive ? "Активен" : "Приостановлен"}
-                          </Badge>
-                        </div>
-                      </div>
-                      {!isLowAdminView && (
-                        <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={async () => {
-                            try {
-                              const response = await fetch(`/api/admin/${admin.id}/password`, {
-                                method: 'POST',
-                                headers: {
-                                  'Content-Type': 'application/json'
-                                }
-                              })
-                              if (response.ok) {
-                                const data = await response.json()
-                                toast.info(data.password || 'Пароль скрыт. Используйте функцию сброса.')
-                              } else {
-                                toast.error('Ошибка получения пароля')
-                              }
-                            } catch {
-                              toast.error('Ошибка соединения с сервером')
-                            }
-                          }}
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          Пароль
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={async () => {
-                            try {
-                              const response = await fetch(`/api/admin/${admin.id}/toggle-status`, {
-                                method: 'PATCH',
-                                headers: {
-                                  'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({ isActive: !admin.isActive })
-                              })
-                              if (response.ok) {
-                                fetchData()
-                                toast.success(`Статус ${admin.isActive ? 'приостановлен' : 'активирован'}`)
-                              } else {
-                                toast.error('Ошибка изменения статуса')
-                              }
-                            } catch {
-                              toast.error('Ошибка соединения с сервером')
-                            }
-                          }}
-                        >
-                          {admin.isActive ? (
-                            <Pause className="w-4 h-4 mr-1" />
-                          ) : (
-                            <Play className="w-4 h-4 mr-1" />
-                          )}
-                          {admin.isActive ? "Приостановить" : "Активировать"}
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={async () => {
-                            if (!confirm(`Вы уверены, что хотите удалить администратора ${admin.name}?`)) {
-                              return
-                            }
-                            try {
-                              const response = await fetch(`/api/admin/low-admins/${admin.id}`, {
-                                method: 'DELETE',
-                                headers: {
-                                }
-                              })
-                              if (response.ok) {
-                                fetchData()
-                                toast.success('Администратор удален')
-                              } else {
-                                const data = await response.json()
-                                toast.error(data.error || 'Ошибка удаления администратора')
-                              }
-                            } catch {
-                              toast.error('Ошибка соединения с сервером')
-                            }
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4 mr-1" />
-                          Удалить
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditAdmin(admin)}
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Изменить
-                        </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+          <AdminsTab lowAdmins={lowAdmins} isLowAdminView={isLowAdminView} onRefresh={fetchData} tabsCopy={tabsCopy} />
 
-                {/* Mobile View */}
-                <div className="md:hidden space-y-4">
-                  {lowAdmins.map((admin) => (
-                    <Card key={admin.id}>
-                      <CardHeader className="pb-2">
-                        <div className="flex justify-between items-start">
-                          <div className="flex items-center gap-3">
-                            <Avatar>
-                              <AvatarFallback>{admin.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <CardTitle className="text-base">{admin.name}</CardTitle>
-                              <CardDescription>{admin.email}</CardDescription>
-                            </div>
-                          </div>
-                          <Badge variant={admin.isActive ? "default" : "secondary"}>
-                            {admin.isActive ? "Активен" : "Приостановлен"}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-4 space-y-4">
-                        <div className="flex justify-between items-center">
-                          <Badge variant="outline">
-                            {admin.role === 'COURIER' ? 'Курьер' : admin.role === 'WORKER' ? 'Работник' : 'Низкий администратор'}
-                          </Badge>
-                        </div>
-
-                        {!isLowAdminView && (
-                          <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                            onClick={async () => {
-                              try {
-                                const response = await fetch(`/api/admin/${admin.id}/password`, {
-                                  method: 'POST',
-                                  headers: {
-                                    'Content-Type': 'application/json'
-                                  }
-                                })
-                                if (response.ok) {
-                                  const data = await response.json()
-                                  toast.info(data.password || 'Пароль скрыт. Используйте функцию сброса.')
-                                } else {
-                                  toast.error('Ошибка получения пароля')
-                                }
-                              } catch {
-                                toast.error('Ошибка соединения с сервером')
-                              }
-                            }}
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            Пароль
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                            onClick={() => handleEditAdmin(admin)}
-                          >
-                            <Edit className="w-4 h-4 mr-1" />
-                            Изменить
-                          </Button>
-                          </div>
-                        )}
-
-                        {!isLowAdminView && (
-                          <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            variant={admin.isActive ? "secondary" : "default"}
-                            size="sm"
-                            className="w-full"
-                            onClick={async () => {
-                              try {
-                                const response = await fetch(`/api/admin/${admin.id}/toggle-status`, {
-                                  method: 'PATCH',
-                                  headers: {
-                                    'Content-Type': 'application/json'
-                                  },
-                                  body: JSON.stringify({ isActive: !admin.isActive })
-                                })
-                                if (response.ok) {
-                                  fetchData()
-                                  toast.success(`Статус ${admin.isActive ? 'приостановлен' : 'активирован'}`)
-                                } else {
-                                  toast.error('Ошибка изменения статуса')
-                                }
-                              } catch {
-                                toast.error('Ошибка соединения с сервером')
-                              }
-                            }}
-                          >
-                            {admin.isActive ? (
-                              <Pause className="w-4 h-4 mr-1" />
-                            ) : (
-                              <Play className="w-4 h-4 mr-1" />
-                            )}
-                            {admin.isActive ? "Пауза" : "Старт"}
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="w-full"
-                            onClick={async () => {
-                              if (confirm('Вы уверены, что хотите удалить этого пользователя?')) {
-                                try {
-                                  const response = await fetch(`/api/admin/low-admins/${admin.id}`, {
-                                    method: 'DELETE',
-                                    headers: {
-                                    }
-                                  })
-                                  if (response.ok) {
-                                    fetchData()
-                                    toast.success('Пользователь удален')
-                                  } else {
-                                    toast.error('Ошибка удаления')
-                                  }
-                                } catch {
-                                  toast.error('Ошибка соединения с сервером')
-                                }
-                              }
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4 mr-1" />
-                            Удалить
-                          </Button>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+          {/* Features Tab */}
+          <TabsContent value="features" className="space-y-6">
+            <FeaturesTab />
           </TabsContent>
 
           {/* Interface Tab */}
@@ -4202,517 +3368,23 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         </DialogContent>
       </Dialog >
 
-      {/* Edit Admin Modal */}
-      < Dialog open={isEditAdminModalOpen} onOpenChange={setIsEditAdminModalOpen} >
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Редактировать Администратора</DialogTitle>
-            <DialogDescription>
-              Измените данные администратора или курьера
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleUpdateAdmin}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-name" className="text-right">
-                  Имя
-                </Label>
-                <Input
-                  id="edit-name"
-                  value={editAdminFormData.name}
-                  onChange={(e) => setEditAdminFormData({ ...editAdminFormData, name: e.target.value })}
-                  className="col-span-3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-email" className="text-right">
-                  Email
-                </Label>
-                <Input
-                  id="edit-email"
-                  type="email"
-                  value={editAdminFormData.email}
-                  onChange={(e) => setEditAdminFormData({ ...editAdminFormData, email: e.target.value })}
-                  className="col-span-3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-password" className="text-right">
-                  Пароль
-                </Label>
-                <Input
-                  id="edit-password"
-                  type="password"
-                  placeholder="Оставьте пустым, чтобы не менять"
-                  value={editAdminFormData.password}
-                  onChange={(e) => setEditAdminFormData({ ...editAdminFormData, password: e.target.value })}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-role" className="text-right">
-                  Роль
-                </Label>
-                <select
-                  id="edit-role"
-                  value={editAdminFormData.role}
-                  onChange={(e) => setEditAdminFormData({ ...editAdminFormData, role: e.target.value })}
-                  className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="LOW_ADMIN">Низкий администратор</option>
-                  <option value="COURIER">Курьер</option>
-                  <option value="WORKER">Работник</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-salary" className="text-right">
-                  Зарплата
-                </Label>
-                <Input
-                  id="edit-salary"
-                  type="number"
-                  value={editAdminFormData.salary || ''}
-                  onChange={(e) => setEditAdminFormData({ ...editAdminFormData, salary: parseInt(e.target.value) || 0 })}
-                  className="col-span-3"
-                  placeholder="0"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-active" className="text-right">
-                  Статус
-                </Label>
-                <div className="col-span-3 flex items-center space-x-2">
-                  <Checkbox
-                    id="edit-active"
-                    checked={editAdminFormData.isActive}
-                    onCheckedChange={(checked) => setEditAdminFormData({ ...editAdminFormData, isActive: checked as boolean })}
-                  />
-                  <label
-                    htmlFor="edit-active"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Активен
-                  </label>
-                </div>
-              </div>
-
-              {editAdminFormData.role === 'LOW_ADMIN' && (
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <Label className="text-right pt-2">
-                    Доступ к вкладкам
-                  </Label>
-                  <div className="col-span-3 space-y-2 border rounded-md p-3">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="tab-statistics"
-                        checked={editAdminFormData.allowedTabs.includes('statistics')}
-                        onCheckedChange={(checked) => {
-                          const tabs = checked
-                            ? [...editAdminFormData.allowedTabs, 'statistics']
-                            : editAdminFormData.allowedTabs.filter(t => t !== 'statistics')
-                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
-                        }}
-                      />
-                      <label htmlFor="tab-statistics" className="text-sm">Статистика</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="tab-orders"
-                        checked={editAdminFormData.allowedTabs.includes('orders')}
-                        onCheckedChange={(checked) => {
-                          const tabs = checked
-                            ? [...editAdminFormData.allowedTabs, 'orders']
-                            : editAdminFormData.allowedTabs.filter(t => t !== 'orders')
-                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
-                        }}
-                      />
-                      <label htmlFor="tab-orders" className="text-sm">Заказы</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="tab-clients"
-                        checked={editAdminFormData.allowedTabs.includes('clients')}
-                        onCheckedChange={(checked) => {
-                          const tabs = checked
-                            ? [...editAdminFormData.allowedTabs, 'clients']
-                            : editAdminFormData.allowedTabs.filter(t => t !== 'clients')
-                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
-                        }}
-                      />
-                      <label htmlFor="tab-clients" className="text-sm">Клиенты</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="tab-profile"
-                        checked={editAdminFormData.allowedTabs.includes('profile')}
-                        onCheckedChange={(checked) => {
-                          const tabs = checked
-                            ? [...editAdminFormData.allowedTabs, 'profile']
-                            : editAdminFormData.allowedTabs.filter(t => t !== 'profile')
-                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
-                        }}
-                      />
-                      <label htmlFor="tab-profile" className="text-sm">Профиль</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="tab-admins"
-                        checked={editAdminFormData.allowedTabs.includes('admins')}
-                        onCheckedChange={(checked) => {
-                          const tabs = checked
-                            ? [...editAdminFormData.allowedTabs, 'admins']
-                            : editAdminFormData.allowedTabs.filter(t => t !== 'admins')
-                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
-                        }}
-                      />
-                      <label htmlFor="tab-admins" className="text-sm">Админы</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="tab-bin"
-                        checked={editAdminFormData.allowedTabs.includes('bin')}
-                        onCheckedChange={(checked) => {
-                          const tabs = checked
-                            ? [...editAdminFormData.allowedTabs, 'bin']
-                            : editAdminFormData.allowedTabs.filter(t => t !== 'bin')
-                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
-                        }}
-                      />
-                      <label htmlFor="tab-bin" className="text-sm">Корзина</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="tab-warehouse"
-                        checked={editAdminFormData.allowedTabs.includes('warehouse')}
-                        onCheckedChange={(checked) => {
-                          const tabs = checked
-                            ? [...editAdminFormData.allowedTabs, 'warehouse']
-                            : editAdminFormData.allowedTabs.filter(t => t !== 'warehouse')
-                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
-                        }}
-                      />
-                      <label htmlFor="tab-warehouse" className="text-sm">Склад</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="tab-finance"
-                        checked={editAdminFormData.allowedTabs.includes('finance')}
-                        onCheckedChange={(checked) => {
-                          const tabs = checked
-                            ? [...editAdminFormData.allowedTabs, 'finance']
-                            : editAdminFormData.allowedTabs.filter(t => t !== 'finance')
-                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
-                        }}
-                      />
-                      <label htmlFor="tab-finance" className="text-sm">Финансы</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="tab-interface"
-                        checked={editAdminFormData.allowedTabs.includes('interface')}
-                        onCheckedChange={(checked) => {
-                          const tabs = checked
-                            ? [...editAdminFormData.allowedTabs, 'interface']
-                            : editAdminFormData.allowedTabs.filter(t => t !== 'interface')
-                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
-                        }}
-                      />
-                      <label htmlFor="tab-interface" className="text-sm">Интерфейс</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="tab-history"
-                        checked={editAdminFormData.allowedTabs.includes('history')}
-                        onCheckedChange={(checked) => {
-                          const tabs = checked
-                            ? [...editAdminFormData.allowedTabs, 'history']
-                            : editAdminFormData.allowedTabs.filter(t => t !== 'history')
-                          setEditAdminFormData({ ...editAdminFormData, allowedTabs: tabs })
-                        }}
-                      />
-                      <label htmlFor="tab-history" className="text-sm">История</label>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsEditAdminModalOpen(false)}>
-                Отмена
-              </Button>
-              <Button type="submit">
-                Сохранить
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog >
-
       {/* Create Order Modal */}
-      < Dialog open={isCreateOrderModalOpen} onOpenChange={setIsCreateOrderModalOpen} >
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>{editingOrderId ? 'Редактировать Заказ' : 'Создать Новый Заказ'}</DialogTitle>
-            <DialogDescription>
-              {editingOrderId ? 'Измените данные заказа' : 'Заполните информацию о новом заказе. Вы можете выбрать клиента из списка для автозаполнения данных.'}
-            </DialogDescription>
-            {!editingOrderId && orderFormData.selectedClientId && orderFormData.selectedClientId !== "manual" && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-2">
-                <p className="text-xs text-green-800">
-                  ✅ Данные клиента заполнены автоматически
-                </p>
-              </div>
-            )}
-          </DialogHeader>
-          <div className="flex-1 overflow-y-auto">
-            <form onSubmit={handleCreateOrder}>
-              <div className="grid gap-3 py-2">
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="clientSelect" className="text-right">
-                    Выбрать клиента
-                  </Label>
-                  <div className="col-span-3">
-                    <Select
-                      value={orderFormData.selectedClientId}
-                      onValueChange={handleClientSelect}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Выберите клиента из списка или введите данные вручную" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="manual">-- Ввести данные вручную --</SelectItem>
-                        {clients.map((client) => (
-                          <SelectItem key={client.id} value={client.id}>
-                            {client.name} - {client.phone}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Выберите клиента для автозаполнения
-                    </p>
-                  </div>
-                </div>
-                {availableSets.length > 0 && (
-                  <div className="grid grid-cols-4 items-center gap-2">
-                    <Label htmlFor="orderSet" className="text-right">
-                      Сет
-                    </Label>
-                    <div className="col-span-3">
-                      <Select
-                        value={orderFormData.assignedSetId || 'none'}
-                        onValueChange={(value) =>
-                          setOrderFormData(prev => ({ ...prev, assignedSetId: value === 'none' ? '' : value }))
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Выберите сет (опционально)" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">-- Не выбирать --</SelectItem>
-                          {availableSets.map((set: any) => (
-                            <SelectItem key={set.id} value={set.id}>
-                              {set.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-slate-400 mt-1">
-                        Если выбрать сет, он будет закреплён за клиентом
-                      </p>
-                    </div>
-                  </div>
-                )}
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="customerName" className="text-right">
-                    Имя клиента
-                    {orderFormData.selectedClientId && (
-                      <span className="text-xs text-green-600 ml-1">✓</span>
-                    )}
-                  </Label>
-                  <Input
-                    id="customerName"
-                    value={orderFormData.customerName}
-                    onChange={(e) => setOrderFormData(prev => ({ ...prev, customerName: e.target.value }))}
-                    className={`col-span-3 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="customerPhone" className="text-right">
-                    Телефон клиента
-                    {orderFormData.selectedClientId && (
-                      <span className="text-xs text-green-600 ml-1">✓</span>
-                    )}
-                  </Label>
-                  <div className="col-span-3">
-                    <Input
-                      id="customerPhone"
-                      type="tel"
-                      placeholder="+998 XX XXX XX XX"
-                      value={orderFormData.customerPhone}
-                      onChange={(e) => setOrderFormData(prev => ({ ...prev, customerPhone: e.target.value }))}
-                      className={orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">Формат: +998 XX XXX XX XX</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="deliveryAddress" className="text-right">
-                    Адрес доставки
-                    {orderFormData.selectedClientId && (
-                      <span className="text-xs text-green-600 ml-1">✓</span>
-                    )}
-                  </Label>
-                  <div className="col-span-3 space-y-2">
-                    <div className="relative">
-                      <Input
-                        id="deliveryAddress"
-                        value={orderFormData.deliveryAddress}
-                        onChange={(e) => handleAddressChange(e.target.value)}
-                        placeholder="Адрес или Google Maps ссылка"
-                        className={`col-span-3 ${orderFormData.latitude && orderFormData.longitude ? 'pr-10 border-green-500 focus:border-green-500' : ''} ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
-                        required
-                      />
-                      {orderFormData.latitude && orderFormData.longitude && (
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p className="text-xs text-slate-400">
-                        Можно вставить Google Maps ссылку
-                      </p>
-                      {orderFormData.latitude && orderFormData.longitude && (
-                        <p className="text-xs text-green-600 font-medium">
-                          📍 {orderFormData.latitude.toFixed(4)}, {orderFormData.longitude.toFixed(4)}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="deliveryTime" className="text-right">
-                    Время доставки
-                  </Label>
-                  <Input
-                    id="deliveryTime"
-                    type="time"
-                    value={orderFormData.deliveryTime}
-                    onChange={(e) => setOrderFormData(prev => ({ ...prev, deliveryTime: e.target.value }))}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="quantity" className="text-right">
-                    Количество
-                  </Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    min="1"
-                    value={orderFormData.quantity}
-                    onChange={(e) => setOrderFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) }))}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="calories" className="text-right">
-                    Калории
-                    {orderFormData.selectedClientId && (
-                      <span className="text-xs text-green-600 ml-1">✓</span>
-                    )}
-                  </Label>
-                  <select
-                    id="calories"
-                    value={orderFormData.calories}
-                    onChange={(e) => setOrderFormData(prev => ({ ...prev, calories: parseInt(e.target.value) }))}
-                    className={`col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
-                  >
-                    <option value="1200">1200 ккал</option>
-                    <option value="1600">1600 ккал</option>
-                    <option value="2000">2000 ккал</option>
-                    <option value="2500">2500 ккал</option>
-                    <option value="3000">3000 ккал</option>
-                  </select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="paymentMethod" className="text-right">
-                    Оплата
-                  </Label>
-                  <select
-                    id="paymentMethod"
-                    value={orderFormData.paymentMethod}
-                    onChange={(e) => setOrderFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
-                    className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="CASH">Наличные</option>
-                    <option value="CARD">Карта</option>
-                  </select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="specialFeatures" className="text-right">
-                    Особенности
-                    {orderFormData.selectedClientId && (
-                      <span className="text-xs text-green-600 ml-1">✓</span>
-                    )}
-                  </Label>
-                  <Input
-                    id="specialFeatures"
-                    value={orderFormData.specialFeatures}
-                    onChange={(e) => setOrderFormData(prev => ({ ...prev, specialFeatures: e.target.value }))}
-                    className={`col-span-3 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
-                    placeholder="Особые пожелания"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="courier" className="text-right">
-                    Курьер
-                  </Label>
-                  <select
-                    id="courier"
-                    value={orderFormData.courierId}
-                    onChange={(e) => setOrderFormData(prev => ({ ...prev, courierId: e.target.value }))}
-                    className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">Автоматически (если есть у клиента)</option>
-                    {couriers.map((courier) => (
-                      <option key={courier.id} value={courier.id}>
-                        {courier.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {orderError && (
-                  <div className="col-span-4">
-                    <Alert variant="destructive">
-                      <AlertDescription>{orderError}</AlertDescription>
-                    </Alert>
-                  </div>
-                )}
-              </div>
-            </form>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => {
-              setIsCreateOrderModalOpen(false)
-              setOrderFormData(prev => ({ ...prev, latitude: null, longitude: null }))
-              setEditingOrderId(null)
-            }}>
-              Отмена
-            </Button>
-            <Button type="submit" disabled={isCreatingOrder} onClick={handleCreateOrder}>
-              {isCreatingOrder ? 'Сохранение...' : (editingOrderId ? 'Сохранить изменения' : 'Создать заказ')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog >
+      <OrderModal
+        open={isCreateOrderModalOpen}
+        onOpenChange={setIsCreateOrderModalOpen}
+        editingOrderId={editingOrderId}
+        setEditingOrderId={setEditingOrderId}
+        orderFormData={orderFormData}
+        setOrderFormData={setOrderFormData}
+        clients={clients}
+        couriers={couriers}
+        availableSets={availableSets}
+        orderError={orderError}
+        isCreatingOrder={isCreatingOrder}
+        onSubmit={handleCreateOrder}
+        onClientSelect={handleClientSelect}
+        onAddressChange={handleAddressChange}
+      />
 
       {/* Create Courier Modal */}
       < Dialog open={isCreateCourierModalOpen} onOpenChange={setIsCreateCourierModalOpen} >
@@ -4781,87 +3453,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         </DialogContent>
       </Dialog>
 
-      {/* Create Feature Modal */}
-      <Dialog open={isCreateFeatureModalOpen} onOpenChange={setIsCreateFeatureModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Создать Особенность</DialogTitle>
-            <DialogDescription>
-              Создайте новую особенность для заказов
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleCreateFeature}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="featureName" className="text-right">
-                  Название
-                </Label>
-                <Input
-                  id="featureName"
-                  value={featureFormData.name}
-                  onChange={(e) => setFeatureFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="col-span-3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="featureDescription" className="text-right">
-                  Описание
-                </Label>
-                <Input
-                  id="featureDescription"
-                  value={featureFormData.description}
-                  onChange={(e) => setFeatureFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="col-span-3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="featureType" className="text-right">
-                  Тип
-                </Label>
-                <select
-                  id="featureType"
-                  value={featureFormData.type}
-                  onChange={(e) => setFeatureFormData(prev => ({ ...prev, type: e.target.value }))}
-                  className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="TEXT">Текст</option>
-                  <option value="SELECT">Выбор из списка</option>
-                  <option value="CHECKBOX">Флажок</option>
-                </select>
-              </div>
-              {featureFormData.type === 'SELECT' && (
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="featureOptions" className="text-right">
-                    Варианты
-                  </Label>
-                  <Input
-                    id="featureOptions"
-                    value={featureFormData.options}
-                    onChange={(e) => setFeatureFormData(prev => ({ ...prev, options: e.target.value }))}
-                    className="col-span-3"
-                    placeholder="Вариант1, Вариант2, Вариант3"
-                  />
-                </div>
-              )}
-            </div>
-            {featureError && (
-              <Alert className="mb-4">
-                <AlertDescription>{featureError}</AlertDescription>
-              </Alert>
-            )}
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsCreateFeatureModalOpen(false)}>
-                Отмена
-              </Button>
-              <Button type="submit" disabled={isCreatingFeature}>
-                {isCreatingFeature ? 'Создание...' : 'Создать'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

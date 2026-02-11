@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
 import { getGroupAdminIds } from '@/lib/admin-scope'
+import { safeJsonParse } from '@/lib/safe-json'
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,37 +40,32 @@ export async function GET(request: NextRequest) {
     // Helper function to check if customer has daily delivery
     const isDailyCustomer = (deliveryDays: string | null): boolean => {
       if (!deliveryDays) return false
-      try {
-        const days = JSON.parse(deliveryDays)
-        return days.monday && days.tuesday && days.wednesday && days.thursday && days.friday && days.saturday && days.sunday
-      } catch {
-        return false
-      }
+      const days = safeJsonParse<Record<string, boolean>>(deliveryDays, {})
+      return !!(
+        days.monday &&
+        days.tuesday &&
+        days.wednesday &&
+        days.thursday &&
+        days.friday &&
+        days.saturday &&
+        days.sunday
+      )
     }
 
     // Helper function to check if customer has even-day delivery
     const isEvenDayCustomer = (deliveryDays: string | null): boolean => {
       if (!deliveryDays) return false
-      try {
-        const days = JSON.parse(deliveryDays)
-        // Even days pattern: typically every other day
-        const selectedDays = Object.values(days).filter(Boolean).length
-        return selectedDays >= 3 && selectedDays <= 4 && !isDailyCustomer(deliveryDays)
-      } catch {
-        return false
-      }
+      const days = safeJsonParse<Record<string, boolean>>(deliveryDays, {})
+      const selectedDays = Object.values(days).filter(Boolean).length
+      return selectedDays >= 3 && selectedDays <= 4 && !isDailyCustomer(deliveryDays)
     }
 
     // Helper function to check if customer has odd-day delivery
     const isOddDayCustomer = (deliveryDays: string | null): boolean => {
       if (!deliveryDays) return false
-      try {
-        const days = JSON.parse(deliveryDays)
-        const selectedDays = Object.values(days).filter(Boolean).length
-        return selectedDays >= 3 && selectedDays <= 4 && !isDailyCustomer(deliveryDays) && !isEvenDayCustomer(deliveryDays)
-      } catch {
-        return false
-      }
+      const days = safeJsonParse<Record<string, boolean>>(deliveryDays, {})
+      const selectedDays = Object.values(days).filter(Boolean).length
+      return selectedDays >= 3 && selectedDays <= 4 && !isDailyCustomer(deliveryDays) && !isEvenDayCustomer(deliveryDays)
     }
 
     // Calculate statistics
