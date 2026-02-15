@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { getAuthUser, hasRole, hasPermission } from '@/lib/auth-utils'
 import { getGroupAdminIds } from '@/lib/admin-scope'
 import { safeJsonParse } from '@/lib/safe-json'
 
@@ -11,6 +11,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'Доступ запрещен' }, { status: 403 }
       )
+    }
+
+    if (user.role === 'LOW_ADMIN' && !hasPermission(user, 'statistics')) {
+      return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
     }
 
     // Build where clause for filtering

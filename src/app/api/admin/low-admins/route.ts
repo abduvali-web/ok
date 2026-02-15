@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
-import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { getAuthUser, hasRole, hasPermission } from '@/lib/auth-utils'
 import { passwordSchema, emailSchema } from '@/lib/validations'
 import { z } from 'zod'
 import { Prisma } from '@prisma/client'
@@ -17,6 +17,11 @@ export async function GET(request: NextRequest) {
         { status: 403 }
       )
     }
+
+    if (user.role === 'LOW_ADMIN' && !hasPermission(user, 'admins')) {
+      return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
+    }
+
 
     // For middle admin, only get admins created by them
     // For super admin, get all low admins and couriers

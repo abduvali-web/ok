@@ -1,19 +1,23 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { db as prisma } from '@/lib/db'
-import { auth } from '@/auth'
+import { getAuthUser, hasPermission } from '@/lib/auth-utils'
 import { getOwnerAdminId } from '@/lib/admin-scope'
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
     try {
-        const session = await auth()
-        if (!session || !session.user || (session.user.role !== 'MIDDLE_ADMIN' && session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'LOW_ADMIN')) {
+        const user = await getAuthUser(req)
+        if (!user || (user.role !== 'MIDDLE_ADMIN' && user.role !== 'SUPER_ADMIN' && user.role !== 'LOW_ADMIN')) {
             return new NextResponse('Unauthorized', { status: 401 })
         }
 
+        if (user.role === 'LOW_ADMIN' && !hasPermission(user, 'finance')) {
+            return new NextResponse('Forbidden', { status: 403 })
+        }
+
         const effectiveAdminId =
-            session.user.role === 'LOW_ADMIN'
-                ? (await getOwnerAdminId(session.user)) ?? session.user.id
-                : session.user.id
+            user.role === 'LOW_ADMIN'
+                ? (await getOwnerAdminId(user)) ?? user.id
+                : user.id
 
         const { searchParams } = new URL(req.url)
         const limit = parseInt(searchParams.get('limit') || '50')

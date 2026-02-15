@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getAuthUser } from '@/lib/auth-utils'
+import { getAuthUser, hasPermission } from '@/lib/auth-utils'
 import { getGroupAdminIds } from '@/lib/admin-scope'
 
 export async function GET(request: NextRequest) {
@@ -9,6 +9,11 @@ export async function GET(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    if (!hasPermission(user, 'history')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
 
     const { searchParams } = new URL(request.url)
     const targetAdminId = searchParams.get('adminId')

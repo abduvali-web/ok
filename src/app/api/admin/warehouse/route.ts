@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getAuthUser, hasRole } from '@/lib/auth-utils'
+import { getAuthUser, hasRole, hasPermission } from '@/lib/auth-utils'
 import { getOwnerAdminId } from '@/lib/admin-scope'
 import { z } from 'zod'
 
@@ -48,15 +48,21 @@ const patchSchema = z
     message: 'Provide either {lat,lng} or {googleMapsLink}',
   })
 
+
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  if (user.role === 'LOW_ADMIN' && !hasPermission(user, 'warehouse')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   const ownerAdminId = (await getOwnerAdminId(user)) ?? user.id
   const row = await db.admin.findUnique({
     where: { id: ownerAdminId },
     select: { latitude: true, longitude: true },
   })
+
 
   return NextResponse.json({
     lat: row?.latitude ?? null,

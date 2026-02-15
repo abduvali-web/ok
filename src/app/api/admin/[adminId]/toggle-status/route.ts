@@ -38,8 +38,11 @@ export async function PATCH(
       )
     }
 
-    // Middle admins can only manage LOW_ADMIN and COURIER
-    if (user.role === 'MIDDLE_ADMIN' && admin.role !== 'LOW_ADMIN' && admin.role !== 'COURIER') {
+    // Middle admins can only manage LOW_ADMIN, COURIER and WORKER
+    if (user.role === 'MIDDLE_ADMIN' &&
+      admin.role !== 'LOW_ADMIN' &&
+      admin.role !== 'COURIER' &&
+      admin.role !== 'WORKER') {
       return NextResponse.json(
         { error: 'Недостаточно прав для управления этим администратором' },
         { status: 403 }
