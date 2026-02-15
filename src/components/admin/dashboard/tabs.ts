@@ -2,7 +2,6 @@ export const CANONICAL_TABS = [
   'orders',
   'clients',
   'admins',
-  'features',
   'bin',
   'statistics',
   'history',
@@ -22,7 +21,11 @@ export function mapLegacyAllowedTabId(tab: string): string {
 
 export function deriveVisibleTabs(allowedTabs: string[] | null | undefined): string[] {
   const canonical = new Set<string>(CANONICAL_TABS as unknown as string[])
-  const normalized = (allowedTabs || []).map(mapLegacyAllowedTabId).filter((tab) => canonical.has(tab))
+  if (!Array.isArray(allowedTabs)) {
+    return [...(CANONICAL_TABS as unknown as string[])]
+  }
 
-  return normalized.length > 0 ? normalized : [...(CANONICAL_TABS as unknown as string[])]
+  const normalized = allowedTabs.map(mapLegacyAllowedTabId).filter((tab) => canonical.has(tab))
+
+  return allowedTabs.length > 0 ? normalized : []
 }

@@ -38,7 +38,7 @@ export function useDashboardData({
       if (!res.ok) return
       const data = await res.json().catch(() => null)
       setMeRole(data && typeof data.role === 'string' ? data.role : null)
-      setAllowedTabs(data && Array.isArray(data.allowedTabs) ? data.allowedTabs : [])
+      setAllowedTabs(data && Array.isArray(data.allowedTabs) ? data.allowedTabs : null)
     } catch (error) {
       if (isAbortError(error)) return
       console.error('Error fetching permissions:', error)
@@ -173,4 +173,3 @@ export function useDashboardData({
     refreshBinOrders,
   }
 }
-

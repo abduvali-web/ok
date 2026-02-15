@@ -25,7 +25,6 @@ export async function PATCH(
             'orders',
             'clients',
             'admins',
-            'features',
             'bin',
             'statistics',
             'history',

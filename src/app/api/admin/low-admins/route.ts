@@ -109,7 +109,6 @@ export async function POST(request: NextRequest) {
       'orders',
       'clients',
       'admins',
-      'features',
       'bin',
       'statistics',
       'history',

@@ -27,10 +27,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const parsedAllowedTabs = safeJsonParse<unknown>(admin.allowedTabs, [])
-    const allowedTabs = Array.isArray(parsedAllowedTabs)
-      ? parsedAllowedTabs.filter((t): t is string => typeof t === 'string')
-      : []
+    const allowedTabs =
+      admin.allowedTabs == null
+        ? null
+        : (() => {
+            const parsedAllowedTabs = safeJsonParse<unknown>(admin.allowedTabs, [])
+            return Array.isArray(parsedAllowedTabs)
+              ? parsedAllowedTabs.filter((t): t is string => typeof t === 'string')
+              : []
+          })()
 
     return NextResponse.json({
       ...admin,

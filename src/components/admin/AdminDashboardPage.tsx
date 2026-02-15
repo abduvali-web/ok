@@ -97,11 +97,6 @@ const RouteOptimizeButton = dynamic(
   () => import('@/components/admin/RouteOptimizeButton').then((mod) => mod.RouteOptimizeButton),
   { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading…</div> }
 )
-const FeaturesTab = dynamic(
-  () => import('@/components/admin/features/FeaturesTab').then((mod) => mod.FeaturesTab),
-  { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading…</div> }
-)
-
 export type AdminDashboardMode = 'middle' | 'low'
 
 export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
@@ -138,7 +133,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     orders: t.admin.orders,
     clients: t.admin.clients,
     admins: t.admin.admins,
-    features: t.admin.features,
     bin: t.admin.bin,
     statistics: t.admin.statistics,
     history: t.admin.history,
@@ -3011,11 +3005,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       {/* Admins Tab */}
       <AdminsTab lowAdmins={lowAdmins} isLowAdminView={isLowAdminView} onRefresh={fetchData} tabsCopy={tabsCopy} />
-
-          {/* Features Tab */}
-          <TabsContent value="features" className="space-y-6">
-            <FeaturesTab />
-          </TabsContent>
 
           {/* Interface Tab */}
 
