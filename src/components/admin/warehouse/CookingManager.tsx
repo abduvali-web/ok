@@ -79,6 +79,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
     // Custom set integration
     const [availableSets, setAvailableSets] = useState<MenuSet[]>([]);
     const [selectedSetId, setSelectedSetId] = useState<string>('active');
+    const safeAvailableSets = Array.isArray(availableSets) ? availableSets : [];
 
     // Memoize the effective caloric distribution based on selected set
     const clientsByCalorie = useMemo(() => {
@@ -138,9 +139,9 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
 
     // Custom set integration defined above
     const activeSet = useMemo(() => {
-        if (selectedSetId === 'active') return availableSets.find(s => s.isActive) || null;
-        return availableSets.find(s => s.id === selectedSetId) || null;
-    }, [availableSets, selectedSetId]);
+        if (selectedSetId === 'active') return safeAvailableSets.find(s => s.isActive) || null;
+        return safeAvailableSets.find(s => s.id === selectedSetId) || null;
+    }, [safeAvailableSets, selectedSetId]);
 
     useEffect(() => {
         fetchData();
@@ -154,7 +155,8 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
             try {
                 const setsRes = await fetch('/api/admin/sets');
                 if (setsRes.ok) {
-                    const sets: MenuSet[] = await setsRes.json();
+                    const raw = await setsRes.json().catch(() => null);
+                    const sets: MenuSet[] = Array.isArray(raw) ? (raw as MenuSet[]) : [];
                     setAvailableSets(sets);
 
                     // Logic Update: determine active set based on selection or global status
@@ -209,9 +211,11 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
                 try {
                     const menuRes = await fetch(`/api/admin/menus?number=${menuNumber}`);
                     if (menuRes.ok) {
-                        const menuData = await menuRes.json();
-                        if (menuData && menuData.dishes && menuData.dishes.length > 0) {
-                            setDishes(menuData.dishes);
+                        const menuData = await menuRes.json().catch(() => null);
+                        const menuDishes =
+                            menuData && Array.isArray((menuData as any).dishes) ? ((menuData as any).dishes as Dish[]) : [];
+                        if (menuDishes.length > 0) {
+                            setDishes(menuDishes);
                             gotDishes = true;
                         }
                     }
@@ -222,7 +226,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
                 // Ultimate fallback: use static MENUS data
                 if (!gotDishes) {
                     const staticMenu = MENUS.find(m => m.menuNumber === menuNumber);
-                    if (staticMenu && staticMenu.dishes.length > 0) {
+                    if (staticMenu && Array.isArray(staticMenu.dishes) && staticMenu.dishes.length > 0) {
                         setDishes(staticMenu.dishes.map(d => ({
                             id: d.id,
                             name: d.name,
@@ -426,7 +430,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="active">Auto (Active Global)</SelectItem>
-                                {availableSets.map(s => (
+                                {safeAvailableSets.map(s => (
                                     <SelectItem key={s.id} value={s.id}>
                                         {s.name} {s.isActive ? '✓' : ''}
                                     </SelectItem>

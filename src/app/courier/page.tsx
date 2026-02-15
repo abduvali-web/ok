@@ -151,12 +151,15 @@ export default function CourierPage() {
         return
       }
 
-      if (response.ok) {
-        const ordersData = await response.json()
+        if (response.ok) {
+          const ordersData = await response.json()
 
-        const activeAndPendingOrders = ordersData.filter(
-          (order: Order) => order.orderStatus === 'PENDING' || order.orderStatus === 'IN_DELIVERY' || order.orderStatus === 'PAUSED'
-        )
+        const activeAndPendingOrders = ordersData
+          .filter(
+            (order: Order) =>
+              order.orderStatus === 'PENDING' || order.orderStatus === 'IN_DELIVERY' || order.orderStatus === 'PAUSED'
+          )
+          .sort((a: Order, b: Order) => (a.orderNumber ?? 0) - (b.orderNumber ?? 0))
         setOrders(activeAndPendingOrders)
 
         if (selectedOrder) {

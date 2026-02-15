@@ -248,7 +248,8 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         try {
             const response = await fetch('/api/admin/warehouse/ingredients');
             if (response.ok) {
-                const data = await response.json();
+                const data = await response.json().catch(() => null);
+                if (!Array.isArray(data)) return;
                 // Convert array to record: { "Rice": 500, ... }
                 const invRecord: Record<string, number> = {};
                 data.forEach((item: { name: string, amount: number }) => {
@@ -287,7 +288,8 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             // Fetch active set
             const setsResponse = await fetch('/api/admin/sets');
             if (setsResponse.ok) {
-                const sets = await setsResponse.json();
+                const rawSets = await setsResponse.json().catch(() => null);
+                const sets = Array.isArray(rawSets) ? rawSets : [];
                 setAvailableSets(sets);
 
                 const active = sets.find((s: any) => s.isActive);

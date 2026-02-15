@@ -41,6 +41,7 @@ import {
   Route,
   CalendarDays,
   MapPin,
+  ArrowUpDown,
   Edit,
   Clock,
   Truck,
@@ -58,6 +59,8 @@ import { DesktopTabsNav } from '@/components/admin/dashboard/DesktopTabsNav'
 import { useDashboardData } from '@/components/admin/dashboard/useDashboardData'
 import { AdminsTab } from '@/components/admin/dashboard/tabs-content/AdminsTab'
 import { OrderModal } from '@/components/admin/dashboard/modals/OrderModal'
+import { DispatchMapPanel } from '@/components/admin/orders/DispatchMapPanel'
+import { extractCoordsFromText, isShortGoogleMapsUrl, type LatLng } from '@/lib/geo'
 
 import { MobileSidebar } from '@/components/MobileSidebar'
 import { MobileTabIndicator } from '@/components/MobileTabIndicator'
@@ -105,7 +108,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const { t, language } = useLanguage()
   const [activeTab, setActiveTab] = useState('statistics')
   const [currentDate, setCurrentDate] = useState('')
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => (mode === 'middle' ? new Date() : null))
+  const [isDispatchOpen, setIsDispatchOpen] = useState(false)
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set())
   const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set())
   const [clientStatusFilter, setClientStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
@@ -199,6 +203,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const [editingClientId, setEditingClientId] = useState<string | null>(null)
   const [isCreatingClient, setIsCreatingClient] = useState(false)
   const [orderError, setOrderError] = useState('')
+  const [warehousePoint, setWarehousePoint] = useState<LatLng | null>(null)
+  const [warehouseInput, setWarehouseInput] = useState('')
+  const [warehousePreview, setWarehousePreview] = useState<LatLng | null>(null)
+  const [isWarehouseLoading, setIsWarehouseLoading] = useState(false)
+  const [isWarehouseSaving, setIsWarehouseSaving] = useState(false)
   // Set current date on client side to avoid hydration mismatch
   useEffect(() => {
     setCurrentDate(new Date().toLocaleDateString('ru-RU', {
@@ -261,6 +270,31 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   const visibleTabs = useMemo(() => deriveVisibleTabs(allowedTabs), [allowedTabs])
   const isLowAdminView = mode === 'low' || meRole === 'LOW_ADMIN'
+  const isWarehouseReadOnly = isLowAdminView
+
+  const refreshWarehousePoint = async () => {
+    setIsWarehouseLoading(true)
+    try {
+      const res = await fetch('/api/admin/warehouse')
+      if (!res.ok) return
+      const data = await res.json().catch(() => null)
+      const lat = data && typeof data.lat === 'number' ? data.lat : null
+      const lng = data && typeof data.lng === 'number' ? data.lng : null
+      const point = lat != null && lng != null ? ({ lat, lng } as LatLng) : null
+      setWarehousePoint(point)
+      setWarehousePreview(point)
+      setWarehouseInput(point ? `${lat},${lng}` : '')
+    } catch (error) {
+      console.error('Error loading warehouse point:', error)
+    } finally {
+      setIsWarehouseLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    void refreshWarehousePoint()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Add effect to reset selected clients when filter changes
   useEffect(() => {
@@ -476,7 +510,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     let finalUrl = url
 
     // Handle short links
-    if (url.includes('goo.gl') || url.includes('maps.app.goo.gl')) {
+    if (isShortGoogleMapsUrl(url)) {
       try {
         const response = await fetch(`/api/admin/expand-url?url=${encodeURIComponent(url)}`)
         if (response.ok) {
@@ -491,40 +525,69 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     }
 
     try {
-      // 1. Format: @41.311081,69.240562
-      const atMatch = finalUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/)
-      if (atMatch) {
-        return `${atMatch[1]}, ${atMatch[2]}`
-      }
-
-      // 2. Format: q=41.311081,69.240562
-      const qMatch = finalUrl.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/)
-      if (qMatch) {
-        return `${qMatch[1]}, ${qMatch[2]}`
-      }
-
-      // 3. Format: !3d41.311081!4d69.240562
-      const pbMatch = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/)
-      if (pbMatch) {
-        return `${pbMatch[1]}, ${pbMatch[2]}`
-      }
-
-      // 4. Format: ll=41.311081,69.240562
-      const llMatch = finalUrl.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/)
-      if (llMatch) {
-        return `${llMatch[1]}, ${llMatch[2]}`
-      }
-
-      // 5. Format: search/41.311081,69.240562
-      const searchMatch = finalUrl.match(/search\/(-?\d+\.\d+),(-?\d+\.\d+)/)
-      if (searchMatch) {
-        return `${searchMatch[1]}, ${searchMatch[2]}`
-      }
-
-      return null
+      const coords = extractCoordsFromText(finalUrl) ?? extractCoordsFromText(url)
+      if (!coords) return null
+      return `${coords.lat}, ${coords.lng}`
     } catch (error) {
       console.error('Error parsing Google Maps URL:', error)
       return null
+    }
+  }
+
+  const handleWarehouseInputChange = (value: string) => {
+    setWarehouseInput(value)
+    const coords = extractCoordsFromText(value)
+    setWarehousePreview(coords)
+  }
+
+  const handleWarehouseInputBlur = async () => {
+    if (!warehouseInput || warehousePreview) return
+    if (!isShortGoogleMapsUrl(warehouseInput)) return
+
+    try {
+      const response = await fetch(`/api/admin/expand-url?url=${encodeURIComponent(warehouseInput)}`)
+      if (!response.ok) return
+      const data = await response.json().catch(() => null)
+      const expanded = data && typeof data.expandedUrl === 'string' ? data.expandedUrl : null
+      if (!expanded) return
+      const coords = extractCoordsFromText(expanded)
+      if (coords) setWarehousePreview(coords)
+    } catch (error) {
+      console.error('Error expanding warehouse url:', error)
+    }
+  }
+
+  const handleSaveWarehousePoint = async () => {
+    if (isWarehouseReadOnly) return
+    if (!warehouseInput.trim()) {
+      toast.error('Укажите ссылку Google Maps или координаты')
+      return
+    }
+
+    setIsWarehouseSaving(true)
+    try {
+      const res = await fetch('/api/admin/warehouse', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ googleMapsLink: warehouseInput.trim() }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        throw new Error((data && data.error) || 'Ошибка сохранения склада')
+      }
+
+      const lat = data && typeof data.lat === 'number' ? data.lat : null
+      const lng = data && typeof data.lng === 'number' ? data.lng : null
+      const point = lat != null && lng != null ? ({ lat, lng } as LatLng) : null
+      setWarehousePoint(point)
+      setWarehousePreview(point)
+      setWarehouseInput(point ? `${lat},${lng}` : '')
+
+      toast.success('Склад сохранён')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Ошибка сохранения склада')
+    } finally {
+      setIsWarehouseSaving(false)
     }
   }
 
@@ -1795,10 +1858,25 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       ))}
                     </SelectContent>
                   </Select>
+                  <Button
+                    variant="outline"
+                    className="h-12 w-full"
+                    onClick={() => {
+                      if (!selectedDate) {
+                        toast.error('Выберите дату')
+                        return
+                      }
+                      setIsDispatchOpen(true)
+                    }}
+                  >
+                    <ArrowUpDown className="w-5 h-5 mr-2" />
+                    Сортировать
+                  </Button>
                   <div className="grid grid-cols-3 gap-2">
                     <RouteOptimizeButton
                       orders={orders.filter(isOrderInOptimizeScope)}
                       onOptimized={applyOptimizedOrdering}
+                      startPoint={warehousePoint ?? undefined}
                       variant="outline"
                     />
                     <Button variant="outline" className="h-12 w-full" onClick={() => setIsBulkEditOrdersModalOpen(true)} disabled={selectedOrders.size === 0}>
@@ -1830,9 +1908,24 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       ))}
                     </SelectContent>
                   </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (!selectedDate) {
+                        toast.error('Выберите дату')
+                        return
+                      }
+                      setIsDispatchOpen(true)
+                    }}
+                  >
+                    <ArrowUpDown className="w-4 h-4 mr-2" />
+                    Сортировать
+                  </Button>
                   <RouteOptimizeButton
                     orders={orders.filter(isOrderInOptimizeScope)}
                     onOptimized={applyOptimizedOrdering}
+                    startPoint={warehousePoint ?? undefined}
                     variant="outline"
                     size="sm"
                   />
@@ -2898,10 +2991,26 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 </Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog >
+      </Dialog >
 
-          {/* Admins Tab */}
-          <AdminsTab lowAdmins={lowAdmins} isLowAdminView={isLowAdminView} onRefresh={fetchData} tabsCopy={tabsCopy} />
+      {isDispatchOpen && (
+        <DispatchMapPanel
+          open={isDispatchOpen}
+          onOpenChange={setIsDispatchOpen}
+          orders={orders}
+          couriers={couriers}
+          selectedDateLabel={
+            selectedDate
+              ? selectedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+              : 'Все заказы'
+          }
+          warehousePoint={warehousePoint}
+          onSaved={fetchData}
+        />
+      )}
+
+      {/* Admins Tab */}
+      <AdminsTab lowAdmins={lowAdmins} isLowAdminView={isLowAdminView} onRefresh={fetchData} tabsCopy={tabsCopy} />
 
           {/* Features Tab */}
           <TabsContent value="features" className="space-y-6">
@@ -2944,6 +3053,58 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     isOpen={isChangePasswordOpen}
                     onClose={() => setIsChangePasswordOpen(false)}
                   />
+                </div>
+
+                {/* Divider */}
+                <div className="border-t" />
+
+                {/* Warehouse Start Point */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Склад (точка старта)</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Используется для сортировки и построения маршрутов для всех курьеров.
+                  </p>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="warehousePoint">
+                      Ссылка Google Maps или координаты (lat,lng)
+                      {isWarehouseReadOnly && <span className="ml-2 text-xs text-slate-500">(только просмотр)</span>}
+                    </Label>
+                    <Input
+                      id="warehousePoint"
+                      value={warehouseInput}
+                      onChange={(e) => handleWarehouseInputChange(e.target.value)}
+                      onBlur={() => void handleWarehouseInputBlur()}
+                      placeholder="Пример: 41.311081,69.240562 или ссылка Google Maps"
+                      disabled={isWarehouseReadOnly || isWarehouseLoading || isWarehouseSaving}
+                    />
+                    <div className="text-xs text-slate-500">
+                      {warehousePoint
+                        ? `Текущие координаты: ${warehousePoint.lat.toFixed(6)}, ${warehousePoint.lng.toFixed(6)}`
+                        : 'Текущие координаты: не заданы (будет использован дефолт)'}
+                      {warehousePreview && (
+                        <span className="ml-2 text-slate-400">
+                          • Превью: {warehousePreview.lat.toFixed(6)}, {warehousePreview.lng.toFixed(6)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 flex-wrap">
+                    <Button
+                      onClick={() => void refreshWarehousePoint()}
+                      variant="outline"
+                      disabled={isWarehouseLoading || isWarehouseSaving}
+                    >
+                      Обновить
+                    </Button>
+                    <Button
+                      onClick={() => void handleSaveWarehousePoint()}
+                      disabled={isWarehouseReadOnly || isWarehouseSaving || isWarehouseLoading || !warehouseInput.trim()}
+                    >
+                      {isWarehouseSaving ? 'Сохранение...' : 'Сохранить'}
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Divider */}
