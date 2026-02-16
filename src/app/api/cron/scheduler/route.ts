@@ -98,6 +98,8 @@ export async function GET(req: Request) {
                             customerId: client.id,
                             adminId: defaultAdmin.id,
                             deliveryAddress: client.address,
+                            latitude: client.latitude ?? null,
+                            longitude: client.longitude ?? null,
                             deliveryDate: new Date(d),
                             deliveryTime: generateDeliveryTime(),
                             quantity: 1,

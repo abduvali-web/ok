@@ -32,6 +32,7 @@ import { CourierProfile } from '@/components/courier/CourierProfile'
 import { ChatTab } from '@/components/chat/ChatTab'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { RouteOptimizeButton } from '@/components/admin/RouteOptimizeButton'
+import { extractCoordsFromText } from '@/lib/geo'
 
 const CourierMap = dynamic(() => import('@/components/courier/CourierMap'), {
   ssr: false,
@@ -48,6 +49,9 @@ interface Order {
   customer: {
     name: string
     phone: string
+    address?: string
+    latitude?: number | null
+    longitude?: number | null
   }
   deliveryAddress: string
   latitude: number | null
@@ -139,12 +143,20 @@ export default function CourierPage() {
     }
   }
 
+  const getLocalIsoDate = (d: Date = new Date()) => {
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    return `${yyyy}-${mm}-${dd}`
+  }
+
   const fetchOrders = async (background = false) => {
     if (!background) setLoading(true)
     else setIsRefreshing(true)
 
     try {
-      const response = await fetch('/api/orders')
+      const today = getLocalIsoDate()
+      const response = await fetch(`/api/courier/orders?date=${encodeURIComponent(today)}`)
 
       if (response.status === 401) {
         window.location.href = '/login'
@@ -154,7 +166,25 @@ export default function CourierPage() {
         if (response.ok) {
           const ordersData = await response.json()
 
-        const activeAndPendingOrders = ordersData
+        const normalized: Order[] = (Array.isArray(ordersData) ? ordersData : []).map((o: any) => {
+          const orderLat = typeof o?.latitude === 'number' ? o.latitude : null
+          const orderLng = typeof o?.longitude === 'number' ? o.longitude : null
+          const customerLat = typeof o?.customer?.latitude === 'number' ? o.customer.latitude : null
+          const customerLng = typeof o?.customer?.longitude === 'number' ? o.customer.longitude : null
+          const parsed = extractCoordsFromText(String(o?.deliveryAddress ?? ''))
+
+          const latitude = orderLat ?? customerLat ?? parsed?.lat ?? null
+          const longitude = orderLng ?? customerLng ?? parsed?.lng ?? null
+
+          return {
+            ...o,
+            latitude,
+            longitude,
+            customer: o?.customer ?? { name: '', phone: '' },
+          } as Order
+        })
+
+        const activeAndPendingOrders = normalized
           .filter(
             (order: Order) =>
               order.orderStatus === 'PENDING' || order.orderStatus === 'IN_DELIVERY' || order.orderStatus === 'PAUSED'

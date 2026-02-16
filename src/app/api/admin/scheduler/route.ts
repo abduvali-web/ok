@@ -38,6 +38,8 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         address: true,
+        latitude: true,
+        longitude: true,
         preferences: true,
         createdBy: true,
         deliveryDays: true,
@@ -101,6 +103,8 @@ export async function POST(request: NextRequest) {
               customerId: client.id,
               adminId: adminId,
               deliveryAddress: client.address,
+              latitude: client.latitude ?? null,
+              longitude: client.longitude ?? null,
               deliveryDate: new Date(d),
               deliveryTime: generateDeliveryTime(),
               quantity: 1,

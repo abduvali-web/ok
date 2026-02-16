@@ -136,6 +136,8 @@ export async function POST(request: NextRequest) {
                 customerId: c.id,
                 adminId: c.createdBy || defaultAdmin.id,
                 deliveryAddress: c.address,
+                latitude: c.latitude ?? null,
+                longitude: c.longitude ?? null,
                 deliveryDate: new Date(dayStart),
                 deliveryTime: defaultDeliveryTime(),
                 quantity: 1,

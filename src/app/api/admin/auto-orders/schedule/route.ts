@@ -69,6 +69,8 @@ async function createAutoOrdersForClient(client: any, startDate: Date, endDate: 
                 customerId: client.id,
                 adminId: adminId,
                 deliveryAddress: client.address,
+                latitude: client.latitude ?? null,
+                longitude: client.longitude ?? null,
                 deliveryDate: new Date(currentDate),
                 deliveryTime: generateDeliveryTime(),
                 quantity: 1,
