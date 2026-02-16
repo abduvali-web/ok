@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
     if (!user || !hasRole(user, ['SUPER_ADMIN'])) {
-      return NextResponse.json({ error: 'Недостаточно прав (только для Super Admin)' }, { status: 403 })
+      return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
     }
 
     // Get middle admins from DB
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
     if (!user || !hasRole(user, ['SUPER_ADMIN'])) {
-      return NextResponse.json({ error: 'Недостаточно прав (только для Super Admin)' }, { status: 403 })
+      return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
     }
 
     const { email, password, name } = await request.json()

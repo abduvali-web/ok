@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getAuthUser, hasRole, hasPermission } from '@/lib/auth-utils'
+import { getAuthUser, hasRole } from '@/lib/auth-utils'
 import { getGroupAdminIds, getOwnerAdminId } from '@/lib/admin-scope'
 import { Prisma, PaymentStatus, PaymentMethod, OrderStatus } from '@prisma/client'
-import { safeJsonParse } from '@/lib/safe-json'
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
     if (!user || !hasRole(user, ['LOW_ADMIN', 'MIDDLE_ADMIN', 'SUPER_ADMIN', 'COURIER'])) {
-      return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
-    }
-
-    if (user.role === 'LOW_ADMIN' && !hasPermission(user, 'orders')) {
       return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
     }
 
