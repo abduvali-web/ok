@@ -101,6 +101,12 @@ function renumberInOrder(
   return next
 }
 
+function extractShortGoogleMapsUrl(input: string): string | null {
+  if (!input) return null
+  const match = input.match(/https?:\/\/(?:maps\.app\.goo\.gl|goo\.gl)\/[^\s)]+/i)
+  return match ? match[0] : null
+}
+
 function SortableOrderItem({
   order,
   color,
@@ -211,6 +217,16 @@ export function DispatchMapPanel({
     return m
   }, [safeCouriers])
 
+  const courierStartById = useMemo(() => {
+    const m = new Map<string, LatLng>()
+    for (const c of safeCouriers) {
+      if (typeof c.latitude === 'number' && typeof c.longitude === 'number') {
+        m.set(c.id, { lat: c.latitude, lng: c.longitude })
+      }
+    }
+    return m
+  }, [safeCouriers])
+
   const allContainerIds = useMemo<ContainerId[]>(() => {
     const base = safeCouriers.map((c) => c.id)
     const ids = new Set<string>([...base, UNASSIGNED])
@@ -265,9 +281,10 @@ export function DispatchMapPanel({
         continue
       }
 
-      if (isShortGoogleMapsUrl(raw)) {
+      const shortUrl = isShortGoogleMapsUrl(raw) ? raw : extractShortGoogleMapsUrl(raw)
+      if (shortUrl) {
         base[o.id] = null
-        toExpand.push({ id: o.id, url: raw })
+        toExpand.push({ id: o.id, url: shortUrl })
         continue
       }
 
@@ -322,9 +339,20 @@ export function DispatchMapPanel({
       if (containerId === UNASSIGNED) continue
       const ids = containers[containerId] || []
       const color = getCourierColor(containerId)
+      const courierName = courierNameById.get(containerId) || 'Курьер'
+      const routeStart = courierStartById.get(containerId) ?? warehousePoint ?? null
 
       const linePositions: LatLng[] = []
-      if (warehousePoint) linePositions.push(warehousePoint)
+      if (routeStart) {
+        linePositions.push(routeStart)
+        markers.push({
+          id: `courier-${containerId}`,
+          position: routeStart,
+          color,
+          label: 'C',
+          popup: `${courierName} • start`,
+        })
+      }
 
       for (const id of ids) {
         const coords = coordsById[id]
@@ -343,7 +371,7 @@ export function DispatchMapPanel({
         }
       }
 
-      if (linePositions.length >= (warehousePoint ? 2 : 2)) {
+      if (linePositions.length >= 2) {
         polylines.push({ id: containerId, color, positions: linePositions })
       }
     }
@@ -367,11 +395,12 @@ export function DispatchMapPanel({
     }
 
     return { markers, polylines }
-  }, [containers, coordsById, orderById, orderNumberById, warehousePoint])
+  }, [containers, coordsById, courierNameById, courierStartById, orderById, orderNumberById, warehousePoint])
 
   const applyAutoSortAll = async () => {
-    if (!warehousePoint) {
-      toast.error('Укажите склад (точку старта) в профиле')
+    const hasCourierStart = safeCouriers.some((c) => typeof c.latitude === 'number' && typeof c.longitude === 'number')
+    if (!warehousePoint && !hasCourierStart) {
+      toast.error('Set warehouse coordinates or enable courier geolocation')
       return
     }
 
@@ -380,6 +409,8 @@ export function DispatchMapPanel({
 
       for (const containerId of Object.keys(nextContainers)) {
         const ids = nextContainers[containerId] || []
+        const startPoint = courierStartById.get(containerId) ?? warehousePoint
+        if (!startPoint) continue
         const withCoords: Array<{ id: string; coords: LatLng }> = []
         const withoutCoords: string[] = []
 
@@ -389,7 +420,7 @@ export function DispatchMapPanel({
           else withoutCoords.push(id)
         }
 
-        const orderedWithCoords = optimizeNearestNeighbor(warehousePoint, withCoords)
+        const orderedWithCoords = optimizeNearestNeighbor(startPoint, withCoords)
         nextContainers[containerId] = [...orderedWithCoords, ...withoutCoords]
       }
 
@@ -578,23 +609,6 @@ export function DispatchMapPanel({
             </div>
           </Card>
 
-            <div className="flex items-center gap-2 text-sm">
-              <Users className="w-4 h-4 text-slate-500" />
-              <div className="text-slate-600">Курьеры:</div>
-              <div className="flex flex-wrap gap-2">
-              {safeCouriers.map((c) => (
-                <div key={c.id} className="inline-flex items-center gap-2 px-2 py-1 rounded-md border bg-background">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getCourierColor(c.id) }} />
-                  <div className="text-xs">{c.name}</div>
-                </div>
-              ))}
-              <div className="inline-flex items-center gap-2 px-2 py-1 rounded-md border bg-background">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#94A3B8' }} />
-                <div className="text-xs">Без курьера</div>
-              </div>
-            </div>
-          </div>
-
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -652,6 +666,23 @@ export function DispatchMapPanel({
               })}
             </div>
           </DndContext>
+
+          <div className="flex items-center gap-2 text-sm">
+            <Users className="w-4 h-4 text-slate-500" />
+            <div className="text-slate-600">Couriers:</div>
+            <div className="flex flex-wrap gap-2">
+              {safeCouriers.map((c) => (
+                <div key={c.id} className="inline-flex items-center gap-2 px-2 py-1 rounded-md border bg-background">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getCourierColor(c.id) }} />
+                  <div className="text-xs">{c.name}</div>
+                </div>
+              ))}
+              <div className="inline-flex items-center gap-2 px-2 py-1 rounded-md border bg-background">
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#94A3B8' }} />
+                <div className="text-xs">Unassigned</div>
+              </div>
+            </div>
+          </div>
 
           {activeId && (
             <div className="text-xs text-slate-400">

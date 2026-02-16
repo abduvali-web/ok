@@ -103,7 +103,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const { t, language } = useLanguage()
   const [activeTab, setActiveTab] = useState('statistics')
   const [currentDate, setCurrentDate] = useState('')
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => (mode === 'middle' ? new Date() : null))
   const [isDispatchOpen, setIsDispatchOpen] = useState(false)
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set())
   const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set())

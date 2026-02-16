@@ -40,7 +40,9 @@ export async function GET(request: NextRequest) {
         isActive: true,
         createdAt: true,
         allowedTabs: true,
-        salary: true
+        salary: true,
+        latitude: true,
+        longitude: true
       },
       orderBy: { createdAt: 'desc' }
     })
@@ -138,7 +140,9 @@ export async function POST(request: NextRequest) {
         isActive: true,
         createdAt: true,
         allowedTabs: true,
-        salary: true
+        salary: true,
+        latitude: true,
+        longitude: true
       }
     })
 

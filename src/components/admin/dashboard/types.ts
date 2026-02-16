@@ -7,6 +7,8 @@ export interface Admin {
   createdAt: string
   allowedTabs?: string[]
   salary?: number
+  latitude?: number | null
+  longitude?: number | null
 }
 
 export interface Order {
