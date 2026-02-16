@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -42,11 +42,24 @@ interface CourierMapProps {
     onMarkerClick: (order: Order) => void
 }
 
-function MapUpdater({ center }: { center: [number, number] }) {
+function MapViewport({ points }: { points: Array<[number, number]> }) {
     const map = useMap()
     useEffect(() => {
-        map.flyTo(center, 15)
-    }, [center, map])
+        if (!points || points.length === 0) return
+
+        setTimeout(() => {
+            map.invalidateSize()
+            if (points.length === 1) {
+                map.flyTo(points[0], 15, { duration: 0.5 })
+                return
+            }
+
+            map.fitBounds(L.latLngBounds(points), {
+                padding: [40, 40],
+                maxZoom: 16,
+            })
+        }, 30)
+    }, [map, points])
     return null
 }
 
@@ -57,14 +70,21 @@ export default function CourierMap({ orders, currentLocation, onMarkerClick }: C
         setIsMounted(true)
     }, [])
 
-    if (!isMounted) return <div className="h-full w-full bg-slate-100 animate-pulse rounded-lg" />
+    const points = useMemo<Array<[number, number]>>(() => {
+        const pts: Array<[number, number]> = []
+        if (currentLocation) pts.push([currentLocation.lat, currentLocation.lng])
+        for (const order of orders) {
+            if (order.latitude != null && order.longitude != null) {
+                pts.push([order.latitude, order.longitude])
+            }
+        }
+        return pts
+    }, [currentLocation, orders])
 
-    // Calculate center based on current location or first order or default
-    const center: [number, number] = currentLocation
-        ? [currentLocation.lat, currentLocation.lng]
-        : orders.length > 0 && orders[0].latitude != null && orders[0].longitude != null
-            ? [orders[0].latitude, orders[0].longitude]
-            : [41.2995, 69.2401] // Default to Tashkent
+    // Initial center (viewport auto-fits to all points)
+    const center: [number, number] = points.length > 0 ? points[0] : [41.2995, 69.2401] // Default to Tashkent
+
+    if (!isMounted) return <div className="h-full w-full bg-slate-100 animate-pulse rounded-lg" />
 
     return (
         <MapContainer
@@ -104,7 +124,7 @@ export default function CourierMap({ orders, currentLocation, onMarkerClick }: C
                 </Marker>
             )}
 
-            <MapUpdater center={center} />
+            <MapViewport points={points} />
         </MapContainer>
     )
 }
