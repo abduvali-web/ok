@@ -284,10 +284,32 @@ export function DispatchMapPanel({
     if (!open) return
     let cancelled = false
 
+    const coerceLatLng = (latRaw: unknown, lngRaw: unknown): LatLng | null => {
+      const lat =
+        typeof latRaw === 'number' ? latRaw :
+          typeof latRaw === 'string' ? Number(latRaw) :
+            NaN
+      const lng =
+        typeof lngRaw === 'number' ? lngRaw :
+          typeof lngRaw === 'string' ? Number(lngRaw) :
+            NaN
+
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+      if (lat < -90 || lat > 90) return null
+      if (lng < -180 || lng > 180) return null
+      return { lat, lng }
+    }
+
     const base: Record<string, LatLng | null | undefined> = {}
     const toExpand: Array<{ id: string; url: string }> = []
 
     for (const o of safeOrders) {
+      const saved = coerceLatLng((o as any).latitude, (o as any).longitude)
+      if (saved) {
+        base[o.id] = saved
+        continue
+      }
+
       const raw = o.deliveryAddress || ''
       const parsed = extractCoordsFromText(raw)
       if (parsed) {
@@ -311,11 +333,6 @@ export function DispatchMapPanel({
           base[o.id] = null
           toExpand.push({ id: o.id, url: anyUrl })
         }
-        continue
-      }
-
-      if (typeof o.latitude === 'number' && typeof o.longitude === 'number') {
-        base[o.id] = { lat: o.latitude, lng: o.longitude }
         continue
       }
 
