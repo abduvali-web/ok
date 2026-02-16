@@ -221,6 +221,7 @@ export function DispatchMapPanel({
   const [activeId, setActiveId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [search, setSearch] = useState('')
+  const [roadPolylineByContainer, setRoadPolylineByContainer] = useState<Record<string, LatLng[]>>({})
 
   const expandedCache = useRef(new Map<string, string>())
 
@@ -274,6 +275,7 @@ export function DispatchMapPanel({
 
     setContainers(grouped)
     setOrderNumberById(numbers)
+    setRoadPolylineByContainer({})
     setSearch('')
   }, [allContainerIds, open, safeOrders])
 
@@ -370,6 +372,7 @@ export function DispatchMapPanel({
       const color = getCourierColor(containerId)
       const courierName = courierNameById.get(containerId) || 'Курьер'
       const routeStart = courierStartById.get(containerId) ?? warehousePoint ?? null
+      const roadPolyline = roadPolylineByContainer[containerId]
 
       const linePositions: LatLng[] = []
       if (routeStart) {
@@ -400,7 +403,9 @@ export function DispatchMapPanel({
         }
       }
 
-      if (linePositions.length >= 2) {
+      if (Array.isArray(roadPolyline) && roadPolyline.length >= 2) {
+        polylines.push({ id: containerId, color, positions: roadPolyline })
+      } else if (linePositions.length >= 2) {
         polylines.push({ id: containerId, color, positions: linePositions })
       }
     }
@@ -425,12 +430,15 @@ export function DispatchMapPanel({
         })
       }
     }
-    if (unassignedLine.length >= 2) {
+    const unassignedRoadPolyline = roadPolylineByContainer[UNASSIGNED]
+    if (Array.isArray(unassignedRoadPolyline) && unassignedRoadPolyline.length >= 2) {
+      polylines.push({ id: UNASSIGNED, color: '#94A3B8', positions: unassignedRoadPolyline })
+    } else if (unassignedLine.length >= 2) {
       polylines.push({ id: 'unassigned', color: '#94A3B8', positions: unassignedLine })
     }
 
     return { markers, polylines }
-  }, [containers, coordsById, courierNameById, courierStartById, orderById, orderNumberById, warehousePoint])
+  }, [containers, coordsById, courierNameById, courierStartById, orderById, orderNumberById, roadPolylineByContainer, warehousePoint])
 
   const applyAutoSortAll = async () => {
     const hasCourierStart = safeCouriers.some((c) => typeof c.latitude === 'number' && typeof c.longitude === 'number')
@@ -439,36 +447,114 @@ export function DispatchMapPanel({
       return
     }
 
-    setContainers((prev) => {
-      const nextContainers = { ...prev }
+    const currentContainers = { ...containers }
+    const nextContainers = { ...currentContainers }
+    const withoutCoordsByContainer: Record<string, string[]> = {}
+    const withCoordsByContainer: Record<string, Array<{ id: string; coords: LatLng }>> = {}
+    const routeRequests: Array<{
+      containerId: string
+      startPoint: LatLng | null
+      stops: Array<{ orderId: string; lat: number; lng: number }>
+    }> = []
 
-      for (const containerId of Object.keys(nextContainers)) {
-        const ids = nextContainers[containerId] || []
-        const startPoint = courierStartById.get(containerId) ?? warehousePoint
-        if (!startPoint) continue
-        const withCoords: Array<{ id: string; coords: LatLng }> = []
-        const withoutCoords: string[] = []
+    for (const containerId of Object.keys(nextContainers)) {
+      const ids = nextContainers[containerId] || []
+      const withCoords: Array<{ id: string; coords: LatLng }> = []
+      const withoutCoords: string[] = []
+      for (const id of ids) {
+        const coords = coordsById[id]
+        if (coords) withCoords.push({ id, coords })
+        else withoutCoords.push(id)
+      }
+      withCoordsByContainer[containerId] = withCoords
+      withoutCoordsByContainer[containerId] = withoutCoords
 
-        for (const id of ids) {
-          const coords = coordsById[id]
-          if (coords) withCoords.push({ id, coords })
-          else withoutCoords.push(id)
+      if (withCoords.length > 0) {
+        const startPoint = courierStartById.get(containerId) ?? warehousePoint ?? null
+        routeRequests.push({
+          containerId,
+          startPoint,
+          stops: withCoords.map((w) => ({ orderId: w.id, lat: w.coords.lat, lng: w.coords.lng })),
+        })
+      } else {
+        nextContainers[containerId] = [...withoutCoords]
+      }
+    }
+
+    let roadPolylinesNext: Record<string, LatLng[]> = {}
+    let usedServerOptimization = false
+
+    if (routeRequests.length > 0) {
+      try {
+        const response = await fetch('/api/admin/dispatch/ors-optimize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ routes: routeRequests }),
+        })
+        if (response.ok) {
+          const data = await response.json().catch(() => null)
+          const routes = Array.isArray(data?.routes) ? data.routes : []
+          const byContainer = new Map<string, any>(routes.map((r: any) => [String(r.containerId), r]))
+
+          for (const containerId of Object.keys(nextContainers)) {
+            const route = byContainer.get(containerId)
+            const withCoords = withCoordsByContainer[containerId] || []
+            const withoutCoords = withoutCoordsByContainer[containerId] || []
+            const allowed = new Set(withCoords.map((w) => w.id))
+
+            if (route && Array.isArray(route.orderedOrderIds)) {
+              const ordered = route.orderedOrderIds
+                .map((id: unknown) => String(id))
+                .filter((id: string) => allowed.has(id))
+              const missing = withCoords.map((w) => w.id).filter((id) => !ordered.includes(id))
+              nextContainers[containerId] = [...ordered, ...missing, ...withoutCoords]
+            } else if (withCoords.length > 0) {
+              const startPoint = courierStartById.get(containerId) ?? warehousePoint
+              const orderedWithCoords = startPoint
+                ? optimizeNearestNeighbor(startPoint, withCoords)
+                : withCoords.map((w) => w.id)
+              nextContainers[containerId] = [...orderedWithCoords, ...withoutCoords]
+            }
+
+            if (route && Array.isArray(route.polyline)) {
+              const polyline = route.polyline
+                .map((p: any) => ({ lat: Number(p?.lat), lng: Number(p?.lng) }))
+                .filter((p: LatLng) => Number.isFinite(p.lat) && Number.isFinite(p.lng))
+              if (polyline.length >= 2) {
+                roadPolylinesNext[containerId] = polyline
+              }
+            }
+          }
+
+          usedServerOptimization = true
         }
+      } catch {
+        // Fallback below
+      }
+    }
 
-        const orderedWithCoords = optimizeNearestNeighbor(startPoint, withCoords)
+    if (!usedServerOptimization) {
+      roadPolylinesNext = {}
+      for (const containerId of Object.keys(nextContainers)) {
+        const withCoords = withCoordsByContainer[containerId] || []
+        const withoutCoords = withoutCoordsByContainer[containerId] || []
+        if (withCoords.length === 0) continue
+        const startPoint = courierStartById.get(containerId) ?? warehousePoint
+        const orderedWithCoords = startPoint
+          ? optimizeNearestNeighbor(startPoint, withCoords)
+          : withCoords.map((w) => w.id)
         nextContainers[containerId] = [...orderedWithCoords, ...withoutCoords]
       }
+    }
 
-      // Renumber within each container after sorting
-      setOrderNumberById((prevNumbers) => {
-        let numbersNext: Record<string, number | undefined> = { ...prevNumbers }
-        for (const containerId of Object.keys(nextContainers)) {
-          numbersNext = renumberInOrder(nextContainers[containerId] || [], numbersNext)
-        }
-        return numbersNext as Record<string, number>
-      })
-
-      return nextContainers
+    setContainers(nextContainers)
+    setRoadPolylineByContainer(roadPolylinesNext)
+    setOrderNumberById((prevNumbers) => {
+      let numbersNext: Record<string, number | undefined> = { ...prevNumbers }
+      for (const containerId of Object.keys(nextContainers)) {
+        numbersNext = renumberInOrder(nextContainers[containerId] || [], numbersNext)
+      }
+      return numbersNext as Record<string, number>
     })
   }
 
@@ -480,8 +566,18 @@ export function DispatchMapPanel({
       void applyAutoSortAll()
     }, 50)
     return () => clearTimeout(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
+  }, [open, autoSortOnOpen])
+
+  useEffect(() => {
+    if (!open) return
+    if (!autoSortOnOpen) return
+    if (Object.keys(coordsById).length === 0) return
+
+    const t = setTimeout(() => {
+      void applyAutoSortAll()
+    }, 250)
+    return () => clearTimeout(t)
+  }, [coordsById, open, autoSortOnOpen])
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(String(event.active.id))
@@ -493,6 +589,7 @@ export function DispatchMapPanel({
 
     const active = String(event.active.id)
     const over = String(overId)
+    setRoadPolylineByContainer({})
 
     setContainers((prev) => {
       const activeContainer = findContainerForId(prev, active)
@@ -531,6 +628,7 @@ export function DispatchMapPanel({
 
     const activeId = String(active.id)
     const overId = String(over.id)
+    setRoadPolylineByContainer({})
 
     setContainers((prev) => {
       const containerId = findContainerForId(prev, activeId)
@@ -553,6 +651,7 @@ export function DispatchMapPanel({
 
   const swapOrderNumbers = (orderId: string, nextNumber: number) => {
     if (!Number.isFinite(nextNumber)) return
+    setRoadPolylineByContainer({})
     const allIds = Object.values(containers).flat()
     const targetId = allIds.find((id) => orderNumberById[id] === nextNumber)
     if (!targetId) {
