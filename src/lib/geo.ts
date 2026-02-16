@@ -18,9 +18,23 @@ export function extractCoordsFromText(input: string): LatLng | null {
   const qMatch = input.match(/[?&](?:q|ll|query)=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/)
   if (qMatch) return toLatLng(qMatch[1], qMatch[2])
 
-  // 3) !3dLAT!4dLNG (pb params) - usually the pinned place coordinates
-  const pbMatch = input.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/)
-  if (pbMatch) return toLatLng(pbMatch[1], pbMatch[2])
+  // 3) !3dLAT!4dLNG (pb params) - often repeated; the last pair is usually the pinned place coordinates
+  const pbPairs = Array.from(input.matchAll(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/g))
+  if (pbPairs.length > 0) {
+    const last = pbPairs[pbPairs.length - 1]
+    const lat = last?.[1]
+    const lng = last?.[2]
+    if (lat && lng) return toLatLng(lat, lng)
+  }
+
+  // 3b) !2dLNG!3dLAT (alternate pb order) - take last pair as well
+  const pbPairsAlt = Array.from(input.matchAll(/!2d(-?\d+(?:\.\d+)?)!3d(-?\d+(?:\.\d+)?)/g))
+  if (pbPairsAlt.length > 0) {
+    const last = pbPairsAlt[pbPairsAlt.length - 1]
+    const lng = last?.[1]
+    const lat = last?.[2]
+    if (lat && lng) return toLatLng(lat, lng)
+  }
 
   // 4) /search/lat,lng
   const searchMatch = input.match(/search\/(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/)
