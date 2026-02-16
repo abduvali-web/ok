@@ -69,6 +69,45 @@ function MapUpdater({ center }: { center: [number, number] }) {
   return null
 }
 
+function MapViewport({
+  warehouse,
+  markers,
+  polylines,
+}: {
+  warehouse?: LatLng | null
+  markers: DispatchMapMarker[]
+  polylines: DispatchMapPolyline[]
+}) {
+  const map = useMap()
+
+  useEffect(() => {
+    const points: Array<[number, number]> = []
+    if (warehouse) points.push([warehouse.lat, warehouse.lng])
+    for (const m of markers) points.push([m.position.lat, m.position.lng])
+    for (const line of polylines) {
+      for (const p of line.positions) points.push([p.lat, p.lng])
+    }
+
+    if (points.length === 0) return
+
+    // Ensures map is measured correctly inside sheet/modal before fitting bounds.
+    setTimeout(() => {
+      map.invalidateSize()
+      if (points.length === 1) {
+        map.flyTo(points[0], 14, { duration: 0.5 })
+        return
+      }
+
+      map.fitBounds(L.latLngBounds(points), {
+        padding: [40, 40],
+        maxZoom: 15,
+      })
+    }, 30)
+  }, [map, markers, polylines, warehouse])
+
+  return null
+}
+
 export default function DispatchLeafletMap({
   warehouse,
   markers,
@@ -124,7 +163,7 @@ export default function DispatchLeafletMap({
       ))}
 
       <MapUpdater center={center} />
+      <MapViewport warehouse={warehouse} markers={markers} polylines={polylines} />
     </MapContainer>
   )
 }
-

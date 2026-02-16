@@ -107,6 +107,23 @@ function extractShortGoogleMapsUrl(input: string): string | null {
   return match ? match[0] : null
 }
 
+function extractAnyUrl(input: string): string | null {
+  if (!input) return null
+  const match = input.match(/https?:\/\/[^\s)]+/i)
+  return match ? match[0] : null
+}
+
+function isGoogleMapsLikeUrl(url: string): boolean {
+  if (!url) return false
+  const u = url.toLowerCase()
+  return (
+    u.includes('google.com/maps') ||
+    u.includes('maps.google.com') ||
+    u.includes('maps.app.goo.gl') ||
+    u.includes('goo.gl/maps')
+  )
+}
+
 function SortableOrderItem({
   order,
   color,
@@ -288,6 +305,18 @@ export function DispatchMapPanel({
         continue
       }
 
+      const anyUrl = extractAnyUrl(raw)
+      if (anyUrl && isGoogleMapsLikeUrl(anyUrl)) {
+        const fromUrl = extractCoordsFromText(anyUrl)
+        if (fromUrl) {
+          base[o.id] = fromUrl
+        } else {
+          base[o.id] = null
+          toExpand.push({ id: o.id, url: anyUrl })
+        }
+        continue
+      }
+
       base[o.id] = null
     }
 
@@ -378,12 +407,15 @@ export function DispatchMapPanel({
 
     // Unassigned markers (gray, no polyline)
     const unassignedIds = containers[UNASSIGNED] || []
+    const unassignedLine: LatLng[] = []
+    if (warehousePoint) unassignedLine.push(warehousePoint)
     for (const id of unassignedIds) {
       const coords = coordsById[id]
       const n = orderNumberById[id]
       const o = orderById.get(id)
       if (!o) continue
       if (coords) {
+        unassignedLine.push(coords)
         markers.push({
           id,
           position: coords,
@@ -392,6 +424,9 @@ export function DispatchMapPanel({
           popup: `${o.customer?.name || o.customerName || 'Клиент'} • #${n ?? ''} • Без курьера`,
         })
       }
+    }
+    if (unassignedLine.length >= 2) {
+      polylines.push({ id: 'unassigned', color: '#94A3B8', positions: unassignedLine })
     }
 
     return { markers, polylines }
