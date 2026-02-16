@@ -19,6 +19,7 @@ type RouteOutput = {
   containerId: string
   orderedOrderIds: string[]
   polyline: LatLng[]
+  durationSec: number | null
   source: 'ors' | 'fallback' | 'none'
 }
 
@@ -40,6 +41,21 @@ function haversineDistance(a: LatLng, b: LatLng) {
     Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLng / 2) * Math.sin(dLng / 2)
   const c = 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x))
   return R * c
+}
+
+function estimateDurationSecFromPoints(points: LatLng[]): number | null {
+  if (!Array.isArray(points) || points.length < 2) return null
+
+  // crude estimate for fallback mode (no ORS key or failed request)
+  const AVG_SPEED_KMH = 25
+  let km = 0
+  for (let i = 0; i < points.length - 1; i++) {
+    km += haversineDistance(points[i], points[i + 1])
+  }
+
+  if (!Number.isFinite(km) || km <= 0) return null
+  const sec = (km / AVG_SPEED_KMH) * 3600
+  return Number.isFinite(sec) && sec > 0 ? sec : null
 }
 
 function nearestNeighborByDistance(start: LatLng | null, stops: RouteStop[]): string[] {
@@ -166,7 +182,7 @@ async function processRoute(route: RouteInput, apiKey: string | null): Promise<R
   )
 
   if (validStops.length === 0) {
-    return { containerId: route.containerId, orderedOrderIds: [], polyline: [], source: 'none' }
+    return { containerId: route.containerId, orderedOrderIds: [], polyline: [], durationSec: null, source: 'none' }
   }
 
   const start = isLatLng(route.startPoint) ? route.startPoint : null
@@ -181,10 +197,12 @@ async function processRoute(route: RouteInput, apiKey: string | null): Promise<R
   }
 
   if (!apiKey) {
+    const durationSec = estimateDurationSecFromPoints(fallbackPoints)
     return {
       containerId: route.containerId,
       orderedOrderIds: fallbackOrder,
       polyline: fallbackPoints,
+      durationSec,
       source: 'fallback',
     }
   }
@@ -192,12 +210,19 @@ async function processRoute(route: RouteInput, apiKey: string | null): Promise<R
   try {
     const matrixLocations = (start ? [start] : []).concat(validStops.map((s) => ({ lat: s.lat, lng: s.lng })))
     let orderedStopIndices: number[] = []
+    let durationSecFromMatrix: number | null = null
 
     if (matrixLocations.length <= 1) {
       orderedStopIndices = [0]
     } else {
       const matrix = await fetchOrsMatrix(apiKey, matrixLocations)
       if (!matrix) throw new Error('Invalid matrix payload')
+
+      // Compute duration for the chosen path using matrix durations (seconds).
+      const toMatrixIndexSequence = (stopIndices: number[]): number[] => {
+        if (start) return [0, ...stopIndices.map((i) => i + 1)]
+        return stopIndices
+      }
 
       if (start) {
         const candidates = Array.from({ length: validStops.length }, (_, i) => i + 1)
@@ -210,6 +235,24 @@ async function processRoute(route: RouteInput, apiKey: string | null): Promise<R
           const candidates = Array.from({ length: stopCount - 1 }, (_, i) => i + 1)
           orderedStopIndices = [0, ...nearestNeighborByMatrix(matrix, 0, candidates)]
         }
+      }
+
+      const seq = toMatrixIndexSequence(orderedStopIndices)
+      if (seq.length >= 2) {
+        let total = 0
+        let ok = true
+        for (let i = 0; i < seq.length - 1; i++) {
+          const a = seq[i]
+          const b = seq[i + 1]
+          const row = matrix[a]
+          const cost = Array.isArray(row) ? row[b] : undefined
+          if (typeof cost !== 'number' || !Number.isFinite(cost) || cost < 0) {
+            ok = false
+            break
+          }
+          total += cost
+        }
+        durationSecFromMatrix = ok && Number.isFinite(total) ? total : null
       }
     }
 
@@ -228,13 +271,16 @@ async function processRoute(route: RouteInput, apiKey: string | null): Promise<R
       containerId: route.containerId,
       orderedOrderIds,
       polyline: roadPolyline ?? routePoints,
+      durationSec: durationSecFromMatrix ?? estimateDurationSecFromPoints(roadPolyline ?? routePoints),
       source: 'ors',
     }
   } catch {
+    const durationSec = estimateDurationSecFromPoints(fallbackPoints)
     return {
       containerId: route.containerId,
       orderedOrderIds: fallbackOrder,
       polyline: fallbackPoints,
+      durationSec,
       source: 'fallback',
     }
   }

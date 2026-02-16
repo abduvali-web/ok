@@ -218,6 +218,7 @@ export function DispatchMapPanel({
   const [containers, setContainers] = useState<Record<ContainerId, string[]>>({})
   const [orderNumberById, setOrderNumberById] = useState<Record<string, number>>({})
   const [coordsById, setCoordsById] = useState<Record<string, LatLng | null | undefined>>({})
+  const [routeStatsByContainer, setRouteStatsByContainer] = useState<Record<string, { durationSec: number | null; source: string }>>({})
   const [activeId, setActiveId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [search, setSearch] = useState('')
@@ -499,6 +500,7 @@ export function DispatchMapPanel({
     }
 
     let roadPolylinesNext: Record<string, LatLng[]> = {}
+    let statsNext: Record<string, { durationSec: number | null; source: string }> = {}
     let usedServerOptimization = false
 
     if (routeRequests.length > 0) {
@@ -518,6 +520,14 @@ export function DispatchMapPanel({
             const withCoords = withCoordsByContainer[containerId] || []
             const withoutCoords = withoutCoordsByContainer[containerId] || []
             const allowed = new Set(withCoords.map((w) => w.id))
+
+            if (route) {
+              const durationSec = typeof route.durationSec === 'number' && Number.isFinite(route.durationSec) ? route.durationSec : null
+              const source = typeof route.source === 'string' ? route.source : 'unknown'
+              statsNext[containerId] = { durationSec, source }
+            } else {
+              statsNext[containerId] = { durationSec: null, source: 'none' }
+            }
 
             if (route && Array.isArray(route.orderedOrderIds)) {
               const ordered = route.orderedOrderIds
@@ -552,20 +562,38 @@ export function DispatchMapPanel({
 
     if (!usedServerOptimization) {
       roadPolylinesNext = {}
+      statsNext = {}
       for (const containerId of Object.keys(nextContainers)) {
         const withCoords = withCoordsByContainer[containerId] || []
         const withoutCoords = withoutCoordsByContainer[containerId] || []
-        if (withCoords.length === 0) continue
+        if (withCoords.length === 0) {
+          statsNext[containerId] = { durationSec: null, source: 'none' }
+          continue
+        }
         const startPoint = courierStartById.get(containerId) ?? warehousePoint
         const orderedWithCoords = startPoint
           ? optimizeNearestNeighbor(startPoint, withCoords)
           : withCoords.map((w) => w.id)
         nextContainers[containerId] = [...orderedWithCoords, ...withoutCoords]
+
+        const line: LatLng[] = []
+        if (startPoint) line.push(startPoint)
+        for (const id of orderedWithCoords) {
+          const c = coordsById[id]
+          if (c) line.push(c)
+        }
+        const totalKm = line.reduce((acc, cur, idx) => {
+          if (idx === 0) return 0
+          return acc + haversineDistance(line[idx - 1], cur)
+        }, 0)
+        const durationSec = Number.isFinite(totalKm) && totalKm > 0 ? (totalKm / 25) * 3600 : null
+        statsNext[containerId] = { durationSec, source: 'fallback' }
       }
     }
 
     setContainers(nextContainers)
     setRoadPolylineByContainer(roadPolylinesNext)
+    setRouteStatsByContainer(statsNext)
     setOrderNumberById((prevNumbers) => {
       let numbersNext: Record<string, number | undefined> = { ...prevNumbers }
       for (const containerId of Object.keys(nextContainers)) {
@@ -774,6 +802,10 @@ export function DispatchMapPanel({
                 const color = isUnassigned ? '#94A3B8' : getCourierColor(containerId)
                 const ids = containers[containerId] || []
                 const visibleIds = filteredOrderIds ? ids.filter((id) => filteredOrderIds.has(id)) : ids
+                const stats = routeStatsByContainer[containerId]
+                const durationSec = stats?.durationSec
+                const durationMin = typeof durationSec === 'number' && Number.isFinite(durationSec) ? Math.max(1, Math.round(durationSec / 60)) : null
+                const approx = stats?.source && stats.source !== 'ors'
 
                 return (
                   <DroppableColumn key={containerId} id={containerId}>
@@ -783,6 +815,11 @@ export function DispatchMapPanel({
                           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
                           <div className="font-semibold text-sm truncate">{name}</div>
                           <Badge variant="outline" className="text-[10px]">{ids.length}</Badge>
+                          {durationMin != null && (
+                            <Badge variant="secondary" className="text-[10px]">
+                              {approx ? '≈' : ''}{durationMin} min
+                            </Badge>
+                          )}
                         </div>
                       </div>
 
