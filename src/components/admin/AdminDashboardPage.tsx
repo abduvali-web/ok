@@ -498,15 +498,34 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     }
   }
 
+  const extractAnyUrl = (input: string): string | null => {
+    if (!input) return null
+    const match = input.match(/https?:\/\/[^\s)]+/i)
+    return match ? match[0] : null
+  }
+
+  const isGoogleMapsLikeUrl = (url: string): boolean => {
+    if (!url) return false
+    const u = url.toLowerCase()
+    return (
+      u.includes('google.com/maps') ||
+      u.includes('maps.google.com') ||
+      u.includes('maps.app.goo.gl') ||
+      u.includes('goo.gl/maps')
+    )
+  }
+
   const parseGoogleMapsUrl = async (url: string): Promise<string | null> => {
     if (!url) return null
 
     let finalUrl = url
+    const inlineUrl = extractAnyUrl(url)
+    const candidateUrl = inlineUrl && isGoogleMapsLikeUrl(inlineUrl) ? inlineUrl : url
 
     // Handle short links
-    if (isShortGoogleMapsUrl(url)) {
+    if (isShortGoogleMapsUrl(candidateUrl)) {
       try {
-        const response = await fetch(`/api/admin/expand-url?url=${encodeURIComponent(url)}`)
+        const response = await fetch(`/api/admin/expand-url?url=${encodeURIComponent(candidateUrl)}`)
         if (response.ok) {
           const data = await response.json()
           if (data.expandedUrl) {
@@ -516,10 +535,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       } catch (error) {
         console.error('Error expanding URL:', error)
       }
+    } else {
+      finalUrl = candidateUrl
     }
 
     try {
-      const coords = extractCoordsFromText(finalUrl) ?? extractCoordsFromText(url)
+      const coords = extractCoordsFromText(finalUrl) ?? extractCoordsFromText(candidateUrl) ?? extractCoordsFromText(url)
       if (!coords) return null
       return `${coords.lat}, ${coords.lng}`
     } catch (error) {

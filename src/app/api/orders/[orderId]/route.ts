@@ -185,6 +185,8 @@ export async function PATCH(
         }
 
         const hasAssignedSetId = Object.prototype.hasOwnProperty.call(body, 'assignedSetId')
+        const hasLatitude = Object.prototype.hasOwnProperty.call(body, 'latitude')
+        const hasLongitude = Object.prototype.hasOwnProperty.call(body, 'longitude')
         const {
           customerName: _customerName,
           customerPhone: _customerPhone,
@@ -198,6 +200,8 @@ export async function PATCH(
           isPrepaid,
           date,
           courierId,
+          latitude,
+          longitude,
           assignedSetId: rawAssignedSetId
         } = body
 
@@ -245,6 +249,32 @@ export async function PATCH(
           return NextResponse.json({ error: 'Неверный формат даты' }, { status: 400 })
         }
 
+        let sanitizedLatitude: number | null | undefined
+        if (hasLatitude) {
+          if (latitude === '' || latitude === null || latitude === 'null') {
+            sanitizedLatitude = null
+          } else {
+            const lat = parseFloat(String(latitude))
+            if (isNaN(lat) || lat < -90 || lat > 90) {
+              return NextResponse.json({ error: 'Invalid latitude coordinates format' }, { status: 400 })
+            }
+            sanitizedLatitude = lat
+          }
+        }
+
+        let sanitizedLongitude: number | null | undefined
+        if (hasLongitude) {
+          if (longitude === '' || longitude === null || longitude === 'null') {
+            sanitizedLongitude = null
+          } else {
+            const lng = parseFloat(String(longitude))
+            if (isNaN(lng) || lng < -180 || lng > 180) {
+              return NextResponse.json({ error: 'Invalid longitude coordinates format' }, { status: 400 })
+            }
+            sanitizedLongitude = lng
+          }
+        }
+
         // Update customer info if name/phone changed and it's a manual order or we want to update the linked customer
         // For now, we'll just update the order fields. Updating the customer entity is a separate concern.
 
@@ -259,7 +289,9 @@ export async function PATCH(
           paymentMethod,
           isPrepaid,
           deliveryDate: date ? new Date(date) : undefined,
-          courierId: (courierId === 'null' || courierId === '') ? null : courierId
+          courierId: (courierId === 'null' || courierId === '') ? null : courierId,
+          ...(hasLatitude ? { latitude: sanitizedLatitude } : {}),
+          ...(hasLongitude ? { longitude: sanitizedLongitude } : {})
         }
         break
       default:

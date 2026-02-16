@@ -286,11 +286,6 @@ export function DispatchMapPanel({
     const toExpand: Array<{ id: string; url: string }> = []
 
     for (const o of safeOrders) {
-      if (typeof o.latitude === 'number' && typeof o.longitude === 'number') {
-        base[o.id] = { lat: o.latitude, lng: o.longitude }
-        continue
-      }
-
       const raw = o.deliveryAddress || ''
       const parsed = extractCoordsFromText(raw)
       if (parsed) {
@@ -314,6 +309,11 @@ export function DispatchMapPanel({
           base[o.id] = null
           toExpand.push({ id: o.id, url: anyUrl })
         }
+        continue
+      }
+
+      if (typeof o.latitude === 'number' && typeof o.longitude === 'number') {
+        base[o.id] = { lat: o.latitude, lng: o.longitude }
         continue
       }
 
