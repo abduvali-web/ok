@@ -78,7 +78,7 @@ async function createAutoOrdersForClient(client: any, startDate: Date, endDate: 
                 specialFeatures: client.preferences,
                 paymentStatus: PaymentStatus.UNPAID,
                 paymentMethod: PaymentMethod.CASH,
-                orderStatus: OrderStatus.PENDING,
+                orderStatus: OrderStatus.NEW,
                 isPrepaid: false,
               },
               include: {

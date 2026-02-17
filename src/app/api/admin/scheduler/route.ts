@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
               paymentStatus: PaymentStatus.UNPAID,
               paymentMethod: PaymentMethod.CASH,
               isPrepaid: false,
-              orderStatus: OrderStatus.PENDING,
+              orderStatus: OrderStatus.NEW,
               fromAutoOrder: true,
               courierId: client.defaultCourierId || null
             }

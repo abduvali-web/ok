@@ -252,17 +252,27 @@ export function DispatchMapPanel({
 
   const isDayActiveDerived = useMemo(() => {
     if (safeOrders.length === 0) return false
+    if (!selectedDateISO) return false
+    const todayISO = new Date().toISOString().split('T')[0]
+    if (selectedDateISO !== todayISO) return false
     return safeOrders.some((o) => {
       const status = String((o as any)?.orderStatus ?? '')
-      return status !== 'NEW' && status !== 'IN_PROCESS'
+      const hasCourier = !!(o as any)?.courierId
+      return hasCourier && status !== 'NEW' && status !== 'IN_PROCESS'
     })
-  }, [safeOrders])
+  }, [safeOrders, selectedDateISO])
 
   const isDayActive = isDayActiveOverride ?? isDayActiveDerived
 
   useEffect(() => {
     if (open) setIsDayActiveOverride(null)
   }, [open])
+
+  const isTodaySelected = useMemo(() => {
+    if (!selectedDateISO) return false
+    const todayISO = new Date().toISOString().split('T')[0]
+    return selectedDateISO === todayISO
+  }, [selectedDateISO])
 
   const allContainerIds = useMemo<ContainerId[]>(() => {
     const base = safeCouriers.map((c) => c.id)
@@ -821,7 +831,16 @@ export function DispatchMapPanel({
       }
       return
     }
-    await startDay()
+    if (isTodaySelected) {
+      await startDay()
+      return
+    }
+
+    try {
+      await saveReorder()
+    } catch {
+      // errors are already surfaced via toast in saveReorder
+    }
   }
 
   return (
@@ -954,18 +973,27 @@ export function DispatchMapPanel({
             </Button>
 
             <Button onClick={() => void primaryAction()} disabled={isSaving || isStarting}>
-              {!isDayActive ? (
-                isStarting ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Play className="w-4 h-4 mr-2" />
-                )
-              ) : isSaving ? (
+              {isSaving || isStarting ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : isDayActive ? (
+                <Save className="w-4 h-4 mr-2" />
+              ) : isTodaySelected ? (
+                <Play className="w-4 h-4 mr-2" />
               ) : (
                 <Save className="w-4 h-4 mr-2" />
               )}
-              {!isDayActive ? (isStarting ? 'Запуск…' : 'Начать') : isSaving ? 'Сохранение…' : 'Сохранить'}
+
+              {isDayActive
+                ? isSaving
+                  ? 'Сохранение…'
+                  : 'Сохранить'
+                : isTodaySelected
+                  ? isStarting
+                    ? 'Запуск…'
+                    : 'Начать'
+                  : isSaving
+                    ? 'Сохранение…'
+                    : 'Сохранить'}
             </Button>
           </div>
         </SheetFooter>

@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
           paymentStatus: 'UNPAID',
           paymentMethod: 'CASH',
           isPrepaid: false,
-          orderStatus: 'PENDING',
+          orderStatus: 'NEW',
         },
         include: { customer: { select: { name: true, phone: true } } }
       })

@@ -367,7 +367,7 @@ export async function POST(request: NextRequest) {
             paymentStatus: (paymentStatus ? String(paymentStatus) : PaymentStatus.UNPAID) as PaymentStatus,
             paymentMethod: (paymentMethod ? String(paymentMethod) : PaymentMethod.CASH) as PaymentMethod,
             isPrepaid: isPrepaid || false,
-            orderStatus: OrderStatus.PENDING,
+            orderStatus: OrderStatus.NEW,
             latitude: sanitizedLatitude,
             longitude: sanitizedLongitude
           },

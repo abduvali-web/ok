@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
                         paymentStatus: 'UNPAID',
                         paymentMethod: 'CASH',
                         isPrepaid: false,
-                        orderStatus: 'PENDING',
+                        orderStatus: 'NEW',
                         fromAutoOrder: true // Mark as auto-generated
                     }
                 })

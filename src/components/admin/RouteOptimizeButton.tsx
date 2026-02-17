@@ -143,7 +143,7 @@ export function RouteOptimizeButton({
                 )}
                 {showLabel && (
                     <span className="ml-2">
-                        {isOptimizing ? 'Оптимизация...' : 'Сортировать'}
+                        {isOptimizing ? 'Оптимизация...' : 'Оптимизировать'}
                     </span>
                 )}
             </Button>

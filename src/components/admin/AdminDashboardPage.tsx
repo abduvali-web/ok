@@ -35,13 +35,13 @@ import {
   Trash2,
   Pause,
   Play,
+  Save,
   Filter,
   ChevronLeft,
   ChevronRight,
   Route,
   CalendarDays,
   MapPin,
-  ArrowUpDown,
   Edit,
   Clock,
   Truck,
@@ -266,14 +266,37 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const isLowAdminView = mode === 'low' || meRole === 'LOW_ADMIN'
   const isWarehouseReadOnly = isLowAdminView
 
+  const isSelectedDateToday = useMemo(() => {
+    if (!selectedDate) return false
+    const todayISO = new Date().toISOString().split('T')[0]
+    const selectedISO = selectedDate.toISOString().split('T')[0]
+    return selectedISO === todayISO
+  }, [selectedDate])
+
   const selectedDayIsActive = useMemo(() => {
     if (!selectedDate) return null
     if (!Array.isArray(orders) || orders.length === 0) return false
+    if (!isSelectedDateToday) return false
     return orders.some((o) => {
       const status = String((o as any)?.orderStatus ?? '')
-      return status !== 'NEW' && status !== 'IN_PROCESS'
+      const hasCourier = !!(o as any)?.courierId
+      return hasCourier && status !== 'NEW' && status !== 'IN_PROCESS'
     })
-  }, [orders, selectedDate])
+  }, [isSelectedDateToday, orders, selectedDate])
+
+  const normalizedOrdersForSelectedDate = useMemo(() => {
+    if (!selectedDate) return orders
+    if (isSelectedDateToday) return orders
+    if (!Array.isArray(orders) || orders.length === 0) return orders
+
+    return orders.map((o) => {
+      const status = String((o as any)?.orderStatus ?? '')
+      if (status === 'PENDING' || status === 'IN_DELIVERY' || status === 'PAUSED') {
+        return { ...o, orderStatus: 'NEW' }
+      }
+      return o
+    })
+  }, [isSelectedDateToday, orders, selectedDate])
 
   const refreshWarehousePoint = async () => {
     setIsWarehouseLoading(true)
@@ -296,6 +319,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   useEffect(() => {
     void refreshWarehousePoint()
+  }, [])
+
+  useEffect(() => {
+    // Ensure future days remain drafts (server-side normalization for legacy data)
+    void fetch('/api/admin/dispatch/normalize-drafts', { method: 'POST' }).catch(() => null)
   }, [])
 
   // Add effect to reset selected clients when filter changes
@@ -1883,20 +1911,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button
-                    variant="outline"
-                    className="h-12 w-full"
-                    onClick={() => {
-                      if (!selectedDate) {
-                        toast.error('Выберите дату')
-                        return
-                      }
-                      setIsDispatchOpen(true)
-                    }}
-                  >
-                    <ArrowUpDown className="w-5 h-5 mr-2" />
-                    Сортировать
-                  </Button>
                   <div className={`grid ${meRole !== 'MIDDLE_ADMIN' ? 'grid-cols-3' : 'grid-cols-2'} gap-2`}>
                     {meRole !== 'MIDDLE_ADMIN' && (
                       <RouteOptimizeButton
@@ -1935,20 +1949,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (!selectedDate) {
-                        toast.error('Выберите дату')
-                        return
-                      }
-                      setIsDispatchOpen(true)
-                    }}
-                  >
-                    <ArrowUpDown className="w-4 h-4 mr-2" />
-                    Сортировать
-                  </Button>
                   {meRole !== 'MIDDLE_ADMIN' && (
                     <RouteOptimizeButton
                       orders={orders.filter(isOrderInOptimizeScope)}
@@ -2249,7 +2249,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 {/* Orders Table */}
                 <div className="rounded-md border">
                   <OrdersTable
-                    orders={orders.filter(order => {
+                    orders={normalizedOrdersForSelectedDate.filter(order => {
                       const searchLower = searchTerm.toLowerCase()
                       return (
                         order.customer?.name.toLowerCase().includes(searchLower) ||
@@ -2271,9 +2271,25 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 </div>
 
                 {/* Table Actions */}
-                <div className="flex justify-between items-center mt-4">
-                  <div className="flex space-x-2">
-                  </div>
+                <div className="flex justify-end items-center mt-4">
+                  <Button
+                    onClick={() => {
+                      if (!selectedDate) {
+                        toast.error('Выберите дату')
+                        return
+                      }
+                      setIsDispatchOpen(true)
+                    }}
+                  >
+                    {selectedDayIsActive ? (
+                      <Save className="w-4 h-4 mr-2" />
+                    ) : isSelectedDateToday ? (
+                      <Play className="w-4 h-4 mr-2" />
+                    ) : (
+                      <Save className="w-4 h-4 mr-2" />
+                    )}
+                    {selectedDayIsActive ? 'Сохранить' : isSelectedDateToday ? 'Начать' : 'Черновик'}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
