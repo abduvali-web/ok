@@ -266,6 +266,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const isLowAdminView = mode === 'low' || meRole === 'LOW_ADMIN'
   const isWarehouseReadOnly = isLowAdminView
 
+  const selectedDayIsActive = useMemo(() => {
+    if (!selectedDate) return null
+    if (!Array.isArray(orders) || orders.length === 0) return false
+    return orders.some((o) => {
+      const status = String((o as any)?.orderStatus ?? '')
+      return status !== 'NEW' && status !== 'IN_PROCESS'
+    })
+  }, [orders, selectedDate])
+
   const refreshWarehousePoint = async () => {
     setIsWarehouseLoading(true)
     try {
@@ -287,7 +296,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   useEffect(() => {
     void refreshWarehousePoint()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Add effect to reset selected clients when filter changes
@@ -2003,13 +2011,20 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 {
                   selectedDate && (
                     <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-sm text-blue-800 text-center">
-                        📅 Показаны заказы за {selectedDate.toLocaleDateString('ru-RU', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric'
-                        })}
-                      </p>
+                      <div className="flex items-center justify-center gap-2 flex-wrap text-sm text-blue-800">
+                        <span>
+                          📅 Показаны заказы за {selectedDate.toLocaleDateString('ru-RU', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                          })}
+                        </span>
+                        {selectedDayIsActive != null && (
+                          <Badge variant={selectedDayIsActive ? 'default' : 'secondary'} className="text-[10px]">
+                            {selectedDayIsActive ? 'Активный' : 'Черновик'}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   )
                 }
@@ -3020,12 +3035,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
           onOpenChange={setIsDispatchOpen}
           orders={orders}
           couriers={couriers}
-          showResortButton={meRole !== 'MIDDLE_ADMIN'}
           selectedDateLabel={
             selectedDate
               ? selectedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
               : 'Все заказы'
           }
+          selectedDateISO={selectedDate ? selectedDate.toISOString().split('T')[0] : undefined}
           warehousePoint={warehousePoint}
           onSaved={fetchData}
         />

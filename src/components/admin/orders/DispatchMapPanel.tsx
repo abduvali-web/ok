@@ -25,7 +25,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { GripVertical, RefreshCw, Save, Route, Users } from 'lucide-react'
+import { GripVertical, Loader2, Play, Save, Route, Users } from 'lucide-react'
 
 const DispatchLeafletMap = dynamic(() => import('./DispatchLeafletMap'), {
   ssr: false,
@@ -198,9 +198,9 @@ export function DispatchMapPanel({
   orders,
   couriers,
   selectedDateLabel,
+  selectedDateISO,
   warehousePoint,
   autoSortOnOpen = true,
-  showResortButton = true,
   onSaved,
 }: {
   open: boolean
@@ -208,9 +208,9 @@ export function DispatchMapPanel({
   orders: Order[]
   couriers: Admin[]
   selectedDateLabel: string
+  selectedDateISO?: string
   warehousePoint: LatLng | null
   autoSortOnOpen?: boolean
-  showResortButton?: boolean
   onSaved: () => void
 }) {
   const safeOrders: Order[] = Array.isArray(orders) ? orders : []
@@ -223,6 +223,8 @@ export function DispatchMapPanel({
   const [routeStatsByContainer, setRouteStatsByContainer] = useState<Record<string, { durationSec: number | null; source: string }>>({})
   const [activeId, setActiveId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [isStarting, setIsStarting] = useState(false)
+  const [isDayActiveOverride, setIsDayActiveOverride] = useState<boolean | null>(null)
   const [search, setSearch] = useState('')
   const [roadPolylineByContainer, setRoadPolylineByContainer] = useState<Record<string, LatLng[]>>({})
 
@@ -247,6 +249,20 @@ export function DispatchMapPanel({
     }
     return m
   }, [safeCouriers])
+
+  const isDayActiveDerived = useMemo(() => {
+    if (safeOrders.length === 0) return false
+    return safeOrders.some((o) => {
+      const status = String((o as any)?.orderStatus ?? '')
+      return status !== 'NEW' && status !== 'IN_PROCESS'
+    })
+  }, [safeOrders])
+
+  const isDayActive = isDayActiveOverride ?? isDayActiveDerived
+
+  useEffect(() => {
+    if (open) setIsDayActiveOverride(null)
+  }, [open])
 
   const allContainerIds = useMemo<ContainerId[]>(() => {
     const base = safeCouriers.map((c) => c.id)
@@ -715,7 +731,13 @@ export function DispatchMapPanel({
     })
   }
 
-  const save = async () => {
+  const saveReorder = async ({
+    closeOnSuccess = true,
+    toastOnSuccess = true,
+  }: {
+    closeOnSuccess?: boolean
+    toastOnSuccess?: boolean
+  } = {}) => {
     const orderIds = Object.values(containers).flat()
     if (orderIds.length === 0) return
 
@@ -740,50 +762,92 @@ export function DispatchMapPanel({
         throw new Error((data && data.error) || 'Ошибка сохранения')
       }
 
-      toast.success('Сохранено')
+      if (toastOnSuccess) toast.success('Сохранено')
       onSaved()
-      onOpenChange(false)
+      if (closeOnSuccess) onOpenChange(false)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Ошибка сохранения')
+      throw error
     } finally {
       setIsSaving(false)
     }
   }
 
+  const startDay = async () => {
+    if (!selectedDateISO) {
+      toast.error('Дата не выбрана')
+      return
+    }
+
+    const unassignedCount = (containers[UNASSIGNED] || []).length
+    if (unassignedCount > 0) {
+      toast.error('Назначьте курьеров всем заказам', { description: `Без курьера: ${unassignedCount}` })
+      return
+    }
+
+    setIsStarting(true)
+    try {
+      await saveReorder({ closeOnSuccess: false, toastOnSuccess: false })
+
+      const res = await fetch('/api/admin/dispatch/start-day', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: selectedDateISO }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        throw new Error((data && data.error) || 'Ошибка запуска')
+      }
+
+      setIsDayActiveOverride(true)
+      toast.success('День начат', {
+        description: `Отправлено курьерам: ${data && typeof data.updatedCount === 'number' ? data.updatedCount : 0}`,
+      })
+      onSaved()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Ошибка запуска')
+    } finally {
+      setIsStarting(false)
+    }
+  }
+
+  const primaryAction = async () => {
+    if (isSaving || isStarting) return
+    if (isDayActive) {
+      try {
+        await saveReorder()
+      } catch {
+        // errors are already surfaced via toast in saveReorder
+      }
+      return
+    }
+    await startDay()
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[95vw] sm:max-w-6xl">
+      <SheetContent side="right" className="w-[95vw] sm:max-w-6xl flex flex-col">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <Route className="w-4 h-4" />
             Карта/Маршруты — {selectedDateLabel}
+            <Badge variant={isDayActive ? 'default' : 'secondary'} className="ml-2 text-[10px]">
+              {isDayActive ? 'Активный' : 'Черновик'}
+            </Badge>
           </SheetTitle>
           <SheetDescription>
             Перетащите заказы между курьерами, изменяйте порядок и номера. Цвет заказа = цвет курьера.
           </SheetDescription>
         </SheetHeader>
 
-        <div className="px-4 flex flex-col gap-3">
+        <div className="px-4 flex-1 overflow-auto flex flex-col gap-3">
           <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
-            <div className="flex gap-2 items-center">
-              <Input
-                placeholder="Поиск (номер, клиент, адрес)…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="sm:w-[320px]"
-              />
-              {showResortButton && (
-                <Button variant="outline" onClick={() => void applyAutoSortAll()}>
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Сортировать заново
-                </Button>
-              )}
-            </div>
-
-            <Button onClick={save} disabled={isSaving}>
-              <Save className="w-4 h-4 mr-2" />
-              {isSaving ? 'Сохранение…' : 'Сохранить'}
-            </Button>
+            <Input
+              placeholder="Поиск (номер, клиент, адрес)…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="sm:w-[320px]"
+            />
           </div>
 
           <Card className="p-2">
@@ -883,10 +947,27 @@ export function DispatchMapPanel({
           )}
         </div>
 
-        <SheetFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
-            Закрыть
-          </Button>
+        <SheetFooter className="border-t px-4 py-3">
+          <div className="w-full flex items-center justify-between gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving || isStarting}>
+              Закрыть
+            </Button>
+
+            <Button onClick={() => void primaryAction()} disabled={isSaving || isStarting}>
+              {!isDayActive ? (
+                isStarting ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Play className="w-4 h-4 mr-2" />
+                )
+              ) : isSaving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              {!isDayActive ? (isStarting ? 'Запуск…' : 'Начать') : isSaving ? 'Сохранение…' : 'Сохранить'}
+            </Button>
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>
