@@ -200,6 +200,7 @@ export function DispatchMapPanel({
   selectedDateLabel,
   warehousePoint,
   autoSortOnOpen = true,
+  showResortButton = true,
   onSaved,
 }: {
   open: boolean
@@ -209,6 +210,7 @@ export function DispatchMapPanel({
   selectedDateLabel: string
   warehousePoint: LatLng | null
   autoSortOnOpen?: boolean
+  showResortButton?: boolean
   onSaved: () => void
 }) {
   const safeOrders: Order[] = Array.isArray(orders) ? orders : []
@@ -770,10 +772,12 @@ export function DispatchMapPanel({
                 onChange={(e) => setSearch(e.target.value)}
                 className="sm:w-[320px]"
               />
-              <Button variant="outline" onClick={() => void applyAutoSortAll()}>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Сортировать заново
-              </Button>
+              {showResortButton && (
+                <Button variant="outline" onClick={() => void applyAutoSortAll()}>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Сортировать заново
+                </Button>
+              )}
             </div>
 
             <Button onClick={save} disabled={isSaving}>

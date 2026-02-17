@@ -3016,6 +3016,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
           onOpenChange={setIsDispatchOpen}
           orders={orders}
           couriers={couriers}
+          showResortButton={meRole !== 'MIDDLE_ADMIN'}
           selectedDateLabel={
             selectedDate
               ? selectedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
