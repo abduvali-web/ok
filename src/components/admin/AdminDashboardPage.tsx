@@ -1889,13 +1889,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     <ArrowUpDown className="w-5 h-5 mr-2" />
                     Сортировать
                   </Button>
-                  <div className="grid grid-cols-3 gap-2">
-                    <RouteOptimizeButton
-                      orders={orders.filter(isOrderInOptimizeScope)}
-                      onOptimized={applyOptimizedOrdering}
-                      startPoint={warehousePoint ?? undefined}
-                      variant="outline"
-                    />
+                  <div className={`grid ${meRole !== 'MIDDLE_ADMIN' ? 'grid-cols-3' : 'grid-cols-2'} gap-2`}>
+                    {meRole !== 'MIDDLE_ADMIN' && (
+                      <RouteOptimizeButton
+                        orders={orders.filter(isOrderInOptimizeScope)}
+                        onOptimized={applyOptimizedOrdering}
+                        startPoint={warehousePoint ?? undefined}
+                        variant="outline"
+                      />
+                    )}
                     <Button variant="outline" className="h-12 w-full" onClick={() => setIsBulkEditOrdersModalOpen(true)} disabled={selectedOrders.size === 0}>
                       <Edit className="w-5 h-5" />
                     </Button>
@@ -1939,13 +1941,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     <ArrowUpDown className="w-4 h-4 mr-2" />
                     Сортировать
                   </Button>
-                  <RouteOptimizeButton
-                    orders={orders.filter(isOrderInOptimizeScope)}
-                    onOptimized={applyOptimizedOrdering}
-                    startPoint={warehousePoint ?? undefined}
-                    variant="outline"
-                    size="sm"
-                  />
+                  {meRole !== 'MIDDLE_ADMIN' && (
+                    <RouteOptimizeButton
+                      orders={orders.filter(isOrderInOptimizeScope)}
+                      onOptimized={applyOptimizedOrdering}
+                      startPoint={warehousePoint ?? undefined}
+                      variant="outline"
+                      size="sm"
+                    />
+                  )}
                   <Button variant="outline" size="sm" onClick={() => setIsBulkEditOrdersModalOpen(true)}>
                     <Edit className="w-4 h-4 mr-2" />
                     Редактировать ({selectedOrders.size})
