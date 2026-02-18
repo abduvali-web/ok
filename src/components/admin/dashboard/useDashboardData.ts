@@ -31,6 +31,7 @@ export function useDashboardData({
   const [stats, setStats] = useState<Stats | null>(null)
 
   const abortRef = useRef<AbortController | null>(null)
+  const didInitialRefreshRef = useRef(false)
 
   const loadMe = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -151,7 +152,17 @@ export function useDashboardData({
   }, [loadMe])
 
   useEffect(() => {
-    refreshAll()
+    if (!didInitialRefreshRef.current) {
+      didInitialRefreshRef.current = true
+      refreshAll()
+      return
+    }
+
+    const timer = setTimeout(() => {
+      refreshAll()
+    }, 220)
+
+    return () => clearTimeout(timer)
   }, [refreshAll])
 
   return {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useEffect } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
@@ -99,11 +99,41 @@ const RouteOptimizeButton = dynamic(
 )
 export type AdminDashboardMode = 'middle' | 'low'
 
+const DASHBOARD_UI_STORAGE_PREFIX = 'autofood:dashboard-ui'
+
+const DEFAULT_ORDER_FILTERS = {
+  successful: false,
+  failed: false,
+  pending: false,
+  inDelivery: false,
+  prepaid: false,
+  paid: false,
+  unpaid: false,
+  card: false,
+  cash: false,
+  daily: false,
+  evenDay: false,
+  oddDay: false,
+  special: false,
+  calories1200: false,
+  calories1600: false,
+  calories2000: false,
+  calories2500: false,
+  calories3000: false,
+  singleItem: false,
+  multiItem: false,
+  autoOrders: false,
+  manualOrders: false,
+}
+
 export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const { t, language } = useLanguage()
+  const searchInputRef = useRef<HTMLInputElement | null>(null)
   const [activeTab, setActiveTab] = useState('statistics')
   const [currentDate, setCurrentDate] = useState('')
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => (mode === 'middle' ? new Date() : null))
+  const [dateCursor, setDateCursor] = useState<Date>(() => new Date())
+  const [isUiStateHydrated, setIsUiStateHydrated] = useState(false)
   const [isDispatchOpen, setIsDispatchOpen] = useState(false)
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set())
   const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set())
@@ -213,30 +243,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   }, [])
   const [courierError, setCourierError] = useState('')
   const [clientError, setClientError] = useState('')
-  const [filters, setFilters] = useState({
-    successful: false,
-    failed: false,
-    pending: false,
-    inDelivery: false,
-    prepaid: false,
-    paid: false,
-    unpaid: false,
-    card: false,
-    cash: false,
-    daily: false,
-    evenDay: false,
-    oddDay: false,
-    special: false,
-    calories1200: false,
-    calories1600: false,
-    calories2000: false,
-    calories2500: false,
-    calories3000: false,
-    singleItem: false,
-    multiItem: false,
-    autoOrders: false,
-    manualOrders: false
-  })
+  const [filters, setFilters] = useState({ ...DEFAULT_ORDER_FILTERS })
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedBinClients, setSelectedBinClients] = useState<Set<string>>(new Set())
 
@@ -263,8 +270,13 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const fetchBinOrders = () => refreshBinOrders()
 
   const visibleTabs = useMemo(() => deriveVisibleTabs(allowedTabs), [allowedTabs])
+  const uiStateStorageKey = useMemo(() => `${DASHBOARD_UI_STORAGE_PREFIX}:${mode}`, [mode])
   const isLowAdminView = mode === 'low' || meRole === 'LOW_ADMIN'
   const isWarehouseReadOnly = isLowAdminView
+  const activeFiltersCount = useMemo(
+    () => Object.values(filters).reduce((count, value) => count + (value ? 1 : 0), 0),
+    [filters]
+  )
 
   const isSelectedDateToday = useMemo(() => {
     if (!selectedDate) return false
@@ -298,6 +310,27 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     })
   }, [isSelectedDateToday, orders, selectedDate])
 
+  const filteredOrders = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase()
+    if (!normalizedSearch) return normalizedOrdersForSelectedDate
+
+    return normalizedOrdersForSelectedDate.filter((order) => {
+      const customerName = (order.customer?.name || order.customerName || '').toLowerCase()
+      const deliveryAddress = (order.deliveryAddress || '').toLowerCase()
+      const orderNumber = String(order.orderNumber ?? '')
+
+      return (
+        customerName.includes(normalizedSearch) ||
+        deliveryAddress.includes(normalizedSearch) ||
+        orderNumber.includes(normalizedSearch)
+      )
+    })
+  }, [normalizedOrdersForSelectedDate, searchTerm])
+
+  const clearOrderFilters = useCallback(() => {
+    setFilters({ ...DEFAULT_ORDER_FILTERS })
+  }, [])
+
   const refreshWarehousePoint = async () => {
     setIsWarehouseLoading(true)
     try {
@@ -330,6 +363,126 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   useEffect(() => {
     setSelectedClients(new Set())
   }, [clientStatusFilter])
+
+  useEffect(() => {
+    if (isUiStateHydrated || typeof window === 'undefined') return
+
+    try {
+      const rawState = localStorage.getItem(uiStateStorageKey)
+      if (!rawState) {
+        setIsUiStateHydrated(true)
+        return
+      }
+
+      const state = JSON.parse(rawState) as {
+        activeTab?: string
+        selectedDateISO?: string | null
+        showFilters?: boolean
+        searchTerm?: string
+        optimizeCourierId?: string
+        clientStatusFilter?: 'all' | 'active' | 'inactive'
+      }
+
+      if (typeof state.activeTab === 'string') setActiveTab(state.activeTab)
+      if (typeof state.showFilters === 'boolean') setShowFilters(state.showFilters)
+      if (typeof state.searchTerm === 'string') setSearchTerm(state.searchTerm.slice(0, 160))
+      if (typeof state.optimizeCourierId === 'string') setOptimizeCourierId(state.optimizeCourierId)
+      if (state.clientStatusFilter === 'all' || state.clientStatusFilter === 'active' || state.clientStatusFilter === 'inactive') {
+        setClientStatusFilter(state.clientStatusFilter)
+      }
+      if (state.selectedDateISO === null) {
+        setSelectedDate(null)
+        setDateCursor(new Date())
+      } else if (typeof state.selectedDateISO === 'string') {
+        const restoredDate = new Date(state.selectedDateISO)
+        if (!Number.isNaN(restoredDate.getTime())) {
+          setSelectedDate(restoredDate)
+          setDateCursor(restoredDate)
+        }
+      }
+    } catch (error) {
+      console.error('Unable to restore dashboard UI state:', error)
+    } finally {
+      setIsUiStateHydrated(true)
+    }
+  }, [isUiStateHydrated, uiStateStorageKey])
+
+  useEffect(() => {
+    if (!isUiStateHydrated || typeof window === 'undefined') return
+
+    localStorage.setItem(
+      uiStateStorageKey,
+      JSON.stringify({
+        activeTab,
+        selectedDateISO: selectedDate ? selectedDate.toISOString().split('T')[0] : null,
+        showFilters,
+        searchTerm,
+        optimizeCourierId,
+        clientStatusFilter,
+      })
+    )
+  }, [
+    activeTab,
+    clientStatusFilter,
+    isUiStateHydrated,
+    optimizeCourierId,
+    searchTerm,
+    selectedDate,
+    showFilters,
+    uiStateStorageKey,
+  ])
+
+  useEffect(() => {
+    if (selectedDate) setDateCursor(selectedDate)
+  }, [selectedDate])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return
+
+      const target = event.target as HTMLElement | null
+      const tagName = target?.tagName
+      const isEditable = !!target && (target.isContentEditable || tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT')
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k' && activeTab === 'orders') {
+        event.preventDefault()
+        searchInputRef.current?.focus()
+        searchInputRef.current?.select()
+        return
+      }
+
+      if (event.key === '/' && !isEditable && activeTab === 'orders') {
+        event.preventDefault()
+        searchInputRef.current?.focus()
+        return
+      }
+
+      if (event.key === 'Escape') {
+        if (showFilters) {
+          setShowFilters(false)
+          event.preventDefault()
+          return
+        }
+        if (activeTab === 'orders' && searchTerm) {
+          setSearchTerm('')
+          event.preventDefault()
+        }
+      }
+
+      if (event.altKey && !event.shiftKey && !event.ctrlKey && !event.metaKey && /^[1-9]$/.test(event.key)) {
+        const tab = visibleTabs[Number(event.key) - 1]
+        if (tab) {
+          event.preventDefault()
+          setActiveTab(tab)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [activeTab, searchTerm, showFilters, visibleTabs])
 
   useEffect(() => {
     if (visibleTabs.length === 0) return
@@ -1498,9 +1651,18 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     }
   }
 
+  const shiftDateWindow = (offsetDays: number) => {
+    setDateCursor((prev) => {
+      const baseDate = selectedDate ?? prev
+      const nextDate = new Date(baseDate)
+      nextDate.setDate(baseDate.getDate() + offsetDays)
+      return nextDate
+    })
+  }
+
   const getDateRange = () => {
     const dates: Date[] = []
-    const today = selectedDate || new Date()
+    const today = dateCursor
 
     for (let i = -4; i <= 5; i++) {
       const date = new Date(today)
@@ -1621,6 +1783,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
           <p className="text-muted-foreground">
             {t.admin.dashboardSubtitle}
           </p>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <Badge variant="outline" className="font-mono">Alt+1..9 tabs</Badge>
+            <Badge variant="outline" className="font-mono">Ctrl/Cmd+K search</Badge>
+            <Badge variant="outline" className="font-mono">/ focus search</Badge>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -1972,12 +2139,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setSelectedDate(null)}
+                    onClick={() => {
+                      setSelectedDate(null)
+                      setDateCursor(new Date())
+                    }}
                     className={!selectedDate ? "bg-primary text-primary-foreground" : ""}
                   >
                     Все заказы
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => shiftDateWindow(-7)} aria-label="Previous days">
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
                   <div className="flex space-x-1">
@@ -1987,13 +2157,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         variant={selectedDate && date.toDateString() === selectedDate.toDateString() ? "default" : "outline"}
                         size="sm"
                         className="w-10 h-10 p-0"
-                        onClick={() => setSelectedDate(date)}
+                        onClick={() => {
+                          setSelectedDate(date)
+                          setDateCursor(date)
+                        }}
                       >
                         {date.getDate()}
                       </Button>
                     ))}
                   </div>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => shiftDateWindow(7)} aria-label="Next days">
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                   <Button
@@ -2004,7 +2177,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   >
                     <Filter className="w-4 h-4 mr-2" />
                     {t.admin.filters}
+                    {activeFiltersCount > 0 && (
+                      <Badge variant="secondary" className="ml-2 text-[10px]">
+                        {activeFiltersCount}
+                      </Badge>
+                    )}
                   </Button>
+                  {activeFiltersCount > 0 && (
+                    <Button variant="ghost" size="sm" onClick={clearOrderFilters}>
+                      Clear
+                    </Button>
+                  )}
                 </div>
 
                 {/* Selected Date Indicator */}
@@ -2238,6 +2421,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 {/* Order Search */}
                 <div className="mb-4 relative">
                   <Input
+                    ref={searchInputRef}
                     placeholder="Поиск по имени, адресу или номеру заказа..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -2246,18 +2430,20 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   <Filter className="w-5 h-5 absolute left-3 top-2.5 text-slate-400 pointer-events-none" />
                 </div>
 
+                <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <Badge variant="outline">Visible: {filteredOrders.length}</Badge>
+                  {selectedOrders.size > 0 && <Badge variant="outline">Selected: {selectedOrders.size}</Badge>}
+                  {searchTerm && (
+                    <Button variant="ghost" size="sm" onClick={() => setSearchTerm('')} className="h-7 px-2">
+                      Clear search
+                    </Button>
+                  )}
+                </div>
+
                 {/* Orders Table */}
                 <div className="rounded-md border">
                   <OrdersTable
-                    orders={normalizedOrdersForSelectedDate.filter(order => {
-                      const searchLower = searchTerm.toLowerCase()
-                      return (
-                        order.customer?.name.toLowerCase().includes(searchLower) ||
-                        order.customerName?.toLowerCase().includes(searchLower) ||
-                        order.deliveryAddress.toLowerCase().includes(searchLower) ||
-                        order.orderNumber.toString().includes(searchLower)
-                      )
-                    })}
+                    orders={filteredOrders}
                     selectedOrders={selectedOrders}
                     onSelectOrder={handleOrderSelect}
                     onSelectAll={handleSelectAllOrders}
