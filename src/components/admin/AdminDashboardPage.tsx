@@ -37,6 +37,7 @@ import {
   Play,
   Save,
   Filter,
+  Search,
   ChevronLeft,
   ChevronRight,
   Route,
@@ -1678,6 +1679,28 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     return dates
   }
 
+  const DispatchActionIcon = !selectedDate
+    ? CalendarDays
+    : selectedDayIsActive
+      ? Save
+      : isSelectedDateToday
+        ? Play
+        : Save
+  const dispatchActionLabel = !selectedDate
+    ? 'Choose date'
+    : selectedDayIsActive
+      ? 'Save'
+      : isSelectedDateToday
+        ? 'Start'
+        : 'Draft'
+  const dispatchActionHint = !selectedDate
+    ? 'Pick a day first to enable dispatch'
+    : selectedDayIsActive
+      ? 'Save updates for the active day'
+      : isSelectedDateToday
+        ? 'Start delivery flow for today'
+        : 'Store selected day as draft'
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'DELIVERED': return 'bg-green-500'
@@ -1918,159 +1941,173 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 </div>
               </CardHeader>
               <CardContent>
-                {/* Mobile Actions - Compact */}
-                <div className="md:hidden flex flex-col gap-3 mb-4">
-                  <Button onClick={() => setIsCreateOrderModalOpen(true)} className="w-full h-12 text-base font-semibold shadow-md">
-                    <Plus className="w-5 h-5 mr-2" />
-                    Создать заказ
-                  </Button>
-                  <Select value={optimizeCourierId} onValueChange={setOptimizeCourierId}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Все курьеры" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Все курьеры</SelectItem>
-                      <SelectItem value="unassigned">Без курьера</SelectItem>
-                      {couriers.map((courier) => (
-                        <SelectItem key={courier.id} value={courier.id}>
-                          {courier.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className={`grid ${meRole !== 'MIDDLE_ADMIN' ? 'grid-cols-3' : 'grid-cols-2'} gap-2`}>
-                    {meRole !== 'MIDDLE_ADMIN' && (
-                      <RouteOptimizeButton
-                        orders={orders.filter(isOrderInOptimizeScope)}
-                        onOptimized={applyOptimizedOrdering}
-                        startPoint={warehousePoint ?? undefined}
-                        variant="outline"
-                      />
-                    )}
-                    <Button variant="outline" className="h-12 w-full" onClick={() => setIsBulkEditOrdersModalOpen(true)} disabled={selectedOrders.size === 0}>
-                      <Edit className="w-5 h-5" />
-                    </Button>
-                    <Button variant="outline" className="h-12 w-full border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-900" onClick={handleDeleteSelectedOrders} disabled={selectedOrders.size === 0}>
-                      <Trash2 className="w-5 h-5 text-red-500" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Desktop Actions */}
-                <div className="hidden md:flex flex-wrap items-center gap-2">
-                  <Button onClick={() => setIsCreateOrderModalOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Создать заказ
-                  </Button>
-                  <Select value={optimizeCourierId} onValueChange={setOptimizeCourierId}>
-                    <SelectTrigger className="w-[220px]">
-                      <SelectValue placeholder="Все курьеры" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Все курьеры</SelectItem>
-                      <SelectItem value="unassigned">Без курьера</SelectItem>
-                      {couriers.map((courier) => (
-                        <SelectItem key={courier.id} value={courier.id}>
-                          {courier.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {meRole !== 'MIDDLE_ADMIN' && (
-                    <RouteOptimizeButton
-                      orders={orders.filter(isOrderInOptimizeScope)}
-                      onOptimized={applyOptimizedOrdering}
-                      startPoint={warehousePoint ?? undefined}
-                      variant="outline"
-                      size="sm"
-                    />
-                  )}
-                  <Button variant="outline" size="sm" onClick={() => setIsBulkEditOrdersModalOpen(true)}>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Редактировать ({selectedOrders.size})
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleDeleteSelectedOrders}>
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Удалить выбранные ({selectedOrders.size})
-                  </Button>
-                </div>
-                {/* Date Selector */}
-                <div className="flex items-center justify-center mb-6 space-x-2 overflow-x-auto py-2 mobile-scroll-container">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedDate(null)
-                      setDateCursor(new Date())
-                    }}
-                    className={!selectedDate ? "bg-primary text-primary-foreground" : ""}
-                  >
-                    Все заказы
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => shiftDateWindow(-7)} aria-label="Previous days">
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <div className="flex space-x-1">
-                    {getDateRange().map((date, index) => (
-                      <Button
-                        key={index}
-                        variant={selectedDate && date.toDateString() === selectedDate.toDateString() ? "default" : "outline"}
-                        size="sm"
-                        className="w-10 h-10 p-0"
-                        onClick={() => {
-                          setSelectedDate(date)
-                          setDateCursor(date)
-                        }}
-                      >
-                        {date.getDate()}
+                {/* Unified action panel */}
+                <div className="mb-4 space-y-3 rounded-2xl border border-border/70 bg-muted/20 p-3 md:p-4">
+                  <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button onClick={() => setIsCreateOrderModalOpen(true)} className="h-10 gap-2 rounded-xl px-4">
+                        <Plus className="w-4 h-4" />
+                        {t.admin.createOrder}
                       </Button>
-                    ))}
+                      <Select value={optimizeCourierId} onValueChange={setOptimizeCourierId}>
+                        <SelectTrigger className="h-10 w-[180px] rounded-xl bg-background md:w-[220px]">
+                          <SelectValue placeholder={t.admin.couriers} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">{t.admin.couriers}</SelectItem>
+                          <SelectItem value="unassigned">Unassigned</SelectItem>
+                          {couriers.map((courier) => (
+                            <SelectItem key={courier.id} value={courier.id}>
+                              {courier.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {meRole !== 'MIDDLE_ADMIN' && (
+                        <div className="min-w-[150px]">
+                          <RouteOptimizeButton
+                            orders={orders.filter(isOrderInOptimizeScope)}
+                            onOptimized={applyOptimizedOrdering}
+                            startPoint={warehousePoint ?? undefined}
+                            variant="outline"
+                            size="sm"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 self-start lg:self-auto">
+                      {selectedOrders.size > 0 && (
+                        <Badge variant="secondary" className="rounded-full px-2.5 py-1 text-[11px] font-semibold">
+                          {selectedOrders.size} selected
+                        </Badge>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-10 rounded-xl px-3 text-xs"
+                        onClick={() => setIsBulkEditOrdersModalOpen(true)}
+                        disabled={selectedOrders.size === 0}
+                      >
+                        <Edit className="w-4 h-4 mr-1.5" />
+                        {t.admin.edit}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-10 rounded-xl border-destructive/40 px-3 text-xs text-destructive hover:bg-destructive/10"
+                        onClick={handleDeleteSelectedOrders}
+                        disabled={selectedOrders.size === 0}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1.5" />
+                        {t.admin.delete}
+                      </Button>
+                    </div>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => shiftDateWindow(7)} aria-label="Next days">
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowFilters(prev => !prev)}
-                    className="whitespace-nowrap"
-                  >
-                    <Filter className="w-4 h-4 mr-2" />
-                    {t.admin.filters}
-                    {activeFiltersCount > 0 && (
-                      <Badge variant="secondary" className="ml-2 text-[10px]">
-                        {activeFiltersCount}
-                      </Badge>
-                    )}
-                  </Button>
-                  {activeFiltersCount > 0 && (
-                    <Button variant="ghost" size="sm" onClick={clearOrderFilters}>
-                      Clear
-                    </Button>
-                  )}
+
+                  <div className="rounded-xl border border-border/60 bg-card/70 p-2.5">
+                    <div className="mobile-scroll-container flex items-center gap-1 overflow-x-auto pb-1">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-10 w-10 shrink-0 rounded-xl"
+                        onClick={() => shiftDateWindow(-7)}
+                        aria-label="Previous days"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant={!selectedDate ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => {
+                          setSelectedDate(null)
+                          setDateCursor(new Date())
+                        }}
+                        className="h-10 shrink-0 rounded-xl px-3 text-xs"
+                      >
+                        {t.admin.all}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const today = new Date()
+                          setSelectedDate(today)
+                          setDateCursor(today)
+                        }}
+                        className={`h-10 shrink-0 rounded-xl px-3 text-xs ${selectedDate && isSelectedDateToday ? 'border-primary/40 bg-primary/10 text-foreground' : ''}`}
+                      >
+                        Today
+                      </Button>
+                      {getDateRange().map((date) => {
+                        const isSelected = !!selectedDate && date.toDateString() === selectedDate.toDateString()
+                        const isToday = date.toDateString() === new Date().toDateString()
+                        return (
+                          <Button
+                            key={date.toISOString()}
+                            variant={isSelected ? 'default' : 'outline'}
+                            size="sm"
+                            className={`h-10 w-10 shrink-0 rounded-xl p-0 text-xs font-semibold ${!isSelected && isToday ? 'border-primary/40 text-foreground' : ''}`}
+                            onClick={() => {
+                              setSelectedDate(date)
+                              setDateCursor(date)
+                            }}
+                          >
+                            {date.getDate()}
+                          </Button>
+                        )
+                      })}
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-10 w-10 shrink-0 rounded-xl"
+                        onClick={() => shiftDateWindow(7)}
+                        aria-label="Next days"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowFilters((prev) => !prev)}
+                        className={`h-10 shrink-0 rounded-xl px-3 text-xs ${showFilters ? 'border-primary/40 bg-primary/10 text-foreground' : ''}`}
+                      >
+                        <Filter className="w-4 h-4 mr-1.5" />
+                        {t.admin.filters}
+                        {activeFiltersCount > 0 && (
+                          <Badge variant="secondary" className="ml-1 rounded-full px-2 text-[10px]">
+                            {activeFiltersCount}
+                          </Badge>
+                        )}
+                      </Button>
+                      {activeFiltersCount > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearOrderFilters}
+                          className="h-10 shrink-0 rounded-xl px-3 text-xs"
+                        >
+                          Reset
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Selected Date Indicator */}
-                {
-                  selectedDate && (
-                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <div className="flex items-center justify-center gap-2 flex-wrap text-sm text-blue-800">
-                        <span>
-                          📅 Показаны заказы за {selectedDate.toLocaleDateString('ru-RU', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
-                          })}
-                        </span>
-                        {selectedDayIsActive != null && (
-                          <Badge variant={selectedDayIsActive ? 'default' : 'secondary'} className="text-[10px]">
-                            {selectedDayIsActive ? 'Активный' : 'Черновик'}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  )
-                }
+                {selectedDate && (
+                  <div className="mb-4 flex flex-wrap items-center justify-center gap-2 rounded-xl border border-border/70 bg-muted/30 px-4 py-2.5 text-sm">
+                    <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="font-medium text-muted-foreground">
+                      {selectedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </span>
+                    {selectedDayIsActive != null && (
+                      <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${selectedDayIsActive ? 'border-emerald-200 bg-emerald-100 text-emerald-700' : 'border-border bg-background text-muted-foreground'}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${selectedDayIsActive ? 'bg-emerald-500' : 'bg-muted-foreground'}`} />
+                        {selectedDayIsActive ? 'Active' : 'Draft'}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Filters Panel */}
                 {
@@ -2287,7 +2324,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
                   />
-                  <Filter className="w-5 h-5 absolute left-3 top-2.5 text-slate-400 pointer-events-none" />
+                  <Search className="w-5 h-5 absolute left-3 top-2.5 text-slate-400 pointer-events-none" />
                 </div>
 
                 <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -2317,25 +2354,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 </div>
 
                 {/* Table Actions */}
-                <div className="flex justify-end items-center mt-4">
+                <div className="mt-4 flex flex-col items-end gap-1.5">
                   <Button
-                    onClick={() => {
-                      if (!selectedDate) {
-                        toast.error('Выберите дату')
-                        return
-                      }
-                      setIsDispatchOpen(true)
-                    }}
+                    onClick={() => setIsDispatchOpen(true)}
+                    disabled={!selectedDate}
+                    className="min-w-[180px] gap-2"
                   >
-                    {selectedDayIsActive ? (
-                      <Save className="w-4 h-4 mr-2" />
-                    ) : isSelectedDateToday ? (
-                      <Play className="w-4 h-4 mr-2" />
-                    ) : (
-                      <Save className="w-4 h-4 mr-2" />
-                    )}
-                    {selectedDayIsActive ? 'Сохранить' : isSelectedDateToday ? 'Начать' : 'Черновик'}
+                    <DispatchActionIcon className="w-4 h-4" />
+                    {dispatchActionLabel}
                   </Button>
+                  <p className="text-[11px] text-muted-foreground">{dispatchActionHint}</p>
                 </div>
               </CardContent>
             </Card>

@@ -81,7 +81,7 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
       <Button
         variant="outline"
         size="icon"
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full border-border/60 bg-card shadow-elevated backdrop-blur-md md:hidden"
+        className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-50 h-12 w-12 rounded-2xl border-border/70 bg-card/95 shadow-elevated backdrop-blur-md md:hidden"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label={isOpen ? 'Close menu' : 'Open menu'}
       >
@@ -132,7 +132,7 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-            className="fixed left-0 top-0 bottom-0 z-50 w-[280px] overflow-y-auto border-r border-border/60 bg-card backdrop-blur-xl md:hidden"
+            className="fixed left-0 top-0 bottom-0 z-50 w-[300px] overflow-y-auto border-r border-border/60 bg-card backdrop-blur-xl md:hidden"
           >
             {/* Header */}
             <div className="sticky top-0 border-b border-border/60 bg-card p-4">
@@ -177,7 +177,7 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
                       setIsOpen(false)
                     }}
                     className={cn(
-                      'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200',
+                      'flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-all duration-200',
                       isActive
                         ? 'bg-muted font-medium text-foreground'
                         : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
