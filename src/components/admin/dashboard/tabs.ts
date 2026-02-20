@@ -20,12 +20,15 @@ export function mapLegacyAllowedTabId(tab: string): string {
 }
 
 export function deriveVisibleTabs(allowedTabs: string[] | null | undefined): string[] {
-  const canonical = new Set<string>(CANONICAL_TABS as unknown as string[])
+  const canonicalTabs = CANONICAL_TABS as unknown as string[]
+  const canonical = new Set<string>(canonicalTabs)
+
   if (!Array.isArray(allowedTabs)) {
-    return [...(CANONICAL_TABS as unknown as string[])]
+    return [...canonicalTabs]
   }
 
-  const normalized = allowedTabs.map(mapLegacyAllowedTabId).filter((tab) => canonical.has(tab))
+  const safeAllowedTabs = allowedTabs.filter((tab): tab is string => typeof tab === 'string')
+  const normalized = safeAllowedTabs.map(mapLegacyAllowedTabId).filter((tab) => canonical.has(tab))
 
-  return allowedTabs.length > 0 ? normalized : []
+  return safeAllowedTabs.length > 0 ? normalized : []
 }

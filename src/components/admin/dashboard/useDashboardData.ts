@@ -39,7 +39,11 @@ export function useDashboardData({
       if (!res.ok) return
       const data = await res.json().catch(() => null)
       setMeRole(data && typeof data.role === 'string' ? data.role : null)
-      setAllowedTabs(data && Array.isArray(data.allowedTabs) ? data.allowedTabs : null)
+      setAllowedTabs(
+        data && Array.isArray(data.allowedTabs)
+          ? data.allowedTabs.filter((tab: unknown): tab is string => typeof tab === 'string')
+          : null
+      )
     } catch (error) {
       if (isAbortError(error)) return
       console.error('Error fetching permissions:', error)

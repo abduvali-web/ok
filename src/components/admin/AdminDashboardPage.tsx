@@ -53,7 +53,7 @@ import { UserGuide } from '@/components/UserGuide'
 import { TrialStatus } from '@/components/admin/TrialStatus'
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal'
 import { getDailyPrice, PLAN_TYPES } from '@/lib/menuData'
-import { deriveVisibleTabs } from '@/components/admin/dashboard/tabs'
+import { CANONICAL_TABS, deriveVisibleTabs } from '@/components/admin/dashboard/tabs'
 import type { Client, Order } from '@/components/admin/dashboard/types'
 import { DesktopTabsNav } from '@/components/admin/dashboard/DesktopTabsNav'
 import { useDashboardData } from '@/components/admin/dashboard/useDashboardData'
@@ -269,7 +269,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const fetchBinClients = () => refreshBinClients()
   const fetchBinOrders = () => refreshBinOrders()
 
-  const visibleTabs = useMemo(() => deriveVisibleTabs(allowedTabs), [allowedTabs])
+  const visibleTabs = useMemo(() => {
+    if (!Array.isArray(allowedTabs)) {
+      return [...(CANONICAL_TABS as unknown as string[])]
+    }
+    return deriveVisibleTabs(allowedTabs)
+  }, [allowedTabs])
   const uiStateStorageKey = useMemo(() => `${DASHBOARD_UI_STORAGE_PREFIX}:${mode}`, [mode])
   const isLowAdminView = mode === 'low' || meRole === 'LOW_ADMIN'
   const isWarehouseReadOnly = isLowAdminView
