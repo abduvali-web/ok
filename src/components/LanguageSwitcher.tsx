@@ -1,42 +1,43 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { useLanguage, Language } from '@/contexts/LanguageContext'
 import { Globe } from 'lucide-react'
-import { useLanguage } from '@/contexts/LanguageContext'
-import { Language } from '@/lib/translations'
+
+const LANGUAGES: { code: Language; label: string; flag: string }[] = [
+    { code: 'ru', label: 'Русский', flag: '🇷🇺' },
+    { code: 'uz', label: "O'zbek", flag: '🇺🇿' },
+    { code: 'en', label: 'English', flag: '🇬🇧' },
+]
 
 export function LanguageSwitcher() {
     const { language, setLanguage } = useLanguage()
 
-    const languages: { code: Language; label: string; flag: string }[] = [
-        { code: 'ru', label: 'Русский', flag: '🇷🇺' },
-        { code: 'uz', label: 'O\'zbek', flag: '🇺🇿' },
-        { code: 'en', label: 'English', flag: '🇺🇸' },
-    ]
+    const current = LANGUAGES.find((l) => l.code === language)
 
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="w-9 px-0">
-                    <Globe className="h-4 w-4" />
-                    <span className="sr-only">Switch language</span>
+                <Button variant="ghost" size="sm" className="h-8 gap-1.5 rounded-full px-3 text-xs">
+                    <Globe className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">{current?.flag}</span>
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                {languages.map((lang) => (
+            <DropdownMenuContent align="end" className="w-36">
+                {LANGUAGES.map(({ code, label, flag }) => (
                     <DropdownMenuItem
-                        key={lang.code}
-                        onClick={() => setLanguage(lang.code)}
-                        className={language === lang.code ? 'bg-accent' : ''}
+                        key={code}
+                        onClick={() => setLanguage(code)}
+                        className={`gap-2 text-xs ${language === code ? 'font-medium' : ''}`}
                     >
-                        <span className="mr-2">{lang.flag}</span>
-                        {lang.label}
+                        <span>{flag}</span>
+                        {label}
                     </DropdownMenuItem>
                 ))}
             </DropdownMenuContent>

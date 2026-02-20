@@ -1699,9 +1699,13 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-slate-600">Загрузка...</p>
+        <div className="text-center animate-fade-in">
+          <div className="flex items-center justify-center gap-1.5 mb-3">
+            <span className="h-2 w-2 rounded-full bg-foreground/60 animate-pulse" style={{ animationDelay: '0ms' }} />
+            <span className="h-2 w-2 rounded-full bg-foreground/40 animate-pulse" style={{ animationDelay: '150ms' }} />
+            <span className="h-2 w-2 rounded-full bg-foreground/20 animate-pulse" style={{ animationDelay: '300ms' }} />
+          </div>
+          <p className="text-xs text-muted-foreground tracking-wide">Загрузка...</p>
         </div>
       </div>
     )
@@ -1710,22 +1714,23 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-background/80 backdrop-blur-md border-b border-border">
+      <header className="bg-background/70 backdrop-blur-xl border-b border-border/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-slate-900 hidden md:block">{t.admin.dashboard}</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-muted-foreground hidden md:block">
+          <div className="flex justify-between items-center h-14">
+            <div className="flex items-center gap-4">
+              <h1 className="font-display text-base font-semibold tracking-tight hidden md:block">{t.admin.dashboard}</h1>
+              <span className="hidden md:block text-xs text-muted-foreground">·</span>
+              <span className="text-xs text-muted-foreground hidden md:block">
                 {currentDate || ' '}
-              </div>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
               <LanguageSwitcher />
               <div className="hidden md:block">
                 <UserGuide guides={[
                   {
                     title: t.admin.createOrder,
-                    description: t.admin.manageOrdersDesc, // Using generic desc as placeholder or need specific key
+                    description: t.admin.manageOrdersDesc,
                     buttonName: "+ " + t.admin.createOrder,
                     icon: <Plus className="w-5 h-5 text-primary" />
                   },
@@ -1758,11 +1763,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               <div className="hidden md:block">
                 <TrialStatus compact />
               </div>
-              <Button variant="outline" size="icon" className="md:hidden" onClick={handleLogout} aria-label={t.common.logout}>
+              <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden" onClick={handleLogout} aria-label={t.common.logout}>
                 <LogOut className="w-4 h-4" />
               </Button>
-              <Button variant="outline" size="sm" className="hidden md:inline-flex" onClick={handleLogout}>
-                <LogOut className="w-4 h-4 mr-2" />
+              <Button variant="ghost" size="sm" className="hidden md:inline-flex gap-1.5 text-xs" onClick={handleLogout}>
+                <LogOut className="w-3.5 h-3.5" />
                 {t.common.logout}
               </Button>
             </div>
@@ -1777,23 +1782,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         visibleTabs={visibleTabs}
       />
 
-      {/* Mobile Tab Indicator - shows current tab on mobile */}
+      {/* Mobile Tab Indicator */}
       <MobileTabIndicator activeTab={activeTab} />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8 mobile-bottom-space md:pt-8 pt-4">
-        <div className="hidden md:flex flex-col gap-4">
-          <h1 className="text-3xl font-bold tracking-tight text-gradient">
-            {t.admin.dashboard}
-          </h1>
-          <p className="text-muted-foreground">
-            {t.admin.dashboardSubtitle}
-          </p>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <Badge variant="outline" className="font-mono">Alt+1..9 tabs</Badge>
-            <Badge variant="outline" className="font-mono">Ctrl/Cmd+K search</Badge>
-            <Badge variant="outline" className="font-mono">/ focus search</Badge>
-          </div>
-        </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6 mobile-bottom-space">
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <DesktopTabsNav
@@ -1802,248 +1794,111 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
           />
 
           {/* Statistics Tab */}
-          <TabsContent value="statistics" className="space-y-6">
-            {/* Order Statistics */}
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
-              <Card className="glass-card border-none shadow-sm">
-                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
-                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.successful}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
-                  <div className="text-xl md:text-2xl font-bold text-green-600">
-                    {stats?.successfulOrders || 0}
+          <TabsContent value="statistics" className="space-y-5 animate-fade-in">
+            {/* ── Order Status ── */}
+            <div>
+              <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.admin.stats.successful} / {t.admin.stats.failed}</h3>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  { label: t.admin.stats.successful, value: stats?.successfulOrders || 0, sub: 'Доставлено', color: 'text-emerald-600', dot: 'bg-emerald-500' },
+                  { label: t.admin.stats.failed, value: stats?.failedOrders || 0, sub: 'Отменено', color: 'text-rose-600', dot: 'bg-rose-500' },
+                  { label: t.admin.stats.inDelivery, value: stats?.inDeliveryOrders || 0, sub: 'В процессе', color: 'text-blue-600', dot: 'bg-blue-500' },
+                  { label: t.admin.stats.pending, value: stats?.pendingOrders || 0, sub: 'В очереди', color: 'text-amber-600', dot: 'bg-amber-500' },
+                ].map((s) => (
+                  <div key={s.label} className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`inline-block h-2 w-2 rounded-full ${s.dot}`} />
+                      <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
+                    </div>
+                    <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
+                    <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">{s.sub}</p>
                   </div>
-                  <p className="text-[10px] md:text-xs text-slate-500">Доставлено</p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card border-none shadow-sm">
-                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
-                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.failed}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
-                  <div className="text-xl md:text-2xl font-bold text-red-600">
-                    {stats?.failedOrders || 0}
-                  </div>
-                  <p className="text-[10px] md:text-xs text-slate-500">Отменено</p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card border-none shadow-sm">
-                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
-                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.inDelivery}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
-                  <div className="text-xl md:text-2xl font-bold text-blue-600">
-                    {stats?.inDeliveryOrders || 0}
-                  </div>
-                  <p className="text-[10px] md:text-xs text-slate-500">В процессе</p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card border-none shadow-sm">
-                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
-                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.pending}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
-                  <div className="text-xl md:text-2xl font-bold text-orange-600">
-                    {stats?.pendingOrders || 0}
-                  </div>
-                  <p className="text-[10px] md:text-xs text-slate-500">В очереди</p>
-                </CardContent>
-              </Card>
+                ))}
+              </div>
             </div>
 
-            {/* Payment Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.prepaid}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
-                    {stats?.prepaidOrders || 0}
+            {/* ── Payment Stats ── */}
+            <div>
+              <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.admin.stats.prepaid} / {t.admin.stats.unpaid}</h3>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  { label: t.admin.stats.prepaid, value: stats?.prepaidOrders || 0, sub: 'Оплачено', color: 'text-emerald-600', dot: 'bg-emerald-500' },
+                  { label: t.admin.stats.unpaid, value: stats?.unpaidOrders || 0, sub: 'При получении', color: 'text-rose-600', dot: 'bg-rose-500' },
+                  { label: t.admin.stats.card, value: stats?.cardOrders || 0, sub: 'Онлайн', color: 'text-blue-600', dot: 'bg-blue-500' },
+                  { label: t.admin.stats.cash, value: stats?.cashOrders || 0, sub: 'Наличные', color: 'text-teal-600', dot: 'bg-teal-500' },
+                ].map((s) => (
+                  <div key={s.label} className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`inline-block h-2 w-2 rounded-full ${s.dot}`} />
+                      <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
+                    </div>
+                    <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
+                    <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">{s.sub}</p>
                   </div>
-                  <p className="text-xs text-slate-500">Оплачено</p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.unpaid}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-red-600">
-                    {stats?.unpaidOrders || 0}
-                  </div>
-                  <p className="text-xs text-slate-500">Оплата при получении</p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.card}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {stats?.cardOrders || 0}
-                  </div>
-                  <p className="text-xs text-slate-500">Онлайн оплата</p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.cash}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
-                    {stats?.cashOrders || 0}
-                  </div>
-                  <p className="text-xs text-slate-500">При получении</p>
-                </CardContent>
-              </Card>
+                ))}
+              </div>
             </div>
 
-            {/* Customer Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.daily}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-purple-600">
-                    {stats?.dailyCustomers || 0}
+            {/* ── Customer Stats ── */}
+            <div>
+              <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.admin.stats.daily}</h3>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  { label: t.admin.stats.daily, value: stats?.dailyCustomers || 0, sub: 'Каждый день', color: 'text-violet-600', dot: 'bg-violet-500' },
+                  { label: t.admin.stats.evenDay, value: stats?.evenDayCustomers || 0, sub: 'Чётные дни', color: 'text-indigo-600', dot: 'bg-indigo-500' },
+                  { label: t.admin.stats.oddDay, value: stats?.oddDayCustomers || 0, sub: 'Нечётные дни', color: 'text-pink-600', dot: 'bg-pink-500' },
+                  { label: t.admin.stats.special, value: stats?.specialPreferenceCustomers || 0, sub: 'С особенностями', color: 'text-orange-600', dot: 'bg-orange-500' },
+                ].map((s) => (
+                  <div key={s.label} className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`inline-block h-2 w-2 rounded-full ${s.dot}`} />
+                      <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
+                    </div>
+                    <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
+                    <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">{s.sub}</p>
                   </div>
-                  <p className="text-xs text-slate-500">Каждый день</p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.evenDay}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-indigo-600">
-                    {stats?.evenDayCustomers || 0}
-                  </div>
-                  <p className="text-xs text-slate-500">По четным дням</p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.oddDay}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-pink-600">
-                    {stats?.oddDayCustomers || 0}
-                  </div>
-                  <p className="text-xs text-slate-500">По нечетным дням</p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.special}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-orange-600">
-                    {stats?.specialPreferenceCustomers || 0}
-                  </div>
-                  <p className="text-xs text-slate-500">С особенностями</p>
-                </CardContent>
-              </Card>
+                ))}
+              </div>
             </div>
 
-            {/* Calories Statistics */}
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-6">
-              <Card className="glass-card border-none shadow-sm">
-                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
-                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.lowCal}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
-                  <div className="text-xl md:text-2xl font-bold text-red-600">
-                    {stats?.orders1200 || 0}
+            {/* ── Calories ── */}
+            <div>
+              <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.admin.stats.lowCal}</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                {[
+                  { label: t.admin.stats.lowCal, value: stats?.orders1200 || 0, sub: '1200 ккал', color: 'text-rose-600', dot: 'bg-rose-500' },
+                  { label: t.admin.stats.standard, value: stats?.orders1600 || 0, sub: '1600 ккал', color: 'text-orange-600', dot: 'bg-orange-500' },
+                  { label: t.admin.stats.medium, value: stats?.orders2000 || 0, sub: '2000 ккал', color: 'text-yellow-600', dot: 'bg-yellow-500' },
+                  { label: t.admin.stats.high, value: stats?.orders2500 || 0, sub: '2500 ккал', color: 'text-emerald-600', dot: 'bg-emerald-500' },
+                  { label: t.admin.stats.max, value: stats?.orders3000 || 0, sub: '3000 ккал', color: 'text-blue-600', dot: 'bg-blue-500' },
+                ].map((s) => (
+                  <div key={s.label} className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`inline-block h-2 w-2 rounded-full ${s.dot}`} />
+                      <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
+                    </div>
+                    <div className={`text-xl md:text-2xl font-bold ${s.color}`}>{s.value}</div>
+                    <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">{s.sub}</p>
                   </div>
-                  <p className="text-[10px] md:text-xs text-slate-500">1200 ккал</p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card border-none shadow-sm">
-                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
-                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.standard}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
-                  <div className="text-xl md:text-2xl font-bold text-orange-600">
-                    {stats?.orders1600 || 0}
-                  </div>
-                  <p className="text-[10px] md:text-xs text-slate-500">1600 ккал</p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card border-none shadow-sm">
-                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
-                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.medium}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
-                  <div className="text-xl md:text-2xl font-bold text-yellow-600">
-                    {stats?.orders2000 || 0}
-                  </div>
-                  <p className="text-[10px] md:text-xs text-slate-500">2000 ккал</p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card border-none shadow-sm">
-                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
-                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.high}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
-                  <div className="text-xl md:text-2xl font-bold text-green-600">
-                    {stats?.orders2500 || 0}
-                  </div>
-                  <p className="text-[10px] md:text-xs text-slate-500">2500 ккал</p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card border-none shadow-sm col-span-2 md:col-span-1">
-                <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
-                  <CardTitle className="text-sm md:text-base font-medium text-muted-foreground">{t.admin.stats.max}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
-                  <div className="text-xl md:text-2xl font-bold text-blue-600">
-                    {stats?.orders3000 || 0}
-                  </div>
-                  <p className="text-[10px] md:text-xs text-slate-500">3000 ккал</p>
-                </CardContent>
-              </Card>
+                ))}
+              </div>
             </div>
 
-            {/* Item Count Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.single}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-indigo-600">
-                    {stats?.singleItemOrders || 0}
+            {/* ── Item Count ── */}
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: t.admin.stats.single, value: stats?.singleItemOrders || 0, sub: '1 порция', color: 'text-indigo-600', dot: 'bg-indigo-500' },
+                { label: t.admin.stats.multi, value: stats?.multiItemOrders || 0, sub: 'Два и более рационов', color: 'text-violet-600', dot: 'bg-violet-500' },
+              ].map((s) => (
+                <div key={s.label} className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className={`inline-block h-2 w-2 rounded-full ${s.dot}`} />
+                    <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
                   </div>
-                  <p className="text-xs text-slate-500">1 порция</p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t.admin.stats.multi}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-purple-600">
-                    {stats?.multiItemOrders || 0}
-                  </div>
-                  <p className="text-xs text-slate-500">Два и более рационов</p>
-                </CardContent>
-              </Card>
+                  <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
+                  <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">{s.sub}</p>
+                </div>
+              ))}
             </div>
           </TabsContent>
 
@@ -3234,27 +3089,27 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 </Button>
               </DialogFooter>
             </DialogContent>
-      </Dialog >
+          </Dialog >
 
-      {isDispatchOpen && (
-        <DispatchMapPanel
-          open={isDispatchOpen}
-          onOpenChange={setIsDispatchOpen}
-          orders={orders}
-          couriers={couriers}
-          selectedDateLabel={
-            selectedDate
-              ? selectedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
-              : 'Все заказы'
-          }
-          selectedDateISO={selectedDate ? selectedDate.toISOString().split('T')[0] : undefined}
-          warehousePoint={warehousePoint}
-          onSaved={fetchData}
-        />
-      )}
+          {isDispatchOpen && (
+            <DispatchMapPanel
+              open={isDispatchOpen}
+              onOpenChange={setIsDispatchOpen}
+              orders={orders}
+              couriers={couriers}
+              selectedDateLabel={
+                selectedDate
+                  ? selectedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+                  : 'Все заказы'
+              }
+              selectedDateISO={selectedDate ? selectedDate.toISOString().split('T')[0] : undefined}
+              warehousePoint={warehousePoint}
+              onSaved={fetchData}
+            />
+          )}
 
-      {/* Admins Tab */}
-      <AdminsTab lowAdmins={lowAdmins} isLowAdminView={isLowAdminView} onRefresh={fetchData} tabsCopy={tabsCopy} />
+          {/* Admins Tab */}
+          <AdminsTab lowAdmins={lowAdmins} isLowAdminView={isLowAdminView} onRefresh={fetchData} tabsCopy={tabsCopy} />
 
           {/* Interface Tab */}
 
