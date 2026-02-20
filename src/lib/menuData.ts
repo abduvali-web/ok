@@ -269,11 +269,15 @@ export function getTomorrowsMenuNumber(): number {
 
 // Scale ingredients based on calorie tier and portion count
 export function scaleIngredients(
-  ingredients: Ingredient[],
+  ingredients: Ingredient[] | null | undefined,
   calories: number,
   mealType: keyof typeof MEAL_TYPES,
   portionCount: number = 1
 ): Ingredient[] {
+  if (!Array.isArray(ingredients) || ingredients.length === 0) {
+    return [];
+  }
+
   const multipliers = CALORIE_MULTIPLIERS[calories] || CALORIE_MULTIPLIERS[1200];
 
   let multiplier = 1;
