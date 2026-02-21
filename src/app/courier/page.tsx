@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { signOut } from 'next-auth/react'
 import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
@@ -78,6 +78,56 @@ export default function CourierPage() {
   const [isOrderPaused, setIsOrderPaused] = useState(false)
   const [amountReceived, setAmountReceived] = useState('')
   const [isCompleting, setIsCompleting] = useState(false)
+  const lastSentLocationRef = useRef<{ lat: number; lng: number; at: number } | null>(null)
+  const isSendingLocationRef = useRef(false)
+  const watchIdRef = useRef<number | null>(null)
+
+  const distanceMeters = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+    const R = 6371e3
+    const dLat = ((b.lat - a.lat) * Math.PI) / 180
+    const dLng = ((b.lng - a.lng) * Math.PI) / 180
+    const x =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLng / 2) * Math.sin(dLng / 2)
+    return R * (2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x)))
+  }
+
+  const sendLocationUpdate = async (lat: number, lng: number, force = false) => {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+    if (isSendingLocationRef.current) return
+
+    const now = Date.now()
+    const previous = lastSentLocationRef.current
+    const minDistanceMeters = 20
+    const minIntervalMs = 10_000
+    const movedEnough = previous ? distanceMeters(previous, { lat, lng }) >= minDistanceMeters : true
+    const waitedEnough = previous ? now - previous.at >= minIntervalMs : true
+
+    if (!force && !movedEnough && !waitedEnough) return
+
+    isSendingLocationRef.current = true
+    try {
+      const response = await fetch('/api/courier/location', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ latitude: lat, longitude: lng }),
+        keepalive: true,
+      })
+      if (response.ok) {
+        lastSentLocationRef.current = { lat, lng, at: now }
+      }
+    } catch (error) {
+      console.error('Error sending courier location:', error)
+    } finally {
+      isSendingLocationRef.current = false
+    }
+  }
+
+  const applyLocation = (lat: number, lng: number, forceSend = false) => {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+    setCurrentLocation({ lat, lng })
+    void sendLocationUpdate(lat, lng, forceSend)
+  }
 
   useEffect(() => {
     const loadCourierData = async () => {
@@ -111,9 +161,25 @@ export default function CourierPage() {
 
     void loadCourierData()
     void fetchOrders()
-    getCurrentLocation()
+    getCurrentLocation(true)
 
-    const locationInterval = setInterval(getCurrentLocation, 30000)
+    if (navigator.geolocation) {
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        (position) => {
+          applyLocation(position.coords.latitude, position.coords.longitude)
+        },
+        (error) => {
+          console.error('Location watch error:', error)
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 5000,
+          timeout: 12000,
+        }
+      )
+    }
+
+    const locationInterval = setInterval(() => getCurrentLocation(false), 45000)
     const ordersInterval = setInterval(() => {
       void fetchOrders(true)
     }, 60000)
@@ -121,23 +187,27 @@ export default function CourierPage() {
     return () => {
       clearInterval(locationInterval)
       clearInterval(ordersInterval)
+      if (watchIdRef.current != null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchIdRef.current)
+        watchIdRef.current = null
+      }
     }
   }, [])
 
-  const getCurrentLocation = () => {
+  const getCurrentLocation = (forceSend = false) => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setCurrentLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          })
+          applyLocation(position.coords.latitude, position.coords.longitude, forceSend)
         },
         (error) => {
           console.error('Error getting location:', error)
-          if (!currentLocation) {
-            setCurrentLocation({ lat: 41.2995, lng: 69.2401 })
-          }
+          setCurrentLocation((prev) => prev ?? { lat: 41.2995, lng: 69.2401 })
+        },
+        {
+          enableHighAccuracy: false,
+          maximumAge: 10000,
+          timeout: 12000,
         }
       )
     }

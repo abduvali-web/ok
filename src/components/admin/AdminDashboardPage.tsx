@@ -98,6 +98,10 @@ const RouteOptimizeButton = dynamic(
   () => import('@/components/admin/RouteOptimizeButton').then((mod) => mod.RouteOptimizeButton),
   { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading…</div> }
 )
+const MiddleLiveMap = dynamic(
+  () => import('@/components/admin/orders/MiddleLiveMap'),
+  { ssr: false, loading: () => <div className="h-[360px] w-full animate-pulse rounded-xl bg-slate-100" /> }
+)
 export type AdminDashboardMode = 'middle' | 'low'
 
 const DASHBOARD_UI_STORAGE_PREFIX = 'autofood:dashboard-ui'
@@ -2106,6 +2110,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         {selectedDayIsActive ? 'Active' : 'Draft'}
                       </span>
                     )}
+                  </div>
+                )}
+
+                {mode === 'middle' && (
+                  <div className="mb-6">
+                    <MiddleLiveMap
+                      active={activeTab === 'orders'}
+                      orders={filteredOrders}
+                      couriers={couriers}
+                      clients={clients}
+                    />
                   </div>
                 )}
 
