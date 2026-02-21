@@ -8,6 +8,27 @@ import { Prisma } from '@prisma/client'
 import { getGroupAdminIds, getOwnerAdminId } from '@/lib/admin-scope'
 import { safeJsonParse } from '@/lib/safe-json'
 
+const courierPatchSchema = z
+  .object({
+    courierId: z.string().min(1),
+    name: z.string().trim().min(1).max(120).optional(),
+    latitude: z.number().finite().min(-90).max(90).nullable().optional(),
+    longitude: z.number().finite().min(-180).max(180).nullable().optional(),
+  })
+  .refine(
+    (payload) =>
+      payload.name !== undefined ||
+      payload.latitude !== undefined ||
+      payload.longitude !== undefined,
+    { message: 'No update fields provided' }
+  )
+  .refine(
+    (payload) =>
+      (payload.latitude === undefined && payload.longitude === undefined) ||
+      (payload.latitude !== undefined && payload.longitude !== undefined),
+    { message: 'Provide both latitude and longitude together' }
+  )
+
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
@@ -62,6 +83,102 @@ export async function GET(request: NextRequest) {
       error: 'Внутренняя ошибка сервера',
       ...(process.env.NODE_ENV === 'development' && { details: error instanceof Error ? error.message : 'Unknown error' })
     }, { status: 500 })
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const user = await getAuthUser(request)
+    if (!user || !hasRole(user, ['MIDDLE_ADMIN', 'SUPER_ADMIN', 'LOW_ADMIN'])) {
+      return NextResponse.json({ error: 'ÐÐµÐ´Ð¾ÑÑ‚Ð°Ñ‚Ð¾Ñ‡Ð½Ð¾ Ð¿Ñ€Ð°Ð²' }, { status: 403 })
+    }
+
+    const raw = await request.json().catch(() => null)
+    const parsed = courierPatchSchema.safeParse(raw)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'Invalid payload' },
+        { status: 400 }
+      )
+    }
+
+    const groupAdminIds = user.role === 'SUPER_ADMIN' ? null : await getGroupAdminIds(user)
+    const whereClause: any = {
+      id: parsed.data.courierId,
+      role: 'COURIER',
+    }
+
+    if (groupAdminIds) {
+      whereClause.createdBy = { in: groupAdminIds }
+    }
+
+    const existingCourier = await db.admin.findFirst({
+      where: whereClause,
+      select: { id: true, name: true, email: true, latitude: true, longitude: true },
+    })
+
+    if (!existingCourier) {
+      return NextResponse.json({ error: 'Courier not found' }, { status: 404 })
+    }
+
+    const updateData: Record<string, unknown> = {}
+    if (parsed.data.name !== undefined) updateData.name = parsed.data.name.trim()
+    if (parsed.data.latitude !== undefined && parsed.data.longitude !== undefined) {
+      updateData.latitude = parsed.data.latitude
+      updateData.longitude = parsed.data.longitude
+    }
+
+    const updatedCourier = await db.admin.update({
+      where: { id: existingCourier.id },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        allowedTabs: true,
+        salary: true,
+        latitude: true,
+        longitude: true,
+      },
+    })
+
+    try {
+      await db.actionLog.create({
+        data: {
+          adminId: user.id,
+          action: 'UPDATE_COURIER',
+          entityType: 'ADMIN',
+          entityId: updatedCourier.id,
+          description: `Updated courier from map: ${updatedCourier.name}`,
+        },
+      })
+    } catch (logError) {
+      console.error('Failed to log courier update action:', logError)
+    }
+
+    return NextResponse.json({
+      ...updatedCourier,
+      allowedTabs: (() => {
+        const parsedAllowedTabs = safeJsonParse<unknown>(updatedCourier.allowedTabs, [])
+        return Array.isArray(parsedAllowedTabs)
+          ? parsedAllowedTabs.filter((t): t is string => typeof t === 'string')
+          : []
+      })(),
+    })
+  } catch (error) {
+    console.error('Error updating courier:', error)
+    return NextResponse.json(
+      {
+        error: 'Ð’Ð½ÑƒÑ‚Ñ€ÐµÐ½Ð½ÑÑ Ð¾ÑˆÐ¸Ð±ÐºÐ° ÑÐµÑ€Ð²ÐµÑ€Ð°',
+        ...(process.env.NODE_ENV === 'development' && {
+          details: error instanceof Error ? error.message : 'Unknown error',
+        }),
+      },
+      { status: 500 }
+    )
   }
 }
 

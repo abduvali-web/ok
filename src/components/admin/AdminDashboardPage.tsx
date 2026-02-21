@@ -2120,6 +2120,14 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       orders={filteredOrders}
                       couriers={couriers}
                       clients={clients}
+                      warehousePoint={warehousePoint}
+                      selectedDateISO={selectedDate ? selectedDate.toISOString().split('T')[0] : undefined}
+                      onDataChanged={fetchData}
+                      onWarehouseUpdated={(point) => {
+                        setWarehousePoint(point)
+                        setWarehousePreview(point)
+                        setWarehouseInput(point ? `${point.lat},${point.lng}` : '')
+                      }}
                     />
                   </div>
                 )}
