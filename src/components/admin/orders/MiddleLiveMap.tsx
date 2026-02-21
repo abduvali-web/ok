@@ -295,14 +295,17 @@ export default function MiddleLiveMap({
     const byCourier = new Map<string, RouteBuildInput>()
     for (const [courierId, courierOrders] of grouped.entries()) {
       const courier = liveCouriersById.get(courierId)
-      if (!courier) continue
+      const startPoint = courier
+        ? ({ lat: courier.lat, lng: courier.lng } as LatLng)
+        : liveWarehouse
+      if (!startPoint) continue
       courierOrders.sort((a, b) => a.orderNumber - b.orderNumber)
       const stops = courierOrders.map((order) => ({ orderId: order.id, lat: order.lat, lng: order.lng }))
       if (stops.length === 0) continue
-      byCourier.set(courierId, { courierId, startPoint: { lat: courier.lat, lng: courier.lng }, stops })
+      byCourier.set(courierId, { courierId, startPoint, stops })
     }
     return byCourier
-  }, [liveCouriersById, liveOrders])
+  }, [liveCouriersById, liveOrders, liveWarehouse])
   const routeSignature = useMemo(() => {
     return Array.from(routeInputByCourier.values())
       .map((input) => `${input.courierId}:${input.stops.map((s) => `${s.orderId}:${s.lat.toFixed(6)}:${s.lng.toFixed(6)}`).join('|')}`)
