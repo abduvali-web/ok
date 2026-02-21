@@ -23,7 +23,7 @@ const display = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL('https://autofood.uz'),
   title: {
-    default: "AutoFood — Delivery Operations Platform",
+    default: "AutoFood - Delivery Operations Platform",
     template: "%s | AutoFood"
   },
   description: "O'zbekistonda restoran va kafelar uchun zamonaviy yetkazib berishni avtomatlashtirish tizimi.",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   authors: [{ name: "AutoFood Team", url: "https://autofood.uz" }],
   creator: "AutoFood Inc.",
   openGraph: {
-    title: "AutoFood — Delivery Operations Platform",
+    title: "AutoFood - Delivery Operations Platform",
     description: "Restoran va kuryerlik xizmatlari uchun mukammal yechim.",
     url: "https://autofood.uz",
     siteName: "AutoFood",

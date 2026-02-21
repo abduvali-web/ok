@@ -12,25 +12,21 @@ const features = [
     icon: Zap,
     title: 'Auto Orders',
     desc: 'Smart scheduling by zone and delivery plan. Set it once, run forever.',
-    accent: 'from-amber-400 to-orange-500',
   },
   {
     icon: Route,
     title: 'Live Dispatch',
     desc: 'Real-time courier tracking with dynamic route rebalancing.',
-    accent: 'from-cyan-400 to-blue-500',
   },
   {
     icon: ChartColumnIncreasing,
     title: 'Finance',
-    desc: 'Revenue, debts, margins — all in one clear view.',
-    accent: 'from-emerald-400 to-green-500',
+    desc: 'Revenue, debts, margins - all in one clear view.',
   },
   {
     icon: ShieldCheck,
     title: 'Access Control',
     desc: 'Role-based permissions for every team member.',
-    accent: 'from-violet-400 to-purple-500',
   },
 ]
 
@@ -49,7 +45,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* ─── Nav ─── */}
-      <nav className="fixed inset-x-0 top-0 z-50 border-b border-border/40 bg-background/70 backdrop-blur-xl">
+      <nav className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-card/70 backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-5">
           <Link href="/" className="text-lg font-semibold tracking-tight">
             AutoFood
@@ -70,7 +66,7 @@ export default function LandingPage() {
         {/* ─── Hero ─── */}
         <section className="animate-fade-in-up pb-20 pt-8">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
             Delivery Operations Platform
           </div>
 
@@ -81,7 +77,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Orders, couriers, warehouse, and finance — unified in one command center. Built for food delivery teams.
+            Orders, couriers, warehouse, and finance - unified in one command center. Built for food delivery teams.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-3">
@@ -127,12 +123,12 @@ export default function LandingPage() {
             {features.map((f, i) => (
               <div
                 key={f.title}
-                className={`group animate-fade-in-up stagger-${i + 2} flex gap-4 rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:border-muted-foreground/30 hover:shadow-elegant`}
+                className={`group animate-fade-in-up stagger-${i + 2} flex gap-4 rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:border-primary/20 hover:shadow-elegant`}
               >
                 <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${f.accent} shadow-smooth`}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-primary/15 bg-primary/10 text-primary shadow-smooth"
                 >
-                  <f.icon className="h-5 w-5 text-white" />
+                  <f.icon className="h-5 w-5" />
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold">{f.title}</h3>
@@ -163,9 +159,9 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            {/* Quarterly — highlighted */}
-            <div className="relative rounded-2xl border-2 border-foreground bg-card p-6 shadow-elevated transition-all duration-300">
-              <span className="absolute -top-3 left-5 inline-block rounded-full bg-foreground px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-background">
+            {/* Quarterly - highlighted */}
+            <div className="relative rounded-2xl border-2 border-primary/35 bg-card p-6 shadow-elevated transition-all duration-300">
+              <span className="absolute -top-3 left-5 inline-block rounded-full bg-primary px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground">
                 Save 33%
               </span>
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Quarterly</p>
@@ -181,8 +177,8 @@ export default function LandingPage() {
           <div className="mt-8 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {included.map((item) => (
               <div key={item} className="flex items-center gap-2.5 text-sm text-muted-foreground">
-                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100">
-                  <Check className="h-3 w-3 text-emerald-600" />
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-primary/15 bg-primary/10">
+                  <Check className="h-3 w-3 text-primary" />
                 </div>
                 {item}
               </div>

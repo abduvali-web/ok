@@ -1,4 +1,4 @@
-import { Package, Users, CalendarDays, TrendingUp, TrendingDown, Clock, Truck } from 'lucide-react'
+import { Users, TrendingUp, Clock, Truck } from 'lucide-react'
 
 interface Stats {
     successfulOrders: number

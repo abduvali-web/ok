@@ -27,7 +27,7 @@ export function MobileHeader({
   onLogout,
 }: MobileHeaderProps) {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-card/85 backdrop-blur-xl lg:hidden">
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-card/80 backdrop-blur-xl lg:hidden">
       <div className="flex h-14 items-center justify-between px-4">
         <Button variant="ghost" size="icon" className="h-9 w-9" onClick={onMenuClick}>
           <Menu className="h-5 w-5" />
@@ -42,7 +42,9 @@ export function MobileHeader({
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" className="relative h-9 w-9">
             <Bell className="h-4 w-4" />
-            <Badge className="absolute -right-0.5 -top-0.5 h-4 min-w-4 p-0 text-[10px]">3</Badge>
+            <Badge variant="destructive" className="absolute -right-0.5 -top-0.5 h-4 min-w-4 px-1 py-0 text-[10px]">
+              3
+            </Badge>
           </Button>
 
           <DropdownMenu>

@@ -78,7 +78,7 @@ export default function LoginPage() {
             command center.
           </h2>
           <p className="mt-4 max-w-sm text-sm leading-relaxed opacity-60">
-            Orders, couriers, warehouse and finance — all in one place. Built for teams that move fast.
+            Orders, couriers, warehouse and finance - all in one place. Built for teams that move fast.
           </p>
 
           <div className="mt-10 space-y-4">

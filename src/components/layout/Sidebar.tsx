@@ -59,7 +59,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-72 -translate-x-full border-r border-border/70 bg-card/90 backdrop-blur-xl transition-transform duration-300 ease-out lg:static lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 w-72 -translate-x-full border-r border-border bg-sidebar/92 backdrop-blur-xl transition-transform duration-300 ease-out lg:static lg:translate-x-0',
           isOpen && 'translate-x-0',
           className
         )}
@@ -67,7 +67,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between border-b border-border/70 px-4 py-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-smooth">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-elegant">
                 <ChefHat className="h-5 w-5" />
               </div>
               <div>
@@ -98,8 +98,8 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                     className={cn(
                       'h-11 w-full justify-start gap-3 rounded-xl border px-3 text-sm font-medium transition-all',
                       isActive
-                        ? 'border-primary/35 bg-primary/12 text-foreground shadow-[0_10px_22px_-16px_rgba(15,118,110,0.6)]'
-                        : 'border-transparent text-muted-foreground hover:border-border/70 hover:bg-background/80 hover:text-foreground'
+                        ? 'border-primary/20 bg-primary/10 text-foreground shadow-smooth'
+                        : 'border-transparent text-muted-foreground hover:border-border hover:bg-accent hover:text-foreground'
                     )}
                     onClick={() => {
                       onTabChange(item.id);
