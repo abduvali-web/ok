@@ -69,7 +69,7 @@ export default function RegisterPage({ params }: { params: { subdomain: string }
                 throw new Error(data?.error || 'Registration failed')
             }
 
-            toast.success('Registered. Now login to receive SMS code.')
+            toast.success('Registered. Now login with your phone number.')
             window.location.href = makeClientSiteHref(params.subdomain, '/login')
         } catch (error) {
             console.error(error)
@@ -90,7 +90,7 @@ export default function RegisterPage({ params }: { params: { subdomain: string }
                     <div>
                         <h2 className="text-2xl font-semibold">Register</h2>
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Registration does not require SMS. After registering, login will send an SMS code.
+                            Registration and login are both done by phone number.
                         </p>
                     </div>
 

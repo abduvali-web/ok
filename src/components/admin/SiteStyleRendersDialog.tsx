@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { MessageCircle, ReceiptText, ShieldCheck, Sparkles, UserRound, Wallet } from 'lucide-react'
+import { LogIn, MessageCircle, ReceiptText, Sparkles, UserRound, Wallet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -62,7 +62,7 @@ function PreviewLogin({ site, mode }: { site: SiteConfig; mode: 'login' | 'regis
           <div>
             <h2 className="text-2xl font-semibold">{mode === 'login' ? 'Login with Phone' : 'Register'}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {mode === 'login' ? 'Enter phone number and OTP code.' : 'Register by phone number (no SMS verification during registration).'}
+              {mode === 'login' ? 'Enter phone number to login.' : 'Register by phone number.'}
             </p>
           </div>
 
@@ -80,10 +80,7 @@ function PreviewLogin({ site, mode }: { site: SiteConfig; mode: 'login' | 'regis
 
           <div className="flex flex-wrap gap-2">
             <Button type="button" className="gap-2">
-              <MessageCircle className="h-4 w-4" /> Send code
-            </Button>
-            <Button type="button" variant="outline" className="gap-2">
-              <ShieldCheck className="h-4 w-4" /> Verify
+              <LogIn className="h-4 w-4" /> {mode === 'login' ? 'Login' : 'Register'}
             </Button>
           </div>
         </SitePanel>
@@ -352,4 +349,3 @@ export function SiteStyleRendersDialog({
     </Dialog>
   )
 }
-
