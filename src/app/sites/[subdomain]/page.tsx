@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import { SiteContent } from '@/components/site/SiteContent'
+import { parseSiteContent } from '@/lib/site-builder'
 
 interface PageProps {
     params: { subdomain: string }
@@ -15,7 +16,8 @@ export default async function SitePage({ params }: PageProps) {
         notFound()
     }
 
-    const content = JSON.parse(website.content)
+    const content = parseSiteContent(website.content, params.subdomain)
+    const inferredSiteName = content.about.title.en.replace(/^About\s+/, '') || params.subdomain
 
-    return <SiteContent content={content} subdomain={params.subdomain} />
+    return <SiteContent content={content} subdomain={params.subdomain} siteName={inferredSiteName} />
 }

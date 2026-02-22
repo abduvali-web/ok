@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCustomerFromRequest } from '@/lib/customer-auth'
+import { extractCoordsFromText } from '@/lib/geo'
 
 export async function GET(request: NextRequest) {
     try {
@@ -9,7 +10,13 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        return NextResponse.json(customer)
+        return NextResponse.json({
+            ...customer,
+            googleMapsLink:
+                typeof customer.latitude === 'number' && typeof customer.longitude === 'number'
+                    ? `https://maps.google.com/?q=${customer.latitude},${customer.longitude}`
+                    : ''
+        })
 
     } catch (error) {
         console.error('Error fetching customer profile:', error)
@@ -28,20 +35,38 @@ export async function PATCH(request: NextRequest) {
         }
 
         const body = await request.json()
-        const { name, address, preferences, calories, deliveryDays } = body
+        const { name, address, preferences, calories, deliveryDays, googleMapsLink } = body
+
+        let parsedCoords: { lat: number; lng: number } | null = null
+        if (typeof googleMapsLink === 'string' && googleMapsLink.trim().length > 0) {
+            parsedCoords = extractCoordsFromText(googleMapsLink.trim())
+            if (!parsedCoords) {
+                return NextResponse.json({ error: 'Invalid Google Maps link or coordinates' }, { status: 400 })
+            }
+        }
 
         const updatedCustomer = await db.customer.update({
             where: { id: customer.id },
             data: {
                 name,
-                address,
+                address: typeof address === 'string' && address.trim().length > 0
+                    ? address
+                    : (typeof googleMapsLink === 'string' && googleMapsLink.trim().length > 0 ? googleMapsLink.trim() : undefined),
                 preferences,
                 calories: calories ? parseInt(calories) : undefined,
-                deliveryDays: deliveryDays ? JSON.stringify(deliveryDays) : undefined
+                deliveryDays: deliveryDays ? JSON.stringify(deliveryDays) : undefined,
+                latitude: parsedCoords ? parsedCoords.lat : undefined,
+                longitude: parsedCoords ? parsedCoords.lng : undefined
             }
         })
 
-        return NextResponse.json(updatedCustomer)
+        return NextResponse.json({
+            ...updatedCustomer,
+            googleMapsLink:
+                typeof updatedCustomer.latitude === 'number' && typeof updatedCustomer.longitude === 'number'
+                    ? `https://maps.google.com/?q=${updatedCustomer.latitude},${updatedCustomer.longitude}`
+                    : ''
+        })
 
     } catch (error) {
         console.error('Error updating customer profile:', error)

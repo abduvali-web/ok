@@ -10,6 +10,9 @@ export interface CustomerTokenPayload {
     id: string
     phone: string
     role: 'CUSTOMER'
+    websiteId?: string
+    ownerAdminId?: string
+    subdomain?: string
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -42,6 +45,11 @@ export function verifyCustomerToken(token: string): CustomerTokenPayload | null 
                 phone: z.string().min(1),
                 role: z.literal('CUSTOMER')
             })
+            .and(z.object({
+                websiteId: z.string().min(1).optional(),
+                ownerAdminId: z.string().min(1).optional(),
+                subdomain: z.string().min(1).optional()
+            }))
             .safeParse(decoded)
         if (!parsed.success) return null
         return parsed.data

@@ -53,6 +53,8 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { UserGuide } from '@/components/UserGuide'
 import { TrialStatus } from '@/components/admin/TrialStatus'
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal'
+import { SiteBuilderCard } from '@/components/admin/SiteBuilderCard'
+import { SiteCommunityChat } from '@/components/admin/SiteCommunityChat'
 import { getDailyPrice, PLAN_TYPES } from '@/lib/menuData'
 import { CANONICAL_TABS, deriveVisibleTabs } from '@/components/admin/dashboard/tabs'
 import type { Client, Order } from '@/components/admin/dashboard/types'
@@ -3255,11 +3257,37 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 {/* Divider */}
                 <div className="border-t" />
 
+                {!isLowAdminView && (
+                  <>
+                    {/* Website Builder */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold">Website Builder</h3>
+                      <SiteBuilderCard />
+                    </div>
+
+                    {/* Divider */}
+                    <div className="border-t" />
+                  </>
+                )}
+
                 {/* Chat Section */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Сообщения</h3>
                   <ChatTab />
                 </div>
+
+                {!isLowAdminView && (
+                  <>
+                    {/* Divider */}
+                    <div className="border-t" />
+
+                    {/* Site Community Chat */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold">Site Community Chat</h3>
+                      <SiteCommunityChat />
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -3764,3 +3792,5 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 }
 
 export default AdminDashboardPage
+
+

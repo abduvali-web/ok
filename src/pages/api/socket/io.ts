@@ -27,18 +27,33 @@ export const config = {
 interface ChatMessage {
     id: string
     senderName: string
+    senderRole: 'CUSTOMER' | 'SITE_ADMIN'
     content: string
     timestamp: Date
 }
 
+type CustomerTokenPayload = {
+    id: string
+    role: 'CUSTOMER'
+    phone?: string
+    websiteId?: string
+    subdomain?: string
+}
+
+type SiteAdminTokenPayload = {
+    id: string
+    role: 'SITE_ADMIN'
+    name: string
+    websiteId: string
+}
+
+type SocketAuthPayload = CustomerTokenPayload | SiteAdminTokenPayload
+
 export default function handler(req: NextApiRequest, res: NextApiResponseWithSocket) {
     if (res.socket.server.io) {
-        console.log('Socket.IO already running')
         res.end()
         return
     }
-
-    console.log('Starting Socket.IO server...')
 
     const io = new IOServer(res.socket.server as any, {
         path: '/api/socket/io',
@@ -49,7 +64,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponseWithSoc
         }
     })
 
-    // Authentication middleware
     io.use((socket, next) => {
         const token = socket.handshake.auth.token
 
@@ -58,11 +72,23 @@ export default function handler(req: NextApiRequest, res: NextApiResponseWithSoc
         }
 
         try {
-            const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: string }
-            if (decoded.role !== 'CUSTOMER') {
+            const decoded = jwt.verify(token, JWT_SECRET) as SocketAuthPayload
+
+            if (!decoded || typeof decoded !== 'object' || typeof decoded.id !== 'string') {
+                return next(new Error('Invalid token payload'))
+            }
+
+            if (decoded.role !== 'CUSTOMER' && decoded.role !== 'SITE_ADMIN') {
                 return next(new Error('Invalid token role'))
             }
-            socket.data.customerId = decoded.id
+
+            socket.data.participantId = decoded.id
+            socket.data.role = decoded.role
+            socket.data.websiteId = decoded.websiteId || null
+            socket.data.displayName = decoded.role === 'SITE_ADMIN'
+                ? decoded.name || 'Middle Admin'
+                : `Client ${decoded.id.slice(-4)}`
+
             next()
         } catch {
             next(new Error('Invalid token'))
@@ -70,29 +96,45 @@ export default function handler(req: NextApiRequest, res: NextApiResponseWithSoc
     })
 
     io.on('connection', (socket) => {
-        console.log('Client connected:', socket.data.customerId)
-
-        // Join admin-specific room based on websiteId
         socket.on('join_room', (websiteId: string) => {
+            if (!websiteId || typeof websiteId !== 'string') return
+
+            const allowedWebsiteId = socket.data.websiteId as string | null
+            if (allowedWebsiteId && allowedWebsiteId !== websiteId) {
+                socket.emit('chat_error', { error: 'Room access denied' })
+                return
+            }
+
             socket.join(`website:${websiteId}`)
-            console.log(`${socket.data.customerId} joined room: website:${websiteId}`)
         })
 
-        // Handle chat messages
-        socket.on('chat_message', (data: { websiteId: string; senderName: string; content: string }) => {
+        socket.on('chat_message', (data: { websiteId: string; senderName?: string; content: string }) => {
+            const content = typeof data?.content === 'string' ? data.content.trim() : ''
+            if (!content) return
+            if (content.length > 2000) return
+
+            const websiteId = typeof data?.websiteId === 'string' ? data.websiteId : ''
+            if (!websiteId) return
+
+            const allowedWebsiteId = socket.data.websiteId as string | null
+            if (allowedWebsiteId && allowedWebsiteId !== websiteId) {
+                socket.emit('chat_error', { error: 'Room access denied' })
+                return
+            }
+
+            const role = socket.data.role as 'CUSTOMER' | 'SITE_ADMIN'
+            const participantId = socket.data.participantId as string
+            const fallbackName = socket.data.displayName as string
+
             const message: ChatMessage = {
-                id: `${Date.now()}-${socket.data.customerId}`,
-                senderName: data.senderName,
-                content: data.content,
+                id: `${Date.now()}-${participantId}`,
+                senderName: fallbackName || data.senderName || 'User',
+                senderRole: role,
+                content,
                 timestamp: new Date()
             }
 
-            // Broadcast to all clients in the same website room
-            io.to(`website:${data.websiteId}`).emit('new_message', message)
-        })
-
-        socket.on('disconnect', () => {
-            console.log('Client disconnected:', socket.data.customerId)
+            io.to(`website:${websiteId}`).emit('new_message', message)
         })
     })
 

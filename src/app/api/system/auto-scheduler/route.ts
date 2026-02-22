@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     const dayStart = startOfDay(processDate)
     const dayEnd = endOfDay(processDate)
 
-    const customers = await db.customer.findMany({ where: { isActive: true } })
+    const customers = await db.customer.findMany({ where: { isActive: true, autoOrdersEnabled: true } })
     const defaultAdmin = await db.admin.findFirst({ where: { role: 'SUPER_ADMIN' } })
 
     // If no super admin, try to find any admin or use a system ID if possible (but schema likely requires valid adminId)

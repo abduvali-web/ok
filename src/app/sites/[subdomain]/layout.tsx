@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Metadata } from 'next'
+import { parseSiteContent, parseThemePayload } from '@/lib/site-builder'
 
 // Force dynamic rendering to handle subdomains correctly
 export const dynamic = 'force-dynamic'
@@ -18,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ subdomain
 
     if (!website) return { title: 'Site Not Found' }
 
-    const content = JSON.parse(website.content)
+    const content = parseSiteContent(website.content, subdomain)
     return {
         title: content.hero.title.en, // Default to English for metadata
         description: content.hero.subtitle.en
@@ -35,16 +36,24 @@ export default async function SiteLayout({ children, params }: SiteLayoutProps) 
         notFound()
     }
 
-    // Apply theme (simplified for now)
-    const theme = JSON.parse(website.theme)
+    const theme = parseThemePayload(website.theme)
+    const palette = theme.palette
 
     return (
-        <div className="min-h-screen bg-background font-sans antialiased">
-            {/* We could inject CSS variables here for theming */}
+        <div className="min-h-screen antialiased">
             <style dangerouslySetInnerHTML={{
                 __html: `
                     :root {
-                        --primary: ${theme.primary === 'blue' ? '221.2 83.2% 53.3%' : '142.1 76.2% 36.3%'};
+                        --site-bg: ${palette.pageBackground};
+                        --site-panel: ${palette.panelBackground};
+                        --site-text: ${palette.textPrimary};
+                        --site-muted: ${palette.textMuted};
+                        --site-border: ${palette.border};
+                        --site-accent: ${palette.accent};
+                        --site-accent-soft: ${palette.accentSoft};
+                        --site-hero-from: ${palette.heroFrom};
+                        --site-hero-to: ${palette.heroTo};
+                        --site-hero-text: ${palette.heroText};
                     }
                 `
             }} />

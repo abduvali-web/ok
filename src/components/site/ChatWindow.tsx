@@ -7,10 +7,12 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { MessageCircle, Send, X, Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface ChatMessage {
     id: string
     senderName: string
+    senderRole?: 'CUSTOMER' | 'SITE_ADMIN'
     content: string
     timestamp: Date
 }
@@ -18,21 +20,28 @@ interface ChatMessage {
 interface ChatWindowProps {
     websiteId: string
     customerName: string
+    authToken?: string
+    mode?: 'floating' | 'embedded'
+    className?: string
 }
 
-export function ChatWindow({ websiteId, customerName }: ChatWindowProps) {
-    const [isOpen, setIsOpen] = useState(false)
+export function ChatWindow({ websiteId, customerName, authToken, mode = 'floating', className }: ChatWindowProps) {
+    const [isOpen, setIsOpen] = useState(mode === 'embedded')
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [input, setInput] = useState('')
     const [isConnecting, setIsConnecting] = useState(true)
     const socketRef = useRef<Socket | null>(null)
-    const scrollRef = useRef<HTMLDivElement>(null)
+    const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
     useEffect(() => {
-        const token = localStorage.getItem('customerToken')
-        if (!token) return
+        const token = authToken || localStorage.getItem('customerToken')
+        if (!token) {
+            setIsConnecting(false)
+            return
+        }
 
-        // Initialize socket connection
+        setIsConnecting(true)
+
         const socket = io({
             path: '/api/socket/io',
             auth: { token }
@@ -41,13 +50,16 @@ export function ChatWindow({ websiteId, customerName }: ChatWindowProps) {
         socketRef.current = socket
 
         socket.on('connect', () => {
-            console.log('Connected to chat server')
             setIsConnecting(false)
             socket.emit('join_room', websiteId)
         })
 
         socket.on('new_message', (message: ChatMessage) => {
-            setMessages(prev => [...prev, message])
+            setMessages((prev) => [...prev, message])
+        })
+
+        socket.on('chat_error', (payload: { error?: string }) => {
+            console.error('Chat room error:', payload?.error)
         })
 
         socket.on('connect_error', (err) => {
@@ -58,21 +70,25 @@ export function ChatWindow({ websiteId, customerName }: ChatWindowProps) {
         return () => {
             socket.disconnect()
         }
-    }, [websiteId])
+    }, [websiteId, authToken])
 
     useEffect(() => {
-        // Auto-scroll to bottom on new messages
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight
         }
     }, [messages])
+
+    useEffect(() => {
+        if (mode === 'embedded') {
+            setIsOpen(true)
+        }
+    }, [mode])
 
     const sendMessage = () => {
         if (!input.trim() || !socketRef.current) return
 
         socketRef.current.emit('chat_message', {
             websiteId,
-            senderName: customerName,
             content: input.trim()
         })
 
@@ -86,11 +102,11 @@ export function ChatWindow({ websiteId, customerName }: ChatWindowProps) {
         }
     }
 
-    if (!isOpen) {
+    if (mode === 'floating' && !isOpen) {
         return (
             <Button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg bg-blue-600 hover:bg-blue-700"
+                className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg"
             >
                 <MessageCircle className="w-6 h-6" />
             </Button>
@@ -98,16 +114,25 @@ export function ChatWindow({ websiteId, customerName }: ChatWindowProps) {
     }
 
     return (
-        <Card className="fixed bottom-6 right-6 w-96 h-[500px] shadow-2xl flex flex-col z-50">
+        <Card
+            className={cn(
+                mode === 'floating'
+                    ? 'fixed bottom-6 right-6 w-[22rem] h-[500px] shadow-2xl flex flex-col z-50'
+                    : 'w-full h-full min-h-[300px] flex flex-col',
+                className
+            )}
+        >
             <CardHeader className="py-3 px-4 border-b flex-shrink-0">
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-medium flex items-center gap-2">
                         <MessageCircle className="w-4 h-4" />
                         Community Chat
                     </CardTitle>
-                    <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
-                        <X className="w-4 h-4" />
-                    </Button>
+                    {mode === 'floating' && (
+                        <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
+                            <X className="w-4 h-4" />
+                        </Button>
+                    )}
                 </div>
             </CardHeader>
             <CardContent className="flex-1 p-0 flex flex-col overflow-hidden">
@@ -117,27 +142,36 @@ export function ChatWindow({ websiteId, customerName }: ChatWindowProps) {
                     </div>
                 ) : (
                     <>
-                        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+                        <ScrollArea
+                            className="flex-1 p-4"
+                            ref={scrollContainerRef as any}
+                        >
                             {messages.length === 0 ? (
                                 <div className="text-center text-muted-foreground text-sm py-8">
                                     No messages yet. Start the conversation!
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {messages.map((msg) => (
-                                        <div
-                                            key={msg.id}
-                                            className={`p-2 rounded-lg ${msg.senderName === customerName
-                                                    ? 'bg-primary text-primary-foreground ml-8'
-                                                    : 'bg-muted mr-8'
-                                                }`}
-                                        >
-                                            <div className="text-xs font-medium mb-1 opacity-75">
-                                                {msg.senderName}
+                                    {messages.map((msg) => {
+                                        const ownMessage = msg.senderName === customerName
+                                        return (
+                                            <div
+                                                key={msg.id}
+                                                className={cn(
+                                                    'p-2 rounded-lg',
+                                                    ownMessage
+                                                        ? 'bg-primary text-primary-foreground ml-8'
+                                                        : 'bg-muted mr-8'
+                                                )}
+                                            >
+                                                <div className="text-xs font-medium mb-1 opacity-75 flex items-center gap-1">
+                                                    <span>{msg.senderName}</span>
+                                                    {msg.senderRole === 'SITE_ADMIN' && <span>(admin)</span>}
+                                                </div>
+                                                <div className="text-sm whitespace-pre-wrap break-words">{msg.content}</div>
                                             </div>
-                                            <div className="text-sm">{msg.content}</div>
-                                        </div>
-                                    ))}
+                                        )
+                                    })}
                                 </div>
                             )}
                         </ScrollArea>
