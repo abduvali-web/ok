@@ -28,17 +28,12 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
   useEffect(() => {
     if (siteLoading) return
 
-    const token = localStorage.getItem('customerToken')
-    if (!token) {
-      router.push(makeClientSiteHref(params.subdomain, '/login'))
-      return
-    }
-
     const load = async () => {
       setIsLoading(true)
       try {
+        const token = localStorage.getItem('customerToken')
         const response = await fetch('/api/customers/orders', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         })
 
         if (!response.ok) {

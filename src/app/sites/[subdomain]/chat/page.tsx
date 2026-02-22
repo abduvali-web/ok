@@ -22,12 +22,6 @@ export default function ClientChatPage({ params }: { params: { subdomain: string
   useEffect(() => {
     if (siteLoading) return
 
-    const token = localStorage.getItem('customerToken')
-    if (!token) {
-      router.push(makeClientSiteHref(params.subdomain, '/login'))
-      return
-    }
-
     const info = localStorage.getItem('customerInfo')
     if (info) {
       try {
@@ -40,7 +34,28 @@ export default function ClientChatPage({ params }: { params: { subdomain: string
       }
     }
 
-    setIsLoading(false)
+    const ensureAuthed = async () => {
+      try {
+        const token = localStorage.getItem('customerToken')
+        const res = await fetch('/api/customers/profile', {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        })
+        if (!res.ok) {
+          throw new Error('Unauthorized')
+        }
+        const profile = await res.json().catch(() => null)
+        if (profile?.name && !info) {
+          setCustomerName(profile.name)
+        }
+        setIsLoading(false)
+      } catch {
+        localStorage.removeItem('customerToken')
+        localStorage.removeItem('customerInfo')
+        router.push(makeClientSiteHref(params.subdomain, '/login'))
+      }
+    }
+
+    void ensureAuthed()
   }, [params.subdomain, router, siteLoading])
 
   if (siteLoading || isLoading || !site) {

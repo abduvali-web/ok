@@ -14,6 +14,14 @@ function normalizePhone(input: string) {
   return `+${digits}`
 }
 
+function cookieDomainFromRootHost(rootHost: string | undefined) {
+  if (!rootHost) return undefined
+  const host = rootHost.split(':')[0].trim().toLowerCase()
+  if (!host || host === 'localhost') return undefined
+  if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(host)) return undefined
+  return `.${host}`
+}
+
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ subdomain: string }> }
@@ -87,7 +95,7 @@ export async function POST(
       subdomain: site.subdomain,
     })
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       token,
       customer: {
@@ -98,6 +106,20 @@ export async function POST(
         balance: customer.balance,
       },
     })
+
+    // Persist auth across subdomains (production). On localhost the cookie becomes host-only.
+    response.cookies.set({
+      name: 'customerToken',
+      value: token,
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      domain: cookieDomainFromRootHost(process.env.NEXT_PUBLIC_ROOT_DOMAIN),
+    })
+
+    return response
   } catch (error) {
     console.error('Error verifying OTP code:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

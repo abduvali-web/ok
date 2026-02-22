@@ -49,6 +49,18 @@ type SiteAdminTokenPayload = {
 
 type SocketAuthPayload = CustomerTokenPayload | SiteAdminTokenPayload
 
+function readCookie(cookieHeader: string | undefined, key: string) {
+    if (!cookieHeader) return null
+    const parts = cookieHeader.split(';')
+    for (const part of parts) {
+        const [k, ...rest] = part.trim().split('=')
+        if (k === key) {
+            return decodeURIComponent(rest.join('=') || '')
+        }
+    }
+    return null
+}
+
 export default function handler(req: NextApiRequest, res: NextApiResponseWithSocket) {
     if (res.socket.server.io) {
         res.end()
@@ -65,7 +77,9 @@ export default function handler(req: NextApiRequest, res: NextApiResponseWithSoc
     })
 
     io.use((socket, next) => {
-        const token = socket.handshake.auth.token
+        const tokenFromHandshake = socket.handshake.auth?.token as string | undefined
+        const tokenFromCookie = readCookie(socket.request.headers.cookie, 'customerToken') || undefined
+        const token = tokenFromHandshake || tokenFromCookie
 
         if (!token) {
             return next(new Error('Authentication required'))
@@ -80,6 +94,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponseWithSoc
 
             if (decoded.role !== 'CUSTOMER' && decoded.role !== 'SITE_ADMIN') {
                 return next(new Error('Invalid token role'))
+            }
+
+            if (decoded.role === 'CUSTOMER' && !decoded.websiteId) {
+                return next(new Error('Invalid token payload'))
             }
 
             socket.data.participantId = decoded.id

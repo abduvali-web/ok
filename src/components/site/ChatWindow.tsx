@@ -35,16 +35,11 @@ export function ChatWindow({ websiteId, customerName, authToken, mode = 'floatin
 
     useEffect(() => {
         const token = authToken || localStorage.getItem('customerToken')
-        if (!token) {
-            setIsConnecting(false)
-            return
-        }
-
         setIsConnecting(true)
 
         const socket = io({
             path: '/api/socket/io',
-            auth: { token }
+            auth: token ? { token } : {}
         })
 
         socketRef.current = socket

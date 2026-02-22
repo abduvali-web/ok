@@ -58,16 +58,11 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
   useEffect(() => {
     if (siteLoading) return
 
-    const customerToken = localStorage.getItem('customerToken')
-    if (!customerToken) {
-      router.push(makeClientSiteHref(params.subdomain, '/login'))
-      return
-    }
-
     const load = async () => {
       setIsLoading(true)
       try {
-        const authHeaders = { Authorization: `Bearer ${customerToken}` }
+        const customerToken = localStorage.getItem('customerToken')
+        const authHeaders = customerToken ? { Authorization: `Bearer ${customerToken}` } : undefined
 
         const [profileRes, ordersRes, menuRes] = await Promise.all([
           fetch('/api/customers/profile', { headers: authHeaders }),
@@ -76,7 +71,7 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
         ])
 
         if (!profileRes.ok) {
-          throw new Error('Session expired. Please login again.')
+          throw new Error('Unauthorized')
         }
 
         const profileData = await profileRes.json()
@@ -89,7 +84,7 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
         setTodayMenu(menuData)
       } catch (error) {
         console.error(error)
-        toast.error(error instanceof Error ? error.message : 'Failed to load client data')
+        toast.error('Please login again.')
         localStorage.removeItem('customerToken')
         localStorage.removeItem('customerInfo')
         router.push(makeClientSiteHref(params.subdomain, '/login'))
@@ -108,12 +103,12 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
   const handleLogout = () => {
     localStorage.removeItem('customerToken')
     localStorage.removeItem('customerInfo')
+    fetch('/api/customers/auth/logout', { method: 'POST' }).catch(() => {})
     router.push(makeClientSiteHref(params.subdomain, '/login'))
   }
 
   const handleSaveLocation = async () => {
     const customerToken = localStorage.getItem('customerToken')
-    if (!customerToken) return
 
     if (!googleMapsLink.trim()) {
       toast.error('Please paste Google Maps link or coordinates')
@@ -126,7 +121,7 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${customerToken}`,
+          ...(customerToken ? { Authorization: `Bearer ${customerToken}` } : {}),
         },
         body: JSON.stringify({ googleMapsLink: googleMapsLink.trim() }),
       })
@@ -149,7 +144,6 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
 
   const handleTogglePlan = async (nextActive: boolean) => {
     const customerToken = localStorage.getItem('customerToken')
-    if (!customerToken) return
     if (!profile) return
 
     setIsTogglingPlan(true)
@@ -158,7 +152,7 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${customerToken}`,
+          ...(customerToken ? { Authorization: `Bearer ${customerToken}` } : {}),
         },
         body: JSON.stringify({ active: nextActive }),
       })

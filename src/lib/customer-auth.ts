@@ -60,12 +60,12 @@ export function verifyCustomerToken(token: string): CustomerTokenPayload | null 
 
 export async function getCustomerFromRequest(request: NextRequest) {
     const authHeader = request.headers.get('authorization')
+    const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null
+    const cookieToken = request.cookies.get('customerToken')?.value || null
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return null
-    }
+    const token = bearerToken || cookieToken
+    if (!token) return null
 
-    const token = authHeader.split(' ')[1]
     const payload = verifyCustomerToken(token)
 
     if (!payload || payload.role !== 'CUSTOMER') {
