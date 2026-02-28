@@ -14,12 +14,14 @@ const courierPatchSchema = z
     name: z.string().trim().min(1).max(120).optional(),
     latitude: z.number().finite().min(-90).max(90).nullable().optional(),
     longitude: z.number().finite().min(-180).max(180).nullable().optional(),
+    salary: z.number().int().min(0).optional(),
   })
   .refine(
     (payload) =>
       payload.name !== undefined ||
       payload.latitude !== undefined ||
-      payload.longitude !== undefined,
+      payload.longitude !== undefined ||
+      payload.salary !== undefined,
     { message: 'No update fields provided' }
   )
   .refine(
@@ -127,6 +129,7 @@ export async function PATCH(request: NextRequest) {
       updateData.latitude = parsed.data.latitude
       updateData.longitude = parsed.data.longitude
     }
+    if (parsed.data.salary !== undefined) updateData.salary = parsed.data.salary
 
     const updatedCourier = await db.admin.update({
       where: { id: existingCourier.id },

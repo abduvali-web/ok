@@ -14,7 +14,10 @@ const outputFile = path.join(
 const METHOD_ORDER = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 
 const routeDescriptionOverrides = new Map([
-  ["/api/admin/couriers", "Couriers list/create/update (PATCH requires courierId)."],
+  [
+    "/api/admin/couriers",
+    "Couriers list/create/update (PATCH requires courierId, supports name/location/salary).",
+  ],
   ["/api/admin/low-admins/[id]", "Update low admin/courier fields (includes salary)."],
   ["/api/admin/finance/salary", "Pay salary transaction."],
   ["/api/orders", "Orders list/create."],

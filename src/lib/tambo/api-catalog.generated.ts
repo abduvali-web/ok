@@ -151,7 +151,7 @@ export const SITE_ENDPOINT_CATALOG = [
       "POST",
       "PATCH"
     ],
-    "description": "Couriers list/create/update (PATCH requires courierId)."
+    "description": "Couriers list/create/update (PATCH requires courierId, supports name/location/salary)."
   },
   {
     "path": "/api/admin/dispatch/normalize-drafts",
