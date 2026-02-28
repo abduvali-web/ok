@@ -123,6 +123,15 @@ export function TamboAgentWidget() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const { overflow } = document.body.style;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = overflow;
+    };
+  }, [isOpen]);
+
   if (!canShow) return null;
   const hasRealThread = currentThreadId !== "placeholder";
   const canUseSuggestions =
@@ -156,8 +165,8 @@ export function TamboAgentWidget() {
 
       {/* Panel */}
       {isOpen ? (
-        <div className="fixed bottom-4 right-4 z-50 w-[360px] max-w-[calc(100vw-2rem)]">
-          <Card className="overflow-hidden shadow-xl">
+        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm">
+          <Card className="flex h-full w-full flex-col overflow-hidden rounded-none border-0 shadow-none">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b py-3">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Bot className="h-4 w-4" />
@@ -191,8 +200,8 @@ export function TamboAgentWidget() {
               </div>
             </CardHeader>
 
-            <CardContent className="p-0">
-              <ScrollArea className="h-[420px]">
+            <CardContent className="flex min-h-0 flex-1 flex-col p-0">
+              <ScrollArea className="min-h-0 flex-1">
                 <div className="space-y-3 p-3">
                   {messages.map((message) => (
                     <div
