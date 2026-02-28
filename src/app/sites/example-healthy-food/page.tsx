@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
-import { Phone, LogIn, Check, Zap, Shield, Heart, Leaf, MessageCircle, Users } from 'lucide-react'
+import { Phone, LogIn, Check, Zap, Shield, Heart, Leaf } from 'lucide-react'
 import Link from 'next/link'
 
 // Pre-built example content matching the showcase prompt
@@ -17,11 +17,11 @@ const EXAMPLE_CONTENT = {
         { icon: Heart, uz: { title: "Sog'lom Ingredientlar", desc: "Faqat yangi va organik mahsulotlar" }, ru: { title: "Здоровые Ингредиенты", desc: "Только свежие и органические продукты" }, en: { title: "Healthy Ingredients", desc: "Only fresh and organic products" } },
         { icon: Zap, title: "Tez Yetkazib Berish", ru: { title: "Быстрая Доставка", desc: "30 минут гарантия" }, uz: { title: "Tez Yetkazib Berish", desc: "30 daqiqa kafolat" }, en: { title: "Fast Delivery", desc: "30 minute guarantee" } },
         { icon: Shield, ru: { title: "Качество Гарантировано", desc: "100% удовлетворение" }, uz: { title: "Sifat Kafolati", desc: "100% qoniqish" }, en: { title: "Quality Guaranteed", desc: "100% satisfaction" } },
-        { icon: Users, ru: { title: "Сообщество", desc: "Общайтесь с клиентами" }, uz: { title: "Jamoa", desc: "Mijozlar bilan muloqot" }, en: { title: "Community", desc: "Chat with clients" } }
+        
     ],
     pricing: [
         { name: { uz: "Boshlang'ich", ru: "Начальный", en: "Starter" }, price: "290,000 UZS", period: { uz: "/oy", ru: "/мес", en: "/mo" }, features: ["1 vaqtlik ovqat", "Kunlik menyular", "Kaloriya hisoblash"] },
-        { name: { uz: "Standart", ru: "Стандарт", en: "Standard" }, price: "490,000 UZS", period: { uz: "/oy", ru: "/мес", en: "/mo" }, features: ["2 vaqtlik ovqat", "Maxsus dieta", "Chat kirish", "Shaxsiy maslahatchi"], popular: true },
+        { name: { uz: "Standart", ru: "Стандарт", en: "Standard" }, price: "490,000 UZS", period: { uz: "/oy", ru: "/мес", en: "/mo" }, features: ["2 vaqtlik ovqat", "Maxsus dieta", "Shaxsiy kabinet", "Shaxsiy maslahatchi"], popular: true },
         { name: { uz: "Premium", ru: "Премиум", en: "Premium" }, price: "790,000 UZS", period: { uz: "/oy", ru: "/мес", en: "/mo" }, features: ["3 vaqtlik ovqat", "VIP yetkazish", "24/7 qo'llab-quvvatlash", "Oilaviy rejim"] }
     ],
     about: {
@@ -172,13 +172,6 @@ export default function ExampleSitePage() {
                     </p>
                 </div>
             </section>
-
-            {/* Chat Indicator */}
-            <div className="fixed bottom-6 right-6">
-                <Button className="rounded-full w-14 h-14 shadow-lg bg-green-600 hover:bg-green-700">
-                    <MessageCircle className="w-6 h-6" />
-                </Button>
-            </div>
 
             {/* Footer */}
             <footer className="py-8 border-t mt-auto bg-white">

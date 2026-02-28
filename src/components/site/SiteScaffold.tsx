@@ -83,11 +83,28 @@ export function SiteHero({ title, subtitle }: { title: string; subtitle: string 
         color: 'var(--site-hero-text)',
       }}
     >
-      <div className="mx-auto max-w-6xl px-4 py-20">
-        <h1 className="max-w-3xl text-4xl font-semibold leading-tight md:text-5xl">{title}</h1>
-        <p className="mt-4 max-w-2xl text-base md:text-lg" style={{ color: 'color-mix(in srgb, var(--site-hero-text) 80%, transparent)' }}>
-          {subtitle}
-        </p>
+      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-16 md:grid-cols-[1fr_300px] md:items-end md:py-20">
+        <div>
+          <h1 className="max-w-3xl text-4xl font-semibold leading-tight md:text-5xl">{title}</h1>
+          <p className="mt-4 max-w-2xl text-base md:text-lg" style={{ color: 'color-mix(in srgb, var(--site-hero-text) 82%, transparent)' }}>
+            {subtitle}
+          </p>
+        </div>
+
+        <div
+          className="rounded-3xl border p-4 text-sm backdrop-blur-sm"
+          style={{
+            borderColor: 'color-mix(in srgb, var(--site-hero-text) 24%, transparent)',
+            backgroundColor: 'color-mix(in srgb, var(--site-hero-text) 10%, transparent)',
+            color: 'color-mix(in srgb, var(--site-hero-text) 88%, transparent)',
+          }}
+        >
+          <p className="text-[11px] uppercase tracking-[0.2em] opacity-80">Fast Access</p>
+          <div className="mt-2 flex items-center gap-2">
+            <MessageCircle className="h-4 w-4" />
+            <span>Client, History</span>
+          </div>
+        </div>
       </div>
     </section>
   )
@@ -111,7 +128,6 @@ export function SiteClientNav({ subdomain }: { subdomain: string }) {
   const items = [
     { href: makeClientSiteHref(subdomain, '/client'), label: 'Client' },
     { href: makeClientSiteHref(subdomain, '/history'), label: 'History' },
-    { href: makeClientSiteHref(subdomain, '/chat'), label: 'Chat' },
   ]
 
   return (

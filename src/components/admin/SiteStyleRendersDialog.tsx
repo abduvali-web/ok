@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { LogIn, MessageCircle, ReceiptText, Sparkles, UserRound, Wallet } from 'lucide-react'
+import { LogIn, ReceiptText, Sparkles, UserRound, Wallet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -12,12 +12,12 @@ import type { SiteConfig } from '@/hooks/useSiteConfig'
 import type { SiteStylePreset, SiteRenderPageId } from '@/lib/site-builder'
 import { SiteClientNav, SiteHero, SitePageSurface, SitePanel, SitePublicHeader } from '@/components/site/SiteScaffold'
 
-function buildPreviewSite(preset: SiteStylePreset, siteName: string, subdomain: string, chatEnabled: boolean): SiteConfig {
+function buildPreviewSite(preset: SiteStylePreset, siteName: string, subdomain: string): SiteConfig {
   return {
     id: 'preview',
     subdomain,
     adminId: 'preview',
-    chatEnabled,
+    chatEnabled: false,
     styleVariant: preset.id,
     palette: preset.palette,
     siteName: siteName || 'Company',
@@ -30,13 +30,12 @@ function PreviewLanding({ site }: { site: SiteConfig }) {
       <SitePublicHeader site={site} />
       <SiteHero
         title={`${site.siteName} - Daily meals`}
-        subtitle="Profile, today menu, chat and order history in one client cabinet."
+        subtitle="Profile, today menu, and order history in one client cabinet."
       />
       <main className="mx-auto max-w-6xl space-y-4 px-4 py-10">
         <div className="grid gap-4 md:grid-cols-3">
           {[
             { title: 'Today menu', icon: Sparkles, desc: 'Daily dishes configured by your middle-admin.' },
-            { title: 'Community chat', icon: MessageCircle, desc: 'Chat with admin and other clients.' },
             { title: 'Balance', icon: Wallet, desc: 'Track balance and payments.' },
           ].map((item) => (
             <SitePanel key={item.title} className="space-y-2">
@@ -133,15 +132,6 @@ function PreviewClient({ site }: { site: SiteConfig }) {
             ))}
           </div>
         </SitePanel>
-
-        {site.chatEnabled && (
-          <SitePanel className="space-y-2">
-            <div className="flex items-center gap-2 font-medium">
-              <MessageCircle className="h-4 w-4" /> Embedded chat widget
-            </div>
-            <p className="text-sm" style={{ color: 'var(--site-muted)' }}>Clients can message middle-admin and others.</p>
-          </SitePanel>
-        )}
       </main>
     </SitePageSurface>
   )
@@ -189,49 +179,13 @@ function PreviewHistory({ site }: { site: SiteConfig }) {
   )
 }
 
-function PreviewChat({ site }: { site: SiteConfig }) {
-  return (
-    <SitePageSurface site={site}>
-      <SitePublicHeader site={site} />
-      <main className="mx-auto max-w-6xl space-y-4 px-4 py-8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold">Community Chat</h1>
-          <SiteClientNav subdomain={site.subdomain} />
-        </div>
-
-        <SitePanel className="space-y-3">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <MessageCircle className="h-4 w-4" /> Preview chat window
-          </div>
-          <div className="grid gap-2">
-            {[
-              { who: 'Middle-admin', text: 'Today menu is ready.' },
-              { who: 'Client', text: 'Thanks, got it.' },
-            ].map((m, idx) => (
-              <div
-                key={idx}
-                className="rounded-xl border p-3 text-sm"
-                style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-panel) 92%, transparent)' }}
-              >
-                <div className="mb-1 text-xs" style={{ color: 'var(--site-muted)' }}>{m.who}</div>
-                <div>{m.text}</div>
-              </div>
-            ))}
-          </div>
-        </SitePanel>
-      </main>
-    </SitePageSurface>
-  )
-}
-
-function PagePreview({ page, preset, siteName, subdomain, chatEnabled }: {
+function PagePreview({ page, preset, siteName, subdomain }: {
   page: SiteRenderPageId
   preset: SiteStylePreset
   siteName: string
   subdomain: string
-  chatEnabled: boolean
 }) {
-  const site = useMemo(() => buildPreviewSite(preset, siteName, subdomain, chatEnabled), [preset, siteName, subdomain, chatEnabled])
+  const site = useMemo(() => buildPreviewSite(preset, siteName, subdomain), [preset, siteName, subdomain])
 
   // Prevent clicks/links inside previews from navigating away.
   return (
@@ -239,7 +193,6 @@ function PagePreview({ page, preset, siteName, subdomain, chatEnabled }: {
       {page === 'landing' && <PreviewLanding site={site} />}
       {page === 'login' && <PreviewLogin site={site} mode="login" />}
       {page === 'register' && <PreviewLogin site={site} mode="register" />}
-      {page === 'chat' && <PreviewChat site={site} />}
       {page === 'history' && <PreviewHistory site={site} />}
       {page === 'client' && <PreviewClient site={site} />}
     </div>
@@ -252,14 +205,12 @@ export function SiteStyleRendersDialog({
   preset,
   siteName,
   subdomain,
-  chatEnabled,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   preset: SiteStylePreset | null
   siteName: string
   subdomain: string
-  chatEnabled: boolean
 }) {
   const [page, setPage] = useState<SiteRenderPageId>('landing')
 
@@ -286,7 +237,7 @@ export function SiteStyleRendersDialog({
             <ReceiptText className="h-4 w-4" /> {title}
           </DialogTitle>
           <DialogDescription>
-            Render preview of 6 pages for this style. Company name and subdomain are taken from Profile settings.
+            Render preview of 5 pages for this style. Company name and subdomain are taken from Profile settings.
           </DialogDescription>
         </DialogHeader>
 
@@ -315,7 +266,6 @@ export function SiteStyleRendersDialog({
                       <UserRound className="h-3.5 w-3.5" /> Client
                     </TabsTrigger>
                     <TabsTrigger value="history">History</TabsTrigger>
-                    <TabsTrigger value="chat">Chat</TabsTrigger>
                   </TabsList>
                   <TabsContent value={page} className="mt-3">
                     <div className="text-xs text-muted-foreground">
@@ -339,7 +289,6 @@ export function SiteStyleRendersDialog({
                   preset={preset}
                   siteName={siteName}
                   subdomain={subdomain}
-                  chatEnabled={chatEnabled}
                 />
               </div>
             </div>

@@ -113,7 +113,7 @@ export const AI_TOOLS = [
             type: SchemaType.OBJECT,
             properties: {
                 websiteId: { type: SchemaType.STRING, description: 'Website ID' },
-                updates: { type: SchemaType.STRING, description: 'Updates as JSON (content, theme, chatEnabled, etc.)' }
+                updates: { type: SchemaType.STRING, description: 'Updates as JSON (content, theme, etc.)' }
             },
             required: ['websiteId', 'updates']
         }

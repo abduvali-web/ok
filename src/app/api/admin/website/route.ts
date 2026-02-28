@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
         subdomain: website?.subdomain ?? '',
         siteName: inferredSiteName,
         styleVariant: stylePreset?.id ?? DEFAULT_STYLE_VARIANT,
-        chatEnabled: website?.chatEnabled ?? true,
+        chatEnabled: false,
         style: stylePreset ?? SITE_STYLE_PRESETS[0],
       },
       presets: SITE_STYLE_PRESETS,
@@ -89,7 +89,7 @@ export async function PUT(request: NextRequest) {
       ? body.siteName.trim().slice(0, 80)
       : fallbackName
     const styleVariant = typeof body.styleVariant === 'string' ? body.styleVariant : DEFAULT_STYLE_VARIANT
-    const chatEnabled = Boolean(body.chatEnabled)
+    const chatEnabled = false
 
     if (!isValidSubdomain(subdomain)) {
       return NextResponse.json({ error: 'Subdomain must be 3-32 chars using letters, numbers, and hyphens' }, { status: 400 })
@@ -137,7 +137,7 @@ export async function PUT(request: NextRequest) {
         id: website.id,
         subdomain: website.subdomain,
         siteName,
-        chatEnabled: website.chatEnabled,
+        chatEnabled: false,
         styleVariant: updatedTheme.styleVariant,
       },
       urls: {

@@ -86,18 +86,32 @@ export function SiteContent({ content, subdomain, siteName }: SiteContentProps) 
                     color: 'var(--site-hero-text)',
                 }}
             >
-                <div className="mx-auto max-w-6xl px-4 py-20">
-                    <h1 className="max-w-3xl text-4xl font-semibold leading-tight md:text-5xl">
-                        {t(content.hero.title)}
-                    </h1>
-                    <p className="mt-4 max-w-2xl text-base md:text-lg">{t(content.hero.subtitle)}</p>
-                    <div className="mt-6 flex flex-wrap gap-3">
-                        <Link href={href('/client')}>
-                            <Button size="lg">{t(content.hero.cta)}</Button>
-                        </Link>
-                        <Link href={href('/chat')}>
-                            <Button size="lg" variant="outline">Community Chat</Button>
-                        </Link>
+                <div className="mx-auto grid max-w-6xl gap-6 px-4 py-16 md:grid-cols-[1fr_280px] md:items-end md:py-20">
+                    <div>
+                        <h1 className="max-w-3xl text-4xl font-semibold leading-tight md:text-5xl">
+                            {t(content.hero.title)}
+                        </h1>
+                        <p className="mt-4 max-w-2xl text-base md:text-lg">{t(content.hero.subtitle)}</p>
+                        <div className="mt-6 flex flex-wrap gap-3">
+                            <Link href={href('/client')}>
+                                <Button size="lg" className="rounded-full px-7">{t(content.hero.cta)}</Button>
+                            </Link>
+                        </div>
+                    </div>
+
+                    <div
+                        className="rounded-3xl border p-4 text-sm backdrop-blur-sm"
+                        style={{
+                            borderColor: 'color-mix(in srgb, var(--site-hero-text) 24%, transparent)',
+                            backgroundColor: 'color-mix(in srgb, var(--site-hero-text) 10%, transparent)',
+                            color: 'color-mix(in srgb, var(--site-hero-text) 88%, transparent)',
+                        }}
+                    >
+                        <p className="text-[11px] uppercase tracking-[0.2em] opacity-80">Live Features</p>
+                        <div className="mt-2 flex items-center gap-2">
+                            <MessageCircle className="h-4 w-4" />
+                            <span>Balance, History, Client Area</span>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -141,7 +155,6 @@ export function SiteContent({ content, subdomain, siteName }: SiteContentProps) 
                         { href: href('/register'), label: 'Register' },
                         { href: href('/client'), label: 'Client Home' },
                         { href: href('/history'), label: 'History' },
-                        { href: href('/chat'), label: 'Chat' },
                     ].map((item) => (
                         <Link key={item.href} href={item.href}>
                             <div

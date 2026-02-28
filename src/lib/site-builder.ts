@@ -4,7 +4,6 @@ export const SITE_RENDER_PAGES = [
   { id: 'landing', label: 'Landing' },
   { id: 'login', label: 'Login' },
   { id: 'register', label: 'Register' },
-  { id: 'chat', label: 'Chat' },
   { id: 'history', label: 'History' },
   { id: 'client', label: 'Client Home' },
 ] as const
@@ -168,9 +167,9 @@ export function buildDefaultSiteContent(siteName: string): GeneratedSiteContent 
         en: withSiteName('{siteName} - Daily healthy meals', siteName),
       },
       subtitle: {
-        uz: 'Profilingiz, bugungi menyu, chat va buyurtmalar bir joyda.',
-        ru: 'Profil, segodnyashnee menyu, chat i istoriya zakazov v odnom kabinete.',
-        en: 'Profile, today menu, chat, and order history in one place.',
+        uz: 'Profilingiz, bugungi menyu va buyurtmalar bir joyda.',
+        ru: 'Profil, segodnyashnee menyu i istoriya zakazov v odnom kabinete.',
+        en: 'Profile, today menu, and order history in one place.',
       },
       cta: {
         uz: 'Kabinetga kirish',
@@ -190,19 +189,6 @@ export function buildDefaultSiteContent(siteName: string): GeneratedSiteContent 
           uz: 'Middle admin sozlagan kunlik taomlar.',
           ru: 'Dnevnye blyuda po nastroikam middle admina.',
           en: 'Daily dishes based on middle-admin configuration.',
-        },
-      },
-      {
-        icon: 'MessageCircle',
-        title: {
-          uz: 'Jamoa chat',
-          ru: 'Komandnyi chat',
-          en: 'Community chat',
-        },
-        description: {
-          uz: 'Middle admin va boshqa mijozlar bilan aloqa.',
-          ru: 'Obshenie s middle admin i drugimi klientami.',
-          en: 'Talk to your middle admin and other clients.',
         },
       },
       {
@@ -253,7 +239,6 @@ export function buildDefaultSiteContent(siteName: string): GeneratedSiteContent 
         en: 'A personalized service for each customer.',
       },
     },
-    chatEnabled: true,
   }
 }
 

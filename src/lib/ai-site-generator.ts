@@ -28,7 +28,6 @@ export interface GeneratedSiteContent {
         title: { uz: string; ru: string; en: string }
         description: { uz: string; ru: string; en: string }
     }
-    chatEnabled: boolean
 }
 
 // Database schema context for Gemini to understand the data structure
@@ -70,22 +69,10 @@ const DATABASE_CONTEXT = `
 4. Customers can view their orders, calories, and status via the generated website
 `
 
-// Check if prompt mentions chat or community features
-function detectChatRequest(prompt: string): boolean {
-    const chatKeywords = [
-        'chat', 'чат', 'suhbat', 'community', 'сообщество', 'jamoa',
-        'message', 'сообщение', 'xabar', 'talk', 'communicate', 'discuss'
-    ]
-    const lowerPrompt = prompt.toLowerCase()
-    return chatKeywords.some(keyword => lowerPrompt.includes(keyword))
-}
-
 export async function generateWebsiteContent(prompt: string): Promise<GeneratedSiteContent> {
     if (!apiKey) {
         throw new Error('GEMINI_API_KEY is missing')
     }
-
-    const chatEnabled = detectChatRequest(prompt)
 
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
@@ -106,38 +93,36 @@ The content MUST be in 3 languages: Uzbek (uz), Russian (ru), and English (en).
 - Each Customer can log in to see ONLY their own orders and data
 - The website connects to the Middle Admin's database automatically
 - All data queries are scoped to the Middle Admin who created the website
-${chatEnabled ? '- CHAT IS ENABLED: Clients can chat with each other (only clients of the same Middle Admin)' : ''}
 
 Return ONLY valid JSON matching this structure:
 {
-  "hero": { 
-    "title": { "uz": "", "ru": "", "en": "" }, 
-    "subtitle": { "uz": "", "ru": "", "en": "" }, 
-    "cta": { "uz": "", "ru": "", "en": "" } 
+  "hero": {
+    "title": { "uz": "", "ru": "", "en": "" },
+    "subtitle": { "uz": "", "ru": "", "en": "" },
+    "cta": { "uz": "", "ru": "", "en": "" }
   },
   "features": [
-    { 
-      "title": { "uz": "", "ru": "", "en": "" }, 
-      "description": { "uz": "", "ru": "", "en": "" }, 
-      "icon": "lucide-react-icon-name" 
+    {
+      "title": { "uz": "", "ru": "", "en": "" },
+      "description": { "uz": "", "ru": "", "en": "" },
+      "icon": "lucide-react-icon-name"
     }
   ],
   "pricing": [
-    { 
-      "name": { "uz": "", "ru": "", "en": "" }, 
-      "price": "", 
-      "features": [{ "uz": "", "ru": "", "en": "" }] 
+    {
+      "name": { "uz": "", "ru": "", "en": "" },
+      "price": "",
+      "features": [{ "uz": "", "ru": "", "en": "" }]
     }
   ],
-  "about": { 
-    "title": { "uz": "", "ru": "", "en": "" }, 
-    "description": { "uz": "", "ru": "", "en": "" } 
-  },
-  "chatEnabled": ${chatEnabled}
+  "about": {
+    "title": { "uz": "", "ru": "", "en": "" },
+    "description": { "uz": "", "ru": "", "en": "" }
+  }
 }
 
 Ensure the tone is professional, engaging, and persuasive.
-For icons, use valid Lucide React icon names (e.g., "Zap", "Shield", "Heart", "Leaf", "MessageCircle").
+For icons, use valid Lucide React icon names (e.g., "Zap", "Shield", "Heart", "Leaf").
 `
 
     const result = await model.generateContent(systemPrompt)
@@ -147,12 +132,10 @@ For icons, use valid Lucide React icon names (e.g., "Zap", "Shield", "Heart", "L
     try {
         // Clean up markdown code blocks if present
         const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim()
-        const parsed = JSON.parse(jsonStr)
-        // Ensure chatEnabled is set based on our detection
-        parsed.chatEnabled = chatEnabled
-        return parsed
+        return JSON.parse(jsonStr)
     } catch {
         console.error('Failed to parse AI response:', text)
         throw new Error('Failed to generate valid JSON content')
     }
 }
+

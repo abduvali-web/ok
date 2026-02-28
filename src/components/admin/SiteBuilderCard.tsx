@@ -5,7 +5,6 @@ import { Eye, Globe, Loader2, Palette, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SiteStyleRendersDialog } from '@/components/admin/SiteStyleRendersDialog'
@@ -23,7 +22,6 @@ type WebsiteSettingsResponse = {
     subdomain: string
     siteName: string
     styleVariant: SiteStyleVariant
-    chatEnabled: boolean
   }
   baseHost: string
 }
@@ -36,7 +34,6 @@ export function SiteBuilderCard() {
   const [siteName, setSiteName] = useState('')
   const [subdomain, setSubdomain] = useState('')
   const [styleVariant, setStyleVariant] = useState<SiteStyleVariant>(DEFAULT_STYLE_VARIANT)
-  const [chatEnabled, setChatEnabled] = useState(true)
   const [previewPresetId, setPreviewPresetId] = useState<SiteStyleVariant | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
 
@@ -58,7 +55,6 @@ export function SiteBuilderCard() {
         setSiteName(data.website.siteName || '')
         setSubdomain(data.website.subdomain || '')
         setStyleVariant(data.website.styleVariant || DEFAULT_STYLE_VARIANT)
-        setChatEnabled(Boolean(data.website.chatEnabled))
         setBaseHost(data.baseHost || 'localhost:3000')
       } catch (error) {
         console.error(error)
@@ -92,7 +88,6 @@ export function SiteBuilderCard() {
           siteName: siteName.trim(),
           subdomain: normalizedSubdomain,
           styleVariant,
-          chatEnabled,
         }),
       })
 
@@ -201,7 +196,7 @@ export function SiteBuilderCard() {
           <Palette className="h-4 w-4" /> Website Builder
         </CardTitle>
         <CardDescription>
-          Choose subdomain, brand name, and one of 4 style variants. Each style previews 6 pages.
+          Choose subdomain, brand name, and one of 4 style variants. Each style previews 5 pages.
         </CardDescription>
       </CardHeader>
 
@@ -212,7 +207,6 @@ export function SiteBuilderCard() {
           preset={previewPreset}
           siteName={siteName.trim() || 'Company'}
           subdomain={normalizedSubdomain || 'your-subdomain'}
-          chatEnabled={chatEnabled}
         />
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -235,18 +229,6 @@ export function SiteBuilderCard() {
               placeholder="healthy-meals"
             />
             <p className="text-xs text-muted-foreground">Path URL: `/sites/{normalizedSubdomain || 'your-subdomain'}`</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 rounded-lg border border-border p-3">
-          <Checkbox
-            id="chatEnabled"
-            checked={chatEnabled}
-            onCheckedChange={(value) => setChatEnabled(Boolean(value))}
-          />
-          <div className="grid gap-0.5">
-            <Label htmlFor="chatEnabled">Enable community chat</Label>
-            <span className="text-xs text-muted-foreground">Clients can chat with middle-admin and other clients in this subdomain.</span>
           </div>
         </div>
 

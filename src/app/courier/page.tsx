@@ -614,7 +614,9 @@ export default function CourierPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="chat">{courierData && <ChatTab />}</TabsContent>
+          <TabsContent value="chat" className="space-y-4">
+            {courierData && <ChatTab />}
+          </TabsContent>
           <TabsContent value="profile">{courierData && <CourierProfile courier={courierData} />}</TabsContent>
         </Tabs>
       </main>

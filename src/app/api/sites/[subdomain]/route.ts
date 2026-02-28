@@ -31,7 +31,7 @@ export async function GET(
             id: website.id,
             subdomain: website.subdomain,
             adminId: website.adminId,
-            chatEnabled: website.chatEnabled,
+            chatEnabled: false,
             styleVariant: theme.styleVariant,
             palette: theme.palette,
             siteName: content.about.title.en.replace(/^About\s+/, '') || subdomain,
