@@ -1,3 +1,6 @@
+import { defineTool } from "@tambo-ai/react";
+import { z } from "zod";
+
 type AnyToolInput = Record<string, unknown>;
 
 type GuardOptions = {
@@ -24,3 +27,27 @@ export function withTamboToolGuard<TInput extends AnyToolInput, TResult>(
   };
 }
 
+type GuardedToolDefinition<TInput extends AnyToolInput, TResult> = {
+  name: string;
+  title?: string;
+  description: string;
+  annotations?: Record<string, unknown>;
+  inputSchema: z.ZodType<TInput>;
+  outputSchema: z.ZodType<TResult>;
+  tool: (input: TInput) => Promise<TResult>;
+  defaultMessage?: string;
+};
+
+export function registerTamboTool<TInput extends AnyToolInput, TResult>({
+  defaultMessage,
+  tool,
+  ...toolDefinition
+}: GuardedToolDefinition<TInput, TResult>) {
+  return defineTool({
+    ...toolDefinition,
+    tool: withTamboToolGuard(tool, {
+      toolName: toolDefinition.name,
+      defaultMessage,
+    }),
+  });
+}
