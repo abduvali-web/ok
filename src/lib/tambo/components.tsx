@@ -217,7 +217,16 @@ function SiteDataTable({
   }>;
   emptyText?: string;
 }) {
-  const safeColumns = columns ?? [];
+  const safeColumns =
+    columns?.filter(
+      (col): col is { key: string; label: string } =>
+        Boolean(
+          col &&
+            typeof col.key === "string" &&
+            col.key.length > 0 &&
+            typeof col.label === "string"
+        )
+    ) ?? [];
   const safeRows = rows ?? [];
 
   if (safeColumns.length === 0 || safeRows.length === 0) {
@@ -251,16 +260,26 @@ function SiteDataTable({
               </tr>
             </thead>
             <tbody>
-              {safeRows.map((row) => (
-                <tr key={row.id} className="border-b last:border-0">
+              {safeRows.map((row, rowIndex) => (
+                <tr
+                  key={typeof row.id === "string" ? row.id : `row-${rowIndex}`}
+                  className="border-b last:border-0"
+                >
                   {safeColumns.map((col) => {
-                    const cell = row.cells.find((value) => value.key === col.key);
+                    const rowCells = Array.isArray(row.cells) ? row.cells : [];
+                    const cell = rowCells.find((value) => value?.key === col.key);
+                    const cellValue =
+                      typeof cell?.value === "string"
+                        ? cell.value
+                        : cell?.value === undefined || cell?.value === null
+                          ? "-"
+                          : String(cell.value);
                     return (
                       <td
-                        key={`${row.id}:${col.key}`}
+                        key={`${typeof row.id === "string" ? row.id : `row-${rowIndex}`}:${col.key}`}
                         className={`px-2 py-2 ${toneClassName(cell?.tone)}`}
                       >
-                        {cell?.value ?? "-"}
+                        {cellValue}
                       </td>
                     );
                   })}
