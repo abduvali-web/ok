@@ -23,12 +23,14 @@ const siteApiResponseSchema = z.object({
   error: z.string().optional(),
 });
 
-const siteApiRequestInputSchema = z.object({
-  method: apiMethodSchema.default("GET"),
-  path: z.string().min(1),
-  queryParams: z.array(queryParamSchema).max(50).optional(),
-  jsonBody: z.string().optional(),
-});
+const siteApiRequestInputSchema = z
+  .object({
+    method: apiMethodSchema.optional(),
+    path: z.string().optional(),
+    queryParams: z.array(queryParamSchema).max(50).optional(),
+    jsonBody: z.string().optional(),
+  })
+  .passthrough();
 
 const siteApiCatalogSchema = z.object({
   title: z.string(),
@@ -179,17 +181,47 @@ export const siteApiRequestTool = registerTamboTool({
   outputSchema: siteApiResponseSchema,
   defaultMessage: "Site API request failed.",
   tool: async (input) => {
-    const parsedInput = siteApiRequestInputSchema.safeParse(input);
-    if (!parsedInput.success) {
-      throw new Error(
-        "Invalid site_api_request input. Required: method and path starting with /api/."
-      );
+    const rawInput =
+      input && typeof input === "object"
+        ? (input as Record<string, unknown>)
+        : ({} as Record<string, unknown>);
+
+    const safeMethod = apiMethodSchema.safeParse(rawInput.method).success
+      ? (rawInput.method as z.infer<typeof apiMethodSchema>)
+      : "GET";
+    const rawPath = typeof rawInput.path === "string" ? rawInput.path : "";
+    const safeQueryParams = Array.isArray(rawInput.queryParams)
+      ? rawInput.queryParams
+          .map((item) => queryParamSchema.safeParse(item))
+          .filter((item) => item.success)
+          .map((item) => item.data)
+      : undefined;
+    const jsonBody = typeof rawInput.jsonBody === "string" ? rawInput.jsonBody : undefined;
+
+    if (!rawPath.trim()) {
+      return {
+        ok: false,
+        method: safeMethod,
+        path: "/api/invalid",
+        status: 400,
+        error:
+          "Invalid site_api_request input. Required: method and path starting with /api/.",
+      };
     }
 
-    const { method, path, queryParams, jsonBody } = parsedInput.data;
-    const safeMethod = method ?? "GET";
+    let requestPath = rawPath;
+    try {
+      requestPath = buildRelativeApiUrl(rawPath, safeQueryParams);
+    } catch (error) {
+      return {
+        ok: false,
+        method: safeMethod,
+        path: rawPath,
+        status: 400,
+        error: error instanceof Error ? error.message : "Invalid API path.",
+      };
+    }
 
-    const requestPath = buildRelativeApiUrl(path, queryParams);
     const token = getOptionalBearerToken();
     const headers: Record<string, string> = {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -200,18 +232,38 @@ export const siteApiRequestTool = registerTamboTool({
       try {
         JSON.parse(jsonBody);
       } catch {
-        throw new Error("jsonBody must be a valid JSON string.");
+        return {
+          ok: false,
+          method: safeMethod,
+          path: requestPath,
+          status: 400,
+          error: "jsonBody must be a valid JSON string.",
+        };
       }
       headers["Content-Type"] = "application/json";
       body = jsonBody;
     }
 
-    const response = await fetch(requestPath, {
-      method: safeMethod,
-      credentials: "include",
-      headers,
-      ...(body ? { body } : {}),
-    });
+    let response: Response;
+    try {
+      response = await fetch(requestPath, {
+        method: safeMethod,
+        credentials: "include",
+        headers,
+        ...(body ? { body } : {}),
+      });
+    } catch (error) {
+      return {
+        ok: false,
+        method: safeMethod,
+        path: requestPath,
+        status: 502,
+        error:
+          error instanceof Error
+            ? `Network/request error: ${error.message}`
+            : "Network/request error.",
+      };
+    }
 
     const rawText = await response.text().catch(() => "");
     let normalized = rawText;
