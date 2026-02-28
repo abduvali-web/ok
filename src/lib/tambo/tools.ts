@@ -30,7 +30,7 @@ const siteApiRequestInputSchema = z
     queryParams: z.array(queryParamSchema).max(50).optional(),
     jsonBody: z.string().optional(),
   })
-  .passthrough();
+  .strict();
 
 const siteApiCatalogSchema = z.object({
   title: z.string(),
