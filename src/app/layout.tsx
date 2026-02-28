@@ -6,6 +6,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext';
 import { AdminSettingsProvider } from '@/contexts/AdminSettingsContext';
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
+import { TamboProviderClient } from "@/components/providers/TamboProviderClient";
 
 const sans = Inter({
   variable: "--font-geist-sans",
@@ -85,10 +86,12 @@ export default function RootLayout({
       >
         <LanguageProvider>
           <AdminSettingsProvider>
-            <ServiceWorkerRegistration />
-            {children}
-            <PWAInstallPrompt />
-            <Toaster />
+            <TamboProviderClient>
+              <ServiceWorkerRegistration />
+              {children}
+              <PWAInstallPrompt />
+              <Toaster />
+            </TamboProviderClient>
           </AdminSettingsProvider>
         </LanguageProvider>
       </body>
