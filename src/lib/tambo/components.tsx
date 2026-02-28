@@ -29,11 +29,12 @@ const ORDER_STATS_LABELS: Record<string, string> = {
   multiItemOrders: "2+ позиции",
 };
 
-function orderStatsEntries(stats: AdminStats) {
+function orderStatsEntries(stats?: Partial<AdminStats> | null) {
   const entries: Array<[string, number | undefined]> = [];
+  const safeStats = stats ?? {};
 
   for (const key of Object.keys(ORDER_STATS_LABELS)) {
-    entries.push([key, stats[key as keyof AdminStats]]);
+    entries.push([key, safeStats[key as keyof AdminStats]]);
   }
 
   return entries;
@@ -45,7 +46,7 @@ function AdminStatsGrid({
   highlightKeys,
 }: {
   title?: string;
-  stats: AdminStats;
+  stats?: Partial<AdminStats> | null;
   highlightKeys?: string[];
 }) {
   const highlight = new Set(highlightKeys ?? []);
@@ -76,7 +77,7 @@ function AdminStatsGrid({
                 ) : null}
               </div>
               <div className="mt-1 text-lg font-semibold tabular-nums">
-                {value === undefined ? "…" : value}
+                {value === undefined ? "..." : value}
               </div>
             </div>
           ))}
@@ -126,7 +127,10 @@ export const tamboComponents: TamboComponent[] = [
     component: AdminStatsGrid,
     propsSchema: z.object({
       title: z.string().optional(),
-      stats: adminStatsSchema.describe("Admin statistics object."),
+      stats: adminStatsSchema
+        .partial()
+        .optional()
+        .describe("Admin statistics object."),
       highlightKeys: z.array(z.string()).optional(),
     }),
   },
