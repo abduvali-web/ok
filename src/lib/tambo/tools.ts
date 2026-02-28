@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { adminStatsSchema } from "@/lib/tambo/schemas";
 import { registerTamboTool } from "@/lib/tambo/tool-guard";
+import { SITE_ENDPOINT_CATALOG as GENERATED_SITE_ENDPOINT_CATALOG } from "@/lib/tambo/api-catalog.generated";
+import {
+  SITE_UI_COMPONENT_CATALOG,
+  SITE_UI_PAGE_CATALOG,
+} from "@/lib/tambo/ui-catalog.generated";
 
 function getOptionalBearerToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -45,12 +50,22 @@ const siteApiCatalogSchema = z.object({
 
 const siteUiCatalogSchema = z.object({
   title: z.string(),
+  notes: z.array(z.string()).optional(),
   components: z.array(
     z.object({
       name: z.string(),
       purpose: z.string(),
     })
   ),
+  siteComponents: z
+    .array(
+      z.object({
+        name: z.string(),
+        purpose: z.string(),
+        source: z.string(),
+      })
+    )
+    .optional(),
   pages: z.array(
     z.object({
       path: z.string(),
@@ -63,52 +78,11 @@ const SITE_ENDPOINT_CATALOG: Array<{
   path: string;
   methods: Array<z.infer<typeof apiMethodSchema>>;
   description: string;
-}> = [
-  { path: "/api/admin/statistics", methods: ["GET"], description: "Dashboard stats" },
-  { path: "/api/admin/clients", methods: ["GET"], description: "Clients list" },
-  { path: "/api/admin/clients/[id]", methods: ["GET", "PATCH"], description: "Client details/update" },
-  { path: "/api/admin/clients/toggle-status", methods: ["POST"], description: "Toggle client status" },
-  { path: "/api/orders", methods: ["GET", "POST"], description: "Orders list/create" },
-  { path: "/api/orders/[orderId]", methods: ["GET", "PATCH"], description: "Order details/update" },
-  { path: "/api/admin/orders/bulk-update", methods: ["PATCH"], description: "Bulk update orders" },
-  { path: "/api/admin/orders/reorder", methods: ["PATCH"], description: "Reorder orders" },
-  { path: "/api/admin/orders/delete", methods: ["DELETE"], description: "Soft delete order" },
-  { path: "/api/admin/orders/restore", methods: ["POST"], description: "Restore soft-deleted order" },
-  { path: "/api/admin/orders/permanent-delete", methods: ["DELETE"], description: "Permanently delete order" },
-  {
-    path: "/api/admin/couriers",
-    methods: ["GET", "PATCH", "POST"],
-    description:
-      "Couriers list/create/update. For PATCH, send JSON body with courierId plus changed fields.",
-  },
-  { path: "/api/admin/live-map", methods: ["GET"], description: "Live courier map data" },
-  { path: "/api/admin/middle-admins", methods: ["GET", "POST"], description: "Middle admin CRUD entrypoint" },
-  { path: "/api/admin/low-admins", methods: ["GET", "POST"], description: "Low admin CRUD entrypoint" },
-  { path: "/api/admin/profile", methods: ["GET", "PUT"], description: "Current admin profile" },
-  { path: "/api/admin/profile/change-password", methods: ["POST"], description: "Change password" },
-  { path: "/api/admin/action-logs", methods: ["GET"], description: "Audit logs" },
-  { path: "/api/admin/finance/company", methods: ["GET"], description: "Company finance summary" },
-  { path: "/api/admin/finance/clients", methods: ["GET"], description: "Client finance summary" },
-  { path: "/api/admin/finance/salary", methods: ["GET"], description: "Salary finance summary" },
-  { path: "/api/admin/finance/transaction", methods: ["POST"], description: "Create finance transaction" },
-  { path: "/api/admin/warehouse", methods: ["GET"], description: "Warehouse overview" },
-  { path: "/api/admin/warehouse/inventory", methods: ["GET", "POST"], description: "Inventory data/update" },
-  { path: "/api/admin/warehouse/ingredients", methods: ["GET", "POST"], description: "Ingredients data/update" },
-  { path: "/api/admin/warehouse/dishes", methods: ["GET", "POST"], description: "Dishes data/update" },
-  { path: "/api/admin/warehouse/cooking-plan", methods: ["GET"], description: "Cooking plan" },
-  { path: "/api/admin/sets", methods: ["GET", "POST"], description: "Meal sets list/create" },
-  { path: "/api/admin/website", methods: ["GET", "POST", "PATCH"], description: "Website builder config" },
-  { path: "/api/admin/features", methods: ["GET", "POST"], description: "Feature flags/config" },
-  { path: "/api/admin/menus", methods: ["GET", "POST"], description: "Menu data" },
-  { path: "/api/admin/users-list", methods: ["GET"], description: "Users listing for admin panel" },
-  { path: "/api/chat/conversations", methods: ["GET", "POST"], description: "Internal chat conversations" },
-  { path: "/api/chat/messages", methods: ["GET", "POST", "PATCH"], description: "Internal chat messages" },
-  { path: "/api/courier/orders", methods: ["GET"], description: "Courier orders" },
-  { path: "/api/courier/stats", methods: ["GET"], description: "Courier statistics" },
-  { path: "/api/courier/profile", methods: ["GET"], description: "Courier profile" },
-  { path: "/api/system/auto-scheduler", methods: ["POST"], description: "Run auto scheduler" },
-  { path: "/api/health", methods: ["GET"], description: "Health check" },
-];
+}> = GENERATED_SITE_ENDPOINT_CATALOG.map((endpoint) => ({
+  path: endpoint.path,
+  methods: [...endpoint.methods] as Array<z.infer<typeof apiMethodSchema>>,
+  description: endpoint.description,
+}));
 
 function buildRelativeApiUrl(
   path: string,
@@ -353,6 +327,10 @@ export const siteUiCatalogTool = registerTamboTool({
   tool: async () => {
     return {
       title: "AutoFood UI catalog",
+      notes: [
+        "Use SiteRouteEmbed to render native site pages interactively (forms, tables, controls).",
+        "Use components list for Tambo-renderable cards/tables/charts inside chat.",
+      ],
       components: [
         { name: "AdminStatsGrid", purpose: "Order and customer stats cards" },
         { name: "SiteMetricGrid", purpose: "KPI dashboard cards" },
@@ -363,13 +341,15 @@ export const siteUiCatalogTool = registerTamboTool({
         { name: "SiteJsonPanel", purpose: "Raw API payload view" },
         { name: "SiteRouteEmbed", purpose: "Embed any internal route in an iframe" },
       ],
-      pages: [
-        { path: "/middle-admin", purpose: "Main middle admin dashboard" },
-        { path: "/middle-admin/database", purpose: "Database workspace + AI panel" },
-        { path: "/super-admin", purpose: "Super admin console" },
-        { path: "/low-admin", purpose: "Low admin workspace" },
-        { path: "/courier", purpose: "Courier app interface" },
-      ],
+      siteComponents: SITE_UI_COMPONENT_CATALOG.map((component) => ({
+        name: component.name,
+        purpose: component.purpose,
+        source: component.source,
+      })),
+      pages: SITE_UI_PAGE_CATALOG.map((page) => ({
+        path: page.path,
+        purpose: page.purpose,
+      })),
     };
   },
 });

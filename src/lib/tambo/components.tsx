@@ -1,5 +1,6 @@
 import type { TamboComponent } from "@tambo-ai/react";
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { z } from "zod";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -228,6 +229,20 @@ function SiteDataTable({
         )
     ) ?? [];
   const safeRows = rows ?? [];
+  const [query, setQuery] = useState("");
+
+  const filteredRows = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) return safeRows;
+    return safeRows.filter((row) => {
+      const rowCells = Array.isArray(row.cells) ? row.cells : [];
+      return rowCells.some((cell) => {
+        const rawValue =
+          cell?.value === undefined || cell?.value === null ? "" : String(cell.value);
+        return rawValue.toLowerCase().includes(normalizedQuery);
+      });
+    });
+  }, [query, safeRows]);
 
   if (safeColumns.length === 0 || safeRows.length === 0) {
     return (
@@ -248,6 +263,17 @@ function SiteDataTable({
         <CardTitle className="text-base">{title ?? "Data table"}</CardTitle>
       </CardHeader>
       <CardContent>
+        <div className="mb-3 flex items-center gap-2">
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search rows..."
+            className="h-8 w-full rounded-md border bg-background px-2 text-sm"
+          />
+          <span className="whitespace-nowrap text-xs text-muted-foreground">
+            {filteredRows.length} rows
+          </span>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-sm">
             <thead>
@@ -260,7 +286,7 @@ function SiteDataTable({
               </tr>
             </thead>
             <tbody>
-              {safeRows.map((row, rowIndex) => (
+              {filteredRows.map((row, rowIndex) => (
                 <tr
                   key={typeof row.id === "string" ? row.id : `row-${rowIndex}`}
                   className="border-b last:border-0"
