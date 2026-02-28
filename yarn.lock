@@ -10844,6 +10844,7 @@ __metadata:
     next-themes: "npm:^0.4.6"
     nodemon: "npm:^3.1.10"
     prisma: "npm:^5.22.0"
+    quansync: "npm:0.2.11"
     react: "npm:^19.0.0"
     react-day-picker: "npm:^9.8.0"
     react-dom: "npm:^19.0.0"
@@ -11466,6 +11467,13 @@ __metadata:
   dependencies:
     side-channel: "npm:^1.1.0"
   checksum: 10/a3458f2f389285c3512e0ebc55522ee370ac7cb720ba9f0eff3e30fb2bb07631caf556c08e2a3d4481a371ac14faa9ceb7442a0610c5a7e55b23a5bdee7b701c
+  languageName: node
+  linkType: hard
+
+"quansync@npm:0.2.11":
+  version: 0.2.11
+  resolution: "quansync@npm:0.2.11"
+  checksum: 10/d4f0cc21a25052a8a6183f17752a6221829c4795b40641de67c06945b356841ff00296d3700d0332dfe8e86100fdcc02f4be7559f3f1774a753b05adb7800d01
   languageName: node
   linkType: hard
 
