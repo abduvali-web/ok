@@ -169,13 +169,20 @@ export const siteApiRequestTool = registerTamboTool({
   title: "Site API request",
   description:
     "Call most site API routes. Supports GET/POST/PUT/PATCH/DELETE for relative /api/* paths.",
-  annotations: {
-    tamboStreamableHint: true,
-  },
+  // Keep this non-streamable: partial streaming tool args can break URL/input validation.
+  annotations: {},
   inputSchema: siteApiRequestInputSchema,
   outputSchema: siteApiResponseSchema,
   defaultMessage: "Site API request failed.",
-  tool: async ({ method, path, queryParams, jsonBody }) => {
+  tool: async (input) => {
+    const parsedInput = siteApiRequestInputSchema.safeParse(input);
+    if (!parsedInput.success) {
+      throw new Error(
+        "Invalid site_api_request input. Required: method and path starting with /api/."
+      );
+    }
+
+    const { method, path, queryParams, jsonBody } = parsedInput.data;
     const safeMethod = method ?? "GET";
 
     const requestPath = buildRelativeApiUrl(path, queryParams);
