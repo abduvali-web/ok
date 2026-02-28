@@ -10,8 +10,6 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { SiteClientNav, SitePageSurface, SitePanel, SitePublicHeader } from '@/components/site/SiteScaffold'
 import { useSiteConfig } from '@/hooks/useSiteConfig'
-import { ClientLiveMap } from '@/components/site/ClientLiveMap'
-import { clearStoredCustomerSession, isCustomerTokenForSite } from '@/lib/customer-site-session'
 import { makeClientSiteHref } from '@/lib/site-urls'
 
 type CustomerProfile = {

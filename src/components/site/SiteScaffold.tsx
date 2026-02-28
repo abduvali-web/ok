@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { type CSSProperties, type ReactNode } from 'react'
-import { LogIn, UserRound, UserPlus } from 'lucide-react'
+import { LogIn, MessageCircle, UserRound, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { SiteConfig } from '@/hooks/useSiteConfig'
 import { makeClientSiteHref } from '@/lib/site-urls'

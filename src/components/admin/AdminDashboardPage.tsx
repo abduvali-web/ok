@@ -54,7 +54,6 @@ import { UserGuide } from '@/components/UserGuide'
 import { TrialStatus } from '@/components/admin/TrialStatus'
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal'
 import { SiteBuilderCard } from '@/components/admin/SiteBuilderCard'
-import { SiteCommunityChat } from '@/components/admin/SiteCommunityChat'
 import { getDailyPrice, PLAN_TYPES } from '@/lib/menuData'
 import { CANONICAL_TABS, deriveVisibleTabs } from '@/components/admin/dashboard/tabs'
 import type { Client, Order } from '@/components/admin/dashboard/types'
@@ -3276,18 +3275,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   <ChatTab />
                 </div>
 
-                {!isLowAdminView && (
-                  <>
-                    {/* Divider */}
-                    <div className="border-t" />
-
-                    {/* Site Community Chat */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">Site Community Chat</h3>
-                      <SiteCommunityChat />
-                    </div>
-                  </>
-                )}
+                
               </CardContent>
             </Card>
           </TabsContent>
