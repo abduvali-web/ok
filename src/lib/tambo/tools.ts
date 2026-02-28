@@ -75,7 +75,12 @@ const SITE_ENDPOINT_CATALOG: Array<{
   { path: "/api/admin/orders/delete", methods: ["DELETE"], description: "Soft delete order" },
   { path: "/api/admin/orders/restore", methods: ["POST"], description: "Restore soft-deleted order" },
   { path: "/api/admin/orders/permanent-delete", methods: ["DELETE"], description: "Permanently delete order" },
-  { path: "/api/admin/couriers", methods: ["GET"], description: "Couriers list" },
+  {
+    path: "/api/admin/couriers",
+    methods: ["GET", "PATCH", "POST"],
+    description:
+      "Couriers list/create/update. For PATCH, send JSON body with courierId plus changed fields.",
+  },
   { path: "/api/admin/live-map", methods: ["GET"], description: "Live courier map data" },
   { path: "/api/admin/middle-admins", methods: ["GET", "POST"], description: "Middle admin CRUD entrypoint" },
   { path: "/api/admin/low-admins", methods: ["GET", "POST"], description: "Low admin CRUD entrypoint" },
@@ -222,31 +227,77 @@ export const siteApiRequestTool = registerTamboTool({
       };
     }
 
+    const courierByIdMatch = requestPath.match(/^\/api\/admin\/couriers\/([^/?#]+)$/);
+    let normalizedPath = requestPath;
+    let normalizedJsonBody = jsonBody;
+
+    if (courierByIdMatch) {
+      if (safeMethod !== "PATCH") {
+        return {
+          ok: false,
+          method: safeMethod,
+          path: requestPath,
+          status: 400,
+          error:
+            "Unsupported courier-by-id route. Use /api/admin/couriers. For updates, call PATCH /api/admin/couriers with courierId in JSON body.",
+        };
+      }
+
+      normalizedPath = "/api/admin/couriers";
+
+      let payload: Record<string, unknown> = {};
+      if (jsonBody) {
+        try {
+          const parsedPayload: unknown = JSON.parse(jsonBody);
+          if (
+            parsedPayload &&
+            typeof parsedPayload === "object" &&
+            !Array.isArray(parsedPayload)
+          ) {
+            payload = parsedPayload as Record<string, unknown>;
+          }
+        } catch {
+          return {
+            ok: false,
+            method: safeMethod,
+            path: requestPath,
+            status: 400,
+            error: "jsonBody must be a valid JSON string.",
+          };
+        }
+      }
+
+      if (typeof payload.courierId !== "string" || payload.courierId.trim().length === 0) {
+        payload.courierId = decodeURIComponent(courierByIdMatch[1]);
+      }
+      normalizedJsonBody = JSON.stringify(payload);
+    }
+
     const token = getOptionalBearerToken();
     const headers: Record<string, string> = {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
 
     let body: string | undefined;
-    if (jsonBody && safeMethod !== "GET") {
+    if (normalizedJsonBody && safeMethod !== "GET") {
       try {
-        JSON.parse(jsonBody);
+        JSON.parse(normalizedJsonBody);
       } catch {
         return {
           ok: false,
           method: safeMethod,
-          path: requestPath,
+          path: normalizedPath,
           status: 400,
           error: "jsonBody must be a valid JSON string.",
         };
       }
       headers["Content-Type"] = "application/json";
-      body = jsonBody;
+      body = normalizedJsonBody;
     }
 
     let response: Response;
     try {
-      response = await fetch(requestPath, {
+      response = await fetch(normalizedPath, {
         method: safeMethod,
         credentials: "include",
         headers,
@@ -256,7 +307,7 @@ export const siteApiRequestTool = registerTamboTool({
       return {
         ok: false,
         method: safeMethod,
-        path: requestPath,
+        path: normalizedPath,
         status: 502,
         error:
           error instanceof Error
@@ -280,7 +331,7 @@ export const siteApiRequestTool = registerTamboTool({
     return {
       ok: response.ok,
       method: safeMethod,
-      path: requestPath,
+      path: normalizedPath,
       status: response.status,
       ...(safeBody ? { body: safeBody } : {}),
       ...(!response.ok ? { error: `Request failed with status ${response.status}` } : {}),
