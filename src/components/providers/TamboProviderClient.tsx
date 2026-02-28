@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -9,7 +9,12 @@ import {
 } from "@tambo-ai/react";
 
 import { tamboComponents } from "@/lib/tambo/components";
-import { getAdminStatisticsTool } from "@/lib/tambo/tools";
+import {
+  getAdminStatisticsTool,
+  siteApiCatalogTool,
+  siteApiRequestTool,
+  siteUiCatalogTool,
+} from "@/lib/tambo/tools";
 import { TamboAgentWidget } from "@/components/tambo/TamboAgentWidget";
 
 function getStableAnonKey(): string {
@@ -44,7 +49,15 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
     setUserKey(getUserKeyFromStorage());
   }, []);
 
-  const tools = useMemo(() => [getAdminStatisticsTool], []);
+  const tools = useMemo(
+    () => [
+      getAdminStatisticsTool,
+      siteApiCatalogTool,
+      siteUiCatalogTool,
+      siteApiRequestTool,
+    ],
+    []
+  );
 
   if (!apiKey) return <>{children}</>;
 
@@ -64,7 +77,7 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
           content: [
             {
               type: "text",
-              text: "Привет! Я AI-агент. Могу показывать интерфейсные карточки (генеративный UI) и помогать в админке. Спроси про статистику или попроси подсказать, куда перейти.",
+              text: "You are AutoFood admin AI. Use site_api_catalog and site_ui_catalog first, then use site_api_request for live data (GET/POST/PUT/PATCH/DELETE). Render responses with AdminStatsGrid, SiteMetricGrid, SiteDataTable, SiteEntityCards, QuickLinks, SiteJsonPanel, and SiteRouteEmbed.",
             },
           ],
         },

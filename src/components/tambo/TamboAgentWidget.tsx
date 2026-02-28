@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Component,
@@ -16,7 +16,16 @@ import {
   useTamboSuggestions,
   useTamboThreadInput,
 } from "@tambo-ai/react";
-import { Bot, Loader2, MessageSquare, Plus, Send, X } from "lucide-react";
+import {
+  Bot,
+  Loader2,
+  Maximize2,
+  MessageSquare,
+  Minimize2,
+  Plus,
+  Send,
+  X,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,18 +72,18 @@ function TamboSuggestionsBar({ disabled }: { disabled: boolean }) {
 
   return (
     <div className="flex flex-wrap gap-2 pt-2">
-      {suggestions.map((s) => (
+      {suggestions.map((suggestion) => (
         <Button
-          key={s.id}
+          key={suggestion.id}
           type="button"
           variant="secondary"
           size="sm"
           className="h-7 px-2 text-xs"
-          onClick={() => accept({ suggestion: s })}
+          onClick={() => accept({ suggestion })}
           disabled={disabled || isFetching}
-          title={s.detailedSuggestion}
+          title={suggestion.detailedSuggestion}
         >
-          {s.title ?? "Suggestion"}
+          {suggestion.title ?? "Suggestion"}
         </Button>
       ))}
     </div>
@@ -95,6 +104,7 @@ export function TamboAgentWidget() {
     process.env.NEXT_PUBLIC_TAMBO_ENABLE_SUGGESTIONS === "true";
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -124,18 +134,18 @@ export function TamboAgentWidget() {
   }, [messages, isOpen]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !isFullscreen) return;
     const { overflow } = document.body.style;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = overflow;
     };
-  }, [isOpen]);
+  }, [isOpen, isFullscreen]);
 
   if (!canShow) return null;
+
   const hasRealThread = currentThreadId !== "placeholder";
-  const canUseSuggestions =
-    enableSuggestions && isIdentified && hasRealThread;
+  const canUseSuggestions = enableSuggestions && isIdentified && hasRealThread;
 
   const handleSend = async () => {
     if (!value.trim() || isDisabled) return;
@@ -151,22 +161,35 @@ export function TamboAgentWidget() {
 
   return (
     <>
-      {/* Toggle button */}
       {!isOpen ? (
         <Button
           type="button"
           className="fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full shadow-lg"
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            setIsOpen(true);
+            setIsFullscreen(false);
+          }}
           aria-label="Open AI agent"
         >
           <MessageSquare className="h-5 w-5" />
         </Button>
       ) : null}
 
-      {/* Panel */}
       {isOpen ? (
-        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm">
-          <Card className="flex h-full w-full flex-col overflow-hidden rounded-none border-0 shadow-none">
+        <div
+          className={
+            isFullscreen
+              ? "fixed inset-0 z-50 bg-background/95 backdrop-blur-sm"
+              : "fixed bottom-4 right-4 z-50 h-[min(760px,calc(100vh-1rem))] w-[min(560px,calc(100vw-1rem))]"
+          }
+        >
+          <Card
+            className={
+              isFullscreen
+                ? "flex h-full w-full flex-col overflow-hidden rounded-none border-0 shadow-none"
+                : "flex h-full w-full flex-col overflow-hidden rounded-2xl shadow-2xl"
+            }
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b py-3">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Bot className="h-4 w-4" />
@@ -192,6 +215,19 @@ export function TamboAgentWidget() {
                   type="button"
                   variant="ghost"
                   size="icon"
+                  onClick={() => setIsFullscreen((value) => !value)}
+                  aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                >
+                  {isFullscreen ? (
+                    <Minimize2 className="h-4 w-4" />
+                  ) : (
+                    <Maximize2 className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setIsOpen(false)}
                   aria-label="Close"
                 >
@@ -211,7 +247,7 @@ export function TamboAgentWidget() {
                       }`}
                     >
                       <div
-                        className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
+                        className={`max-w-[88%] rounded-lg px-3 py-2 text-sm ${
                           message.role === "user"
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted"
@@ -220,19 +256,13 @@ export function TamboAgentWidget() {
                         <div className="space-y-2">
                           {message.content.map((content, idx) => {
                             if (content.type === "text") {
-                              return (
-                                <div key={`${message.id}:t:${idx}`}>
-                                  {content.text}
-                                </div>
-                              );
+                              return <div key={`${message.id}:t:${idx}`}>{content.text}</div>;
                             }
 
                             if (content.type === "component") {
                               return (
                                 <div key={content.id} className="pt-1">
-                                  <TamboComponentErrorBoundary
-                                    componentName={content.name}
-                                  >
+                                  <TamboComponentErrorBoundary componentName={content.name}>
                                     <ComponentRenderer
                                       content={content}
                                       threadId={currentThreadId}
@@ -254,8 +284,7 @@ export function TamboAgentWidget() {
                                   key={`${message.id}:tool:${content.id}`}
                                   className="text-xs text-muted-foreground"
                                 >
-                                  {content.statusMessage ??
-                                    `Running tool: ${content.name}`}
+                                  {content.statusMessage ?? `Running tool: ${content.name}`}
                                 </div>
                               );
                             }
@@ -292,11 +321,10 @@ export function TamboAgentWidget() {
                   {isStreaming ? (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Thinking…
+                      Thinking...
                     </div>
                   ) : null}
 
-                  {/* Suggestions are opt-in because some Tambo projects return 403 for suggestions endpoints. */}
                   {canUseSuggestions ? (
                     <TamboSuggestionsBar disabled={isPending || isDisabled} />
                   ) : null}
@@ -309,11 +337,11 @@ export function TamboAgentWidget() {
                 <div className="flex gap-2">
                   <Input
                     value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") void handleSend();
+                    onChange={(event) => setValue(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") void handleSend();
                     }}
-                    placeholder="Напишите сообщение…"
+                    placeholder="Write a message..."
                     disabled={isDisabled || isPending}
                   />
                   <Button

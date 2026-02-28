@@ -7,26 +7,33 @@ import { Badge } from "@/components/ui/badge";
 import { adminStatsSchema, type AdminStats } from "@/lib/tambo/schemas";
 
 const ORDER_STATS_LABELS: Record<string, string> = {
-  successfulOrders: "Доставлено",
-  failedOrders: "Ошибки",
-  pendingOrders: "Ожидают",
-  inDeliveryOrders: "В доставке",
-  pausedOrders: "На паузе",
-  prepaidOrders: "Предоплата",
-  unpaidOrders: "Без оплаты",
-  cardOrders: "Карта",
-  cashOrders: "Наличные",
-  dailyCustomers: "Ежедневно",
-  evenDayCustomers: "Чётные дни",
-  oddDayCustomers: "Нечётные дни",
-  specialPreferenceCustomers: "С особыми пожеланиями",
-  orders1200: "1200 ккал",
-  orders1600: "1600 ккал",
-  orders2000: "2000 ккал",
-  orders2500: "2500 ккал",
-  orders3000: "3000 ккал",
-  singleItemOrders: "1 позиция",
-  multiItemOrders: "2+ позиции",
+  successfulOrders: "Delivered",
+  failedOrders: "Failed",
+  pendingOrders: "Pending",
+  inDeliveryOrders: "In delivery",
+  pausedOrders: "Paused",
+  prepaidOrders: "Prepaid",
+  unpaidOrders: "Unpaid",
+  cardOrders: "Card",
+  cashOrders: "Cash",
+  dailyCustomers: "Daily clients",
+  evenDayCustomers: "Even-day clients",
+  oddDayCustomers: "Odd-day clients",
+  specialPreferenceCustomers: "Special prefs",
+  orders1200: "1200 kcal",
+  orders1600: "1600 kcal",
+  orders2000: "2000 kcal",
+  orders2500: "2500 kcal",
+  orders3000: "3000 kcal",
+  singleItemOrders: "Single item",
+  multiItemOrders: "Multi item",
+};
+
+const toneClassName = (tone?: string) => {
+  if (tone === "success") return "text-emerald-600";
+  if (tone === "warning") return "text-amber-600";
+  if (tone === "danger") return "text-rose-600";
+  return "text-foreground";
 };
 
 function orderStatsEntries(stats?: Partial<AdminStats> | null) {
@@ -56,7 +63,7 @@ function AdminStatsGrid({
     <Card className="w-full">
       <CardHeader className="pb-3">
         <CardTitle className="text-base">
-          {title ?? "Статистика (админ)"}
+          {title ?? "Admin statistics"}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -72,7 +79,7 @@ function AdminStatsGrid({
                 </span>
                 {highlight.has(key) ? (
                   <Badge variant="secondary" className="shrink-0">
-                    important
+                    key
                   </Badge>
                 ) : null}
               </div>
@@ -97,7 +104,7 @@ function QuickLinks({
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">{title ?? "Быстрые ссылки"}</CardTitle>
+        <CardTitle className="text-base">{title ?? "Quick links"}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         {links.map((link) => (
@@ -119,25 +126,282 @@ function QuickLinks({
   );
 }
 
+function SiteMetricGrid({
+  title,
+  subtitle,
+  metrics,
+}: {
+  title?: string;
+  subtitle?: string;
+  metrics: Array<{
+    label: string;
+    value: string;
+    delta?: string;
+    tone?: "neutral" | "success" | "warning" | "danger";
+  }>;
+}) {
+  return (
+    <Card className="w-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">{title ?? "Metrics"}</CardTitle>
+        {subtitle ? (
+          <p className="text-xs text-muted-foreground">{subtitle}</p>
+        ) : null}
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-4">
+          {metrics.map((item, index) => (
+            <div
+              key={`${item.label}:${index}`}
+              className="rounded-md border bg-card px-3 py-2"
+            >
+              <p className="text-xs text-muted-foreground">{item.label}</p>
+              <p className={`mt-1 text-lg font-semibold ${toneClassName(item.tone)}`}>
+                {item.value}
+              </p>
+              {item.delta ? (
+                <p className="text-xs text-muted-foreground">{item.delta}</p>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SiteDataTable({
+  title,
+  columns,
+  rows,
+  emptyText,
+}: {
+  title?: string;
+  columns: Array<{ key: string; label: string }>;
+  rows: Array<{
+    id: string;
+    cells: Array<{ key: string; value: string; tone?: "neutral" | "success" | "warning" | "danger" }>;
+  }>;
+  emptyText?: string;
+}) {
+  if (rows.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">{title ?? "Data table"}</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          {emptyText ?? "No data"}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="w-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">{title ?? "Data table"}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-sm">
+            <thead>
+              <tr className="border-b text-left">
+                {columns.map((col) => (
+                  <th key={col.key} className="px-2 py-2 font-medium text-muted-foreground">
+                    {col.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id} className="border-b last:border-0">
+                  {columns.map((col) => {
+                    const cell = row.cells.find((value) => value.key === col.key);
+                    return (
+                      <td
+                        key={`${row.id}:${col.key}`}
+                        className={`px-2 py-2 ${toneClassName(cell?.tone)}`}
+                      >
+                        {cell?.value ?? "-"}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SiteEntityCards({
+  title,
+  items,
+}: {
+  title?: string;
+  items: Array<{
+    title: string;
+    subtitle?: string;
+    meta?: string;
+    status?: "active" | "paused" | "pending" | "failed";
+    href?: string;
+  }>;
+}) {
+  return (
+    <Card className="w-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">{title ?? "Entities"}</CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+        {items.map((item, index) => {
+          const statusTone =
+            item.status === "active"
+              ? "success"
+              : item.status === "pending"
+                ? "warning"
+                : item.status === "failed"
+                  ? "danger"
+                  : "neutral";
+
+          const content = (
+            <div className="rounded-md border bg-card px-3 py-2">
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-medium">{item.title}</p>
+                {item.status ? (
+                  <span className={`text-xs ${toneClassName(statusTone)}`}>
+                    {item.status}
+                  </span>
+                ) : null}
+              </div>
+              {item.subtitle ? (
+                <p className="text-xs text-muted-foreground">{item.subtitle}</p>
+              ) : null}
+              {item.meta ? <p className="mt-1 text-sm">{item.meta}</p> : null}
+            </div>
+          );
+
+          if (item.href) {
+            return (
+              <Link key={`${item.title}:${index}`} href={item.href} className="block">
+                {content}
+              </Link>
+            );
+          }
+
+          return <div key={`${item.title}:${index}`}>{content}</div>;
+        })}
+      </CardContent>
+    </Card>
+  );
+}
+
+function SiteJsonPanel({
+  title,
+  json,
+}: {
+  title?: string;
+  json: string;
+}) {
+  return (
+    <Card className="w-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">{title ?? "JSON data"}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <pre className="max-h-[480px] overflow-auto rounded-md border bg-muted p-3 text-xs leading-relaxed">
+          {json}
+        </pre>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SiteRouteEmbed({
+  title,
+  path,
+  height,
+}: {
+  title?: string;
+  path: string;
+  height?: number;
+}) {
+  const safePath = path.startsWith("/") ? path : "/";
+  const frameHeight = Math.min(Math.max(height ?? 620, 320), 1200);
+
+  return (
+    <Card className="w-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">{title ?? `Page: ${safePath}`}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <iframe
+          title={`embed:${safePath}`}
+          src={safePath}
+          className="w-full rounded-md border bg-background"
+          style={{ height: `${frameHeight}px` }}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
+const metricItemSchema = z.object({
+  label: z.string(),
+  value: z.string(),
+  delta: z.string().optional(),
+  tone: z.enum(["neutral", "success", "warning", "danger"]).optional(),
+});
+
+const tableColumnSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+});
+
+const tableCellSchema = z.object({
+  key: z.string(),
+  value: z.string(),
+  tone: z.enum(["neutral", "success", "warning", "danger"]).optional(),
+});
+
+const tableRowSchema = z.object({
+  id: z.string(),
+  cells: z.array(tableCellSchema),
+});
+
+const entityCardSchema = z.object({
+  title: z.string(),
+  subtitle: z.string().optional(),
+  meta: z.string().optional(),
+  status: z.enum(["active", "paused", "pending", "failed"]).optional(),
+  href: z.string().optional(),
+});
+
+const routeEmbedSchema = z.object({
+  title: z.string().optional(),
+  path: z.string().min(1),
+  height: z.number().int().min(320).max(1200).optional(),
+});
+
 export const tamboComponents: TamboComponent[] = [
   {
     name: "AdminStatsGrid",
     description:
-      "Shows a grid of AutoFood admin statistics (orders/customers). Use after calling get_admin_statistics tool.",
+      "Shows AutoFood order and customer statistics in a compact grid.",
     component: AdminStatsGrid,
     propsSchema: z.object({
       title: z.string().optional(),
-      stats: adminStatsSchema
-        .partial()
-        .optional()
-        .describe("Admin statistics object."),
+      stats: adminStatsSchema.partial().optional().describe("Admin statistics object."),
       highlightKeys: z.array(z.string()).optional(),
     }),
   },
   {
     name: "QuickLinks",
     description:
-      "Renders a list of links (navigation shortcuts) relevant to the user.",
+      "Renders navigation shortcuts for current admin workflows.",
     component: QuickLinks,
     propsSchema: z.object({
       title: z.string().optional(),
@@ -151,5 +415,55 @@ export const tamboComponents: TamboComponent[] = [
         )
         .min(1),
     }),
+  },
+  {
+    name: "SiteMetricGrid",
+    description:
+      "Renders KPI cards for dashboard-style metrics like orders, revenue, users.",
+    component: SiteMetricGrid,
+    propsSchema: z.object({
+      title: z.string().optional(),
+      subtitle: z.string().optional(),
+      metrics: z.array(metricItemSchema).min(1),
+    }),
+  },
+  {
+    name: "SiteDataTable",
+    description:
+      "Renders tabular data (orders, clients, couriers, transactions).",
+    component: SiteDataTable,
+    propsSchema: z.object({
+      title: z.string().optional(),
+      columns: z.array(tableColumnSchema).min(1),
+      rows: z.array(tableRowSchema),
+      emptyText: z.string().optional(),
+    }),
+  },
+  {
+    name: "SiteEntityCards",
+    description:
+      "Renders entity cards for clients/orders/couriers/sites with optional status and link.",
+    component: SiteEntityCards,
+    propsSchema: z.object({
+      title: z.string().optional(),
+      items: z.array(entityCardSchema).min(1),
+    }),
+  },
+  {
+    name: "SiteJsonPanel",
+    description:
+      "Displays pretty JSON text when raw API payload should be shown directly.",
+    component: SiteJsonPanel,
+    propsSchema: z.object({
+      title: z.string().optional(),
+      json: z.string().min(1),
+    }),
+  },
+  {
+    name: "SiteRouteEmbed",
+    description:
+      "Embeds any internal route so the agent can show native site UI components.",
+    component: SiteRouteEmbed,
+    propsSchema: routeEmbedSchema,
   },
 ];
