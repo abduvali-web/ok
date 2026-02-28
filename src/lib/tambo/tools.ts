@@ -2,7 +2,7 @@ import { defineTool } from "@tambo-ai/react";
 import { z } from "zod";
 import { adminStatsSchema } from "@/lib/tambo/schemas";
 
-function getAuthTokenFromStorage(): string | null {
+function getOptionalBearerToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("token");
 }
@@ -18,23 +18,22 @@ export const getAdminStatisticsTool = defineTool({
   inputSchema: z.object({}),
   outputSchema: adminStatsSchema,
   tool: async () => {
-    const token = getAuthTokenFromStorage();
-    if (!token) {
-      throw new Error("Not authenticated (missing token).");
-    }
-
+    const token = getOptionalBearerToken();
     const response = await fetch("/api/admin/statistics", {
       method: "GET",
+      credentials: "include",
       headers: {
-        Authorization: `Bearer ${token}`,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
 
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        throw new Error("Not authenticated. Please log in to the admin panel.");
+      }
+
       const text = await response.text().catch(() => "");
-      throw new Error(
-        `Failed to fetch statistics (${response.status}). ${text}`.trim()
-      );
+      throw new Error(`Failed to fetch statistics (${response.status}). ${text}`.trim());
     }
 
     const data: unknown = await response.json();
