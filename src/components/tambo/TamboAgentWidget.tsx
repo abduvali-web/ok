@@ -5,11 +5,9 @@ import {
   type ErrorInfo,
   type ReactNode,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
-import { usePathname } from "next/navigation";
 import {
   ComponentRenderer,
   useTambo,
@@ -90,19 +88,10 @@ function TamboSuggestionsBar({ disabled }: { disabled: boolean }) {
   );
 }
 
-function isAdminRoute(pathname: string) {
-  return (
-    pathname.startsWith("/middle-admin") ||
-    pathname.startsWith("/super-admin") ||
-    pathname.startsWith("/low-admin")
-  );
-}
-
 export function TamboAgentWidget() {
   const apiKey = process.env.NEXT_PUBLIC_TAMBO_API_KEY;
   const enableSuggestions =
     process.env.NEXT_PUBLIC_TAMBO_ENABLE_SUGGESTIONS === "true";
-  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -117,12 +106,6 @@ export function TamboAgentWidget() {
   } = useTambo();
   const { value, setValue, submit, isPending, isDisabled } =
     useTamboThreadInput();
-
-  const canShow = useMemo(() => {
-    if (!apiKey) return false;
-    if (!pathname) return false;
-    return isAdminRoute(pathname);
-  }, [apiKey, pathname]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -142,7 +125,7 @@ export function TamboAgentWidget() {
     };
   }, [isOpen, isFullscreen]);
 
-  if (!canShow) return null;
+  if (!apiKey) return null;
 
   const hasRealThread = currentThreadId !== "placeholder";
   const canUseSuggestions = enableSuggestions && isIdentified && hasRealThread;

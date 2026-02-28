@@ -7,6 +7,7 @@ import {
   TamboProvider,
   TamboThreadInputProvider,
 } from "@tambo-ai/react";
+import { MessageSquare } from "lucide-react";
 
 import { tamboComponents } from "@/lib/tambo/components";
 import {
@@ -16,6 +17,7 @@ import {
   siteUiCatalogTool,
 } from "@/lib/tambo/tools";
 import { TamboAgentWidget } from "@/components/tambo/TamboAgentWidget";
+import { Button } from "@/components/ui/button";
 
 function getStableAnonKey(): string {
   if (typeof window === "undefined") return "anonymous";
@@ -59,7 +61,25 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
     []
   );
 
-  if (!apiKey) return <>{children}</>;
+  if (!apiKey) {
+    return (
+      <>
+        {children}
+        <Button
+          type="button"
+          className="fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full shadow-lg"
+          onClick={() => {
+            window.alert(
+              "Set NEXT_PUBLIC_TAMBO_API_KEY and restart/redeploy to enable chat."
+            );
+          }}
+          aria-label="Open AI agent setup hint"
+        >
+          <MessageSquare className="h-5 w-5" />
+        </Button>
+      </>
+    );
+  }
 
   return (
     <TamboProvider
