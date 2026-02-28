@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { adminStatsSchema, type AdminStats } from "@/lib/tambo/schemas";
 
 const ORDER_STATS_LABELS: Record<string, string> = {
   successfulOrders: "Доставлено",
@@ -28,18 +29,14 @@ const ORDER_STATS_LABELS: Record<string, string> = {
   multiItemOrders: "2+ позиции",
 };
 
-function orderStatsEntries(stats: Record<string, number>) {
-  const known: Array<[string, number]> = [];
-  const unknown: Array<[string, number]> = [];
+function orderStatsEntries(stats: AdminStats) {
+  const entries: Array<[string, number | undefined]> = [];
 
-  for (const [key, value] of Object.entries(stats)) {
-    if (ORDER_STATS_LABELS[key]) known.push([key, value]);
-    else unknown.push([key, value]);
+  for (const key of Object.keys(ORDER_STATS_LABELS)) {
+    entries.push([key, stats[key as keyof AdminStats]]);
   }
 
-  known.sort((a, b) => a[0].localeCompare(b[0]));
-  unknown.sort((a, b) => a[0].localeCompare(b[0]));
-  return [...known, ...unknown];
+  return entries;
 }
 
 function AdminStatsGrid({
@@ -48,7 +45,7 @@ function AdminStatsGrid({
   highlightKeys,
 }: {
   title?: string;
-  stats: Record<string, number>;
+  stats: AdminStats;
   highlightKeys?: string[];
 }) {
   const highlight = new Set(highlightKeys ?? []);
@@ -79,7 +76,7 @@ function AdminStatsGrid({
                 ) : null}
               </div>
               <div className="mt-1 text-lg font-semibold tabular-nums">
-                {value}
+                {value === undefined ? "…" : value}
               </div>
             </div>
           ))}
@@ -129,9 +126,7 @@ export const tamboComponents: TamboComponent[] = [
     component: AdminStatsGrid,
     propsSchema: z.object({
       title: z.string().optional(),
-      stats: z
-        .record(z.string(), z.number())
-        .describe("Map of statKey -> numeric value."),
+      stats: adminStatsSchema.describe("Admin statistics object."),
       highlightKeys: z.array(z.string()).optional(),
     }),
   },

@@ -1,5 +1,6 @@
 import { defineTool } from "@tambo-ai/react";
 import { z } from "zod";
+import { adminStatsSchema } from "@/lib/tambo/schemas";
 
 function getAuthTokenFromStorage(): string | null {
   if (typeof window === "undefined") return null;
@@ -15,7 +16,7 @@ export const getAdminStatisticsTool = defineTool({
     tamboStreamableHint: true,
   },
   inputSchema: z.object({}),
-  outputSchema: z.record(z.string(), z.number()),
+  outputSchema: adminStatsSchema,
   tool: async () => {
     const token = getAuthTokenFromStorage();
     if (!token) {
@@ -37,7 +38,7 @@ export const getAdminStatisticsTool = defineTool({
     }
 
     const data: unknown = await response.json();
-    const parsed = z.record(z.string(), z.number()).safeParse(data);
+    const parsed = adminStatsSchema.safeParse(data);
     if (!parsed.success) {
       throw new Error("Invalid statistics response format.");
     }

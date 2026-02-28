@@ -16,6 +16,33 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
+function TamboSuggestionsBar({ disabled }: { disabled: boolean }) {
+  const { suggestions, accept, isFetching } = useTamboSuggestions({
+    maxSuggestions: 3,
+  });
+
+  if (suggestions.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-2 pt-2">
+      {suggestions.map((s) => (
+        <Button
+          key={s.id}
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="h-7 px-2 text-xs"
+          onClick={() => accept({ suggestion: s })}
+          disabled={disabled || isFetching}
+          title={s.detailedSuggestion}
+        >
+          {s.title ?? "Suggestion"}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
 function isAdminRoute(pathname: string) {
   return (
     pathname.startsWith("/middle-admin") ||
@@ -26,17 +53,22 @@ function isAdminRoute(pathname: string) {
 
 export function TamboAgentWidget() {
   const apiKey = process.env.NEXT_PUBLIC_TAMBO_API_KEY;
+  const enableSuggestions =
+    process.env.NEXT_PUBLIC_TAMBO_ENABLE_SUGGESTIONS === "true";
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const { messages, isStreaming, currentThreadId, initThread, startNewThread } =
-    useTambo();
+  const {
+    messages,
+    isStreaming,
+    currentThreadId,
+    initThread,
+    startNewThread,
+    isIdentified,
+  } = useTambo();
   const { value, setValue, submit, isPending, isDisabled } =
     useTamboThreadInput();
-  const { suggestions, accept, isFetching } = useTamboSuggestions({
-    maxSuggestions: 3,
-  });
 
   const canShow = useMemo(() => {
     if (!apiKey) return false;
@@ -54,6 +86,9 @@ export function TamboAgentWidget() {
   }, [messages, isOpen]);
 
   if (!canShow) return null;
+  const hasRealThread = currentThreadId !== "placeholder";
+  const canUseSuggestions =
+    enableSuggestions && isIdentified && hasRealThread;
 
   const handleSend = async () => {
     if (!value.trim() || isDisabled) return;
@@ -210,23 +245,9 @@ export function TamboAgentWidget() {
                     </div>
                   ) : null}
 
-                  {suggestions.length > 0 ? (
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      {suggestions.map((s) => (
-                        <Button
-                          key={s.id}
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          className="h-7 px-2 text-xs"
-                          onClick={() => accept({ suggestion: s })}
-                          disabled={isFetching || isPending}
-                          title={s.detailedSuggestion}
-                        >
-                          {s.title ?? "Suggestion"}
-                        </Button>
-                      ))}
-                    </div>
+                  {/* Suggestions are opt-in because some Tambo projects return 403 for suggestions endpoints. */}
+                  {canUseSuggestions ? (
+                    <TamboSuggestionsBar disabled={isPending || isDisabled} />
                   ) : null}
 
                   <div ref={bottomRef} />
