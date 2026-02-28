@@ -99,15 +99,30 @@ function QuickLinks({
   links,
 }: {
   title?: string;
-  links: Array<{ label: string; href: string; description?: string }>;
+  links?: Array<{ label: string; href: string; description?: string }>;
 }) {
+  const safeLinks = links ?? [];
+
+  if (safeLinks.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">{title ?? "Quick links"}</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          No links available.
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
         <CardTitle className="text-base">{title ?? "Quick links"}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {links.map((link) => (
+        {safeLinks.map((link) => (
           <Link
             key={`${link.href}:${link.label}`}
             href={link.href}
@@ -133,13 +148,31 @@ function SiteMetricGrid({
 }: {
   title?: string;
   subtitle?: string;
-  metrics: Array<{
+  metrics?: Array<{
     label: string;
     value: string;
     delta?: string;
     tone?: "neutral" | "success" | "warning" | "danger";
   }>;
 }) {
+  const safeMetrics = metrics ?? [];
+
+  if (safeMetrics.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">{title ?? "Metrics"}</CardTitle>
+          {subtitle ? (
+            <p className="text-xs text-muted-foreground">{subtitle}</p>
+          ) : null}
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          No metrics available.
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
@@ -150,7 +183,7 @@ function SiteMetricGrid({
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-4">
-          {metrics.map((item, index) => (
+          {safeMetrics.map((item, index) => (
             <div
               key={`${item.label}:${index}`}
               className="rounded-md border bg-card px-3 py-2"
@@ -177,14 +210,17 @@ function SiteDataTable({
   emptyText,
 }: {
   title?: string;
-  columns: Array<{ key: string; label: string }>;
-  rows: Array<{
+  columns?: Array<{ key: string; label: string }>;
+  rows?: Array<{
     id: string;
     cells: Array<{ key: string; value: string; tone?: "neutral" | "success" | "warning" | "danger" }>;
   }>;
   emptyText?: string;
 }) {
-  if (rows.length === 0) {
+  const safeColumns = columns ?? [];
+  const safeRows = rows ?? [];
+
+  if (safeColumns.length === 0 || safeRows.length === 0) {
     return (
       <Card className="w-full">
         <CardHeader className="pb-3">
@@ -207,7 +243,7 @@ function SiteDataTable({
           <table className="w-full min-w-[560px] text-sm">
             <thead>
               <tr className="border-b text-left">
-                {columns.map((col) => (
+                {safeColumns.map((col) => (
                   <th key={col.key} className="px-2 py-2 font-medium text-muted-foreground">
                     {col.label}
                   </th>
@@ -215,9 +251,9 @@ function SiteDataTable({
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {safeRows.map((row) => (
                 <tr key={row.id} className="border-b last:border-0">
-                  {columns.map((col) => {
+                  {safeColumns.map((col) => {
                     const cell = row.cells.find((value) => value.key === col.key);
                     return (
                       <td
@@ -243,7 +279,7 @@ function SiteEntityCards({
   items,
 }: {
   title?: string;
-  items: Array<{
+  items?: Array<{
     title: string;
     subtitle?: string;
     meta?: string;
@@ -251,13 +287,28 @@ function SiteEntityCards({
     href?: string;
   }>;
 }) {
+  const safeItems = items ?? [];
+
+  if (safeItems.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">{title ?? "Entities"}</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          No entities available.
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
         <CardTitle className="text-base">{title ?? "Entities"}</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-        {items.map((item, index) => {
+        {safeItems.map((item, index) => {
           const statusTone =
             item.status === "active"
               ? "success"
@@ -304,8 +355,10 @@ function SiteJsonPanel({
   json,
 }: {
   title?: string;
-  json: string;
+  json?: string;
 }) {
+  const safeJson = json && json.trim().length > 0 ? json : "{}";
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
@@ -313,8 +366,82 @@ function SiteJsonPanel({
       </CardHeader>
       <CardContent>
         <pre className="max-h-[480px] overflow-auto rounded-md border bg-muted p-3 text-xs leading-relaxed">
-          {json}
+          {safeJson}
         </pre>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SiteBarChart({
+  title,
+  subtitle,
+  bars,
+}: {
+  title?: string;
+  subtitle?: string;
+  bars?: Array<{
+    label: string;
+    value: number;
+    tone?: "neutral" | "success" | "warning" | "danger";
+  }>;
+}) {
+  const safeBars = bars ?? [];
+  const maxValue =
+    safeBars.length > 0
+      ? Math.max(...safeBars.map((item) => Math.max(0, item.value)))
+      : 0;
+
+  if (safeBars.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">{title ?? "Chart"}</CardTitle>
+          {subtitle ? (
+            <p className="text-xs text-muted-foreground">{subtitle}</p>
+          ) : null}
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          No chart data available.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="w-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">{title ?? "Chart"}</CardTitle>
+        {subtitle ? (
+          <p className="text-xs text-muted-foreground">{subtitle}</p>
+        ) : null}
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {safeBars.map((bar, index) => {
+          const percentage =
+            maxValue > 0 ? Math.min(100, Math.round((Math.max(0, bar.value) / maxValue) * 100)) : 0;
+          return (
+            <div key={`${bar.label}:${index}`} className="space-y-1">
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <span className="truncate text-muted-foreground">{bar.label}</span>
+                <span className={`font-medium ${toneClassName(bar.tone)}`}>{bar.value}</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded bg-muted">
+                <div
+                  className={`h-full rounded ${bar.tone === "success"
+                    ? "bg-emerald-500"
+                    : bar.tone === "warning"
+                      ? "bg-amber-500"
+                      : bar.tone === "danger"
+                        ? "bg-rose-500"
+                        : "bg-primary"
+                    }`}
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
       </CardContent>
     </Card>
   );
@@ -326,10 +453,10 @@ function SiteRouteEmbed({
   height,
 }: {
   title?: string;
-  path: string;
+  path?: string;
   height?: number;
 }) {
-  const safePath = path.startsWith("/") ? path : "/";
+  const safePath = typeof path === "string" && path.startsWith("/") ? path : "/";
   const frameHeight = Math.min(Math.max(height ?? 620, 320), 1200);
 
   return (
@@ -353,6 +480,12 @@ const metricItemSchema = z.object({
   label: z.string(),
   value: z.string(),
   delta: z.string().optional(),
+  tone: z.enum(["neutral", "success", "warning", "danger"]).optional(),
+});
+
+const chartBarSchema = z.object({
+  label: z.string(),
+  value: z.number(),
   tone: z.enum(["neutral", "success", "warning", "danger"]).optional(),
 });
 
@@ -413,7 +546,7 @@ export const tamboComponents: TamboComponent[] = [
             description: z.string().optional(),
           })
         )
-        .min(1),
+        .optional(),
     }),
   },
   {
@@ -424,7 +557,7 @@ export const tamboComponents: TamboComponent[] = [
     propsSchema: z.object({
       title: z.string().optional(),
       subtitle: z.string().optional(),
-      metrics: z.array(metricItemSchema).min(1),
+      metrics: z.array(metricItemSchema).optional(),
     }),
   },
   {
@@ -434,8 +567,8 @@ export const tamboComponents: TamboComponent[] = [
     component: SiteDataTable,
     propsSchema: z.object({
       title: z.string().optional(),
-      columns: z.array(tableColumnSchema).min(1),
-      rows: z.array(tableRowSchema),
+      columns: z.array(tableColumnSchema).optional(),
+      rows: z.array(tableRowSchema).optional(),
       emptyText: z.string().optional(),
     }),
   },
@@ -446,7 +579,18 @@ export const tamboComponents: TamboComponent[] = [
     component: SiteEntityCards,
     propsSchema: z.object({
       title: z.string().optional(),
-      items: z.array(entityCardSchema).min(1),
+      items: z.array(entityCardSchema).optional(),
+    }),
+  },
+  {
+    name: "SiteBarChart",
+    description:
+      "Renders a simple bar chart for comparisons like orders per courier/status/day.",
+    component: SiteBarChart,
+    propsSchema: z.object({
+      title: z.string().optional(),
+      subtitle: z.string().optional(),
+      bars: z.array(chartBarSchema).optional(),
     }),
   },
   {
@@ -456,7 +600,7 @@ export const tamboComponents: TamboComponent[] = [
     component: SiteJsonPanel,
     propsSchema: z.object({
       title: z.string().optional(),
-      json: z.string().min(1),
+      json: z.string().optional(),
     }),
   },
   {
