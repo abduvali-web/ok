@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
 import { getGroupAdminIds, getOwnerAdminId } from '@/lib/admin-scope'
-import { Prisma, PaymentStatus, PaymentMethod, OrderStatus } from '@prisma/client'
+import { Prisma, PaymentStatus, PaymentMethod, OrderStatus, OrderEventType } from '@prisma/client'
+import { appendOrderAudit } from '@/lib/order-audit'
 
 export async function GET(request: NextRequest) {
   try {
@@ -199,6 +200,12 @@ export async function POST(request: NextRequest) {
       courierId,
       latitude,
       longitude,
+      priority,
+      sourceChannel,
+      etaMinutes,
+      routeDistanceKm,
+      routeDurationMin,
+      sequenceInRoute,
       assignedSetId: rawAssignedSetId
     } = body
 
@@ -226,6 +233,27 @@ export async function POST(request: NextRequest) {
     if (isNaN(parsedQuantity)) {
       return NextResponse.json({ error: 'Количество должно быть числом' }, { status: 400 })
     }
+
+    const parsedPriority =
+      priority !== undefined && priority !== null && priority !== ''
+        ? Math.min(5, Math.max(1, Number(priority)))
+        : 3
+    const parsedEtaMinutes =
+      etaMinutes !== undefined && etaMinutes !== null && etaMinutes !== ''
+        ? Number(etaMinutes)
+        : null
+    const parsedRouteDistanceKm =
+      routeDistanceKm !== undefined && routeDistanceKm !== null && routeDistanceKm !== ''
+        ? Number(routeDistanceKm)
+        : null
+    const parsedRouteDurationMin =
+      routeDurationMin !== undefined && routeDurationMin !== null && routeDurationMin !== ''
+        ? Number(routeDurationMin)
+        : null
+    const parsedSequenceInRoute =
+      sequenceInRoute !== undefined && sequenceInRoute !== null && sequenceInRoute !== ''
+        ? Number(sequenceInRoute)
+        : null
 
     // Validate date
     if (date && isNaN(Date.parse(date))) {
@@ -348,6 +376,8 @@ export async function POST(request: NextRequest) {
       return lastOrder ? lastOrder.orderNumber + 1 : 1
     }
 
+    const resolvedCourierId = sanitizedCourierId || (customer as any).defaultCourierId || null
+
     let newOrder: any | null = null
     for (let attempt = 0; attempt < 5; attempt++) {
       const nextOrderNumber = await getNextOrderNumber()
@@ -357,7 +387,7 @@ export async function POST(request: NextRequest) {
             orderNumber: nextOrderNumber,
             customerId: customer.id,
             adminId: user.id,
-            courierId: sanitizedCourierId || (customer as any).defaultCourierId || null,
+            courierId: resolvedCourierId,
             deliveryAddress,
             deliveryDate: date ? new Date(date) : null,
             deliveryTime: deliveryTime || '12:00',
@@ -368,6 +398,14 @@ export async function POST(request: NextRequest) {
             paymentMethod: (paymentMethod ? String(paymentMethod) : PaymentMethod.CASH) as PaymentMethod,
             isPrepaid: isPrepaid || false,
             orderStatus: OrderStatus.NEW,
+            sourceChannel: sourceChannel ? String(sourceChannel) : 'ADMIN_PANEL',
+            priority: parsedPriority,
+            etaMinutes: Number.isFinite(parsedEtaMinutes ?? NaN) ? parsedEtaMinutes : null,
+            routeDistanceKm: Number.isFinite(parsedRouteDistanceKm ?? NaN) ? parsedRouteDistanceKm : null,
+            routeDurationMin: Number.isFinite(parsedRouteDurationMin ?? NaN) ? parsedRouteDurationMin : null,
+            sequenceInRoute: Number.isFinite(parsedSequenceInRoute ?? NaN) ? parsedSequenceInRoute : null,
+            statusChangedAt: new Date(),
+            assignedAt: resolvedCourierId ? new Date() : null,
             latitude: sanitizedLatitude,
             longitude: sanitizedLongitude
           },
@@ -384,6 +422,33 @@ export async function POST(request: NextRequest) {
 
     if (!newOrder) {
       return NextResponse.json({ error: 'ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ ÑÐ³ÐµÐ½ÐµÑ€Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ Ð½Ð¾Ð¼ÐµÑ€ Ð·Ð°ÐºÐ°Ð·Ð°' }, { status: 500 })
+    }
+
+    await appendOrderAudit(db, {
+      orderId: newOrder.id,
+      eventType: OrderEventType.CREATED,
+      actorAdminId: user.id,
+      actorRole: user.role,
+      actorName: (user as any).name || null,
+      nextStatus: newOrder.orderStatus,
+      payload: {
+        sourceChannel: sourceChannel ? String(sourceChannel) : 'ADMIN_PANEL',
+        priority: parsedPriority,
+      },
+      message: 'Order created',
+    })
+
+    if (resolvedCourierId) {
+      await appendOrderAudit(db, {
+        orderId: newOrder.id,
+        eventType: OrderEventType.COURIER_ASSIGNED,
+        actorAdminId: user.id,
+        actorRole: user.role,
+        actorName: (user as any).name || null,
+        nextStatus: newOrder.orderStatus,
+        payload: { courierId: resolvedCourierId },
+        message: 'Courier assigned on create',
+      })
     }
 
     const transformedOrder = {

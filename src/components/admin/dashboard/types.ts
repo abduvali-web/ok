@@ -9,6 +9,14 @@ export interface Admin {
   salary?: number
   latitude?: number | null
   longitude?: number | null
+  transportType?: string | null
+  vehicleNumber?: string | null
+  maxLoad?: number
+  isOnShift?: boolean
+  shiftStartedAt?: string | null
+  shiftEndedAt?: string | null
+  lastSeenAt?: string | null
+  averageDeliveryMinutes?: number | null
 }
 
 export interface Order {
@@ -31,6 +39,26 @@ export interface Order {
   paymentMethod: string
   orderStatus: string
   isPrepaid: boolean
+  priority?: number
+  sourceChannel?: string | null
+  statusChangedAt?: string
+  assignedAt?: string | null
+  pickedUpAt?: string | null
+  pausedAt?: string | null
+  resumedAt?: string | null
+  deliveredAt?: string | null
+  failedAt?: string | null
+  canceledAt?: string | null
+  confirmedAt?: string | null
+  etaMinutes?: number | null
+  routeDistanceKm?: number | null
+  routeDurationMin?: number | null
+  sequenceInRoute?: number | null
+  customerRating?: number | null
+  customerFeedback?: string | null
+  lastLatitude?: number | null
+  lastLongitude?: number | null
+  lastLocationAt?: string | null
   createdAt: string
   deliveryDate?: string
   isAutoOrder?: boolean

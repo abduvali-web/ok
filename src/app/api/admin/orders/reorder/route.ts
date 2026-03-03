@@ -1,8 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { OrderEventType, type OrderStatus } from '@prisma/client'
+import { z } from 'zod'
+
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
 import { getGroupAdminIds } from '@/lib/admin-scope'
-import { z } from 'zod'
+import { appendOrderAudit, getCourierAssignmentPatch } from '@/lib/order-audit'
 
 const updateSchema = z.object({
   orderId: z.string().min(1),
@@ -39,7 +42,6 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updates = parsed.data.updates
-
     const orderIds = updates.map((u) => u.orderId)
     if (new Set(orderIds).size !== orderIds.length) {
       return NextResponse.json({ error: 'Duplicate orderId in payload' }, { status: 400 })
@@ -57,7 +59,7 @@ export async function PATCH(request: NextRequest) {
         id: { in: orderIds },
         ...(groupAdminIds ? { adminId: { in: groupAdminIds } } : {}),
       },
-      select: { id: true, orderNumber: true, adminId: true },
+      select: { id: true, orderNumber: true, adminId: true, courierId: true, orderStatus: true },
     })
 
     if (existingOrders.length !== orderIds.length) {
@@ -71,12 +73,11 @@ export async function PATCH(request: NextRequest) {
       JSON.stringify(sortedNumbers(currentOrderNumbers)) === JSON.stringify(sortedNumbers(desiredOrderNumbers))
     if (!isPermutation) {
       return NextResponse.json(
-        { error: 'Номера заказов должны быть перестановкой текущих номеров выбранных заказов' },
+        { error: 'Номера должны быть перестановкой текущих номеров выбранных заказов' },
         { status: 400 }
       )
     }
 
-    // Validate courier IDs (optional)
     const courierIds = Array.from(
       new Set(
         updates
@@ -108,35 +109,77 @@ export async function PATCH(request: NextRequest) {
     const maxOrderNumber = maxRow?.orderNumber ?? 0
     const offset = maxOrderNumber + 10000
 
-    const currentById = new Map(existingOrders.map((o) => [o.id, o.orderNumber]))
+    const currentById = new Map(existingOrders.map((o) => [o.id, o]))
     const finalById = new Map(
       updates.map((u) => [u.orderId, { orderNumber: u.orderNumber, courierId: u.courierId ?? null }])
     )
 
     await db.$transaction(async (tx) => {
-      // Phase 1: move away from current orderNumbers to avoid unique collisions
       for (const orderId of orderIds) {
         const current = currentById.get(orderId)
-        if (current == null) continue
+        if (!current) continue
         await tx.order.update({
           where: { id: orderId },
-          data: { orderNumber: current + offset },
+          data: { orderNumber: current.orderNumber + offset },
           select: { id: true },
         })
       }
 
-      // Phase 2: apply final numbers + courier reassignment
       for (const orderId of orderIds) {
+        const current = currentById.get(orderId)
         const next = finalById.get(orderId)
-        if (!next) continue
-        await tx.order.update({
+        if (!current || !next) continue
+
+        const nextCourierId = next.courierId === 'null' || next.courierId === '' ? null : next.courierId
+
+        const updateData: Record<string, unknown> = {
+          orderNumber: next.orderNumber,
+          courierId: nextCourierId,
+          sequenceInRoute: next.orderNumber,
+        }
+        Object.assign(updateData, getCourierAssignmentPatch(current.courierId, nextCourierId))
+
+        const updated = await tx.order.update({
           where: { id: orderId },
-          data: {
-            orderNumber: next.orderNumber,
-            courierId: next.courierId === 'null' || next.courierId === '' ? null : next.courierId,
-          },
-          select: { id: true },
+          data: updateData,
+          select: { id: true, orderStatus: true, courierId: true, orderNumber: true },
         })
+
+        await appendOrderAudit(tx, {
+          orderId: updated.id,
+          eventType: OrderEventType.REORDERED,
+          actorAdminId: user.id,
+          actorRole: user.role,
+          actorName: (user as { name?: string }).name ?? null,
+          previousStatus: current.orderStatus as OrderStatus,
+          nextStatus: updated.orderStatus as OrderStatus,
+          payload: {
+            previousOrderNumber: current.orderNumber,
+            nextOrderNumber: updated.orderNumber,
+            previousCourierId: current.courierId,
+            nextCourierId: updated.courierId,
+          },
+          message: 'Order reordered',
+        })
+
+        if (current.courierId !== updated.courierId) {
+          await appendOrderAudit(tx, {
+            orderId: updated.id,
+            eventType: updated.courierId
+              ? OrderEventType.COURIER_ASSIGNED
+              : OrderEventType.COURIER_UNASSIGNED,
+            actorAdminId: user.id,
+            actorRole: user.role,
+            actorName: (user as { name?: string }).name ?? null,
+            previousStatus: current.orderStatus as OrderStatus,
+            nextStatus: updated.orderStatus as OrderStatus,
+            payload: {
+              previousCourierId: current.courierId,
+              nextCourierId: updated.courierId,
+            },
+            message: updated.courierId ? 'Courier assigned during reorder' : 'Courier removed during reorder',
+          })
+        }
       }
     })
 
@@ -146,4 +189,3 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 })
   }
 }
-

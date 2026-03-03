@@ -190,6 +190,18 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const [isUpdatingBulk, setIsUpdatingBulk] = useState(false)
   const [isOrderDetailsModalOpen, setIsOrderDetailsModalOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [selectedOrderTimeline, setSelectedOrderTimeline] = useState<
+    Array<{
+      id: string
+      eventType: string
+      occurredAt: string
+      actorName?: string
+      message?: string
+      previousStatus?: string | null
+      nextStatus?: string | null
+    }>
+  >([])
+  const [isOrderTimelineLoading, setIsOrderTimelineLoading] = useState(false)
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
   const tabsCopy = {
     orders: t.admin.orders,
@@ -446,6 +458,13 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     ]
   }, [filteredClients, selectedClients.size])
 
+  const selectedClientsSnapshot = useMemo(
+    () => clients.filter((client) => selectedClients.has(client.id)),
+    [clients, selectedClients]
+  )
+  const shouldPauseSelectedClients =
+    selectedClientsSnapshot.length > 0 && selectedClientsSnapshot.every((client) => client.isActive)
+
   const clearOrderFilters = useCallback(() => {
     setFilters({ ...DEFAULT_ORDER_FILTERS })
   }, [])
@@ -482,6 +501,34 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   useEffect(() => {
     setSelectedClients(new Set())
   }, [clientStatusFilter, clientSearchTerm])
+
+  useEffect(() => {
+    if (!isOrderDetailsModalOpen || !selectedOrder?.id) {
+      setSelectedOrderTimeline([])
+      return
+    }
+
+    let cancelled = false
+    setIsOrderTimelineLoading(true)
+
+    void fetch(`/api/admin/orders/${selectedOrder.id}/timeline`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (cancelled) return
+        const events = Array.isArray(data?.events) ? data.events : []
+        setSelectedOrderTimeline(events)
+      })
+      .catch(() => {
+        if (!cancelled) setSelectedOrderTimeline([])
+      })
+      .finally(() => {
+        if (!cancelled) setIsOrderTimelineLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [isOrderDetailsModalOpen, selectedOrder?.id])
 
   useEffect(() => {
     if (isUiStateHydrated || typeof window === 'undefined') return
@@ -1958,195 +2005,56 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </CardHeader>
               <CardContent>
                 {/* Unified action panel */}
-                <div className="mb-4 space-y-3 rounded-2xl border border-border/70 bg-muted/20 p-3 md:p-4">
-                  <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Button onClick={() => setIsCreateOrderModalOpen(true)} className="h-10 gap-2 rounded-xl px-4">
-                        <Plus className="w-4 h-4" />
-                        {t.admin.createOrder}
-                      </Button>
-                      <Select value={optimizeCourierId} onValueChange={setOptimizeCourierId}>
-                        <SelectTrigger className="h-10 w-[180px] rounded-xl bg-background md:w-[220px]">
-                          <SelectValue placeholder={t.admin.couriers} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">{t.admin.couriers}</SelectItem>
-                          <SelectItem value="unassigned">Unassigned</SelectItem>
-                          {couriers.map((courier) => (
-                            <SelectItem key={courier.id} value={courier.id}>
-                              {courier.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {meRole !== 'MIDDLE_ADMIN' && (
-                        <div className="min-w-[150px]">
-                          <RouteOptimizeButton
-                            orders={orders.filter(isOrderInOptimizeScope)}
-                            onOptimized={applyOptimizedOrdering}
-                            startPoint={warehousePoint ?? undefined}
-                            variant="outline"
-                            size="sm"
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 self-start lg:self-auto">
-                      {selectedOrders.size > 0 && (
-                        <Badge variant="secondary" className="rounded-full px-2.5 py-1 text-[11px] font-semibold">
-                          {selectedOrders.size} selected
-                        </Badge>
-                      )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-10 rounded-xl px-3 text-xs"
-                        onClick={() => setIsBulkEditOrdersModalOpen(true)}
-                        disabled={selectedOrders.size === 0}
-                      >
-                        <Edit className="w-4 h-4 mr-1.5" />
-                        {t.admin.edit}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-10 rounded-xl border-destructive/40 px-3 text-xs text-destructive hover:bg-destructive/10"
-                        onClick={() => setIsDeleteOrdersDialogOpen(true)}
-                        disabled={selectedOrders.size === 0 || isDeletingOrders}
-                      >
-                        <Trash2 className="w-4 h-4 mr-1.5" />
-                        {isDeletingOrders ? t.common.loading : t.admin.delete}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-border/60 bg-card/70 p-2.5">
-                    <div className="mobile-scroll-container flex items-center gap-1 overflow-x-auto pb-1">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-10 w-10 shrink-0 rounded-xl"
-                        onClick={() => shiftDateWindow(-7)}
-                        aria-label="Previous days"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant={!selectedDate ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => {
+                <div className="mb-4 rounded-lg border bg-muted/20 p-3">
+                  <div className="grid gap-2 lg:grid-cols-[auto_auto_auto_minmax(0,220px)_1fr]">
+                    <Button onClick={() => setIsCreateOrderModalOpen(true)} className="h-9 gap-2 px-3">
+                      <Plus className="w-4 h-4" />
+                      {t.admin.createOrder}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-9 gap-2 px-3"
+                      onClick={() => setIsDeleteOrdersDialogOpen(true)}
+                      disabled={selectedOrders.size === 0 || isDeletingOrders}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {isDeletingOrders ? t.common.loading : t.admin.delete}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-9 gap-2 px-3"
+                      onClick={() => setIsDispatchOpen(true)}
+                      disabled={!selectedDate}
+                    >
+                      <DispatchActionIcon className="w-4 h-4" />
+                      {dispatchActionLabel}
+                    </Button>
+                    <Input
+                      type="date"
+                      className="h-9"
+                      value={selectedDate ? selectedDate.toISOString().split('T')[0] : ''}
+                      onChange={(event) => {
+                        const value = event.target.value
+                        if (!value) {
                           setSelectedDate(null)
-                          setDateCursor(new Date())
-                        }}
-                        className="h-10 shrink-0 rounded-xl px-3 text-xs"
-                      >
-                        {t.admin.all}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const today = new Date()
-                          setSelectedDate(today)
-                          setDateCursor(today)
-                        }}
-                        className={`h-10 shrink-0 rounded-xl px-3 text-xs ${selectedDate && isSelectedDateToday ? 'border-primary/40 bg-primary/10 text-foreground' : ''}`}
-                      >
-                        Today
-                      </Button>
-                      {getDateRange().map((date) => {
-                        const isSelected = !!selectedDate && date.toDateString() === selectedDate.toDateString()
-                        const isToday = date.toDateString() === new Date().toDateString()
-                        return (
-                          <Button
-                            key={date.toISOString()}
-                            variant={isSelected ? 'default' : 'outline'}
-                            size="sm"
-                            className={`h-10 w-10 shrink-0 rounded-xl p-0 text-xs font-semibold ${!isSelected && isToday ? 'border-primary/40 text-foreground' : ''}`}
-                            onClick={() => {
-                              setSelectedDate(date)
-                              setDateCursor(date)
-                            }}
-                          >
-                            {date.getDate()}
-                          </Button>
-                        )
-                      })}
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-10 w-10 shrink-0 rounded-xl"
-                        onClick={() => shiftDateWindow(7)}
-                        aria-label="Next days"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowFilters((prev) => !prev)}
-                        className={`h-10 shrink-0 rounded-xl px-3 text-xs ${showFilters ? 'border-primary/40 bg-primary/10 text-foreground' : ''}`}
-                      >
-                        <Filter className="w-4 h-4 mr-1.5" />
-                        {t.admin.filters}
-                        {activeFiltersCount > 0 && (
-                          <Badge variant="secondary" className="ml-1 rounded-full px-2 text-[10px]">
-                            {activeFiltersCount}
-                          </Badge>
-                        )}
-                      </Button>
-                      {activeFiltersCount > 0 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={clearOrderFilters}
-                          className="h-10 shrink-0 rounded-xl px-3 text-xs"
-                        >
-                          Reset
-                        </Button>
-                      )}
+                          return
+                        }
+                        const nextDate = new Date(`${value}T00:00:00`)
+                        if (!Number.isNaN(nextDate.getTime())) {
+                          setSelectedDate(nextDate)
+                          setDateCursor(nextDate)
+                        }
+                      }}
+                    />
+                    <div className="flex items-center justify-end text-xs text-muted-foreground">
+                      {selectedOrders.size > 0 ? `${selectedOrders.size} selected` : 'No selection'}
                     </div>
                   </div>
                 </div>
 
-                {/* Selected Date Indicator */}
-                {selectedDate && (
-                  <div className="mb-4 flex flex-wrap items-center justify-center gap-2 rounded-xl border border-border/70 bg-muted/30 px-4 py-2.5 text-sm">
-                    <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="font-medium text-muted-foreground">
-                      {selectedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
-                    </span>
-                    {selectedDayIsActive != null && (
-                      <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${selectedDayIsActive ? 'border-emerald-200 bg-emerald-100 text-emerald-700' : 'border-border bg-background text-muted-foreground'}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${selectedDayIsActive ? 'bg-emerald-500' : 'bg-muted-foreground'}`} />
-                        {selectedDayIsActive ? 'Active' : 'Draft'}
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {mode === 'middle' && (
-                  <div className="mb-6">
-                    <MiddleLiveMap
-                      active={activeTab === 'orders'}
-                      orders={filteredOrders}
-                      couriers={couriers}
-                      clients={clients}
-                      warehousePoint={warehousePoint}
-                      selectedDateISO={selectedDate ? selectedDate.toISOString().split('T')[0] : undefined}
-                      onDataChanged={fetchData}
-                      onWarehouseUpdated={(point) => {
-                        setWarehousePoint(point)
-                        setWarehousePreview(point)
-                        setWarehouseInput(point ? `${point.lat},${point.lng}` : '')
-                      }}
-                    />
-                  </div>
-                )}
-
                 {/* Filters Panel */}
                 {
-                  showFilters && (
+                  false && showFilters && (
                     <div className="mb-6 p-4 border rounded-lg bg-muted">
                       <h3 className="font-medium mb-4">{t.admin.filters}</h3>
 
@@ -2346,33 +2254,25 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   )
                 }
 
-
-                {/* Today's Menu Display */}
-                <TodaysMenu className="mb-6" />
-
-                <div className="mb-4">
-                  <SectionMetrics items={orderMetrics} />
-                </div>
-
-                <div className="mb-4">
-                  <FilterToolbar
-                    inputRef={searchInputRef}
-                    searchValue={searchTerm}
-                    onSearchChange={setSearchTerm}
-                    searchPlaceholder="Поиск по имени, адресу или номеру заказа..."
-                    searchAriaLabel="Поиск заказов"
-                  >
+                <div className="mb-3 grid gap-2 rounded-md border bg-muted/20 p-2 md:grid-cols-[minmax(0,1fr)_auto]">
+                  <Input
+                    ref={searchInputRef}
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Поиск по имени, адресу или номеру заказа..."
+                    aria-label="Поиск заказов"
+                    className="h-9"
+                  />
+                  <div className="flex items-center gap-2">
                     {searchTerm && (
-                      <Button variant="ghost" size="sm" onClick={() => setSearchTerm('')} className="h-9 px-3">
-                        Clear search
+                      <Button variant="outline" size="sm" onClick={() => setSearchTerm('')} className="h-9 px-3">
+                        Clear
                       </Button>
                     )}
-                    {activeFiltersCount > 0 && (
-                      <Button variant="outline" size="sm" onClick={clearOrderFilters} className="h-9 px-3">
-                        Reset filters
-                      </Button>
-                    )}
-                  </FilterToolbar>
+                    <span className="rounded-md border bg-background px-2 py-1 text-xs text-muted-foreground">
+                      {filteredOrders.length} rows
+                    </span>
+                  </div>
                 </div>
 
                 {filteredOrders.length === 0 ? (
@@ -2396,19 +2296,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     />
                   </div>
                 )}
-
-                {/* Table Actions */}
-                <div className="mt-4 flex flex-col items-end gap-1.5">
-                  <Button
-                    onClick={() => setIsDispatchOpen(true)}
-                    disabled={!selectedDate}
-                    className="min-w-[180px] gap-2"
-                  >
-                    <DispatchActionIcon className="w-4 h-4" />
-                    {dispatchActionLabel}
-                  </Button>
-                  <p className="text-[11px] text-muted-foreground">{dispatchActionHint}</p>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -2417,7 +2304,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
           <TabsContent value="clients" className="space-y-6">
             <Card className="glass-card border-none">
               <CardHeader>
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <div>
                     <CardTitle>{t.admin.manageClients}</CardTitle>
                     <CardDescription>
@@ -2429,9 +2316,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       )}
                     </CardDescription>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="grid w-full gap-2 lg:w-auto lg:grid-cols-[170px_minmax(0,260px)_auto_auto]">
                     <Select value={clientStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setClientStatusFilter(value)}>
-                      <SelectTrigger className="w-40">
+                      <SelectTrigger className="h-9 w-full">
                         <SelectValue placeholder="Фильтр статуса" />
                       </SelectTrigger>
                       <SelectContent>
@@ -2440,32 +2327,20 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         <SelectItem value="inactive">Только приостановленные</SelectItem>
                       </SelectContent>
                     </Select>
+                    <Input
+                      value={clientSearchTerm}
+                      onChange={(event) => setClientSearchTerm(event.target.value)}
+                      placeholder="Поиск клиента..."
+                      className="h-9"
+                    />
                     <Button
                       variant="outline"
+                      className="h-9"
                       onClick={() => setActiveTab('bin')}
                     >
-                      🗑️ Корзина
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={handleRunAutoOrders}
-                    >
-                      🤖 Создать авто-заказы
+                      Корзина
                     </Button>
                   </div>
-                </div>
-
-                <div className="mb-4">
-                  <SectionMetrics items={clientMetrics} />
-                </div>
-
-                <div className="mb-4">
-                  <FilterToolbar
-                    searchValue={clientSearchTerm}
-                    onSearchChange={setClientSearchTerm}
-                    searchPlaceholder="Поиск клиента по имени, телефону, адресу..."
-                    searchAriaLabel="Поиск клиентов"
-                  />
                 </div>
                     <Dialog open={isCreateClientModalOpen} onOpenChange={setIsCreateClientModalOpen}>
                       <DialogTrigger asChild>
@@ -2768,15 +2643,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               <CardContent>
                 {/* Client Management Buttons */}
                 {selectedClients.size > 0 && (
-                  <div className="mb-4 p-3 bg-muted border rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-600">
+                  <div className="mb-4 rounded-lg border bg-muted/20 p-3">
+                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                      <span className="text-sm text-muted-foreground">
                         Выбрано клиентов: {selectedClients.size}
                       </span>
-                      <div className="flex space-x-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           variant="outline"
                           size="sm"
+                          className="h-9"
                           onClick={() => {
                             const client = clients.find(c => selectedClients.has(c.id))
                             if (client) handleEditClient(client)
@@ -2789,30 +2665,33 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setIsPauseClientsDialogOpen(true)}
+                          className="h-9"
+                          onClick={() =>
+                            shouldPauseSelectedClients
+                              ? setIsPauseClientsDialogOpen(true)
+                              : setIsResumeClientsDialogOpen(true)
+                          }
                           disabled={selectedClients.size === 0 || isMutatingClients}
-                          className="text-orange-600 border-orange-200 hover:bg-orange-50"
                         >
-                          <Pause className="w-4 h-4 mr-2" />
-                          {isMutatingClients ? t.common.loading : 'Приостановить выбранных'}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsResumeClientsDialogOpen(true)}
-                          disabled={selectedClients.size === 0 || isMutatingClients}
-                          className="text-green-600 border-green-200 hover:bg-green-50"
-                        >
-                          <Play className="w-4 h-4 mr-2" />
-                          {isMutatingClients ? t.common.loading : 'Возобновить выбранных'}
+                          {shouldPauseSelectedClients ? (
+                            <Pause className="w-4 h-4 mr-2" />
+                          ) : (
+                            <Play className="w-4 h-4 mr-2" />
+                          )}
+                          {isMutatingClients
+                            ? t.common.loading
+                            : shouldPauseSelectedClients
+                              ? 'Приостановить'
+                              : 'Возобновить'}
                         </Button>
                         <Button
                           variant="destructive"
                           size="sm"
+                          className="h-9"
                           onClick={() => setIsDeleteClientsDialogOpen(true)}
                           disabled={selectedClients.size === 0 || isMutatingClients}
                         >
-                          {isMutatingClients ? t.common.loading : '🗑️ Удалить выбранных клиентов'}
+                          {isMutatingClients ? t.common.loading : 'Удалить'}
                         </Button>
                       </div>
                     </div>
@@ -3001,154 +2880,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       </Card>
                     ))}
                 </div>
-
-                {/* Auto Orders Info */}
-                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <CalendarDays className="w-5 h-5" />
-                    Автоматические заказы
-                  </h3>
-                  <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950 p-3 rounded-md">
-                    <p className="font-medium mb-1">Информация:</p>
-                    <p>• При создании клиента заказы генерируются на 30 дней вперед</p>
-                    <p>• Повторная проверка только через 30 дней после создания</p>
-                    <p>• Дальнейшие проверки каждые 30 дней от последней</p>
-                    <p>• Время доставки: 11:00-14:00</p>
-                    <p>• Система работает полностью автоматически</p>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </TabsContent >
-
-
-          {/* Order Details Modal */}
-          < Dialog open={isOrderDetailsModalOpen} onOpenChange={setIsOrderDetailsModalOpen} >
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>Детали Заказа</DialogTitle>
-                <DialogDescription>
-                  Полная информация о заказе
-                </DialogDescription>
-              </DialogHeader>
-              {selectedOrder && (
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-medium">
-                      Номер заказа:
-                    </Label>
-                    <div className="col-span-3 font-semibold">
-                      #{selectedOrder.orderNumber}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-medium">
-                      {t.admin.clients}:
-                    </Label>
-                    <div className="col-span-3">
-                      {selectedOrder.customer.name}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-medium">
-                      Телефон:
-                    </Label>
-                    <div className="col-span-3">
-                      {selectedOrder.customer.phone}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-medium">
-                      Адрес:
-                    </Label>
-                    <div className="col-span-3">
-                      {selectedOrder.deliveryAddress}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-medium">
-                      Время доставки:
-                    </Label>
-                    <div className="col-span-3">
-                      {selectedOrder.deliveryTime}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-medium">
-                      Количество:
-                    </Label>
-                    <div className="col-span-3">
-                      {selectedOrder.quantity}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-medium">
-                      Калории:
-                    </Label>
-                    <div className="col-span-3">
-                      {selectedOrder.calories} ккал
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-medium">
-                      Особенности:
-                    </Label>
-                    <div className="col-span-3">
-                      {selectedOrder.specialFeatures || 'Нет'}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-medium">
-                      Курьер:
-                    </Label>
-                    <div className="col-span-3">
-                      {selectedOrder.courierName || 'Не назначен'}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-medium">
-                      Статус:
-                    </Label>
-                    <div className="col-span-3">
-                      <div className="flex items-center">
-                        <div className={`w-2 h-2 rounded-full ${getStatusColor(selectedOrder.orderStatus)} mr-2`}></div>
-                        <span>{getStatusText(selectedOrder.orderStatus)}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-medium">
-                      Оплата:
-                    </Label>
-                    <div className="col-span-3">
-                      {selectedOrder.paymentMethod === 'CARD' ? 'Карта' : 'Наличные'} - {selectedOrder.paymentStatus === 'PAID' ? 'Оплачено' : 'Не оплачено'}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-medium">
-                      Предоплата:
-                    </Label>
-                    <div className="col-span-3">
-                      {selectedOrder.isPrepaid ? 'Да' : 'Нет'}
-                    </div>
-                  </div>
-                </div>
-              )}
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => handleGetAdminRoute(selectedOrder!)}
-                  disabled={!selectedOrder}
-                >
-                  <Route className="w-4 h-4 mr-2" />
-                  Маршрут
-                </Button>
-                <Button variant="outline" onClick={() => setIsOrderDetailsModalOpen(false)}>
-                  Закрыть
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog >
 
           {isDispatchOpen && (
             <DispatchMapPanel
@@ -3429,146 +3163,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
         </Tabs>
       </main >
-      {/* Bulk Edit Orders Modal */}
-      < Dialog open={isBulkEditOrdersModalOpen} onOpenChange={setIsBulkEditOrdersModalOpen} >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Редактировать выбранные заказы ({selectedOrders.size})</DialogTitle>
-            <DialogDescription>
-              Измените параметры для выбранных заказов. Оставьте поля пустыми, чтобы не менять их.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-2">
-              <Label htmlFor="bulkOrderStatus" className="text-right">
-                Статус
-              </Label>
-              <select
-                id="bulkOrderStatus"
-                value={bulkOrderUpdates.orderStatus}
-                onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, orderStatus: e.target.value }))}
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value="">Не менять</option>
-                <option value="PENDING">Ожидает</option>
-                <option value="IN_DELIVERY">В доставке</option>
-                <option value="DELIVERED">Доставлен</option>
-                <option value="FAILED">Отменен</option>
-              </select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-2">
-              <Label htmlFor="bulkPaymentStatus" className="text-right">
-                Оплата
-              </Label>
-              <select
-                id="bulkPaymentStatus"
-                value={bulkOrderUpdates.paymentStatus}
-                onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, paymentStatus: e.target.value }))}
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value="">Не менять</option>
-                <option value="PAID">Оплачен</option>
-                <option value="UNPAID">Не оплачен</option>
-              </select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-2">
-              <Label htmlFor="bulkCourier" className="text-right">
-                Курьер
-              </Label>
-              <select
-                id="bulkCourier"
-                value={bulkOrderUpdates.courierId}
-                onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, courierId: e.target.value }))}
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value="">Не менять</option>
-                <option value="none">Снять курьера</option>
-                {couriers.map(courier => (
-                  <option key={courier.id} value={courier.id}>{courier.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-2">
-              <Label htmlFor="bulkDeliveryDate" className="text-right">
-                Дата
-              </Label>
-              <Input
-                id="bulkDeliveryDate"
-                type="date"
-                value={bulkOrderUpdates.deliveryDate}
-                onChange={(e) => setBulkOrderUpdates(prev => ({ ...prev, deliveryDate: e.target.value }))}
-                className="col-span-3"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsBulkEditOrdersModalOpen(false)}>
-              {t.common.cancel}
-            </Button>
-            <Button onClick={handleBulkUpdateOrders} disabled={isUpdatingBulk}>
-              {isUpdatingBulk ? t.common.loading : t.common.save}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog >
-
-      {/* Bulk Edit Clients Modal */}
-      < Dialog open={isBulkEditClientsModalOpen} onOpenChange={setIsBulkEditClientsModalOpen} >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Редактировать выбранные клиентов ({selectedClients.size})</DialogTitle>
-            <DialogDescription>
-              Измените параметры для выбранных клиентов. Оставьте поля пустыми, чтобы не менять их.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-2">
-              <Label htmlFor="bulkIsActive" className="text-right">
-                Статус
-              </Label>
-              <select
-                id="bulkIsActive"
-                value={bulkClientUpdates.isActive === undefined ? '' : bulkClientUpdates.isActive.toString()}
-                onChange={(e) => setBulkClientUpdates(prev => ({
-                  ...prev,
-                  isActive: e.target.value === '' ? undefined : e.target.value === 'true'
-                }))}
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value="">Не менять</option>
-                <option value="true">Активен</option>
-                <option value="false">Приостановлен</option>
-              </select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-2">
-              <Label htmlFor="bulkCalories" className="text-right">
-                Калории
-              </Label>
-              <select
-                id="bulkCalories"
-                value={bulkClientUpdates.calories}
-                onChange={(e) => setBulkClientUpdates(prev => ({ ...prev, calories: e.target.value }))}
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value="">Не менять</option>
-                <option value="1200">1200</option>
-                <option value="1600">1600</option>
-                <option value="2000">2000</option>
-                <option value="2500">2500</option>
-                <option value="3000">3000</option>
-              </select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsBulkEditClientsModalOpen(false)}>
-              {t.common.cancel}
-            </Button>
-            <Button onClick={handleBulkUpdateClients} disabled={isUpdatingBulk}>
-              {isUpdatingBulk ? t.common.loading : t.common.save}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog >
+      {/* Bulk edit modals intentionally removed for compact CRM layout */}
 
       <AlertDialog open={isDeleteOrdersDialogOpen} onOpenChange={setIsDeleteOrdersDialogOpen}>
         <AlertDialogContent>
@@ -3706,6 +3301,30 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 </div>
 
                 <div className="border-t pt-4 space-y-3">
+                  <h4 className="font-semibold text-sm">Операционные детали</h4>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    <span className="text-slate-500">Priority</span>
+                    <span>{selectedOrder.priority ?? 3}</span>
+                    <span className="text-slate-500">ETA</span>
+                    <span>{selectedOrder.etaMinutes ? `${selectedOrder.etaMinutes} мин` : '-'}</span>
+                    <span className="text-slate-500">Последнее изменение</span>
+                    <span>
+                      {selectedOrder.statusChangedAt
+                        ? new Date(selectedOrder.statusChangedAt).toLocaleString('ru-RU')
+                        : '-'}
+                    </span>
+                    <span className="text-slate-500">Назначен курьер</span>
+                    <span>{selectedOrder.assignedAt ? new Date(selectedOrder.assignedAt).toLocaleString('ru-RU') : '-'}</span>
+                    <span className="text-slate-500">Старт доставки</span>
+                    <span>{selectedOrder.pickedUpAt ? new Date(selectedOrder.pickedUpAt).toLocaleString('ru-RU') : '-'}</span>
+                    <span className="text-slate-500">Пауза</span>
+                    <span>{selectedOrder.pausedAt ? new Date(selectedOrder.pausedAt).toLocaleString('ru-RU') : '-'}</span>
+                    <span className="text-slate-500">Завершен</span>
+                    <span>{selectedOrder.deliveredAt ? new Date(selectedOrder.deliveredAt).toLocaleString('ru-RU') : '-'}</span>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4 space-y-3">
                   <h4 className="font-semibold text-sm">Клиент</h4>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
@@ -3736,6 +3355,33 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       </p>
                     </div>
                   </div>
+                </div>
+
+                <div className="border-t pt-4 space-y-2">
+                  <h4 className="font-semibold text-sm">Timeline</h4>
+                  {isOrderTimelineLoading ? (
+                    <p className="text-xs text-muted-foreground">Loading timeline...</p>
+                  ) : selectedOrderTimeline.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No events yet</p>
+                  ) : (
+                    <div className="max-h-40 space-y-1 overflow-y-auto rounded border bg-muted/20 p-2">
+                      {selectedOrderTimeline.map((event) => (
+                        <div key={event.id} className="grid grid-cols-[140px_1fr] gap-2 text-xs">
+                          <span className="text-muted-foreground">
+                            {new Date(event.occurredAt).toLocaleString('ru-RU')}
+                          </span>
+                          <span>
+                            <span className="font-medium">{event.actorName || 'System'}</span>
+                            {' · '}
+                            {event.message || event.eventType}
+                            {event.previousStatus || event.nextStatus
+                              ? ` (${event.previousStatus || '-'} → ${event.nextStatus || '-'})`
+                              : ''}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {selectedOrder.specialFeatures && (

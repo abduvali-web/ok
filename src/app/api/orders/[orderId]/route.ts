@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
 import { getGroupAdminIds, getOwnerAdminId } from '@/lib/admin-scope'
-import { Prisma } from '@prisma/client'
+import { OrderEventType, type OrderStatus, Prisma } from '@prisma/client'
+import { appendOrderAudit, getCourierAssignmentPatch, getStatusTimestampPatch } from '@/lib/order-audit'
 
 export async function PATCH(
   request: NextRequest,
@@ -69,6 +70,10 @@ export async function PATCH(
     // SUPER_ADMIN can modify all orders (no restriction)
 
     let updateData: any = {}
+    let eventType: OrderEventType = OrderEventType.DETAILS_UPDATED
+    let eventMessage = 'Order updated'
+    const previousStatus = order.orderStatus as OrderStatus
+    const previousCourierId = order.courierId
 
     switch (action) {
       case 'start_delivery':
@@ -80,6 +85,10 @@ export async function PATCH(
         }
         updateData.orderStatus = 'IN_DELIVERY'
         updateData.courierId = user.id
+        Object.assign(updateData, getStatusTimestampPatch('IN_DELIVERY'))
+        Object.assign(updateData, getCourierAssignmentPatch(order.courierId, user.id))
+        eventType = OrderEventType.DELIVERY_STARTED
+        eventMessage = 'Courier started delivery'
         break
       case 'pause_delivery':
         if (!hasRole(user, ['COURIER'])) {
@@ -89,6 +98,9 @@ export async function PATCH(
           return NextResponse.json({ error: 'Можно приостановить только активную доставку' }, { status: 400 })
         }
         updateData.orderStatus = 'PAUSED'
+        Object.assign(updateData, getStatusTimestampPatch('PAUSED'))
+        eventType = OrderEventType.DELIVERY_PAUSED
+        eventMessage = 'Delivery paused'
         break
       case 'resume_delivery':
         if (!hasRole(user, ['COURIER'])) {
@@ -98,6 +110,9 @@ export async function PATCH(
           return NextResponse.json({ error: 'Можно возобновить только приостановленную доставку' }, { status: 400 })
         }
         updateData.orderStatus = 'IN_DELIVERY'
+        Object.assign(updateData, getStatusTimestampPatch('IN_DELIVERY'))
+        eventType = OrderEventType.DELIVERY_RESUMED
+        eventMessage = 'Delivery resumed'
         break
       case 'complete_delivery':
         if (!hasRole(user, ['COURIER'])) {
@@ -110,7 +125,9 @@ export async function PATCH(
 
         const { amountReceived } = body
         updateData.orderStatus = 'DELIVERED'
-        updateData.deliveredAt = new Date()
+        Object.assign(updateData, getStatusTimestampPatch('DELIVERED'))
+        eventType = OrderEventType.DELIVERY_COMPLETED
+        eventMessage = 'Delivery completed'
 
         const transactionOps: Prisma.PrismaPromise<unknown>[] = []
 
@@ -278,6 +295,8 @@ export async function PATCH(
         // Update customer info if name/phone changed and it's a manual order or we want to update the linked customer
         // For now, we'll just update the order fields. Updating the customer entity is a separate concern.
 
+        const nextCourierId = (courierId === 'null' || courierId === '') ? null : courierId
+
         updateData = {
           ...updateData,
           deliveryAddress,
@@ -289,9 +308,17 @@ export async function PATCH(
           paymentMethod,
           isPrepaid,
           deliveryDate: date ? new Date(date) : undefined,
-          courierId: (courierId === 'null' || courierId === '') ? null : courierId,
+          courierId: nextCourierId,
           ...(hasLatitude ? { latitude: sanitizedLatitude } : {}),
           ...(hasLongitude ? { longitude: sanitizedLongitude } : {})
+        }
+        Object.assign(updateData, getCourierAssignmentPatch(order.courierId, nextCourierId))
+        if (paymentStatus || paymentMethod) {
+          eventType = OrderEventType.PAYMENT_UPDATED
+          eventMessage = 'Payment details updated'
+        } else {
+          eventType = OrderEventType.DETAILS_UPDATED
+          eventMessage = 'Order details updated'
         }
         break
       default:
@@ -313,6 +340,42 @@ export async function PATCH(
         courier: { select: { id: true, name: true } }
       }
     })
+
+    const nextStatus = updatedOrder.orderStatus as OrderStatus
+    await appendOrderAudit(db, {
+      orderId: updatedOrder.id,
+      eventType,
+      actorAdminId: user.id,
+      actorRole: user.role,
+      actorName: (user as any).name || null,
+      previousStatus,
+      nextStatus,
+      payload: {
+        action,
+        courierId: updatedOrder.courierId,
+        paymentStatus: updatedOrder.paymentStatus,
+      },
+      message: eventMessage,
+    })
+
+    if (previousCourierId !== updatedOrder.courierId) {
+      await appendOrderAudit(db, {
+        orderId: updatedOrder.id,
+        eventType: updatedOrder.courierId
+          ? OrderEventType.COURIER_ASSIGNED
+          : OrderEventType.COURIER_UNASSIGNED,
+        actorAdminId: user.id,
+        actorRole: user.role,
+        actorName: (user as any).name || null,
+        previousStatus,
+        nextStatus,
+        payload: {
+          previousCourierId,
+          nextCourierId: updatedOrder.courierId,
+        },
+        message: updatedOrder.courierId ? 'Courier assigned' : 'Courier unassigned',
+      })
+    }
 
     const transformedOrder = {
       ...updatedOrder,

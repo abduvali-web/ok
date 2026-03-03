@@ -27,6 +27,14 @@ model Admin {
   phone                 String?
   latitude              Float?
   longitude             Float?
+  transportType         String?
+  vehicleNumber         String?
+  maxLoad               Int            @default(0)
+  isOnShift             Boolean        @default(false)
+  shiftStartedAt        DateTime?
+  shiftEndedAt          DateTime?
+  lastSeenAt            DateTime?
+  averageDeliveryMinutes Float?
   createdAdmins         Admin[]        @relation("AdminHierarchy")
   creator               Admin?         @relation("AdminHierarchy", fields: [createdBy], references: [id])
   orders                Order[]        @relation("OrderAdmin")
@@ -45,6 +53,7 @@ model Admin {
   salary                Int            @default(0)
   transactions          Transaction[]
   menuSets              MenuSet[]
+  orderAuditEvents      OrderAuditEvent[]
 
   @@map("admins")
 }
@@ -125,8 +134,27 @@ model Order {
   paymentStatus   PaymentStatus  @default(UNPAID)
   paymentMethod   PaymentMethod  @default(CASH)
   isPrepaid       Boolean        @default(false)
+  priority        Int            @default(3)
+  sourceChannel   String?        @default("ADMIN_PANEL")
+  statusChangedAt DateTime       @default(now())
+  assignedAt      DateTime?
+  pickedUpAt      DateTime?
+  pausedAt        DateTime?
+  resumedAt       DateTime?
   deliveredAt     DateTime?
+  failedAt        DateTime?
+  canceledAt      DateTime?
+  confirmedAt     DateTime?
+  etaMinutes      Int?
+  routeDistanceKm Float?
+  routeDurationMin Int?
+  sequenceInRoute Int?
+  customerRating  Int?
+  customerFeedback String?
   amountReceived  Float?
+  lastLatitude    Float?
+  lastLongitude   Float?
+  lastLocationAt  DateTime?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   orderType       OrderType      @default(MORNING)
@@ -138,6 +166,7 @@ model Order {
 
   courierId       String?
   courier         Admin?         @relation("OrderCourier", fields: [courierId], references: [id])
+  events          OrderAuditEvent[]
 
   @@map("orders")
 }
@@ -170,6 +199,39 @@ enum PaymentMethod {
 enum OrderType {
   MORNING
   EVENING
+}
+
+enum OrderEventType {
+  CREATED
+  STATUS_CHANGED
+  DETAILS_UPDATED
+  COURIER_ASSIGNED
+  COURIER_UNASSIGNED
+  DELIVERY_STARTED
+  DELIVERY_PAUSED
+  DELIVERY_RESUMED
+  DELIVERY_COMPLETED
+  PAYMENT_UPDATED
+  REORDERED
+}
+
+model OrderAuditEvent {
+  id            String         @id @default(cuid())
+  orderId       String
+  order         Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  eventType     OrderEventType
+  actorAdminId  String?
+  actorAdmin    Admin?         @relation(fields: [actorAdminId], references: [id], onDelete: SetNull)
+  actorRole     String?
+  actorName     String?
+  previousStatus OrderStatus?
+  nextStatus    OrderStatus?
+  payload       Json?
+  message       String?
+  occurredAt    DateTime       @default(now())
+
+  @@index([orderId, occurredAt])
+  @@map("order_audit_events")
 }
 
 model ActionLog {

@@ -228,7 +228,7 @@ function SiteDataTable({
             typeof col.label === "string"
         )
     ) ?? [];
-  const safeRows = rows ?? [];
+  const safeRows = useMemo(() => rows ?? [], [rows]);
   const [query, setQuery] = useState("");
 
   const filteredRows = useMemo(() => {
@@ -492,35 +492,6 @@ function SiteBarChart({
   );
 }
 
-function SiteRouteEmbed({
-  title,
-  path,
-  height,
-}: {
-  title?: string;
-  path?: string;
-  height?: number;
-}) {
-  const safePath = typeof path === "string" && path.startsWith("/") ? path : "/";
-  const frameHeight = Math.min(Math.max(height ?? 620, 320), 1200);
-
-  return (
-    <Card className="w-full">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">{title ?? `Page: ${safePath}`}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <iframe
-          title={`embed:${safePath}`}
-          src={safePath}
-          className="w-full rounded-md border bg-background"
-          style={{ height: `${frameHeight}px` }}
-        />
-      </CardContent>
-    </Card>
-  );
-}
-
 const metricItemSchema = z.object({
   label: z.string(),
   value: z.string(),
@@ -556,12 +527,6 @@ const entityCardSchema = z.object({
   meta: z.string().optional(),
   status: z.enum(["active", "paused", "pending", "failed"]).optional(),
   href: z.string().optional(),
-});
-
-const routeEmbedSchema = z.object({
-  title: z.string().optional(),
-  path: z.string().min(1),
-  height: z.number().int().min(320).max(1200).optional(),
 });
 
 export const tamboComponents: TamboComponent[] = [
@@ -647,12 +612,5 @@ export const tamboComponents: TamboComponent[] = [
       title: z.string().optional(),
       json: z.string().optional(),
     }),
-  },
-  {
-    name: "SiteRouteEmbed",
-    description:
-      "Embeds any internal route so the agent can show native site UI components.",
-    component: SiteRouteEmbed,
-    propsSchema: routeEmbedSchema,
   },
 ];

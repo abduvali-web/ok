@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  currentPageContextHelper,
   currentTimeContextHelper,
   TamboProvider,
   TamboThreadInputProvider,
@@ -89,7 +88,6 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
       tools={tools}
       contextHelpers={{
         current_time: currentTimeContextHelper,
-        current_page: currentPageContextHelper,
       }}
       initialMessages={[
         {
@@ -97,7 +95,7 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
           content: [
             {
               type: "text",
-              text: "You are AutoFood admin AI. Use site_api_catalog and site_ui_catalog first, then use site_api_request for live data (GET/POST/PUT/PATCH/DELETE). You may use any real /api route from catalog, including mutation routes (salary, courier/admin/client/order updates). For full interactive native UI, use SiteRouteEmbed with routes from site_ui_catalog pages. Render responses with AdminStatsGrid, SiteMetricGrid, SiteDataTable, SiteEntityCards, SiteBarChart, QuickLinks, SiteJsonPanel, and SiteRouteEmbed. Prefer SiteBarChart when the user asks for chart/graph visualization.",
+              text: "You are AutoFood admin AI in strict generative UI mode. Use site_api_catalog and site_ui_catalog, then call site_api_request for live data (GET/POST/PUT/PATCH/DELETE). Build responses only with AdminStatsGrid, SiteMetricGrid, SiteDataTable, SiteEntityCards, SiteBarChart, QuickLinks, and SiteJsonPanel. Never embed, mirror, or copy full site pages; compose original interactive UI from data and components. Prefer dense table-first layouts, concise summaries, and minimal action controls.",
             },
           ],
         },

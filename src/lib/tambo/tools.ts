@@ -2,10 +2,6 @@ import { z } from "zod";
 import { adminStatsSchema } from "@/lib/tambo/schemas";
 import { registerTamboTool } from "@/lib/tambo/tool-guard";
 import { SITE_ENDPOINT_CATALOG as GENERATED_SITE_ENDPOINT_CATALOG } from "@/lib/tambo/api-catalog.generated";
-import {
-  SITE_UI_COMPONENT_CATALOG,
-  SITE_UI_PAGE_CATALOG,
-} from "@/lib/tambo/ui-catalog.generated";
 
 function getOptionalBearerToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -54,21 +50,6 @@ const siteUiCatalogSchema = z.object({
   components: z.array(
     z.object({
       name: z.string(),
-      purpose: z.string(),
-    })
-  ),
-  siteComponents: z
-    .array(
-      z.object({
-        name: z.string(),
-        purpose: z.string(),
-        source: z.string(),
-      })
-    )
-    .optional(),
-  pages: z.array(
-    z.object({
-      path: z.string(),
       purpose: z.string(),
     })
   ),
@@ -317,7 +298,7 @@ export const siteUiCatalogTool = registerTamboTool({
   name: "site_ui_catalog",
   title: "Site UI catalog",
   description:
-    "Returns render components and key site pages the agent can use for UI responses.",
+    "Returns approved generative UI components for in-chat rendering.",
   annotations: {
     tamboStreamableHint: true,
   },
@@ -326,10 +307,11 @@ export const siteUiCatalogTool = registerTamboTool({
   defaultMessage: "Failed to load UI catalog.",
   tool: async () => {
     return {
-      title: "AutoFood UI catalog",
+      title: "AutoFood generative UI catalog",
       notes: [
-        "Use SiteRouteEmbed to render native site pages interactively (forms, tables, controls).",
-        "Use components list for Tambo-renderable cards/tables/charts inside chat.",
+        "Do not embed or mirror full site pages.",
+        "Build UI only from these components and live data from site_api_request.",
+        "Prefer dense, table-first layouts and minimal action controls.",
       ],
       components: [
         { name: "AdminStatsGrid", purpose: "Order and customer stats cards" },
@@ -339,17 +321,7 @@ export const siteUiCatalogTool = registerTamboTool({
         { name: "SiteBarChart", purpose: "Simple bar chart for counts and comparisons" },
         { name: "QuickLinks", purpose: "Navigation shortcuts" },
         { name: "SiteJsonPanel", purpose: "Raw API payload view" },
-        { name: "SiteRouteEmbed", purpose: "Embed any internal route in an iframe" },
       ],
-      siteComponents: SITE_UI_COMPONENT_CATALOG.map((component) => ({
-        name: component.name,
-        purpose: component.purpose,
-        source: component.source,
-      })),
-      pages: SITE_UI_PAGE_CATALOG.map((page) => ({
-        path: page.path,
-        purpose: page.purpose,
-      })),
     };
   },
 });

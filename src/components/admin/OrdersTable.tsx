@@ -9,7 +9,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Trash2, Eye, Edit, Calendar, MapPin, User } from 'lucide-react'
+import { Edit, Calendar, MapPin, User } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { useLanguage } from '@/contexts/LanguageContext'
 
@@ -31,6 +31,9 @@ interface Order {
     paymentMethod: string
     orderStatus: string
     isPrepaid: boolean
+    priority?: number
+    etaMinutes?: number | null
+    statusChangedAt?: string
     createdAt: string
     deliveryDate?: string
     isAutoOrder?: boolean
@@ -55,29 +58,19 @@ export function OrdersTable({
     selectedOrders,
     onSelectOrder,
     onSelectAll,
-    onDeleteSelected,
-    onViewOrder,
+    onDeleteSelected: _onDeleteSelected,
+    onViewOrder: _onViewOrder,
     onEditOrder
 }: OrdersTableProps) {
     const { t } = useLanguage()
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">{t.admin.orders}</h2>
-                {selectedOrders.size > 0 && (
-                    <Button variant="destructive" size="sm" onClick={onDeleteSelected}>
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        {t.admin.deleteSelected} ({selectedOrders.size})
-                    </Button>
-                )}
-            </div>
-
             {/* Desktop View */}
             <div className="hidden md:block rounded-md border overflow-x-auto">
                 <Table>
                     <TableHeader>
-                        <TableRow>
+                        <TableRow className="h-9">
                             <TableHead className="w-[50px]">
                                 <Checkbox
                                     checked={orders.length > 0 && selectedOrders.size === orders.length}
@@ -94,42 +87,45 @@ export function OrdersTable({
                             <TableHead>{t.admin.table.features}</TableHead>
                             <TableHead>{t.admin.table.courier}</TableHead>
                             <TableHead>{t.admin.table.status}</TableHead>
+                            <TableHead>Priority</TableHead>
+                            <TableHead>ETA</TableHead>
+                            <TableHead>Updated</TableHead>
                             <TableHead>{t.admin.table.payment}</TableHead>
                             <TableHead className="text-right">{t.admin.table.actions}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {orders.map((order) => (
-                            <TableRow key={order.id}>
-                                <TableCell>
+                            <TableRow key={order.id} className="h-10">
+                                <TableCell className="py-1.5">
                                     <Checkbox
                                         checked={selectedOrders.has(order.id)}
                                         onCheckedChange={() => onSelectOrder(order.id)}
                                     />
                                 </TableCell>
-                                <TableCell className="font-medium">#{order.orderNumber}</TableCell>
-                                <TableCell>
+                                <TableCell className="py-1.5 font-medium">#{order.orderNumber}</TableCell>
+                                <TableCell className="py-1.5">
                                     <div>{order.customer.name}</div>
                                     <div className="text-sm text-muted-foreground">{order.customer.phone}</div>
                                 </TableCell>
-                                <TableCell className="max-w-[200px] truncate" title={order.deliveryAddress}>
+                                <TableCell className="max-w-[200px] truncate py-1.5" title={order.deliveryAddress}>
                                     {order.deliveryAddress}
                                 </TableCell>
-                                <TableCell>{order.deliveryTime}</TableCell>
-                                <TableCell>
+                                <TableCell className="py-1.5">{order.deliveryTime}</TableCell>
+                                <TableCell className="py-1.5">
                                     <Badge variant="outline">
                                         {order.isAutoOrder ? t.admin.auto : t.admin.manual}
                                     </Badge>
                                 </TableCell>
-                                <TableCell>{order.quantity}</TableCell>
-                                <TableCell>{order.calories}</TableCell>
-                                <TableCell className="max-w-[150px] truncate" title={order.specialFeatures}>
+                                <TableCell className="py-1.5">{order.quantity}</TableCell>
+                                <TableCell className="py-1.5">{order.calories}</TableCell>
+                                <TableCell className="max-w-[150px] truncate py-1.5" title={order.specialFeatures}>
                                     {order.specialFeatures || '-'}
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="py-1.5">
                                     {order.courierName || '-'}
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="py-1.5">
                                     <Badge variant={
                                         order.orderStatus === 'DELIVERED' ? 'default' :
                                             order.orderStatus === 'PENDING' ? 'secondary' :
@@ -138,26 +134,33 @@ export function OrdersTable({
                                         {order.orderStatus}
                                     </Badge>
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="py-1.5">{order.priority ?? 3}</TableCell>
+                                <TableCell className="py-1.5">{order.etaMinutes ? `${order.etaMinutes} min` : '-'}</TableCell>
+                                <TableCell className="py-1.5 text-xs text-muted-foreground">
+                                    {order.statusChangedAt
+                                        ? new Date(order.statusChangedAt).toLocaleString('ru-RU', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                        })
+                                        : '-'}
+                                </TableCell>
+                                <TableCell className="py-1.5">
                                     <Badge variant={order.paymentStatus === 'PAID' ? 'default' : 'destructive'}>
                                         {order.paymentStatus}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex justify-end gap-2">
-                                        <Button variant="ghost" size="icon" onClick={() => onViewOrder?.(order)}>
-                                            <Eye className="w-4 h-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" onClick={() => onEditOrder?.(order)}>
-                                            <Edit className="w-4 h-4" />
-                                        </Button>
-                                    </div>
+                                <TableCell className="py-1.5 text-right">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditOrder?.(order)}>
+                                        <Edit className="w-4 h-4" />
+                                    </Button>
                                 </TableCell>
                             </TableRow>
                         ))}
                         {orders.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={13} className="h-24 text-center">
+                                <TableCell colSpan={16} className="h-24 text-center">
                                     {t.admin.noOrders}
                                 </TableCell>
                             </TableRow>
@@ -237,15 +240,10 @@ export function OrdersTable({
                                         {order.paymentStatus === 'PAID' ? t.common.paid : t.common.notPaid}
                                     </Badge>
 
-                                    <div className="flex gap-2">
-                                        <Button variant="outline" className="h-10 px-4 flex-1" onClick={() => onViewOrder?.(order)}>
-                                            <Eye className="w-4 h-4 mr-2" />
-                                            View
-                                        </Button>
-                                        <Button variant="secondary" className="h-10 w-10 p-0 shrink-0" onClick={() => onEditOrder?.(order)}>
-                                            <Edit className="w-4 h-4" />
-                                        </Button>
-                                    </div>
+                                    <Button variant="secondary" className="h-10 px-3" onClick={() => onEditOrder?.(order)}>
+                                        <Edit className="w-4 h-4 mr-1.5" />
+                                        {t.admin.edit} · P{order.priority ?? 3}
+                                    </Button>
                                 </div>
                             </CardContent>
                         </Card>
