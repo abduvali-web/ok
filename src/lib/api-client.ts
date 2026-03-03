@@ -1,69 +1,85 @@
-/**
- * Shared API client — replaces the repeated `fetch → .json() → toast` pattern
- * (~30 occurrences) with a single, typed helper.
+﻿/**
+ * Small shared API client used across dashboard modules.
+ * It keeps all request and response error handling in one place.
  */
 
-export type ApiResult<T = unknown> = {
-    ok: true
-    data: T
-} | {
-    ok: false
-    error: string
-    details?: string
+export type ApiResult<T = unknown> =
+  | {
+      ok: true
+      data: T
+    }
+  | {
+      ok: false
+      error: string
+      details?: string
+      status?: number
+    }
+
+type FetchApiOptions<TBody = unknown> = {
+  method?: string
+  body?: TBody
+  headers?: Record<string, string>
+  signal?: AbortSignal
 }
 
-/**
- * Typed wrapper around `fetch`.
- *
- * - Auto-sets `Content-Type: application/json` for non-GET requests.
- * - Parses the JSON body and returns `{ ok, data }` or `{ ok: false, error }`.
- *
- * @example
- * const result = await fetchApi<{ deletedCount: number }>('/api/admin/orders/delete', {
- *   method: 'DELETE',
- *   body: { orderIds: ['a', 'b'] },
- * })
- * if (result.ok) {
- *   toast.success(`Deleted ${result.data.deletedCount}`)
- * } else {
- *   toast.error(result.error)
- * }
- */
-export async function fetchApi<T = unknown>(
-    url: string,
-    options?: {
-        method?: string
-        body?: unknown
-        headers?: Record<string, string>
-    },
+type ErrorPayload = {
+  error?: string
+  message?: string
+  details?: string
+}
+
+const DEFAULT_NETWORK_ERROR = 'Network error while contacting the server'
+const DEFAULT_REQUEST_ERROR = 'Request failed'
+
+function extractErrorPayload(payload: unknown): ErrorPayload | null {
+  if (!payload || typeof payload !== 'object') return null
+  return payload as ErrorPayload
+}
+
+async function parseResponsePayload(response: Response): Promise<unknown> {
+  const contentType = response.headers.get('content-type') ?? ''
+  if (contentType.includes('application/json')) {
+    return response.json().catch(() => null)
+  }
+  return response.text().catch(() => null)
+}
+
+export async function fetchApi<T = unknown, TBody = unknown>(
+  url: string,
+  options?: FetchApiOptions<TBody>
 ): Promise<ApiResult<T>> {
-    const { method = 'GET', body, headers = {} } = options ?? {}
+  const { method = 'GET', body, headers = {}, signal } = options ?? {}
 
-    const isBodyMethod = method !== 'GET' && method !== 'HEAD'
-    const fetchHeaders: Record<string, string> = { ...headers }
-    if (isBodyMethod && !fetchHeaders['Content-Type']) {
-        fetchHeaders['Content-Type'] = 'application/json'
+  const canSendBody = method !== 'GET' && method !== 'HEAD'
+  const requestHeaders: Record<string, string> = { ...headers }
+  if (canSendBody && body !== undefined && !requestHeaders['Content-Type']) {
+    requestHeaders['Content-Type'] = 'application/json'
+  }
+
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: requestHeaders,
+      signal,
+      ...(canSendBody && body !== undefined ? { body: JSON.stringify(body) } : {}),
+    })
+
+    const payload = await parseResponsePayload(response)
+    if (response.ok) {
+      return { ok: true, data: payload as T }
     }
 
-    try {
-        const response = await fetch(url, {
-            method,
-            headers: fetchHeaders,
-            ...(isBodyMethod && body !== undefined ? { body: JSON.stringify(body) } : {}),
-        })
-
-        const data = await response.json().catch(() => null)
-
-        if (response.ok) {
-            return { ok: true, data: data as T }
-        }
-
-        return {
-            ok: false,
-            error: (data && (data as Record<string, string>).error) || `Ошибка запроса (${response.status})`,
-            details: (data && (data as Record<string, string>).details) || undefined,
-        }
-    } catch {
-        return { ok: false, error: 'Ошибка соединения с сервером' }
+    const parsedError = extractErrorPayload(payload)
+    return {
+      ok: false,
+      error:
+        parsedError?.error ||
+        parsedError?.message ||
+        `${DEFAULT_REQUEST_ERROR} (${response.status})`,
+      details: parsedError?.details,
+      status: response.status,
     }
+  } catch {
+    return { ok: false, error: DEFAULT_NETWORK_ERROR }
+  }
 }

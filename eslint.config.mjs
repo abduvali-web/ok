@@ -13,8 +13,8 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
-      // TypeScript 相关规则
-      "@typescript-eslint/no-explicit-any": "off",
+      // TypeScript rules
+      "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": [
         "warn",
         { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "ignoreRestSiblings": true }
@@ -22,30 +22,30 @@ const eslintConfig = [
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/ban-ts-comment": "off",
       "@typescript-eslint/prefer-as-const": "off",
-      
-      // React 相关规则
-      "react-hooks/exhaustive-deps": "off",
+
+      // React rules
+      "react-hooks/exhaustive-deps": "warn",
       "react/no-unescaped-entities": "off",
       "react/display-name": "off",
       "react/prop-types": "off",
-      
-      // Next.js 相关规则
+
+      // Next.js rules
       "@next/next/no-img-element": "off",
       "@next/next/no-html-link-for-pages": "off",
-      
-      // 一般JavaScript规则
+
+      // General JavaScript rules
       "prefer-const": "warn",
       "no-unused-vars": "off",
-      "no-console": "off",
-      "no-debugger": "off",
+      "no-console": "warn",
+      "no-debugger": "warn",
       "no-empty": "off",
       "no-irregular-whitespace": "off",
       "no-case-declarations": "off",
-      "no-fallthrough": "off",
+      "no-fallthrough": "error",
       "no-mixed-spaces-and-tabs": "off",
-      "no-redeclare": "off",
+      "no-redeclare": "error",
       "no-undef": "off",
-      "no-unreachable": "off",
+      "no-unreachable": "error",
       "no-useless-escape": "off",
     },
   },

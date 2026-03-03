@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { toast } from 'sonner'
 import {
@@ -18,7 +18,15 @@ import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities'
 
 import type { Admin, Order } from '@/components/admin/dashboard/types'
-import { extractCoordsFromText, isShortGoogleMapsUrl, type LatLng } from '@/lib/geo'
+import {
+  expandShortMapsUrl,
+  extractAnyUrl,
+  extractCoordsFromText,
+  extractShortGoogleMapsUrl,
+  isGoogleMapsLikeUrl,
+  isShortGoogleMapsUrl,
+  type LatLng,
+} from '@/lib/geo'
 import { getCourierColor } from '@/lib/courier-colors'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -99,29 +107,6 @@ function renumberInOrder(
     if (typeof n === 'number') next[id] = n
   }
   return next
-}
-
-function extractShortGoogleMapsUrl(input: string): string | null {
-  if (!input) return null
-  const match = input.match(/https?:\/\/(?:maps\.app\.goo\.gl|goo\.gl)\/[^\s)]+/i)
-  return match ? match[0] : null
-}
-
-function extractAnyUrl(input: string): string | null {
-  if (!input) return null
-  const match = input.match(/https?:\/\/[^\s)]+/i)
-  return match ? match[0] : null
-}
-
-function isGoogleMapsLikeUrl(url: string): boolean {
-  if (!url) return false
-  const u = url.toLowerCase()
-  return (
-    u.includes('google.com/maps') ||
-    u.includes('maps.google.com') ||
-    u.includes('maps.app.goo.gl') ||
-    u.includes('goo.gl/maps')
-  )
 }
 
 function SortableOrderItem({
@@ -213,8 +198,8 @@ export function DispatchMapPanel({
   autoSortOnOpen?: boolean
   onSaved: () => void
 }) {
-  const safeOrders: Order[] = Array.isArray(orders) ? orders : []
-  const safeCouriers: Admin[] = Array.isArray(couriers) ? couriers : []
+  const safeOrders = orders
+  const safeCouriers = couriers
 
   const UNASSIGNED = 'unassigned'
   const [containers, setContainers] = useState<Record<ContainerId, string[]>>({})
@@ -256,8 +241,8 @@ export function DispatchMapPanel({
     const todayISO = new Date().toISOString().split('T')[0]
     if (selectedDateISO !== todayISO) return false
     return safeOrders.some((o) => {
-      const status = String((o as any)?.orderStatus ?? '')
-      const hasCourier = !!(o as any)?.courierId
+      const status = String(o.orderStatus ?? '')
+      const hasCourier = !!o.courierId
       return hasCourier && status !== 'NEW' && status !== 'IN_PROCESS'
     })
   }, [safeOrders, selectedDateISO])
@@ -333,7 +318,7 @@ export function DispatchMapPanel({
     const toExpand: Array<{ id: string; url: string }> = []
 
     for (const o of safeOrders) {
-      const saved = coerceLatLng((o as any).latitude, (o as any).longitude)
+      const saved = coerceLatLng(o.latitude, o.longitude)
       if (saved) {
         base[o.id] = saved
         continue
@@ -375,11 +360,7 @@ export function DispatchMapPanel({
         if (cancelled) return
         try {
           const cached = expandedCache.current.get(item.url)
-          const expanded =
-            cached ??
-            (await fetch(`/api/admin/expand-url?url=${encodeURIComponent(item.url)}`)
-              .then((r) => (r.ok ? r.json() : null))
-              .then((d) => (d && typeof d.expandedUrl === 'string' ? d.expandedUrl : null)))
+          const expanded = cached ?? (await expandShortMapsUrl(item.url))
 
           if (expanded) expandedCache.current.set(item.url, expanded)
           const coords = (expanded ? extractCoordsFromText(expanded) : null) ?? extractCoordsFromText(item.url)
@@ -486,7 +467,7 @@ export function DispatchMapPanel({
     return { markers, polylines }
   }, [containers, coordsById, courierNameById, courierStartById, orderById, orderNumberById, roadPolylineByContainer, warehousePoint])
 
-  const applyAutoSortAll = async () => {
+  const applyAutoSortAll = useCallback(async () => {
     const hasCourierStart = safeCouriers.some((c) => typeof c.latitude === 'number' && typeof c.longitude === 'number')
     if (!warehousePoint && !hasCourierStart) {
       toast.error('Set warehouse coordinates or enable courier geolocation')
@@ -539,9 +520,64 @@ export function DispatchMapPanel({
           body: JSON.stringify({ routes: routeRequests }),
         })
         if (response.ok) {
-          const data = await response.json().catch(() => null)
-          const routes = Array.isArray(data?.routes) ? data.routes : []
-          const byContainer = new Map<string, any>(routes.map((r: any) => [String(r.containerId), r]))
+          const data: unknown = await response.json().catch(() => null)
+          const rawRoutes =
+            data &&
+            typeof data === 'object' &&
+            Array.isArray((data as { routes?: unknown }).routes)
+              ? (data as { routes: unknown[] }).routes
+              : []
+
+          const byContainer = new Map<
+            string,
+            {
+              durationSec: number | null
+              source: string
+              orderedOrderIds: string[]
+              polyline: LatLng[]
+            }
+          >()
+
+          for (const rawRoute of rawRoutes) {
+            if (!rawRoute || typeof rawRoute !== 'object') continue
+            const route = rawRoute as Record<string, unknown>
+
+            const containerIdRaw = route.containerId
+            const containerId =
+              typeof containerIdRaw === 'string' || typeof containerIdRaw === 'number'
+                ? String(containerIdRaw)
+                : ''
+            if (!containerId) continue
+
+            const orderedOrderIds = Array.isArray(route.orderedOrderIds)
+              ? route.orderedOrderIds.map((id) => String(id))
+              : []
+
+            const polyline = Array.isArray(route.polyline)
+              ? route.polyline
+                .map((point) => {
+                  if (!point || typeof point !== 'object') return null
+                  const coord = point as Record<string, unknown>
+                  const lat = Number(coord.lat)
+                  const lng = Number(coord.lng)
+                  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+                  return { lat, lng }
+                })
+                .filter((point): point is LatLng => point !== null)
+              : []
+
+            const durationRaw = route.durationSec
+            const durationSec =
+              typeof durationRaw === 'number' && Number.isFinite(durationRaw) ? durationRaw : null
+            const source = typeof route.source === 'string' ? route.source : 'unknown'
+
+            byContainer.set(containerId, {
+              durationSec,
+              source,
+              orderedOrderIds,
+              polyline,
+            })
+          }
 
           for (const containerId of Object.keys(nextContainers)) {
             const route = byContainer.get(containerId)
@@ -557,10 +593,8 @@ export function DispatchMapPanel({
               statsNext[containerId] = { durationSec: null, source: 'none' }
             }
 
-            if (route && Array.isArray(route.orderedOrderIds)) {
-              const ordered = route.orderedOrderIds
-                .map((id: unknown) => String(id))
-                .filter((id: string) => allowed.has(id))
+            if (route && route.orderedOrderIds.length > 0) {
+              const ordered = route.orderedOrderIds.filter((id) => allowed.has(id))
               const missing = withCoords.map((w) => w.id).filter((id) => !ordered.includes(id))
               nextContainers[containerId] = [...ordered, ...missing, ...withoutCoords]
             } else if (withCoords.length > 0) {
@@ -571,14 +605,9 @@ export function DispatchMapPanel({
               nextContainers[containerId] = [...orderedWithCoords, ...withoutCoords]
             }
 
-            if (route && Array.isArray(route.polyline)) {
-              const polyline = route.polyline
-                .map((p: any) => ({ lat: Number(p?.lat), lng: Number(p?.lng) }))
-                .filter((p: LatLng) => Number.isFinite(p.lat) && Number.isFinite(p.lng))
-              if (polyline.length >= 2) {
-                roadPolylinesNext[containerId] = polyline
+            if (route && route.polyline.length >= 2) {
+              roadPolylinesNext[containerId] = route.polyline
               }
-            }
           }
 
           usedServerOptimization = true
@@ -629,7 +658,7 @@ export function DispatchMapPanel({
       }
       return numbersNext as Record<string, number>
     })
-  }
+  }, [containers, coordsById, courierStartById, safeCouriers, warehousePoint])
 
   useEffect(() => {
     if (!open) return
@@ -639,7 +668,7 @@ export function DispatchMapPanel({
       void applyAutoSortAll()
     }, 50)
     return () => clearTimeout(t)
-  }, [open, autoSortOnOpen])
+  }, [applyAutoSortAll, autoSortOnOpen, open])
 
   useEffect(() => {
     if (!open) return
@@ -650,7 +679,7 @@ export function DispatchMapPanel({
       void applyAutoSortAll()
     }, 250)
     return () => clearTimeout(t)
-  }, [coordsById, open, autoSortOnOpen])
+  }, [applyAutoSortAll, autoSortOnOpen, coordsById, open])
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(String(event.active.id))

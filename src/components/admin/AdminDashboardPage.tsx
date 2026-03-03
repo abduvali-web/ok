@@ -75,7 +75,13 @@ import { FilterToolbar } from '@/components/admin/dashboard/shared/FilterToolbar
 import { SectionMetrics } from '@/components/admin/dashboard/shared/SectionMetrics'
 import { TabEmptyState } from '@/components/admin/dashboard/shared/TabEmptyState'
 import { EntityStatusBadge } from '@/components/admin/dashboard/shared/EntityStatusBadge'
-import { extractCoordsFromText, isShortGoogleMapsUrl, type LatLng } from '@/lib/geo'
+import {
+  expandShortMapsUrl,
+  extractCoordsFromText,
+  isShortGoogleMapsUrl,
+  parseGoogleMapsUrl,
+  type LatLng,
+} from '@/lib/geo'
 
 import { MobileSidebar } from '@/components/MobileSidebar'
 import { MobileTabIndicator } from '@/components/MobileTabIndicator'
@@ -808,57 +814,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     }
   }
 
-  const extractAnyUrl = (input: string): string | null => {
-    if (!input) return null
-    const match = input.match(/https?:\/\/[^\s)]+/i)
-    return match ? match[0] : null
-  }
-
-  const isGoogleMapsLikeUrl = (url: string): boolean => {
-    if (!url) return false
-    const u = url.toLowerCase()
-    return (
-      u.includes('google.com/maps') ||
-      u.includes('maps.google.com') ||
-      u.includes('maps.app.goo.gl') ||
-      u.includes('goo.gl/maps')
-    )
-  }
-
-  const parseGoogleMapsUrl = async (url: string): Promise<string | null> => {
-    if (!url) return null
-
-    let finalUrl = url
-    const inlineUrl = extractAnyUrl(url)
-    const candidateUrl = inlineUrl && isGoogleMapsLikeUrl(inlineUrl) ? inlineUrl : url
-
-    // Handle short links
-    if (isShortGoogleMapsUrl(candidateUrl)) {
-      try {
-        const response = await fetch(`/api/admin/expand-url?url=${encodeURIComponent(candidateUrl)}`)
-        if (response.ok) {
-          const data = await response.json()
-          if (data.expandedUrl) {
-            finalUrl = data.expandedUrl
-          }
-        }
-      } catch (error) {
-        console.error('Error expanding URL:', error)
-      }
-    } else {
-      finalUrl = candidateUrl
-    }
-
-    try {
-      const coords = extractCoordsFromText(finalUrl) ?? extractCoordsFromText(candidateUrl) ?? extractCoordsFromText(url)
-      if (!coords) return null
-      return `${coords.lat}, ${coords.lng}`
-    } catch (error) {
-      console.error('Error parsing Google Maps URL:', error)
-      return null
-    }
-  }
-
   const handleWarehouseInputChange = (value: string) => {
     setWarehouseInput(value)
     const coords = extractCoordsFromText(value)
@@ -870,10 +825,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     if (!isShortGoogleMapsUrl(warehouseInput)) return
 
     try {
-      const response = await fetch(`/api/admin/expand-url?url=${encodeURIComponent(warehouseInput)}`)
-      if (!response.ok) return
-      const data = await response.json().catch(() => null)
-      const expanded = data && typeof data.expandedUrl === 'string' ? data.expandedUrl : null
+      const expanded = await expandShortMapsUrl(warehouseInput)
       if (!expanded) return
       const coords = extractCoordsFromText(expanded)
       if (coords) setWarehousePreview(coords)
@@ -919,21 +871,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const handleAddressChange = async (value: string) => {
     setOrderFormData(prev => ({ ...prev, deliveryAddress: value }))
 
-    // Парсим координаты в реальном времени
     const parsed = await parseGoogleMapsUrl(value)
-    if (parsed && parsed.includes(',')) {
-      const coords = parsed.split(',')
-      const lat = parseFloat(coords[0].trim())
-      const lng = parseFloat(coords[1].trim())
-
-      if (!isNaN(lat) && !isNaN(lng)) {
-        setParsedCoords({ lat, lng })
-      } else {
-        setParsedCoords(null)
-      }
-    } else {
-      setParsedCoords(null)
-    }
+    setParsedCoords(parsed)
   }
 
   const handleClientAddressChange = async (value: string) => {
@@ -949,22 +888,13 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     }
 
     const parsed = await parseGoogleMapsUrl(value)
-    if (parsed && parsed.includes(',')) {
-      const coords = parsed.split(',')
-      const lat = parseFloat(coords[0].trim())
-      const lng = parseFloat(coords[1].trim())
-
-      if (!isNaN(lat) && !isNaN(lng)) {
-        setClientFormData(prev => ({
-          ...prev,
-          latitude: lat,
-          longitude: lng
-        }))
-      }
+    if (parsed) {
+      setClientFormData(prev => ({
+        ...prev,
+        latitude: parsed.lat,
+        longitude: parsed.lng
+      }))
     } else {
-      // Optional: Clear coordinates if link is invalid? 
-      // Or keep previous valid ones? 
-      // Let's clear them to avoid confusion if the user thinks they changed the link but the coords remained old.
       setClientFormData(prev => ({
         ...prev,
         latitude: null,
@@ -1033,21 +963,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
           assignedSetId: selectedClient.assignedSetId || ''
         }))
 
-        // Также парсим координаты из адреса клиента
-        parseGoogleMapsUrl(selectedClient.address).then(parsed => {
-          if (parsed && parsed.includes(',')) {
-            const coords = parsed.split(',')
-            const lat = parseFloat(coords[0].trim())
-            const lng = parseFloat(coords[1].trim())
-
-            if (!isNaN(lat) && !isNaN(lng)) {
-              setParsedCoords({ lat, lng })
-            } else {
-              setParsedCoords(null)
-            }
-          } else {
-            setParsedCoords(null)
-          }
+        void parseGoogleMapsUrl(selectedClient.address).then(parsed => {
+          setParsedCoords(parsed)
         })
       }
     } else {
@@ -1076,23 +993,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     setOrderError('')
 
     try {
-      // Parse address to extract coordinates from Google Maps link
       const parsedCoordinates = await parseGoogleMapsUrl(orderFormData.deliveryAddress)
 
-      // Extract coordinates if present
-      let latitude: number | null = null
-      let longitude: number | null = null
-
-      if (parsedCoordinates && parsedCoordinates.includes(',')) {
-        const coords = parsedCoordinates.split(',')
-        const lat = parseFloat(coords[0].trim())
-        const lng = parseFloat(coords[1].trim())
-
-        if (!isNaN(lat) && !isNaN(lng)) {
-          latitude = lat
-          longitude = lng
-        }
-      }
+      const latitude = parsedCoordinates?.lat ?? null
+      const longitude = parsedCoordinates?.lng ?? null
 
       // Add coordinates and date to order data, but keep original address
       const effectiveOrderDate = (selectedDate ?? new Date()).toISOString().split('T')[0]
