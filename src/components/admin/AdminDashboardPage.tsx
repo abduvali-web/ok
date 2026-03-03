@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
@@ -16,6 +16,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -37,7 +47,6 @@ import {
   Play,
   Save,
   Filter,
-  Search,
   ChevronLeft,
   ChevronRight,
   Route,
@@ -62,6 +71,10 @@ import { useDashboardData } from '@/components/admin/dashboard/useDashboardData'
 import { AdminsTab } from '@/components/admin/dashboard/tabs-content/AdminsTab'
 import { OrderModal } from '@/components/admin/dashboard/modals/OrderModal'
 import { DispatchMapPanel } from '@/components/admin/orders/DispatchMapPanel'
+import { FilterToolbar } from '@/components/admin/dashboard/shared/FilterToolbar'
+import { SectionMetrics } from '@/components/admin/dashboard/shared/SectionMetrics'
+import { TabEmptyState } from '@/components/admin/dashboard/shared/TabEmptyState'
+import { EntityStatusBadge } from '@/components/admin/dashboard/shared/EntityStatusBadge'
 import { extractCoordsFromText, isShortGoogleMapsUrl, type LatLng } from '@/lib/geo'
 
 import { MobileSidebar } from '@/components/MobileSidebar'
@@ -144,7 +157,14 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set())
   const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set())
   const [clientStatusFilter, setClientStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [clientSearchTerm, setClientSearchTerm] = useState('')
   const [showFilters, setShowFilters] = useState(false)
+  const [isDeleteOrdersDialogOpen, setIsDeleteOrdersDialogOpen] = useState(false)
+  const [isDeleteClientsDialogOpen, setIsDeleteClientsDialogOpen] = useState(false)
+  const [isPauseClientsDialogOpen, setIsPauseClientsDialogOpen] = useState(false)
+  const [isResumeClientsDialogOpen, setIsResumeClientsDialogOpen] = useState(false)
+  const [isDeletingOrders, setIsDeletingOrders] = useState(false)
+  const [isMutatingClients, setIsMutatingClients] = useState(false)
   const [optimizeCourierId, setOptimizeCourierId] = useState('all')
   const [isCreateOrderModalOpen, setIsCreateOrderModalOpen] = useState(false)
   const [isCreateCourierModalOpen, setIsCreateCourierModalOpen] = useState(false)
@@ -338,6 +358,88 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     })
   }, [normalizedOrdersForSelectedDate, searchTerm])
 
+  const filteredClients = useMemo(() => {
+    const normalizedSearch = clientSearchTerm.trim().toLowerCase()
+
+    return clients.filter((client) => {
+      const statusMatch =
+        clientStatusFilter === 'all' ||
+        (clientStatusFilter === 'active' && client.isActive) ||
+        (clientStatusFilter === 'inactive' && !client.isActive)
+
+      if (!statusMatch) return false
+      if (!normalizedSearch) return true
+
+      return [client.name, client.nickName, client.phone, client.address]
+        .filter(Boolean)
+        .some((field) => String(field).toLowerCase().includes(normalizedSearch))
+    })
+  }, [clientSearchTerm, clientStatusFilter, clients])
+
+  const orderMetrics = useMemo(() => {
+    const pendingCount = filteredOrders.filter((order) => order.orderStatus === 'PENDING').length
+    const inDeliveryCount = filteredOrders.filter((order) => order.orderStatus === 'IN_DELIVERY').length
+
+    return [
+      {
+        id: 'orders-visible',
+        label: 'Visible orders',
+        value: filteredOrders.length,
+        tone: 'primary' as const,
+      },
+      {
+        id: 'orders-selected',
+        label: 'Selected orders',
+        value: selectedOrders.size,
+        tone: selectedOrders.size > 0 ? ('warning' as const) : ('neutral' as const),
+      },
+      {
+        id: 'orders-pending',
+        label: 'Pending',
+        value: pendingCount,
+        tone: 'warning' as const,
+      },
+      {
+        id: 'orders-delivery',
+        label: 'In delivery',
+        value: inDeliveryCount,
+        tone: 'success' as const,
+      },
+    ]
+  }, [filteredOrders, selectedOrders.size])
+
+  const clientMetrics = useMemo(() => {
+    const activeCount = filteredClients.filter((client) => client.isActive).length
+    const pausedCount = filteredClients.length - activeCount
+
+    return [
+      {
+        id: 'clients-visible',
+        label: 'Visible clients',
+        value: filteredClients.length,
+        tone: 'primary' as const,
+      },
+      {
+        id: 'clients-selected',
+        label: 'Selected clients',
+        value: selectedClients.size,
+        tone: selectedClients.size > 0 ? ('warning' as const) : ('neutral' as const),
+      },
+      {
+        id: 'clients-active',
+        label: 'Active',
+        value: activeCount,
+        tone: 'success' as const,
+      },
+      {
+        id: 'clients-paused',
+        label: 'Paused',
+        value: pausedCount,
+        tone: 'danger' as const,
+      },
+    ]
+  }, [filteredClients, selectedClients.size])
+
   const clearOrderFilters = useCallback(() => {
     setFilters({ ...DEFAULT_ORDER_FILTERS })
   }, [])
@@ -373,7 +475,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   // Add effect to reset selected clients when filter changes
   useEffect(() => {
     setSelectedClients(new Set())
-  }, [clientStatusFilter])
+  }, [clientStatusFilter, clientSearchTerm])
 
   useEffect(() => {
     if (isUiStateHydrated || typeof window === 'undefined') return
@@ -390,6 +492,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         selectedDateISO?: string | null
         showFilters?: boolean
         searchTerm?: string
+        clientSearchTerm?: string
         optimizeCourierId?: string
         clientStatusFilter?: 'all' | 'active' | 'inactive'
       }
@@ -397,6 +500,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       if (typeof state.activeTab === 'string') setActiveTab(state.activeTab)
       if (typeof state.showFilters === 'boolean') setShowFilters(state.showFilters)
       if (typeof state.searchTerm === 'string') setSearchTerm(state.searchTerm.slice(0, 160))
+      if (typeof state.clientSearchTerm === 'string') setClientSearchTerm(state.clientSearchTerm.slice(0, 160))
       if (typeof state.optimizeCourierId === 'string') setOptimizeCourierId(state.optimizeCourierId)
       if (state.clientStatusFilter === 'all' || state.clientStatusFilter === 'active' || state.clientStatusFilter === 'inactive') {
         setClientStatusFilter(state.clientStatusFilter)
@@ -428,12 +532,14 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         selectedDateISO: selectedDate ? selectedDate.toISOString().split('T')[0] : null,
         showFilters,
         searchTerm,
+        clientSearchTerm,
         optimizeCourierId,
         clientStatusFilter,
       })
     )
   }, [
     activeTab,
+    clientSearchTerm,
     clientStatusFilter,
     isUiStateHydrated,
     optimizeCourierId,
@@ -525,25 +631,26 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   }
 
   const handleSelectAllOrders = () => {
-    if (selectedOrders.size === orders.length) {
+    if (selectedOrders.size === filteredOrders.length) {
       setSelectedOrders(new Set())
     } else {
-      setSelectedOrders(new Set(orders.map(order => order.id)))
+      setSelectedOrders(new Set(filteredOrders.map(order => order.id)))
     }
   }
 
-  const handleDeleteSelectedOrders = async () => {
+  const handleDeleteSelectedOrders = async ({ skipConfirm = false }: { skipConfirm?: boolean } = {}) => {
     if (selectedOrders.size === 0) {
       toast.error('Пожалуйста, выберите заказы для удаления')
       return
     }
 
-    const confirmMessage = `Вы уверены, что хотите удалить ${selectedOrders.size} заказ(ов)?`
-    if (!confirm(confirmMessage)) {
+    if (!skipConfirm) {
+      setIsDeleteOrdersDialogOpen(true)
       return
     }
 
     try {
+      setIsDeletingOrders(true)
       const response = await fetch('/api/admin/orders/delete', {
         method: 'DELETE',
         headers: {
@@ -556,6 +663,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         const data = await response.json()
         toast.success(`Успешно удалено ${data.deletedCount} заказ(ов)`)
         setSelectedOrders(new Set())
+        setIsDeleteOrdersDialogOpen(false)
         fetchData()
       } else {
         const data = await response.json()
@@ -564,6 +672,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     } catch (error) {
       console.error('Delete orders error:', error)
       toast.error('Ошибка соединения с сервером')
+    } finally {
+      setIsDeletingOrders(false)
     }
   }
 
@@ -865,23 +975,19 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
 
 
-  const handleDeleteSelectedClients = async () => {
+  const handleDeleteSelectedClients = async ({ skipConfirm = false }: { skipConfirm?: boolean } = {}) => {
     if (selectedClients.size === 0) {
       toast.error('Пожалуйста, выберите клиентов для удаления')
       return
     }
 
-    const selectedClientsList = Array.from(selectedClients).map(id =>
-      clients.find(c => c.id === id)?.name || 'Неизвестный клиент'
-    ).join(', ')
-
-    const confirmMessage = `Вы уверены, что хотите удалить следующих клиентов:\n\n${selectedClientsList}\n\nВсе автоматически созданные заказы этих клиентов за последние 30 дней также будут удалены.\n\nЭто действие нельзя отменить.`
-
-    if (!confirm(confirmMessage)) {
+    if (!skipConfirm) {
+      setIsDeleteClientsDialogOpen(true)
       return
     }
 
     try {
+      setIsMutatingClients(true)
       const response = await fetch('/api/admin/clients/delete', {
         method: 'DELETE',
         headers: {
@@ -898,6 +1004,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         const data = await response.json()
         toast.success(`Успешно удалено:\n- ${data.deletedClients} клиент(ов)\n- ${data.deletedOrders} заказ(ов)`)
         setSelectedClients(new Set())
+        setIsDeleteClientsDialogOpen(false)
         fetchData()
       } else {
         const data = await response.json()
@@ -906,6 +1013,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     } catch (error) {
       console.error('Delete clients error:', error)
       toast.error('Ошибка соединения с сервером')
+    } finally {
+      setIsMutatingClients(false)
     }
   }
 
@@ -1286,23 +1395,19 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     })
   }
 
-  const handlePauseSelectedClients = async () => {
+  const handlePauseSelectedClients = async ({ skipConfirm = false }: { skipConfirm?: boolean } = {}) => {
     if (selectedClients.size === 0) {
       toast.error('Пожалуйста, выберите клиентов для приостановки')
       return
     }
 
-    const selectedClientsList = Array.from(selectedClients).map(id =>
-      clients.find(c => c.id === id)?.name || 'Неизвестный клиент'
-    ).join(', ')
-
-    const confirmMessage = `Вы уверены, что хотите приостановить следующих клиентов:\n\n${selectedClientsList}\n\nПриостановленные клиенты не будут получать автоматические заказы.`
-
-    if (!confirm(confirmMessage)) {
+    if (!skipConfirm) {
+      setIsPauseClientsDialogOpen(true)
       return
     }
 
     try {
+      setIsMutatingClients(true)
       const response = await fetch('/api/admin/clients/toggle-status', {
         method: 'PATCH',
         headers: {
@@ -1318,6 +1423,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         const data = await response.json()
         toast.success(`Успешно приостановлено клиентов: ${data.updatedCount}`)
         setSelectedClients(new Set())
+        setIsPauseClientsDialogOpen(false)
         fetchData()
       } else {
         const data = await response.json()
@@ -1326,26 +1432,24 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     } catch (error) {
       console.error('Error pausing clients:', error)
       toast.error('Ошибка соединения с сервером. Пожалуйста, попробуйте еще раз.')
+    } finally {
+      setIsMutatingClients(false)
     }
   }
 
-  const handleResumeSelectedClients = async () => {
+  const handleResumeSelectedClients = async ({ skipConfirm = false }: { skipConfirm?: boolean } = {}) => {
     if (selectedClients.size === 0) {
       toast.error('Пожалуйста, выберите клиентов для возобновления')
       return
     }
 
-    const selectedClientsList = Array.from(selectedClients).map(id =>
-      clients.find(c => c.id === id)?.name || 'Неизвестный клиент'
-    ).join(', ')
-
-    const confirmMessage = `Вы уверены, что хотите возобновить следующих клиентов:\n\n${selectedClientsList}\n\nВозобновленные клиенты снова начнут получать автоматические заказы.`
-
-    if (!confirm(confirmMessage)) {
+    if (!skipConfirm) {
+      setIsResumeClientsDialogOpen(true)
       return
     }
 
     try {
+      setIsMutatingClients(true)
       const response = await fetch('/api/admin/clients/toggle-status', {
         method: 'PATCH',
         headers: {
@@ -1361,6 +1465,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         const data = await response.json()
         toast.success(`Успешно возобновлено клиентов: ${data.updatedCount}`)
         setSelectedClients(new Set())
+        setIsResumeClientsDialogOpen(false)
         fetchData()
       } else {
         const data = await response.json()
@@ -1369,6 +1474,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     } catch (error) {
       console.error('Error resuming clients:', error)
       toast.error('Ошибка соединения с сервером. Пожалуйста, попробуйте еще раз.')
+    } finally {
+      setIsMutatingClients(false)
     }
   }
 
@@ -2000,11 +2107,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         variant="outline"
                         size="sm"
                         className="h-10 rounded-xl border-destructive/40 px-3 text-xs text-destructive hover:bg-destructive/10"
-                        onClick={handleDeleteSelectedOrders}
-                        disabled={selectedOrders.size === 0}
+                        onClick={() => setIsDeleteOrdersDialogOpen(true)}
+                        disabled={selectedOrders.size === 0 || isDeletingOrders}
                       >
                         <Trash2 className="w-4 h-4 mr-1.5" />
-                        {t.admin.delete}
+                        {isDeletingOrders ? t.common.loading : t.admin.delete}
                       </Button>
                     </div>
                   </div>
@@ -2339,43 +2446,52 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 {/* Today's Menu Display */}
                 <TodaysMenu className="mb-6" />
 
-                {/* Order Search */}
-                <div className="mb-4 relative">
-                  <Input
-                    ref={searchInputRef}
-                    placeholder="Поиск по имени, адресу или номеру заказа..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                  <Search className="w-5 h-5 absolute left-3 top-2.5 text-slate-400 pointer-events-none" />
+                <div className="mb-4">
+                  <SectionMetrics items={orderMetrics} />
                 </div>
 
-                <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <Badge variant="outline">Visible: {filteredOrders.length}</Badge>
-                  {selectedOrders.size > 0 && <Badge variant="outline">Selected: {selectedOrders.size}</Badge>}
-                  {searchTerm && (
-                    <Button variant="ghost" size="sm" onClick={() => setSearchTerm('')} className="h-7 px-2">
-                      Clear search
-                    </Button>
-                  )}
+                <div className="mb-4">
+                  <FilterToolbar
+                    inputRef={searchInputRef}
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    searchPlaceholder="Поиск по имени, адресу или номеру заказа..."
+                    searchAriaLabel="Поиск заказов"
+                  >
+                    {searchTerm && (
+                      <Button variant="ghost" size="sm" onClick={() => setSearchTerm('')} className="h-9 px-3">
+                        Clear search
+                      </Button>
+                    )}
+                    {activeFiltersCount > 0 && (
+                      <Button variant="outline" size="sm" onClick={clearOrderFilters} className="h-9 px-3">
+                        Reset filters
+                      </Button>
+                    )}
+                  </FilterToolbar>
                 </div>
 
-                {/* Orders Table */}
-                <div className="rounded-md border">
-                  <OrdersTable
-                    orders={filteredOrders}
-                    selectedOrders={selectedOrders}
-                    onSelectOrder={handleOrderSelect}
-                    onSelectAll={handleSelectAllOrders}
-                    onDeleteSelected={handleDeleteSelectedOrders}
-                    onViewOrder={(order) => {
-                      setSelectedOrder(order)
-                      setIsOrderDetailsModalOpen(true)
-                    }}
-                    onEditOrder={handleEditOrder}
+                {filteredOrders.length === 0 ? (
+                  <TabEmptyState
+                    title="Заказы не найдены"
+                    description="Измените фильтры или поисковый запрос."
                   />
-                </div>
+                ) : (
+                  <div className="rounded-md border">
+                    <OrdersTable
+                      orders={filteredOrders}
+                      selectedOrders={selectedOrders}
+                      onSelectOrder={handleOrderSelect}
+                      onSelectAll={handleSelectAllOrders}
+                      onDeleteSelected={() => setIsDeleteOrdersDialogOpen(true)}
+                      onViewOrder={(order) => {
+                        setSelectedOrder(order)
+                        setIsOrderDetailsModalOpen(true)
+                      }}
+                      onEditOrder={handleEditOrder}
+                    />
+                  </div>
+                )}
 
                 {/* Table Actions */}
                 <div className="mt-4 flex flex-col items-end gap-1.5">
@@ -2404,11 +2520,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       {t.admin.manageClientsDesc}
                       {clientStatusFilter !== 'all' && (
                         <span className="ml-2 text-sm">
-                          (Показано: {clients.filter(client => {
-                            if (clientStatusFilter === 'active') return client.isActive
-                            if (clientStatusFilter === 'inactive') return !client.isActive
-                            return true
-                          }).length} из {clients.length})
+                          (Показано: {filteredClients.length} из {clients.length})
                         </span>
                       )}
                     </CardDescription>
@@ -2436,6 +2548,21 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     >
                       🤖 Создать авто-заказы
                     </Button>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <SectionMetrics items={clientMetrics} />
+                </div>
+
+                <div className="mb-4">
+                  <FilterToolbar
+                    searchValue={clientSearchTerm}
+                    onSearchChange={setClientSearchTerm}
+                    searchPlaceholder="Поиск клиента по имени, телефону, адресу..."
+                    searchAriaLabel="Поиск клиентов"
+                  />
+                </div>
                     <Dialog open={isCreateClientModalOpen} onOpenChange={setIsCreateClientModalOpen}>
                       <DialogTrigger asChild>
                         <Button>
@@ -2733,8 +2860,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         </form>
                       </DialogContent>
                     </Dialog>
-                  </div>
-                </div>
               </CardHeader>
               <CardContent>
                 {/* Client Management Buttons */}
@@ -2760,28 +2885,30 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={handlePauseSelectedClients}
+                          onClick={() => setIsPauseClientsDialogOpen(true)}
+                          disabled={selectedClients.size === 0 || isMutatingClients}
                           className="text-orange-600 border-orange-200 hover:bg-orange-50"
                         >
                           <Pause className="w-4 h-4 mr-2" />
-                          Приостановить выбранных
+                          {isMutatingClients ? t.common.loading : 'Приостановить выбранных'}
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={handleResumeSelectedClients}
+                          onClick={() => setIsResumeClientsDialogOpen(true)}
+                          disabled={selectedClients.size === 0 || isMutatingClients}
                           className="text-green-600 border-green-200 hover:bg-green-50"
                         >
                           <Play className="w-4 h-4 mr-2" />
-                          Возобновить выбранных
+                          {isMutatingClients ? t.common.loading : 'Возобновить выбранных'}
                         </Button>
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={handleDeleteSelectedClients}
-                          disabled={selectedClients.size === 0}
+                          onClick={() => setIsDeleteClientsDialogOpen(true)}
+                          disabled={selectedClients.size === 0 || isMutatingClients}
                         >
-                          🗑️ Удалить выбранных клиентов
+                          {isMutatingClients ? t.common.loading : '🗑️ Удалить выбранных клиентов'}
                         </Button>
                       </div>
                     </div>
@@ -2799,25 +2926,13 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                               type="checkbox"
                               className="rounded border-border"
                               onChange={(e) => {
-                                const filteredClients = clients.filter(client => {
-                                  if (clientStatusFilter === 'active') return client.isActive
-                                  if (clientStatusFilter === 'inactive') return !client.isActive
-                                  return true
-                                })
                                 if (e.target.checked) {
                                   setSelectedClients(new Set(filteredClients.map(c => c.id)))
                                 } else {
                                   setSelectedClients(new Set())
                                 }
                               }}
-                              checked={(() => {
-                                const filteredClients = clients.filter(client => {
-                                  if (clientStatusFilter === 'active') return client.isActive
-                                  if (clientStatusFilter === 'inactive') return !client.isActive
-                                  return true
-                                })
-                                return selectedClients.size === filteredClients.length && filteredClients.length > 0
-                              })()}
+                              checked={selectedClients.size === filteredClients.length && filteredClients.length > 0}
                             />
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Имя</th>
@@ -2841,13 +2956,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         </tr>
                       </thead>
                       <tbody className="bg-card divide-y divide-border">
-                        {clients
-                          .filter(client => {
-                            if (clientStatusFilter === 'active') return client.isActive
-                            if (clientStatusFilter === 'inactive') return !client.isActive
-                            return true
-                          })
-                          .map((client) => (
+                        {filteredClients.map((client) => (
                             <tr key={client.id} className="hover:bg-muted">
                               <td className="px-4 py-2 whitespace-nowrap text-sm">
                                 <input
@@ -2888,27 +2997,14 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm">
                                 <div className="flex flex-col gap-1">
-                                  <Badge
-                                    variant={client.isActive ? "default" : "secondary"}
-                                    className={
-                                      `${client.isActive
-                                        ? "bg-green-100 text-green-800 border-green-200"
-                                        : "bg-red-100 text-red-800 border-red-200"} cursor-pointer hover:opacity-80`
-                                    }
+                                  <EntityStatusBadge
+                                    isActive={client.isActive}
+                                    activeLabel="Активен"
+                                    inactiveLabel="Приостановлен"
+                                    inactiveTone="danger"
+                                    showDot
                                     onClick={() => handleToggleClientStatus(client.id, client.isActive)}
-                                  >
-                                    {client.isActive ? (
-                                      <>
-                                        <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                                        Активен
-                                      </>
-                                    ) : (
-                                      <>
-                                        <div className="w-2 h-2 bg-red-500 rounded-full mr-1"></div>
-                                        Приостановлен
-                                      </>
-                                    )}
-                                  </Badge>
+                                  />
                                 </div>
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
@@ -2928,6 +3024,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                               </td>
                             </tr>
                           ))}
+                        {filteredClients.length === 0 && (
+                          <tr>
+                            <td colSpan={11} className="px-4 py-8 text-center">
+                              <TabEmptyState
+                                title="Клиенты не найдены"
+                                description="Измените фильтры или поисковый запрос."
+                              />
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -2935,13 +3041,13 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
                 {/* Mobile View */}
                 <div className="md:hidden space-y-4">
-                  {clients
-                    .filter(client => {
-                      if (clientStatusFilter === 'active') return client.isActive
-                      if (clientStatusFilter === 'inactive') return !client.isActive
-                      return true
-                    })
-                    .map((client) => (
+                  {filteredClients.length === 0 && (
+                    <TabEmptyState
+                      title="Клиенты не найдены"
+                      description="Измените фильтры или поисковый запрос."
+                    />
+                  )}
+                  {filteredClients.map((client) => (
                       <Card key={client.id} className="overflow-hidden">
                         <CardHeader className="pb-2 bg-muted/30">
                           <div className="flex justify-between items-start">
@@ -2955,17 +3061,14 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 <CardDescription>{client.phone}</CardDescription>
                               </div>
                             </div>
-                            <Badge
-                              variant={client.isActive ? "default" : "secondary"}
-                              className={
-                                `${client.isActive
-                                  ? "bg-green-100 text-green-800 border-green-200"
-                                  : "bg-red-100 text-red-800 border-red-200"} cursor-pointer`
-                              }
+                            <EntityStatusBadge
+                              isActive={client.isActive}
+                              activeLabel="Активен"
+                              inactiveLabel="Приостановлен"
+                              inactiveTone="danger"
+                              showDot
                               onClick={() => handleToggleClientStatus(client.id, client.isActive)}
-                            >
-                              {client.isActive ? "Активен" : "Приостановлен"}
-                            </Badge>
+                            />
                           </div>
                         </CardHeader>
                         <CardContent className="pt-4 space-y-3">
@@ -3562,6 +3665,86 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
           </DialogFooter>
         </DialogContent>
       </Dialog >
+
+      <AlertDialog open={isDeleteOrdersDialogOpen} onOpenChange={setIsDeleteOrdersDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить выбранные заказы?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Будет удалено заказов: {selectedOrders.size}. Это действие нельзя отменить.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingOrders}>{t.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeletingOrders}
+              onClick={() => void handleDeleteSelectedOrders({ skipConfirm: true })}
+            >
+              {isDeletingOrders ? t.common.loading : t.admin.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isPauseClientsDialogOpen} onOpenChange={setIsPauseClientsDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Приостановить выбранных клиентов?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Клиентов: {selectedClients.size}. Они не будут получать автоматические заказы.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isMutatingClients}>{t.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isMutatingClients}
+              onClick={() => void handlePauseSelectedClients({ skipConfirm: true })}
+            >
+              {isMutatingClients ? t.common.loading : 'Приостановить'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isResumeClientsDialogOpen} onOpenChange={setIsResumeClientsDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Возобновить выбранных клиентов?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Клиентов: {selectedClients.size}. Автоматические заказы снова будут включены.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isMutatingClients}>{t.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isMutatingClients}
+              onClick={() => void handleResumeSelectedClients({ skipConfirm: true })}
+            >
+              {isMutatingClients ? t.common.loading : 'Возобновить'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isDeleteClientsDialogOpen} onOpenChange={setIsDeleteClientsDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить выбранных клиентов?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Будут удалены клиенты: {selectedClients.size}, а также связанные авто-заказы за последние 30 дней.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isMutatingClients}>{t.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isMutatingClients}
+              onClick={() => void handleDeleteSelectedClients({ skipConfirm: true })}
+            >
+              {isMutatingClients ? t.common.loading : t.admin.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Order Details Modal */}
       < Dialog open={isOrderDetailsModalOpen} onOpenChange={setIsOrderDetailsModalOpen} >

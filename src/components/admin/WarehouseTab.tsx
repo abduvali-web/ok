@@ -13,6 +13,7 @@ import {
     ChefHat,
     Loader2,
     RefreshCw,
+    Users,
     UtensilsCrossed
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -32,6 +33,8 @@ import { IngredientsManager } from './warehouse/IngredientsManager';
 import { CookingManager } from './warehouse/CookingManager'; // Integrated
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SetsTab } from './SetsTab';
+import { SectionMetrics } from '@/components/admin/dashboard/shared/SectionMetrics';
+import { TabEmptyState } from '@/components/admin/dashboard/shared/TabEmptyState';
 
 interface WarehouseTabProps {
     className?: string;
@@ -675,6 +678,46 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     // const hasEnoughStock = true;
     const _totalDishesToCook = Object.values(dishQuantities).reduce((sum, qty) => sum + qty, 0);
 
+    const totalPlannedPortions = useMemo(
+        () => Object.values(clientsByCalorie).reduce((sum, qty) => sum + qty, 0),
+        [clientsByCalorie]
+    );
+
+    const warehouseMetrics = useMemo(() => ([
+        {
+            id: 'clients',
+            label: t.admin.clients,
+            value: allClients.length,
+            helper: t.admin.activeClients,
+            icon: <Users className="size-4 text-primary" />,
+            tone: 'primary' as const,
+        },
+        {
+            id: 'orders',
+            label: t.admin.orders,
+            value: allOrders.length,
+            helper: t.warehouse.cooking,
+            icon: <ShoppingCart className="size-4 text-emerald-600" />,
+            tone: 'success' as const,
+        },
+        {
+            id: 'portions',
+            label: t.warehouse.clients,
+            value: totalPlannedPortions,
+            helper: `${t.warehouse.menuFor} ${tomorrowMenuNumber}`,
+            icon: <ChefHat className="size-4 text-amber-600" />,
+            tone: 'warning' as const,
+        },
+        {
+            id: 'ingredients',
+            label: t.warehouse.requiredIngredients,
+            value: calculatedIngredients.size,
+            helper: t.warehouse.calculator,
+            icon: <Package className="size-4 text-muted-foreground" />,
+            tone: 'neutral' as const,
+        },
+    ]), [allClients.length, allOrders.length, calculatedIngredients.size, t.admin.activeClients, t.admin.clients, t.admin.orders, t.warehouse.calculator, t.warehouse.clients, t.warehouse.cooking, t.warehouse.menuFor, t.warehouse.requiredIngredients, tomorrowMenuNumber, totalPlannedPortions]);
+
     return (
         <div className={`space-y-6 ${className}`}>
             <Card className="glass-card border-none">
@@ -705,6 +748,9 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                     </div>
                 </CardHeader>
                 <CardContent>
+                    <div className="mb-6">
+                        <SectionMetrics items={warehouseMetrics} />
+                    </div>
                     <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
                         <TabsList className="grid w-full grid-cols-5 mb-6">
                             <TabsTrigger value="cooking" className="flex items-center gap-2">
@@ -858,10 +904,11 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                     )}
 
                                     {calculatedIngredients.size === 0 && (
-                                        <div className="text-center py-12 text-slate-400">
-                                            <Calculator className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                                            <p>{t.warehouse.clickToCalc}</p>
-                                        </div>
+                                        <TabEmptyState
+                                            title={t.warehouse.clickToCalc}
+                                            description={t.warehouse.calcDaysInfo}
+                                            icon={<Calculator className="mx-auto mb-3 size-6 text-muted-foreground" />}
+                                        />
                                     )}
                                 </div>
                             </div>
