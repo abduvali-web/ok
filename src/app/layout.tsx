@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { LanguageProvider } from '@/contexts/LanguageContext';
@@ -8,16 +8,16 @@ import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistratio
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 import { TamboProviderClient } from "@/components/providers/TamboProviderClient";
 
-const sans = Inter({
+const sans = Manrope({
   variable: "--font-geist-sans",
   subsets: ["latin", "cyrillic"],
   display: "swap",
 });
 
-const display = Inter({
+const display = Fraunces({
   variable: "--font-display",
-  subsets: ["latin", "cyrillic"],
-  weight: ["500", "600", "700", "800"],
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
   display: "swap",
 });
 
