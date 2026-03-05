@@ -1,359 +1,426 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Send, Users } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Loader2, MessageSquarePlus, Search, Send, Users } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface User {
-    id: string
-    name: string
-    email: string
-    role: string
+  id: string
+  name: string
+  email: string
+  role: string
 }
 
 interface Message {
+  id: string
+  content: string
+  senderId: string
+  createdAt: string
+  sender: {
     id: string
-    content: string
-    senderId: string
-    createdAt: string
-    sender: {
-        id: string
-        name: string
-        role: string
-    }
+    name: string
+    role: string
+  }
 }
 
 interface Conversation {
-    id: string
-    otherParticipant: User
-    lastMessage: {
-        content: string
-        createdAt: string
-        isRead: boolean
-        senderId: string
-    } | null
-    unreadCount: number
+  id: string
+  otherParticipant: User
+  lastMessage: {
+    content: string
+    createdAt: string
+    isRead: boolean
+    senderId: string
+  } | null
+  unreadCount: number
+}
+
+function getStoredUserId() {
+  if (typeof window === 'undefined') return null
+  try {
+    return JSON.parse(localStorage.getItem('user') || '{}').id ?? null
+  } catch {
+    return null
+  }
 }
 
 export function ChatTab() {
-    const [conversations, setConversations] = useState<Conversation[]>([])
-    const [availableUsers, setAvailableUsers] = useState<User[]>([])
-    const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
-    const [messages, setMessages] = useState<Message[]>([])
-    const [newMessage, setNewMessage] = useState('')
-    const [showUserList, setShowUserList] = useState(false)
-    const messagesEndRef = useRef<HTMLDivElement>(null)
-    const currentUserId = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}').id : null
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [availableUsers, setAvailableUsers] = useState<User[]>([])
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [newMessage, setNewMessage] = useState('')
+  const [showUserList, setShowUserList] = useState(false)
+  const [isBootLoading, setIsBootLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const currentUserId = useMemo(() => getStoredUserId(), [])
 
-    useEffect(() => {
-        fetchConversations()
-        fetchAvailableUsers()
-        // Poll for new messages every 5 seconds
-        const interval = setInterval(() => {
-            if (selectedConversation) {
-                fetchMessages(selectedConversation, true)
-            }
-            fetchConversations()
-        }, 5000)
-
-        return () => clearInterval(interval)
-    }, [selectedConversation])
-
-    useEffect(() => {
-        scrollToBottom()
-    }, [messages])
-
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  useEffect(() => {
+    const load = async () => {
+      setIsBootLoading(true)
+      await Promise.all([fetchConversations(), fetchAvailableUsers()])
+      setIsBootLoading(false)
     }
 
-    const fetchConversations = async () => {
-        try {
-            const token = localStorage.getItem('token')
-            const response = await fetch('/api/chat/conversations', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
+    void load()
 
-            if (response.ok) {
-                const data = await response.json()
-                setConversations(data.conversations)
-            }
-        } catch (error) {
-            console.error('Error fetching conversations:', error)
-        }
-    }
+    const interval = setInterval(() => {
+      void fetchConversations()
+      if (selectedConversation) {
+        void fetchMessages(selectedConversation, true)
+      }
+    }, 5000)
 
-    const fetchAvailableUsers = async () => {
-        try {
-            const token = localStorage.getItem('token')
-            const response = await fetch('/api/chat/users', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
+    return () => clearInterval(interval)
+  }, [selectedConversation])
 
-            if (response.ok) {
-                const data = await response.json()
-                setAvailableUsers(data.users)
-            }
-        } catch (error) {
-            console.error('Error fetching users:', error)
-        }
-    }
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
-    const fetchMessages = async (conversationId: string, silent = false) => {
-        try {
-            const token = localStorage.getItem('token')
-            const response = await fetch(`/api/chat/messages?conversationId=${conversationId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-
-            if (response.ok) {
-                const data = await response.json()
-                setMessages(data.messages)
-
-                // Mark messages as read
-                await fetch('/api/chat/messages', {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ conversationId })
-                })
-            }
-        } catch (error) {
-            if (!silent) {
-                console.error('Error fetching messages:', error)
-            }
-        }
-    }
-
-    const startConversation = async (userId: string) => {
-        try {
-            const token = localStorage.getItem('token')
-            const response = await fetch('/api/chat/conversations', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ participantId: userId })
-            })
-
-            if (response.ok) {
-                const data = await response.json()
-                setSelectedConversation(data.conversation.id)
-                setShowUserList(false)
-                await fetchConversations()
-                await fetchMessages(data.conversation.id)
-            }
-        } catch {
-            toast.error('Ошибка создания разговора')
-        } finally {
-        }
-    }
-
-    const sendMessage = async () => {
-        if (!newMessage.trim() || !selectedConversation) return
-
-        try {
-            const token = localStorage.getItem('token')
-            const response = await fetch('/api/chat/send', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    conversationId: selectedConversation,
-                    content: newMessage.trim()
-                })
-            })
-
-            if (response.ok) {
-                setNewMessage('')
-                await fetchMessages(selectedConversation)
-                await fetchConversations()
-            } else {
-                toast.error('Ошибка отправки сообщения')
-            }
-        } catch {
-            toast.error('Ошибка соединения')
-        }
-    }
-
-    const getRoleColor = (role: string) => {
-        switch (role) {
-            case 'SUPER_ADMIN': return 'bg-purple-100 text-purple-800'
-            case 'MIDDLE_ADMIN': return 'bg-blue-100 text-blue-800'
-            case 'LOW_ADMIN': return 'bg-green-100 text-green-800'
-            case 'COURIER': return 'bg-orange-100 text-orange-800'
-            default: return 'bg-gray-100 text-gray-800'
-        }
-    }
-
-    const getRoleLabel = (role: string) => {
-        switch (role) {
-            case 'SUPER_ADMIN': return 'Супер Админ'
-            case 'MIDDLE_ADMIN': return 'Средний Админ'
-            case 'LOW_ADMIN': return 'Низкий Админ'
-            case 'COURIER': return 'Курьер'
-            default: return role
-        }
-    }
-
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[600px]">
-            {/* Conversations List */}
-            <Card className="md:col-span-1">
-                <CardHeader className="pb-3">
-                    <div className="flex justify-between items-center">
-                        <CardTitle className="text-lg">Чаты</CardTitle>
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setShowUserList(!showUserList)}
-                        >
-                            <Users className="w-4 h-4 mr-1" />
-                            Новый
-                        </Button>
-                    </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                    {showUserList ? (
-                        <div className="max-h-[500px] overflow-y-auto">
-                            {availableUsers.length === 0 ? (
-                                <div className="p-4 text-center text-muted-foreground">
-                                    Нет доступных пользователей
-                                </div>
-                            ) : (
-                                availableUsers.map(user => (
-                                    <button
-                                        key={user.id}
-                                        onClick={() => startConversation(user.id)}
-                                        className="w-full p-3 hover:bg-muted flex items-center gap-3 border-b"
-                                    >
-                                        <Avatar>
-                                            <AvatarFallback>{user.name[0]}</AvatarFallback>
-                                        </Avatar>
-                                        <div className="flex-1 text-left">
-                                            <div className="font-medium">{user.name}</div>
-                                            <Badge className={`text-xs ${getRoleColor(user.role)}`}>
-                                                {getRoleLabel(user.role)}
-                                            </Badge>
-                                        </div>
-                                    </button>
-                                ))
-                            )}
-                        </div>
-                    ) : (
-                        <div className="max-h-[500px] overflow-y-auto">
-                            {conversations.length === 0 ? (
-                                <div className="p-4 text-center text-muted-foreground">
-                                    Нет разговоров
-                                </div>
-                            ) : (
-                                conversations.map(conv => (
-                                    <button
-                                        key={conv.id}
-                                        onClick={() => {
-                                            setSelectedConversation(conv.id)
-                                            fetchMessages(conv.id)
-                                        }}
-                                        className={`w-full p-3 hover:bg-muted flex items-center gap-3 border-b ${selectedConversation === conv.id ? 'bg-muted' : ''
-                                            }`}
-                                    >
-                                        <Avatar>
-                                            <AvatarFallback>{conv.otherParticipant.name[0]}</AvatarFallback>
-                                        </Avatar>
-                                        <div className="flex-1 text-left">
-                                            <div className="flex justify-between items-start">
-                                                <div className="font-medium">{conv.otherParticipant.name}</div>
-                                                {conv.unreadCount > 0 && (
-                                                    <Badge className="bg-red-500 text-white text-xs">
-                                                        {conv.unreadCount}
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                            <div className="text-xs text-muted-foreground truncate">
-                                                {conv.lastMessage?.content || 'Нет сообщений'}
-                                            </div>
-                                        </div>
-                                    </button>
-                                ))
-                            )}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
-            {/* Messages Area */}
-            <Card className="md:col-span-2">
-                {selectedConversation ? (
-                    <>
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-lg">
-                                {conversations.find(c => c.id === selectedConversation)?.otherParticipant.name}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex flex-col h-[500px]">
-                            {/* Messages */}
-                            <div className="flex-1 overflow-y-auto mb-4 space-y-2">
-                                {messages.map(message => (
-                                    <div
-                                        key={message.id}
-                                        className={`flex ${message.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
-                                    >
-                                        <div
-                                            className={`max-w-[70%] p-3 rounded-lg ${message.senderId === currentUserId
-                                                    ? 'bg-primary text-primary-foreground'
-                                                    : 'bg-muted'
-                                                }`}
-                                        >
-                                            <div className="text-sm">{message.content}</div>
-                                            <div className="text-xs opacity-70 mt-1">
-                                                {new Date(message.createdAt).toLocaleTimeString('ru-RU', {
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                                <div ref={messagesEndRef} />
-                            </div>
-
-                            {/* Input */}
-                            <div className="flex gap-2">
-                                <Input
-                                    value={newMessage}
-                                    onChange={(e) => setNewMessage(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                                    placeholder="Введите сообщение..."
-                                    className="flex-1"
-                                />
-                                <Button onClick={sendMessage} disabled={!newMessage.trim()}>
-                                    <Send className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </>
-                ) : (
-                    <CardContent className="flex items-center justify-center h-full text-muted-foreground">
-                        Выберите разговор или начните новый
-                    </CardContent>
-                )}
-            </Card>
-        </div>
+  const filteredConversations = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    if (!query) return conversations
+    return conversations.filter((conversation) =>
+      conversation.otherParticipant.name.toLowerCase().includes(query) ||
+      conversation.otherParticipant.email.toLowerCase().includes(query)
     )
+  }, [conversations, search])
+
+  const filteredUsers = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    if (!query) return availableUsers
+    return availableUsers.filter((user) =>
+      user.name.toLowerCase().includes(query) || user.email.toLowerCase().includes(query)
+    )
+  }, [availableUsers, search])
+
+  const selectedConversationData = useMemo(
+    () => conversations.find((conversation) => conversation.id === selectedConversation) ?? null,
+    [conversations, selectedConversation]
+  )
+
+  async function fetchConversations() {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch('/api/chat/conversations', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setConversations(data.conversations)
+      }
+    } catch {
+      // ignore transient polling errors
+    }
+  }
+
+  async function fetchAvailableUsers() {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch('/api/chat/users', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setAvailableUsers(data.users)
+      }
+    } catch {
+      // ignore transient loading errors
+    }
+  }
+
+  async function fetchMessages(conversationId: string, silent = false) {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`/api/chat/messages?conversationId=${conversationId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Unable to fetch messages')
+      }
+
+      const data = await response.json()
+      setMessages(data.messages)
+
+      await fetch('/api/chat/messages', {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ conversationId }),
+      })
+    } catch {
+      if (!silent) {
+        toast.error('Could not load messages')
+      }
+    }
+  }
+
+  async function startConversation(userId: string) {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch('/api/chat/conversations', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ participantId: userId }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Could not start conversation')
+      }
+
+      const data = await response.json()
+      setSelectedConversation(data.conversation.id)
+      setShowUserList(false)
+      await fetchConversations()
+      await fetchMessages(data.conversation.id)
+    } catch {
+      toast.error('Could not start conversation')
+    }
+  }
+
+  async function sendMessage() {
+    if (!newMessage.trim() || !selectedConversation) return
+
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch('/api/chat/send', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          conversationId: selectedConversation,
+          content: newMessage.trim(),
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Could not send message')
+      }
+
+      setNewMessage('')
+      await fetchMessages(selectedConversation)
+      await fetchConversations()
+    } catch {
+      toast.error('Could not send message')
+    }
+  }
+
+  function getRoleColor(role: string) {
+    switch (role) {
+      case 'SUPER_ADMIN':
+        return 'bg-violet-100 text-violet-800'
+      case 'MIDDLE_ADMIN':
+        return 'bg-sky-100 text-sky-800'
+      case 'LOW_ADMIN':
+        return 'bg-emerald-100 text-emerald-800'
+      case 'COURIER':
+        return 'bg-amber-100 text-amber-800'
+      default:
+        return 'bg-slate-100 text-slate-800'
+    }
+  }
+
+  function getRoleLabel(role: string) {
+    switch (role) {
+      case 'SUPER_ADMIN':
+        return 'Super Admin'
+      case 'MIDDLE_ADMIN':
+        return 'Middle Admin'
+      case 'LOW_ADMIN':
+        return 'Low Admin'
+      case 'COURIER':
+        return 'Courier'
+      default:
+        return role
+    }
+  }
+
+  return (
+    <div className="grid h-[640px] grid-cols-1 gap-4 xl:grid-cols-[360px_1fr]">
+      <Card className="glass-card border-none overflow-hidden">
+        <CardHeader className="border-b border-border/60 pb-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-lg">Team chat</CardTitle>
+              <p className="mt-1 text-sm text-muted-foreground">Direct communication across admin and courier roles.</p>
+            </div>
+            <Button size="sm" variant="outline" className="rounded-full" onClick={() => setShowUserList((prev) => !prev)}>
+              <MessageSquarePlus className="h-4 w-4" />
+              New
+            </Button>
+          </div>
+          <div className="relative mt-3">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={showUserList ? 'Search users' : 'Search conversations'}
+              className="pl-9"
+            />
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-0">
+          {isBootLoading ? (
+            <div className="flex h-[520px] items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : showUserList ? (
+            <div className="max-h-[520px] overflow-y-auto">
+              {filteredUsers.length === 0 ? (
+                <div className="p-6 text-center text-sm text-muted-foreground">No users available.</div>
+              ) : (
+                filteredUsers.map((user) => (
+                  <button
+                    key={user.id}
+                    onClick={() => void startConversation(user.id)}
+                    className="flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+                  >
+                    <Avatar>
+                      <AvatarFallback>{user.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-medium">{user.name}</div>
+                      <div className="truncate text-xs text-muted-foreground">{user.email}</div>
+                    </div>
+                    <Badge className={getRoleColor(user.role)}>{getRoleLabel(user.role)}</Badge>
+                  </button>
+                ))
+              )}
+            </div>
+          ) : (
+            <div className="max-h-[520px] overflow-y-auto">
+              {filteredConversations.length === 0 ? (
+                <div className="p-6 text-center text-sm text-muted-foreground">No conversations yet.</div>
+              ) : (
+                filteredConversations.map((conversation) => (
+                  <button
+                    key={conversation.id}
+                    onClick={() => {
+                      setSelectedConversation(conversation.id)
+                      void fetchMessages(conversation.id)
+                    }}
+                    className={`flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors hover:bg-muted/40 ${
+                      selectedConversation === conversation.id ? 'bg-muted/50' : ''
+                    }`}
+                  >
+                    <Avatar>
+                      <AvatarFallback>{conversation.otherParticipant.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate font-medium">{conversation.otherParticipant.name}</span>
+                        {conversation.unreadCount > 0 ? (
+                          <Badge className="bg-rose-500 text-white">{conversation.unreadCount}</Badge>
+                        ) : null}
+                      </div>
+                      <div className="truncate text-xs text-muted-foreground">
+                        {conversation.lastMessage?.content || 'No messages yet.'}
+                      </div>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="glass-card border-none overflow-hidden">
+        {selectedConversation ? (
+          <>
+            <CardHeader className="border-b border-border/60 pb-4">
+              <div className="flex items-center gap-3">
+                <Avatar>
+                  <AvatarFallback>{selectedConversationData?.otherParticipant.name?.[0] || 'U'}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <CardTitle className="text-lg">{selectedConversationData?.otherParticipant.name}</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedConversationData?.otherParticipant.email}
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="flex h-[560px] flex-col p-4">
+              <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${message.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[78%] rounded-2xl px-4 py-3 ${
+                        message.senderId === currentUserId
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-foreground'
+                      }`}
+                    >
+                      <div className="text-sm leading-6">{message.content}</div>
+                      <div className="mt-1 text-[11px] opacity-70">
+                        {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+
+              <div className="mt-4 flex gap-2 border-t border-border/60 pt-4">
+                <Input
+                  value={newMessage}
+                  onChange={(event) => setNewMessage(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault()
+                      void sendMessage()
+                    }
+                  }}
+                  placeholder="Write a message..."
+                  className="flex-1"
+                />
+                <Button onClick={() => void sendMessage()} disabled={!newMessage.trim()} className="rounded-full">
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </>
+        ) : (
+          <CardContent className="flex h-full min-h-[640px] items-center justify-center">
+            <div className="text-center">
+              <Users className="mx-auto h-10 w-10 text-muted-foreground" />
+              <p className="mt-4 text-lg font-medium">Select a conversation</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Choose an existing thread or start a new one from the user list.
+              </p>
+            </div>
+          </CardContent>
+        )}
+      </Card>
+    </div>
+  )
 }
