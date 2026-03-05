@@ -21,6 +21,8 @@ function buildPreviewSite(preset: SiteStylePreset, siteName: string, subdomain: 
     styleVariant: preset.id,
     palette: preset.palette,
     siteName: siteName || 'Company',
+    headingClass: preset.headingClass,
+    bodyClass: preset.bodyClass,
   }
 }
 

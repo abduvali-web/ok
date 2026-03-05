@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, LogOut, MapPin, Wallet } from 'lucide-react'
+import { Loader2, LogOut, MapPin, Salad, ShieldCheck, Wallet } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -81,8 +81,7 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
         setGoogleMapsLink(profileData.googleMapsLink || '')
         setOrders(Array.isArray(ordersData) ? ordersData : [])
         setTodayMenu(menuData)
-      } catch (error) {
-        console.error(error)
+      } catch {
         toast.error('Please login again.')
         localStorage.removeItem('customerToken')
         localStorage.removeItem('customerInfo')
@@ -92,11 +91,11 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
       }
     }
 
-    load()
+    void load()
   }, [params.subdomain, router, siteLoading])
 
   const activeOrder = useMemo(() => {
-    return orders.find((order) => !['DELIVERED', 'FAILED', 'CANCELED', 'PAUSED'].includes(order.orderStatus)) || null
+    return orders.find((order) => !['DELIVERED', 'FAILED', 'CANCELED', 'CANCELLED', 'PAUSED'].includes(order.orderStatus)) || null
   }, [orders])
 
   const handleLogout = () => {
@@ -134,7 +133,6 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
       setGoogleMapsLink(data.googleMapsLink || googleMapsLink)
       toast.success('Location saved')
     } catch (error) {
-      console.error(error)
       toast.error(error instanceof Error ? error.message : 'Failed to update location')
     } finally {
       setIsSavingLocation(false)
@@ -164,7 +162,6 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
       setProfile((prev) => (prev ? { ...prev, autoOrdersEnabled: Boolean(data?.customer?.autoOrdersEnabled) } : prev))
       toast.success(nextActive ? 'Plan activated' : 'Plan deactivated')
     } catch (error) {
-      console.error(error)
       toast.error(error instanceof Error ? error.message : 'Failed to update plan status')
     } finally {
       setIsTogglingPlan(false)
@@ -188,66 +185,87 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
       <main className="mx-auto max-w-6xl space-y-5 px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold">Welcome, {profile.name}</h1>
-            <p className="text-sm" style={{ color: 'var(--site-muted)' }}>
+            <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ borderColor: 'var(--site-border)', color: 'var(--site-accent)' }}>
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Client dashboard
+            </div>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight">Welcome, {profile.name}</h1>
+            <p className="mt-1 text-sm" style={{ color: 'var(--site-muted)' }}>
               Phone: {profile.phone}
             </p>
           </div>
 
           <div className="flex gap-2">
-            <SiteClientNav subdomain={params.subdomain} />
-            <Button variant="outline" onClick={handleLogout} className="gap-2">
+            <SiteClientNav subdomain={params.subdomain} currentPath={makeClientSiteHref(params.subdomain, '/client')} />
+            <Button variant="outline" onClick={handleLogout} className="gap-2 rounded-full">
               <LogOut className="h-4 w-4" /> Logout
             </Button>
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <SitePanel>
-            <div className="flex items-start justify-between">
+        <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+          <SitePanel className="space-y-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h2 className="text-sm font-medium" style={{ color: 'var(--site-muted)' }}>Client Balance</h2>
-                <p className="mt-1 text-3xl font-semibold">{(profile.balance || 0).toLocaleString()} UZS</p>
+                <h2 className="text-xl font-semibold">Account snapshot</h2>
+                <p className="mt-1 text-sm" style={{ color: 'var(--site-muted)' }}>
+                  Balance, plan status, and current delivery information in one place.
+                </p>
               </div>
-              <Wallet className="h-5 w-5" style={{ color: 'var(--site-accent)' }} />
+              <div className="rounded-[1.25rem] border px-4 py-3 text-right" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 52%, white)' }}>
+                <p className="text-xs uppercase tracking-[0.22em]" style={{ color: 'var(--site-muted)' }}>Calories target</p>
+                <p className="mt-2 text-2xl font-semibold">{profile.calories || 0}</p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-[1.4rem] border p-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 45%, white)' }}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium" style={{ color: 'var(--site-muted)' }}>Client Balance</h3>
+                    <p className="mt-1 text-3xl font-semibold">{(profile.balance || 0).toLocaleString()} UZS</p>
+                  </div>
+                  <Wallet className="h-5 w-5" style={{ color: 'var(--site-accent)' }} />
+                </div>
+              </div>
+
+              <div className="rounded-[1.4rem] border p-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 45%, white)' }}>
+                <h3 className="text-sm font-medium" style={{ color: 'var(--site-muted)' }}>Current Order</h3>
+                {activeOrder ? (
+                  <div className="mt-2 space-y-1 text-sm">
+                    <p>Status: <strong>{activeOrder.orderStatus}</strong></p>
+                    <p>Calories: {activeOrder.calories}</p>
+                    <p>Time: {activeOrder.deliveryTime || 'Not set'}</p>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm" style={{ color: 'var(--site-muted)' }}>No active order right now.</p>
+                )}
+              </div>
             </div>
           </SitePanel>
 
           <SitePanel>
-            <h2 className="text-sm font-medium" style={{ color: 'var(--site-muted)' }}>Current Order</h2>
-            {activeOrder ? (
-              <div className="mt-2 space-y-1 text-sm">
-                <p>Status: <strong>{activeOrder.orderStatus}</strong></p>
-                <p>Calories: {activeOrder.calories}</p>
-                <p>Time: {activeOrder.deliveryTime || 'Not set'}</p>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-sm font-medium" style={{ color: 'var(--site-muted)' }}>Plan Status</h2>
+                <p className="mt-1 text-lg font-semibold">
+                  {profile.autoOrdersEnabled ? 'Active' : 'Inactive'}
+                </p>
+                <p className="mt-1 text-xs" style={{ color: 'var(--site-muted)' }}>
+                  When inactive, future auto-orders will be paused and won&apos;t be delivered.
+                </p>
               </div>
-            ) : (
-              <p className="mt-2 text-sm" style={{ color: 'var(--site-muted)' }}>No active order right now.</p>
-            )}
+
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={profile.autoOrdersEnabled}
+                  onCheckedChange={(checked) => void handleTogglePlan(Boolean(checked))}
+                  disabled={isTogglingPlan}
+                />
+              </div>
+            </div>
           </SitePanel>
         </div>
-
-        <SitePanel>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-sm font-medium" style={{ color: 'var(--site-muted)' }}>Plan Status</h2>
-              <p className="mt-1 text-lg font-semibold">
-                {profile.autoOrdersEnabled ? 'Active' : 'Inactive'}
-              </p>
-              <p className="mt-1 text-xs" style={{ color: 'var(--site-muted)' }}>
-                When inactive, future auto-orders will be paused and won&apos;t be delivered.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Switch
-                checked={profile.autoOrdersEnabled}
-                onCheckedChange={(checked) => void handleTogglePlan(Boolean(checked))}
-                disabled={isTogglingPlan}
-              />
-            </div>
-          </div>
-        </SitePanel>
 
         <SitePanel>
           <div className="flex items-center justify-between gap-2">
@@ -265,11 +283,16 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
               {todayMenu.dishes.map((dish) => (
                 <div
                   key={`${dish.id}-${dish.mealType}`}
-                  className="rounded-xl border p-3"
+                  className="rounded-[1.25rem] border p-3"
                   style={{ borderColor: 'var(--site-border)', backgroundColor: 'var(--site-bg)' }}
                 >
-                  <p className="text-xs uppercase tracking-wide" style={{ color: 'var(--site-muted)' }}>{dish.mealType}</p>
-                  <p className="mt-1 font-medium">{dish.name}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide" style={{ color: 'var(--site-muted)' }}>{dish.mealType}</p>
+                      <p className="mt-1 font-medium">{dish.name}</p>
+                    </div>
+                    <Salad className="mt-0.5 h-4 w-4 shrink-0" style={{ color: 'var(--site-accent)' }} />
+                  </div>
                 </div>
               ))}
             </div>
@@ -300,7 +323,7 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
               </p>
             </div>
 
-            <Button onClick={handleSaveLocation} disabled={isSavingLocation} className="self-end">
+            <Button onClick={handleSaveLocation} disabled={isSavingLocation} className="self-end rounded-full">
               {isSavingLocation ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save location'}
             </Button>
           </div>

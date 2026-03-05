@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import { Loader2, LogIn } from 'lucide-react'
+import { ArrowRight, Loader2, LogIn, ShieldCheck, Smartphone } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -68,9 +68,8 @@ export default function LoginPage({ params }: { params: { subdomain: string } })
       localStorage.setItem('customerToken', data.token)
       localStorage.setItem('customerInfo', JSON.stringify(data.customer))
       toast.success('Login successful')
-      router.push(makeClientSiteHref(params.subdomain, '/client'))
+      router.replace(makeClientSiteHref(params.subdomain, '/client'))
     } catch (error) {
-      console.error(error)
       toast.error(error instanceof Error ? error.message : 'Login failed')
     } finally {
       setIsSubmitting(false)
@@ -103,33 +102,64 @@ export default function LoginPage({ params }: { params: { subdomain: string } })
         <div className="mb-4 text-sm text-muted-foreground">
           <Link href={makeClientSiteHref(params.subdomain, '')} className="underline">Back to landing</Link>
         </div>
-        <SitePanel className="mx-auto w-full max-w-lg space-y-4">
-          <div>
-            <h2 className="text-2xl font-semibold">Login with Phone</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Enter your phone number to login. No OTP verification is required.
-            </p>
-          </div>
-
-          <form onSubmit={submit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+998901234567"
-              />
+        <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
+          <SitePanel className="space-y-5">
+            <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ borderColor: 'var(--site-border)', color: 'var(--site-accent)' }}>
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Client access
+            </div>
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight">Login with your phone number</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-7" style={{ color: 'var(--site-muted)' }}>
+                Use the same phone number connected to your account to open your client dashboard, view today&apos;s menu, and manage delivery details.
+              </p>
             </div>
 
-            <Button type="submit" disabled={isSubmitting || !normalizedPhone} className="gap-2">
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
-              Login
-            </Button>
-          </form>
-        </SitePanel>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="rounded-[1.4rem] border p-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 52%, white)' }}>
+                <Smartphone className="h-5 w-5" style={{ color: 'var(--site-accent)' }} />
+                <p className="mt-3 font-medium">Phone-first login</p>
+                <p className="mt-2 text-sm leading-6" style={{ color: 'var(--site-muted)' }}>
+                  Fast access without a long password flow.
+                </p>
+              </div>
+              <div className="rounded-[1.4rem] border p-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 52%, white)' }}>
+                <ArrowRight className="h-5 w-5" style={{ color: 'var(--site-accent)' }} />
+                <p className="mt-3 font-medium">Direct to dashboard</p>
+                <p className="mt-2 text-sm leading-6" style={{ color: 'var(--site-muted)' }}>
+                  See balance, active orders, and saved location immediately after sign-in.
+                </p>
+              </div>
+            </div>
+          </SitePanel>
+
+          <SitePanel className="mx-auto w-full max-w-lg space-y-4">
+            <div>
+              <h2 className="text-2xl font-semibold">Login</h2>
+              <p className="mt-1 text-sm" style={{ color: 'var(--site-muted)' }}>
+                Enter your phone number in international format.
+              </p>
+            </div>
+
+            <form onSubmit={submit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+998901234567"
+                />
+              </div>
+
+              <Button type="submit" disabled={isSubmitting || !normalizedPhone} className="w-full gap-2 rounded-full">
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
+                Login
+              </Button>
+            </form>
+          </SitePanel>
+        </div>
       </main>
     </SitePageSurface>
   )
 }
-

@@ -116,8 +116,7 @@ export async function GET(request: NextRequest) {
       setName,
       dishes,
     })
-  } catch (error) {
-    console.error('Error fetching today menu:', error)
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

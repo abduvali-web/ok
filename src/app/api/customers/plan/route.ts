@@ -72,8 +72,7 @@ export async function PATCH(request: NextRequest) {
       success: true,
       customer: updatedCustomer,
     })
-  } catch (error) {
-    console.error('Error toggling customer plan:', error)
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
