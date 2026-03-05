@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import {
   AlertCircle,
   ArrowRight,
@@ -24,6 +25,7 @@ import { Label } from '@/components/ui/label'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 export default function SignUpPage() {
+  const router = useRouter()
   const [signupData, setSignupData] = useState({
     name: '',
     email: '',
@@ -87,9 +89,7 @@ export default function SignUpPage() {
           description: 'Your 30-day trial has started. Redirecting to login...',
         })
 
-        setTimeout(() => {
-          window.location.href = '/login'
-        }, 1200)
+        router.replace('/login')
       } else {
         setError(data.error || 'Failed to create account.')
         toast.error('Sign-up error', {
