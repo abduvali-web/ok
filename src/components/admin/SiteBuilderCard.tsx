@@ -15,6 +15,7 @@ import {
   normalizeSubdomain,
   type SiteStyleVariant,
 } from '@/lib/site-builder'
+import { buildSubdomainHost } from '@/lib/subdomain-host'
 
 type WebsiteSettingsResponse = {
   website: {
@@ -243,7 +244,7 @@ export function SiteBuilderCard() {
           </div>
           <div className="space-y-1 text-muted-foreground">
             <div>Path: `/sites/{normalizedSubdomain || 'your-subdomain'}`</div>
-            <div>Host: `https://{normalizedSubdomain || 'your-subdomain'}.{baseHost}`</div>
+            <div>Host: https://{buildSubdomainHost(normalizedSubdomain || 'your-subdomain', baseHost)}</div>
           </div>
         </div>
 

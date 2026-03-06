@@ -1,13 +1,9 @@
+import { isHostForSubdomain } from '@/lib/subdomain-host'
+
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN
+
 export function isLikelySubdomainHost(hostname: string, subdomain: string) {
-  const host = hostname.split(':')[0].toLowerCase()
-  const normalizedSubdomain = subdomain.trim().toLowerCase()
-  if (!host || !normalizedSubdomain) return false
-
-  // Common local dev pattern: foo.localhost
-  if (host === `${normalizedSubdomain}.localhost`) return true
-
-  // Generic: foo.example.com
-  return host.startsWith(`${normalizedSubdomain}.`)
+  return isHostForSubdomain(hostname, subdomain, ROOT_DOMAIN)
 }
 
 export function getClientSiteBasePath(subdomain: string) {
@@ -35,4 +31,3 @@ export function makeClientSiteHref(subdomain: string, pathname: string) {
 
   return `${basePath}${normalized}`
 }
-

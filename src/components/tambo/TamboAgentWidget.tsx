@@ -610,7 +610,7 @@ export function TamboAgentWidget() {
                                     <p className="truncate text-sm font-medium">{artifact.fileName}</p>
                                     <p className="text-xs text-muted-foreground">
                                       {artifact.ok ? "Generated" : "Failed"}
-                                      {artifact.note ? ` • ${artifact.note}` : ""}
+                                      {artifact.note ? ` - ${artifact.note}` : ""}
                                     </p>
                                   </div>
                                   <Badge variant="outline" className="shrink-0">

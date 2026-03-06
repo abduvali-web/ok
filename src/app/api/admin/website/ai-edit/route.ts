@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 
 import { db } from '@/lib/db'
@@ -15,6 +15,7 @@ import {
   parseThemePayload,
   updateSiteName,
 } from '@/lib/site-builder'
+import { buildSubdomainUrl } from '@/lib/subdomain-host'
 
 function getHostBase() {
   return process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000'
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
       },
       urls: {
         pathUrl: `/sites/${website.subdomain}`,
-        hostUrl: `https://${website.subdomain}.${getHostBase()}`,
+        hostUrl: buildSubdomainUrl(website.subdomain, getHostBase()),
       },
     })
   } catch (error) {
@@ -148,3 +149,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+

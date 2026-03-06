@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { verifyOtp } from '@/lib/otp-store'
 import { createCustomerToken } from '@/lib/customer-auth'
 import { getSiteBySubdomain, getSiteGroupAdminIds } from '@/lib/site-access'
+import { cookieDomainFromRootHost } from '@/lib/subdomain-host'
 
 type RequestPurpose = 'login' | 'register'
 
@@ -12,14 +13,6 @@ function normalizePhone(input: string) {
   const digits = trimmed.startsWith('+') ? trimmed.slice(1).replace(/\D/g, '') : trimmed.replace(/\D/g, '')
   if (!digits) return ''
   return `+${digits}`
-}
-
-function cookieDomainFromRootHost(rootHost: string | undefined) {
-  if (!rootHost) return undefined
-  const host = rootHost.split(':')[0].trim().toLowerCase()
-  if (!host || host === 'localhost') return undefined
-  if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(host)) return undefined
-  return `.${host}`
 }
 
 export async function POST(
@@ -125,3 +118,4 @@ export async function POST(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
