@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -17,6 +17,7 @@ import {
 } from "@/lib/tambo/tools";
 import { TamboAgentWidget } from "@/components/tambo/TamboAgentWidget";
 import { Button } from "@/components/ui/button";
+import { getJsonFromLocalStorage } from "@/lib/browser-storage";
 
 function getStableAnonKey(): string {
   if (typeof window === "undefined") return "anonymous";
@@ -31,15 +32,9 @@ function getStableAnonKey(): string {
 
 function getUserKeyFromStorage(): string {
   if (typeof window === "undefined") return "anonymous";
-  try {
-    const raw = localStorage.getItem("user");
-    if (!raw) return getStableAnonKey();
-    const parsed = JSON.parse(raw) as { id?: string } | null;
-    if (parsed?.id && typeof parsed.id === "string") return parsed.id;
-    return getStableAnonKey();
-  } catch {
-    return getStableAnonKey();
-  }
+  const user = getJsonFromLocalStorage<{ id?: unknown }>("user");
+  if (typeof user?.id === "string" && user.id.length > 0) return user.id;
+  return getStableAnonKey();
 }
 
 export function TamboProviderClient({ children }: { children: React.ReactNode }) {

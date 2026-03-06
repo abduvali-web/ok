@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Clock, AlertTriangle } from 'lucide-react'
+import { getJsonFromLocalStorage } from '@/lib/browser-storage'
 
 interface TrialStatusProps {
     compact?: boolean
@@ -17,9 +18,9 @@ export function TrialStatus({ compact = false }: TrialStatusProps) {
     } | null>(null)
 
     useEffect(() => {
-        const user = JSON.parse(localStorage.getItem('user') || '{}')
+        const user = getJsonFromLocalStorage<{ trialEndsAt?: unknown }>('user')
 
-        if (user.trialEndsAt) {
+        if (typeof user?.trialEndsAt === 'string') {
             const trialEnd = new Date(user.trialEndsAt)
             const now = new Date()
             const daysRemaining = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
@@ -87,3 +88,4 @@ export function TrialStatus({ compact = false }: TrialStatusProps) {
 
     return null
 }
+

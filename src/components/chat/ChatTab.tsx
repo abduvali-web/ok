@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Loader2, MessageSquarePlus, Search, Send, Users } from 'lucide-react'
 import { toast } from 'sonner'
+import { getJsonFromLocalStorage } from '@/lib/browser-storage'
 
 interface User {
   id: string
@@ -42,11 +43,9 @@ interface Conversation {
 
 function getStoredUserId() {
   if (typeof window === 'undefined') return null
-  try {
-    return JSON.parse(localStorage.getItem('user') || '{}').id ?? null
-  } catch {
-    return null
-  }
+  const user = getJsonFromLocalStorage<{ id?: string }>('user')
+  if (!user || typeof user.id !== 'string') return null
+  return user.id
 }
 
 export function ChatTab() {
@@ -424,3 +423,4 @@ export function ChatTab() {
     </div>
   )
 }
+
