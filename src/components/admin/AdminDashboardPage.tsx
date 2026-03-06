@@ -47,8 +47,6 @@ import {
   Play,
   Save,
   Filter,
-  ChevronLeft,
-  ChevronRight,
   Route,
   CalendarDays,
   MapPin,
@@ -64,9 +62,8 @@ import { TrialStatus } from '@/components/admin/TrialStatus'
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal'
 import { SiteBuilderCard } from '@/components/admin/SiteBuilderCard'
 import { getDailyPrice, PLAN_TYPES } from '@/lib/menuData'
-import { CANONICAL_TABS, deriveVisibleTabs, type CanonicalTabId } from '@/components/admin/dashboard/tabs'
+import { CANONICAL_TABS, deriveVisibleTabs } from '@/components/admin/dashboard/tabs'
 import type { Client, Order } from '@/components/admin/dashboard/types'
-import { DASHBOARD_TAB_META, getDashboardTabLabels } from '@/components/admin/dashboard/tabMeta'
 import { DesktopTabsNav } from '@/components/admin/dashboard/DesktopTabsNav'
 import { useDashboardData } from '@/components/admin/dashboard/useDashboardData'
 import { AdminsTab } from '@/components/admin/dashboard/tabs-content/AdminsTab'
@@ -158,7 +155,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const [activeTab, setActiveTab] = useState('statistics')
   const [currentDate, setCurrentDate] = useState('')
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => (mode === 'middle' ? new Date() : null))
-  const [dateCursor, setDateCursor] = useState<Date>(() => new Date())
+  const [, setDateCursor] = useState<Date>(() => new Date())
   const [isUiStateHydrated, setIsUiStateHydrated] = useState(false)
   const [isDispatchOpen, setIsDispatchOpen] = useState(false)
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set())
@@ -216,7 +213,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     finance: t.finance.title,
     interface: t.admin.interface,
   }
-  const tabLabels = useMemo(() => getDashboardTabLabels(t), [t])
   const [courierFormData, setCourierFormData] = useState({
     name: '',
     email: '',
@@ -328,16 +324,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     () => Object.values(filters).reduce((count, value) => count + (value ? 1 : 0), 0),
     [filters]
   )
-  const commandTabShortcuts = useMemo(() => {
-    return visibleTabs
-      .filter((tab): tab is CanonicalTabId => Object.prototype.hasOwnProperty.call(DASHBOARD_TAB_META, tab))
-      .slice(0, 6)
-      .map((tab) => ({
-        id: tab,
-        label: tabLabels[tab] || tab,
-        icon: DASHBOARD_TAB_META[tab].icon,
-      }))
-  }, [tabLabels, visibleTabs])
 
   const isSelectedDateToday = useMemo(() => {
     if (!selectedDate) return false
@@ -1732,29 +1718,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     }
   }
 
-  const shiftDateWindow = (offsetDays: number) => {
-    setDateCursor((prev) => {
-      const baseDate = selectedDate ?? prev
-      const nextDate = new Date(baseDate)
-      nextDate.setDate(baseDate.getDate() + offsetDays)
-      return nextDate
-    })
-  }
-
-  const getDateRange = useCallback(() => {
-    const dates: Date[] = []
-    const today = dateCursor
-
-    for (let i = -4; i <= 5; i++) {
-      const date = new Date(today)
-      date.setDate(today.getDate() + i)
-      dates.push(date)
-    }
-
-    return dates
-  }, [dateCursor])
-  const commandDateWindow = useMemo(() => getDateRange(), [getDateRange])
-
   const DispatchActionIcon = !selectedDate
     ? CalendarDays
     : selectedDayIsActive
@@ -1769,31 +1732,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       : isSelectedDateToday
         ? 'Start'
         : 'Draft'
-  const dispatchActionHint = !selectedDate
-    ? 'Pick a day first to enable dispatch'
-    : selectedDayIsActive
-      ? 'Save updates for the active day'
-      : isSelectedDateToday
-        ? 'Start delivery flow for today'
-        : 'Store selected day as draft'
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'DELIVERED': return 'bg-green-500'
-      case 'IN_DELIVERY': return 'bg-yellow-500'
-      case 'FAILED': return 'bg-red-500'
-      default: return 'bg-gray-500'
-    }
-  }
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'DELIVERED': return 'Доставлен'
-      case 'IN_DELIVERY': return 'В доставке'
-      case 'FAILED': return 'Не доставлен'
-      default: return 'Ожидает'
-    }
-  }
 
   if (isLoading) {
     return (
@@ -1885,219 +1823,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       <MobileTabIndicator activeTab={activeTab} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6 mobile-bottom-space">
-        <section className="mb-5 rounded-[1.6rem] border border-white/10 bg-[linear-gradient(130deg,rgba(8,17,32,0.92),rgba(14,26,45,0.88))] p-4 text-white shadow-[0_28px_70px_-50px_rgba(2,6,23,0.9)] md:p-5">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.24em] text-slate-300">
-                {mode === 'middle' ? 'Middle admin command' : 'Low admin command'}
-              </p>
-              <h2 className="mt-2 font-display text-2xl tracking-tight">
-                {mode === 'middle' ? 'Run daily operations from one control strip' : 'Track today&apos;s operational status'}
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm text-slate-300">
-                Selected day: <span className="font-medium text-white">{selectedDate ? selectedDate.toLocaleDateString() : 'All dates'}</span>
-                {' · '}
-                Visible orders: <span className="font-medium text-white">{filteredOrders.length}</span>
-                {' · '}
-                Visible clients: <span className="font-medium text-white">{filteredClients.length}</span>
-              </p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/8 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-slate-200">
-                  <span
-                    className={`h-2 w-2 rounded-full ${
-                      !selectedDate
-                        ? getStatusColor('FAILED')
-                        : selectedDayIsActive
-                          ? getStatusColor('IN_DELIVERY')
-                          : getStatusColor('PENDING')
-                    }`}
-                  />
-                  Dispatch: {selectedDate ? getStatusText(selectedDayIsActive ? 'IN_DELIVERY' : 'PENDING') : 'Date required'}
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/8 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-slate-200">
-                  <Filter className="h-3 w-3" />
-                  Filters: {activeFiltersCount}
-                </span>
-              </div>
-              <p className="mt-2 text-xs text-slate-400">{dispatchActionHint}</p>
-
-              <div className="mt-3 flex items-center gap-2">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="h-8 w-8 rounded-full border-white/20 bg-white/8 text-white hover:bg-white/14 hover:text-white"
-                  onClick={() => shiftDateWindow(-7)}
-                  aria-label="Previous date window"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <div className="flex flex-wrap gap-1.5">
-                  {commandDateWindow.map((date) => {
-                    const dayLabel = date.toLocaleDateString(language === 'ru' ? 'ru-RU' : 'en-US', { weekday: 'short' })
-                    const dateLabel = date.toLocaleDateString(language === 'ru' ? 'ru-RU' : 'en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                    })
-                    const isSelected = selectedDate ? date.toDateString() === selectedDate.toDateString() : false
-                    const isToday = date.toDateString() === new Date().toDateString()
-
-                    return (
-                      <button
-                        key={date.toISOString()}
-                        type="button"
-                        onClick={() => {
-                          setSelectedDate(date)
-                          setDateCursor(date)
-                        }}
-                        className={`rounded-xl border px-2.5 py-1 text-left text-[11px] transition ${
-                          isSelected
-                            ? 'border-white/60 bg-white/18 text-white'
-                            : 'border-white/14 bg-white/6 text-slate-200 hover:border-white/32 hover:bg-white/12'
-                        }`}
-                      >
-                        <div className="uppercase tracking-[0.16em] text-slate-300">{dayLabel}</div>
-                        <div className="font-medium">{dateLabel}{isToday ? ' · Today' : ''}</div>
-                      </button>
-                    )
-                  })}
-                </div>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="h-8 w-8 rounded-full border-white/20 bg-white/8 text-white hover:bg-white/14 hover:text-white"
-                  onClick={() => shiftDateWindow(7)}
-                  aria-label="Next date window"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 rounded-full border-white/20 bg-white/8 px-3 text-xs text-white hover:bg-white/14 hover:text-white"
-                  onClick={() => {
-                    const today = new Date()
-                    setSelectedDate(today)
-                    setDateCursor(today)
-                  }}
-                >
-                  Today
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 rounded-full border-white/20 bg-white/8 px-3 text-xs text-white hover:bg-white/14 hover:text-white"
-                  onClick={() => {
-                    const tomorrow = new Date()
-                    tomorrow.setDate(tomorrow.getDate() + 1)
-                    setSelectedDate(tomorrow)
-                    setDateCursor(tomorrow)
-                  }}
-                >
-                  Tomorrow
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 rounded-full border-white/20 bg-white/8 px-3 text-xs text-white hover:bg-white/14 hover:text-white"
-                  onClick={() => setSelectedDate(null)}
-                >
-                  All Dates
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {!isLowAdminView ? (
-                <>
-                  <Button
-                    size="sm"
-                    className="rounded-full bg-[#f3efe6] text-[#08111d] hover:bg-white"
-                    onClick={() => setIsCreateOrderModalOpen(true)}
-                  >
-                    <Plus className="mr-1.5 h-4 w-4" />
-                    Quick Order
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full border-white/20 bg-white/8 text-white hover:bg-white/14 hover:text-white"
-                    onClick={() => setIsCreateClientModalOpen(true)}
-                  >
-                    <User className="mr-1.5 h-4 w-4" />
-                    Quick Client
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full border-white/20 bg-white/8 text-white hover:bg-white/14 hover:text-white"
-                    onClick={() => setIsDispatchOpen(true)}
-                    disabled={!selectedDate}
-                  >
-                    <DispatchActionIcon className="mr-1.5 h-4 w-4" />
-                    {dispatchActionLabel}
-                  </Button>
-                </>
-              ) : null}
-              <Button
-                size="sm"
-                variant="outline"
-                className="rounded-full border-white/20 bg-white/8 text-white hover:bg-white/14 hover:text-white"
-                onClick={fetchData}
-              >
-                <Save className="mr-1.5 h-4 w-4" />
-                Refresh
-              </Button>
-            </div>
-          </div>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl border border-white/12 bg-white/6 p-3">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-300">Pending</p>
-              <p className="mt-2 text-2xl font-semibold">{stats?.pendingOrders || 0}</p>
-            </div>
-            <div className="rounded-xl border border-white/12 bg-white/6 p-3">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-300">In Delivery</p>
-              <p className="mt-2 text-2xl font-semibold">{stats?.inDeliveryOrders || 0}</p>
-            </div>
-            <div className="rounded-xl border border-white/12 bg-white/6 p-3">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-300">Selected Orders</p>
-              <p className="mt-2 text-2xl font-semibold">{selectedOrders.size}</p>
-            </div>
-            <div className="rounded-xl border border-white/12 bg-white/6 p-3">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-300">Couriers Online</p>
-              <p className="mt-2 text-2xl font-semibold">{Array.isArray(couriers) ? couriers.length : 0}</p>
-            </div>
-          </div>
-
-          {commandTabShortcuts.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {commandTabShortcuts.map((tab) => {
-                const Icon = tab.icon
-                const isActive = activeTab === tab.id
-                return (
-                  <Button
-                    key={tab.id}
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`rounded-full border-white/20 text-white hover:text-white ${
-                      isActive
-                        ? 'bg-white/20 hover:bg-white/24'
-                        : 'bg-white/8 hover:bg-white/14'
-                    }`}
-                  >
-                    <Icon className="mr-1.5 h-4 w-4" />
-                    {tab.label}
-                  </Button>
-                )
-              })}
-            </div>
-          )}
-        </section>
-
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <DesktopTabsNav
             visibleTabs={visibleTabs}
