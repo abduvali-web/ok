@@ -149,6 +149,11 @@
     @apply border-border outline-ring/50;
   }
 
+  *:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--primary) 55%, transparent);
+    outline-offset: 2px;
+  }
+
   html,
   body {
     margin: 0;
@@ -163,6 +168,32 @@
     font-family: var(--font-geist-sans), sans-serif;
     background-image: var(--page-noise);
     background-attachment: fixed;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 35%, white);
+    color: var(--foreground);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--primary) 35%, transparent) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--primary) 35%, transparent);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
   }
 }
 

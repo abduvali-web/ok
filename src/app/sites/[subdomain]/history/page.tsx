@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Clock3, Loader2, ReceiptText } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Clock3, Loader2, ReceiptText, Search, Truck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { SiteClientNav, SitePageSurface, SitePanel, SitePublicHeader } from '@/components/site/SiteScaffold'
 import { useSiteConfig } from '@/hooks/useSiteConfig'
 import { makeClientSiteHref } from '@/lib/site-urls'
@@ -24,6 +25,9 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
 
   const [isLoading, setIsLoading] = useState(true)
   const [orders, setOrders] = useState<HistoryOrder[]>([])
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'DELIVERED' | 'FAILED'>('ALL')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortDirection, setSortDirection] = useState<'LATEST' | 'OLDEST'>('LATEST')
 
   useEffect(() => {
     if (siteLoading) return
@@ -54,6 +58,77 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
     void load()
   }, [params.subdomain, router, siteLoading])
 
+  const deliveredCount = useMemo(
+    () => orders.filter((order) => order.orderStatus === 'DELIVERED').length,
+    [orders]
+  )
+
+  const activeCount = useMemo(
+    () => orders.filter((order) => order.orderStatus === 'PENDING' || order.orderStatus === 'IN_DELIVERY').length,
+    [orders]
+  )
+
+  const failedCount = useMemo(
+    () => orders.filter((order) => order.orderStatus === 'FAILED' || order.orderStatus === 'CANCELED' || order.orderStatus === 'CANCELLED').length,
+    [orders]
+  )
+
+  const sortedOrders = useMemo(
+    () =>
+      [...orders].sort((a, b) => {
+        const aDate = new Date(a.deliveryDate || a.createdAt).getTime()
+        const bDate = new Date(b.deliveryDate || b.createdAt).getTime()
+        return sortDirection === 'LATEST' ? bDate - aDate : aDate - bDate
+      }),
+    [orders, sortDirection]
+  )
+
+  const paidCount = useMemo(
+    () => orders.filter((order) => order.paymentStatus === 'PAID' || order.paymentStatus === 'PREPAID').length,
+    [orders]
+  )
+
+  const filteredOrders = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase()
+
+    return sortedOrders.filter((order) => {
+      const isActive = order.orderStatus === 'PENDING' || order.orderStatus === 'IN_DELIVERY' || order.orderStatus === 'PAUSED'
+      const isFailed = order.orderStatus === 'FAILED' || order.orderStatus === 'CANCELED' || order.orderStatus === 'CANCELLED'
+
+      const statusMatch =
+        statusFilter === 'ALL' ||
+        (statusFilter === 'ACTIVE' && isActive) ||
+        (statusFilter === 'DELIVERED' && order.orderStatus === 'DELIVERED') ||
+        (statusFilter === 'FAILED' && isFailed)
+
+      if (!statusMatch) return false
+      if (!query) return true
+
+      return (
+        String(order.orderNumber || '').includes(query) ||
+        order.orderStatus.toLowerCase().includes(query) ||
+        order.paymentStatus.toLowerCase().includes(query)
+      )
+    })
+  }, [searchTerm, sortedOrders, statusFilter])
+
+  const getStatusLabel = (status: string) => {
+    if (status === 'DELIVERED') return 'Delivered'
+    if (status === 'IN_DELIVERY') return 'In delivery'
+    if (status === 'PENDING') return 'Pending'
+    if (status === 'PAUSED') return 'Paused'
+    if (status === 'FAILED' || status === 'CANCELED' || status === 'CANCELLED') return 'Failed'
+    return status
+  }
+  const hasActiveFilters = statusFilter !== 'ALL' || searchTerm.trim().length > 0 || sortDirection !== 'LATEST'
+
+  const statusTone = (status: string) => {
+    if (status === 'DELIVERED') return 'bg-emerald-100 text-emerald-700'
+    if (status === 'FAILED' || status === 'CANCELED' || status === 'CANCELLED') return 'bg-rose-100 text-rose-700'
+    if (status === 'IN_DELIVERY') return 'bg-blue-100 text-blue-700'
+    return 'bg-amber-100 text-amber-700'
+  }
+
   if (siteLoading || isLoading || !site) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -83,42 +158,148 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
           </div>
         </div>
 
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <SitePanel className="rounded-[1.3rem] p-4">
+            <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Total orders</p>
+            <p className="mt-2 text-2xl font-semibold">{orders.length}</p>
+          </SitePanel>
+          <SitePanel className="rounded-[1.3rem] p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Delivered</p>
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            </div>
+            <p className="mt-2 text-2xl font-semibold">{deliveredCount}</p>
+          </SitePanel>
+          <SitePanel className="rounded-[1.3rem] p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Active</p>
+              <Truck className="h-4 w-4 text-blue-600" />
+            </div>
+            <p className="mt-2 text-2xl font-semibold">{activeCount}</p>
+          </SitePanel>
+          <SitePanel className="rounded-[1.3rem] p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Paid</p>
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            </div>
+            <p className="mt-2 text-2xl font-semibold">{paidCount}</p>
+          </SitePanel>
+          <SitePanel className="rounded-[1.3rem] p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Failed</p>
+              <AlertCircle className="h-4 w-4 text-rose-600" />
+            </div>
+            <p className="mt-2 text-2xl font-semibold">{failedCount}</p>
+          </SitePanel>
+        </div>
+
+        <SitePanel className="space-y-3">
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: 'var(--site-muted)' }} />
+              <Input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search by order number, payment, or status..."
+                className="pl-9"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {[
+                { id: 'ALL' as const, label: `All (${orders.length})` },
+                { id: 'ACTIVE' as const, label: `Active (${activeCount})` },
+                { id: 'DELIVERED' as const, label: `Delivered (${deliveredCount})` },
+                { id: 'FAILED' as const, label: `Failed (${failedCount})` },
+              ].map((option) => (
+                <Button
+                  key={option.id}
+                  size="sm"
+                  type="button"
+                  variant={statusFilter === option.id ? 'default' : 'outline'}
+                  className="rounded-full"
+                  onClick={() => setStatusFilter(option.id)}
+                >
+                  {option.label}
+                </Button>
+              ))}
+              <Button
+                size="sm"
+                type="button"
+                variant={sortDirection === 'LATEST' ? 'default' : 'outline'}
+                className="rounded-full"
+                onClick={() => setSortDirection('LATEST')}
+              >
+                Newest
+              </Button>
+              <Button
+                size="sm"
+                type="button"
+                variant={sortDirection === 'OLDEST' ? 'default' : 'outline'}
+                className="rounded-full"
+                onClick={() => setSortDirection('OLDEST')}
+              >
+                Oldest
+              </Button>
+              {hasActiveFilters && (
+                <Button
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => {
+                    setStatusFilter('ALL')
+                    setSearchTerm('')
+                    setSortDirection('LATEST')
+                  }}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+          </div>
+          <p className="text-xs" style={{ color: 'var(--site-muted)' }}>
+            Showing {filteredOrders.length} of {orders.length} orders · {sortDirection === 'LATEST' ? 'Newest first' : 'Oldest first'}
+          </p>
+        </SitePanel>
+
         <SitePanel>
-          {orders.length === 0 ? (
-            <p className="text-sm" style={{ color: 'var(--site-muted)' }}>No order history yet.</p>
+          {filteredOrders.length === 0 ? (
+            <div className="rounded-[1.2rem] border border-dashed p-8 text-center" style={{ borderColor: 'var(--site-border)' }}>
+              <AlertCircle className="mx-auto h-5 w-5" style={{ color: 'var(--site-muted)' }} />
+              <p className="mt-3 text-sm" style={{ color: 'var(--site-muted)' }}>
+                {searchTerm || statusFilter !== 'ALL' ? 'No orders match the current filters.' : 'No order history yet.'}
+              </p>
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b" style={{ borderColor: 'var(--site-border)' }}>
-                    <th className="px-2 py-2 text-left">#</th>
-                    <th className="px-2 py-2 text-left">Status</th>
-                    <th className="px-2 py-2 text-left">Calories</th>
-                    <th className="px-2 py-2 text-left">Payment</th>
-                    <th className="px-2 py-2 text-left">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orders.map((order, index) => (
-                    <tr key={order.id} className="border-b" style={{ borderColor: 'var(--site-border)' }}>
-                      <td className="px-2 py-2">{order.orderNumber || index + 1}</td>
-                      <td className="px-2 py-2">
-                        <span className="inline-flex rounded-full px-2.5 py-1 text-xs font-medium" style={{ backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 65%, white)' }}>
-                          {order.orderStatus}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2">{order.calories}</td>
-                      <td className="px-2 py-2">{order.paymentStatus}</td>
-                      <td className="px-2 py-2">
-                        <span className="inline-flex items-center gap-1.5">
-                          <Clock3 className="h-3.5 w-3.5" />
-                          {new Date(order.deliveryDate || order.createdAt).toLocaleDateString()}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-3">
+              {filteredOrders.map((order, index) => (
+                <div
+                  key={order.id}
+                  className="rounded-[1.2rem] border p-4"
+                  style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-panel) 90%, white)' }}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>
+                        Order #{order.orderNumber || index + 1}
+                      </p>
+                      <p className="mt-2 text-sm">
+                        Calories: <strong>{order.calories}</strong>
+                      </p>
+                      <p className="mt-1 text-sm">
+                        Payment: <strong>{order.paymentStatus}</strong>
+                      </p>
+                    </div>
+                    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${statusTone(order.orderStatus)}`}>
+                      {getStatusLabel(order.orderStatus)}
+                    </span>
+                  </div>
+                  <p className="mt-3 inline-flex items-center gap-1.5 text-sm" style={{ color: 'var(--site-muted)' }}>
+                    <Clock3 className="h-3.5 w-3.5" />
+                    {new Date(order.deliveryDate || order.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              ))}
             </div>
           )}
         </SitePanel>

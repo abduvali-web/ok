@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -11,13 +10,9 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  useEffect(() => {
-    console.error(error)
-  }, [error])
-
   return (
-    <div className="p-6">
-      <Card className="max-w-xl">
+    <div className="flex min-h-screen items-center justify-center p-6">
+      <Card className="max-w-xl rounded-2xl border-border/70 bg-card/95 shadow-elegant">
         <CardHeader>
           <CardTitle>Something went wrong</CardTitle>
           <CardDescription>
@@ -32,4 +27,3 @@ export default function Error({
     </div>
   )
 }
-

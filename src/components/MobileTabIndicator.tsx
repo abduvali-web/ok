@@ -1,49 +1,29 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { BarChart3, DollarSign, History, Package, Settings, Trash2, User, Users } from 'lucide-react'
+import { Package } from 'lucide-react'
 
 import { useLanguage } from '@/contexts/LanguageContext'
+import { DASHBOARD_TAB_META, getDashboardTabLabels } from '@/components/admin/dashboard/tabMeta'
+import type { CanonicalTabId } from '@/components/admin/dashboard/tabs'
 
 interface MobileTabIndicatorProps {
   activeTab: string
 }
 
-const TAB_CONFIG: Record<string, { icon: typeof Package; accent: string }> = {
-  orders: { icon: Package, accent: 'bg-teal-500' },
-  clients: { icon: Users, accent: 'bg-cyan-500' },
-  admins: { icon: Users, accent: 'bg-amber-500' },
-  bin: { icon: Trash2, accent: 'bg-rose-500' },
-  statistics: { icon: BarChart3, accent: 'bg-emerald-500' },
-  history: { icon: History, accent: 'bg-yellow-500' },
-  interface: { icon: Settings, accent: 'bg-slate-500' },
-  profile: { icon: User, accent: 'bg-sky-500' },
-  warehouse: { icon: Package, accent: 'bg-emerald-500' },
-  finance: { icon: DollarSign, accent: 'bg-lime-500' },
-}
-
 export function MobileTabIndicator({ activeTab }: MobileTabIndicatorProps) {
   const { t } = useLanguage()
+  const labels = getDashboardTabLabels(t)
 
-  const getLabel = (tab: string) => {
-    const labels: Record<string, string> = {
-      orders: t.admin.orders,
-      clients: t.admin.clients,
-      admins: t.admin.admins,
-      bin: t.admin.bin,
-      statistics: t.admin.statistics,
-      history: t.admin.history,
-      interface: t.admin.interface,
-      profile: t.common.profile,
-      warehouse: t.warehouse.title,
-      finance: t.finance.title,
-    }
-    return labels[tab] || 'Tab'
+  const typedActiveTab = activeTab as CanonicalTabId
+
+  const config = DASHBOARD_TAB_META[typedActiveTab] || {
+    icon: Package,
+    mobileAccent: 'bg-slate-500',
+    desktopAccent: '',
   }
-
-  const config = TAB_CONFIG[activeTab] || { icon: Package, accent: 'bg-slate-500' }
   const Icon = config.icon
-  const label = getLabel(activeTab)
+  const label = labels[typedActiveTab] || 'Tab'
 
   return (
     <motion.div
@@ -54,7 +34,7 @@ export function MobileTabIndicator({ activeTab }: MobileTabIndicatorProps) {
       className="sticky top-0 z-30 border-b border-border/60 bg-card/90 px-4 py-3 backdrop-blur-xl md:hidden"
     >
       <div className="flex items-center gap-3">
-        <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${config.accent} shadow-smooth`}>
+        <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${config.mobileAccent} shadow-smooth`}>
           <Icon className="h-4.5 w-4.5 text-white" />
         </div>
         <div>

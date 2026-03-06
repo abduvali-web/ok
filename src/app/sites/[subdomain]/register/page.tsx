@@ -1,14 +1,15 @@
 'use client'
 
-import Link from 'next/link'
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { ArrowRight, Loader2, NotebookTabs, UserPlus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+
+import { SiteAuthShell } from '@/components/site/SiteAuthShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { SitePanel, SitePageSurface, SitePublicHeader } from '@/components/site/SiteScaffold'
 import { useSiteConfig } from '@/hooks/useSiteConfig'
 import { makeClientSiteHref } from '@/lib/site-urls'
 
@@ -27,25 +28,6 @@ export default function RegisterPage({ params }: { params: { subdomain: string }
   const [name, setName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const normalizedPhone = useMemo(() => normalizePhone(phone), [phone])
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    )
-  }
-
-  if (!site) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 text-center">
-        <div>
-          <p className="text-lg font-medium">Site not found</p>
-          <Link href="/" className="mt-2 inline-block underline">Back to home</Link>
-        </div>
-      </div>
-    )
-  }
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -79,80 +61,79 @@ export default function RegisterPage({ params }: { params: { subdomain: string }
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!site) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 text-center">
+        <div>
+          <p className="text-lg font-medium">Site not found</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <SitePageSurface site={site}>
-      <SitePublicHeader site={site} />
-      <main className="mx-auto max-w-6xl px-4 py-10 md:py-14">
-        <div className="mb-4 text-sm text-muted-foreground">
-          <Link href={makeClientSiteHref(params.subdomain, '')} className="underline">Back to landing</Link>
+    <SiteAuthShell
+      site={site}
+      subdomain={params.subdomain}
+      badge="Client registration"
+      title="Create your portal access"
+      description="Register once with phone number and start using your client portal for balance tracking, menu viewing, and delivery updates."
+      features={[
+        {
+          icon: NotebookTabs,
+          title: 'Simple onboarding',
+          description: 'Name is optional, phone is your core account key.',
+        },
+        {
+          icon: ArrowRight,
+          title: 'Next step ready',
+          description: 'After registration you can login immediately with the same phone.',
+        },
+      ]}
+      formTitle="Register"
+      formDescription="Registration and login are both handled with phone number."
+    >
+      <form onSubmit={submit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">Name (optional)</Label>
+          <Input
+            id="name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="Alex"
+          />
         </div>
-        <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
-          <SitePanel className="space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ borderColor: 'var(--site-border)', color: 'var(--site-accent)' }}>
-              <NotebookTabs className="h-3.5 w-3.5" />
-              New client registration
-            </div>
-            <div>
-              <h1 className="text-3xl font-semibold tracking-tight">Create your client access</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7" style={{ color: 'var(--site-muted)' }}>
-                Register once with your name and phone number, then use the same number to enter your portal, monitor balance, and manage your delivery plan.
-              </p>
-            </div>
 
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="rounded-[1.4rem] border p-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 52%, white)' }}>
-                <p className="font-medium">Simple onboarding</p>
-                <p className="mt-2 text-sm leading-6" style={{ color: 'var(--site-muted)' }}>
-                  Name is optional. Phone number is the primary account identifier.
-                </p>
-              </div>
-              <div className="rounded-[1.4rem] border p-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 52%, white)' }}>
-                <ArrowRight className="h-5 w-5" style={{ color: 'var(--site-accent)' }} />
-                <p className="mt-3 font-medium">Next step</p>
-                <p className="mt-2 text-sm leading-6" style={{ color: 'var(--site-muted)' }}>
-                  After registration, continue directly to login and open the client dashboard.
-                </p>
-              </div>
-            </div>
-          </SitePanel>
-
-          <SitePanel className="mx-auto w-full max-w-lg space-y-4">
-            <div>
-              <h2 className="text-2xl font-semibold">Register</h2>
-              <p className="mt-1 text-sm" style={{ color: 'var(--site-muted)' }}>
-                Registration and login are both handled by phone number.
-              </p>
-            </div>
-
-            <form onSubmit={submit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name (optional)</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Alex"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+998901234567"
-                />
-              </div>
-
-              <Button type="submit" disabled={isSubmitting || !normalizedPhone} className="w-full gap-2 rounded-full">
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
-                Register
-              </Button>
-            </form>
-          </SitePanel>
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone Number</Label>
+          <Input
+            id="phone"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
+            placeholder="+998901234567"
+          />
         </div>
-      </main>
-    </SitePageSurface>
+
+        <Button type="submit" disabled={isSubmitting || !normalizedPhone} className="w-full gap-2 rounded-full">
+          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+          Register
+        </Button>
+      </form>
+
+      <p className="mt-4 text-center text-sm text-muted-foreground">
+        Already registered?{' '}
+        <Link href={makeClientSiteHref(params.subdomain, '/login')} className="font-medium underline">
+          Login
+        </Link>
+      </p>
+    </SiteAuthShell>
   )
 }

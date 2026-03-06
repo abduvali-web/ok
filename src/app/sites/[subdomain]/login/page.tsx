@@ -1,14 +1,15 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { ArrowRight, Loader2, LogIn, ShieldCheck, Smartphone } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+
+import { SiteAuthShell } from '@/components/site/SiteAuthShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { SitePageSurface, SitePanel, SitePublicHeader } from '@/components/site/SiteScaffold'
 import { useSiteConfig } from '@/hooks/useSiteConfig'
 import { makeClientSiteHref } from '@/lib/site-urls'
 
@@ -89,77 +90,66 @@ export default function LoginPage({ params }: { params: { subdomain: string } })
       <div className="min-h-screen flex items-center justify-center px-4 text-center">
         <div>
           <p className="text-lg font-medium">Site not found</p>
-          <Link href="/" className="mt-2 inline-block underline">Back to home</Link>
         </div>
       </div>
     )
   }
 
   return (
-    <SitePageSurface site={site}>
-      <SitePublicHeader site={site} />
-      <main className="mx-auto max-w-6xl px-4 py-10 md:py-14">
-        <div className="mb-4 text-sm text-muted-foreground">
-          <Link href={makeClientSiteHref(params.subdomain, '')} className="underline">Back to landing</Link>
+    <SiteAuthShell
+      site={site}
+      subdomain={params.subdomain}
+      badge="Client access"
+      title="Login with your phone number"
+      description="Use the phone number connected to your account to open your dashboard, track active deliveries, and update your location."
+      features={[
+        {
+          icon: Smartphone,
+          title: 'Phone-first login',
+          description: 'Fast sign-in without password complexity.',
+        },
+        {
+          icon: ArrowRight,
+          title: 'Direct to dashboard',
+          description: 'After login you immediately see balance, orders, and menu.',
+        },
+      ]}
+      formTitle="Login"
+      formDescription="Enter your phone in international format."
+    >
+      <form onSubmit={submit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone Number</Label>
+          <Input
+            id="phone"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
+            placeholder="+998901234567"
+          />
         </div>
-        <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
-          <SitePanel className="space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ borderColor: 'var(--site-border)', color: 'var(--site-accent)' }}>
-              <ShieldCheck className="h-3.5 w-3.5" />
-              Client access
-            </div>
-            <div>
-              <h1 className="text-3xl font-semibold tracking-tight">Login with your phone number</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7" style={{ color: 'var(--site-muted)' }}>
-                Use the same phone number connected to your account to open your client dashboard, view today&apos;s menu, and manage delivery details.
-              </p>
-            </div>
 
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="rounded-[1.4rem] border p-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 52%, white)' }}>
-                <Smartphone className="h-5 w-5" style={{ color: 'var(--site-accent)' }} />
-                <p className="mt-3 font-medium">Phone-first login</p>
-                <p className="mt-2 text-sm leading-6" style={{ color: 'var(--site-muted)' }}>
-                  Fast access without a long password flow.
-                </p>
-              </div>
-              <div className="rounded-[1.4rem] border p-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 52%, white)' }}>
-                <ArrowRight className="h-5 w-5" style={{ color: 'var(--site-accent)' }} />
-                <p className="mt-3 font-medium">Direct to dashboard</p>
-                <p className="mt-2 text-sm leading-6" style={{ color: 'var(--site-muted)' }}>
-                  See balance, active orders, and saved location immediately after sign-in.
-                </p>
-              </div>
-            </div>
-          </SitePanel>
+        <Button type="submit" disabled={isSubmitting || !normalizedPhone} className="w-full gap-2 rounded-full">
+          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
+          Login
+        </Button>
+      </form>
 
-          <SitePanel className="mx-auto w-full max-w-lg space-y-4">
-            <div>
-              <h2 className="text-2xl font-semibold">Login</h2>
-              <p className="mt-1 text-sm" style={{ color: 'var(--site-muted)' }}>
-                Enter your phone number in international format.
-              </p>
-            </div>
-
-            <form onSubmit={submit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+998901234567"
-                />
-              </div>
-
-              <Button type="submit" disabled={isSubmitting || !normalizedPhone} className="w-full gap-2 rounded-full">
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
-                Login
-              </Button>
-            </form>
-          </SitePanel>
+      <div className="mt-4 rounded-xl border border-emerald-300/25 bg-emerald-300/10 p-3 text-sm">
+        <div className="flex items-center gap-2 font-medium">
+          <ShieldCheck className="h-4 w-4" />
+          Quick secure access
         </div>
-      </main>
-    </SitePageSurface>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Your session is tied to this device token and can be revoked by logging out.
+        </p>
+      </div>
+
+      <p className="mt-4 text-center text-sm text-muted-foreground">
+        New client?{' '}
+        <Link href={makeClientSiteHref(params.subdomain, '/register')} className="font-medium underline">
+          Create account
+        </Link>
+      </p>
+    </SiteAuthShell>
   )
 }

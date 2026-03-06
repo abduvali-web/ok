@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, LogOut, MapPin, Salad, ShieldCheck, Wallet } from 'lucide-react'
+import { ArrowUpRight, Clock3, Loader2, LogOut, MapPin, Package, ReceiptText, RefreshCw, Salad, ShieldCheck, Wallet } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,13 +22,16 @@ type CustomerProfile = {
   calories: number
   autoOrdersEnabled: boolean
   googleMapsLink?: string
+  deliveryDays?: Partial<Record<'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday', boolean>>
 }
 
 type Order = {
   id: string
   orderStatus: string
+  orderNumber?: number
   calories: number
   deliveryTime?: string | null
+  deliveryDate?: string | null
 }
 
 type TodayMenuResponse = {
@@ -42,6 +46,30 @@ type TodayMenuResponse = {
   }>
 }
 
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  PENDING: 'Pending',
+  IN_DELIVERY: 'In delivery',
+  DELIVERED: 'Delivered',
+  FAILED: 'Failed',
+  PAUSED: 'Paused',
+  CANCELED: 'Canceled',
+  CANCELLED: 'Canceled',
+}
+
+const ORDER_STATUS_TONES: Record<string, string> = {
+  PENDING: 'bg-amber-100 text-amber-700',
+  IN_DELIVERY: 'bg-blue-100 text-blue-700',
+  DELIVERED: 'bg-emerald-100 text-emerald-700',
+  FAILED: 'bg-rose-100 text-rose-700',
+  PAUSED: 'bg-slate-200 text-slate-700',
+  CANCELED: 'bg-rose-100 text-rose-700',
+  CANCELLED: 'bg-rose-100 text-rose-700',
+}
+
+function normalizeOrderStatus(status: string) {
+  return ORDER_STATUS_LABELS[status] || status || 'Unknown'
+}
+
 export default function ClientHomePage({ params }: { params: { subdomain: string } }) {
   const router = useRouter()
   const { site, isLoading: siteLoading } = useSiteConfig(params.subdomain)
@@ -53,12 +81,14 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
   const [googleMapsLink, setGoogleMapsLink] = useState('')
   const [isSavingLocation, setIsSavingLocation] = useState(false)
   const [isTogglingPlan, setIsTogglingPlan] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null)
 
-  useEffect(() => {
-    if (siteLoading) return
+  const loadDashboardData = useCallback(
+    async (background = false) => {
+      if (background) setIsRefreshing(true)
+      else setIsLoading(true)
 
-    const load = async () => {
-      setIsLoading(true)
       try {
         const customerToken = localStorage.getItem('customerToken')
         const authHeaders = customerToken ? { Authorization: `Bearer ${customerToken}` } : undefined
@@ -81,6 +111,7 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
         setGoogleMapsLink(profileData.googleMapsLink || '')
         setOrders(Array.isArray(ordersData) ? ordersData : [])
         setTodayMenu(menuData)
+        setLastRefreshedAt(new Date())
       } catch {
         toast.error('Please login again.')
         localStorage.removeItem('customerToken')
@@ -88,15 +119,67 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
         router.push(makeClientSiteHref(params.subdomain, '/login'))
       } finally {
         setIsLoading(false)
+        setIsRefreshing(false)
       }
-    }
+    },
+    [params.subdomain, router]
+  )
 
-    void load()
-  }, [params.subdomain, router, siteLoading])
+  useEffect(() => {
+    if (siteLoading) return
+    void loadDashboardData()
+  }, [loadDashboardData, siteLoading])
 
   const activeOrder = useMemo(() => {
     return orders.find((order) => !['DELIVERED', 'FAILED', 'CANCELED', 'CANCELLED', 'PAUSED'].includes(order.orderStatus)) || null
   }, [orders])
+
+  const deliveredOrders = useMemo(
+    () => orders.filter((order) => order.orderStatus === 'DELIVERED').length,
+    [orders]
+  )
+
+  const pendingOrders = useMemo(
+    () => orders.filter((order) => order.orderStatus === 'PENDING' || order.orderStatus === 'IN_DELIVERY').length,
+    [orders]
+  )
+
+  const completionRate = useMemo(() => {
+    if (orders.length === 0) return 0
+    return Math.round((deliveredOrders / orders.length) * 100)
+  }, [deliveredOrders, orders.length])
+
+  const activeDeliveryDays = useMemo(() => {
+    if (!profile?.deliveryDays) return 0
+    return Object.values(profile.deliveryDays).filter(Boolean).length
+  }, [profile?.deliveryDays])
+
+  const deliveryDayLabels = useMemo(() => {
+    if (!profile?.deliveryDays) return []
+    const dayMap: Array<[keyof NonNullable<CustomerProfile['deliveryDays']>, string]> = [
+      ['monday', 'Mon'],
+      ['tuesday', 'Tue'],
+      ['wednesday', 'Wed'],
+      ['thursday', 'Thu'],
+      ['friday', 'Fri'],
+      ['saturday', 'Sat'],
+      ['sunday', 'Sun'],
+    ]
+
+    return dayMap
+      .filter(([day]) => Boolean(profile.deliveryDays?.[day]))
+      .map(([, label]) => label)
+  }, [profile?.deliveryDays])
+
+  const currentOrderTone = activeOrder ? ORDER_STATUS_TONES[activeOrder.orderStatus] || 'bg-slate-100 text-slate-700' : 'bg-slate-100 text-slate-700'
+
+  const lastRefreshLabel = useMemo(
+    () =>
+      lastRefreshedAt
+        ? lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : 'Not synced yet',
+    [lastRefreshedAt]
+  )
 
   const handleLogout = () => {
     localStorage.removeItem('customerToken')
@@ -193,14 +276,70 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
             <p className="mt-1 text-sm" style={{ color: 'var(--site-muted)' }}>
               Phone: {profile.phone}
             </p>
+            <p className="mt-1 text-xs" style={{ color: 'var(--site-muted)' }}>
+              Need full records?{' '}
+              <Link href={makeClientSiteHref(params.subdomain, '/history')} className="underline">
+                Open order history
+              </Link>
+            </p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <SiteClientNav subdomain={params.subdomain} currentPath={makeClientSiteHref(params.subdomain, '/client')} />
+            <Button
+              variant="outline"
+              onClick={() => void loadDashboardData(true)}
+              className="gap-2 rounded-full"
+              disabled={isRefreshing}
+            >
+              {isRefreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              Refresh
+            </Button>
             <Button variant="outline" onClick={handleLogout} className="gap-2 rounded-full">
               <LogOut className="h-4 w-4" /> Logout
             </Button>
           </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <SitePanel className="rounded-[1.3rem] p-4">
+            <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Balance</p>
+            <p className="mt-2 text-2xl font-semibold">{(profile.balance || 0).toLocaleString()} UZS</p>
+          </SitePanel>
+          <SitePanel className="rounded-[1.3rem] p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Active orders</p>
+              <Package className="h-4 w-4" style={{ color: 'var(--site-accent)' }} />
+            </div>
+            <p className="mt-2 text-2xl font-semibold">{pendingOrders}</p>
+          </SitePanel>
+          <SitePanel className="rounded-[1.3rem] p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Delivered</p>
+              <ReceiptText className="h-4 w-4" style={{ color: 'var(--site-accent)' }} />
+            </div>
+            <p className="mt-2 text-2xl font-semibold">{deliveredOrders}</p>
+            <p className="mt-1 text-xs" style={{ color: 'var(--site-muted)' }}>Completion rate: {completionRate}%</p>
+          </SitePanel>
+          <SitePanel className="rounded-[1.3rem] p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Plan mode</p>
+              <Clock3 className="h-4 w-4" style={{ color: 'var(--site-accent)' }} />
+            </div>
+            <p className="mt-2 text-2xl font-semibold">{profile.autoOrdersEnabled ? 'Active' : 'Paused'}</p>
+            <p className="mt-1 text-xs" style={{ color: 'var(--site-muted)' }}>
+              Delivery days: {activeDeliveryDays || 'Not configured'}
+            </p>
+          </SitePanel>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 text-xs" style={{ color: 'var(--site-muted)' }}>
+          <span className="rounded-full border px-3 py-1" style={{ borderColor: 'var(--site-border)' }}>
+            Last sync: {lastRefreshLabel}
+          </span>
+          <span className="rounded-full border px-3 py-1" style={{ borderColor: 'var(--site-border)' }}>
+            Total orders tracked: {orders.length}
+          </span>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
@@ -218,6 +357,27 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
               </div>
             </div>
 
+            <div className="rounded-[1.2rem] border px-4 py-3" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 36%, white)' }}>
+              <div className="flex items-center justify-between gap-2 text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>
+                <span>Delivery consistency</span>
+                <span>{completionRate}%</span>
+              </div>
+              <div className="mt-3 h-2 rounded-full bg-white/70">
+                <div
+                  className="h-2 rounded-full"
+                  style={{
+                    width: `${completionRate}%`,
+                    backgroundColor: 'var(--site-accent)',
+                  }}
+                />
+              </div>
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs" style={{ color: 'var(--site-muted)' }}>
+                <span>Delivered: {deliveredOrders}</span>
+                <span>Active: {pendingOrders}</span>
+                <span>Queue size: {orders.length}</span>
+              </div>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-[1.4rem] border p-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 45%, white)' }}>
                 <div className="flex items-start justify-between">
@@ -230,12 +390,29 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
               </div>
 
               <div className="rounded-[1.4rem] border p-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 45%, white)' }}>
-                <h3 className="text-sm font-medium" style={{ color: 'var(--site-muted)' }}>Current Order</h3>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-medium" style={{ color: 'var(--site-muted)' }}>Current Order</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 rounded-full px-3 text-xs"
+                    onClick={() => router.push(makeClientSiteHref(params.subdomain, '/history'))}
+                  >
+                    History
+                  </Button>
+                </div>
                 {activeOrder ? (
                   <div className="mt-2 space-y-1 text-sm">
-                    <p>Status: <strong>{activeOrder.orderStatus}</strong></p>
+                    <p>
+                      Status:{' '}
+                      <strong className={`inline-flex rounded-full px-2 py-0.5 text-xs ${currentOrderTone}`}>
+                        {normalizeOrderStatus(activeOrder.orderStatus)}
+                      </strong>
+                    </p>
+                    <p>Order: #{activeOrder.orderNumber || '-'}</p>
                     <p>Calories: {activeOrder.calories}</p>
                     <p>Time: {activeOrder.deliveryTime || 'Not set'}</p>
+                    <p>Date: {activeOrder.deliveryDate ? new Date(activeOrder.deliveryDate).toLocaleDateString() : 'Not set'}</p>
                   </div>
                 ) : (
                   <p className="mt-2 text-sm" style={{ color: 'var(--site-muted)' }}>No active order right now.</p>
@@ -254,6 +431,23 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
                 <p className="mt-1 text-xs" style={{ color: 'var(--site-muted)' }}>
                   When inactive, future auto-orders will be paused and won&apos;t be delivered.
                 </p>
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  {deliveryDayLabels.length > 0 ? (
+                    deliveryDayLabels.map((day) => (
+                      <span
+                        key={day}
+                        className="inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium"
+                        style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 56%, white)' }}
+                      >
+                        {day}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs" style={{ color: 'var(--site-muted)' }}>
+                      Delivery days are not configured yet.
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="flex items-center gap-3">
@@ -264,6 +458,12 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
                 />
               </div>
             </div>
+            {isTogglingPlan && (
+              <p className="mt-3 inline-flex items-center gap-1.5 text-xs" style={{ color: 'var(--site-muted)' }}>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Updating plan status...
+              </p>
+            )}
           </SitePanel>
         </div>
 
@@ -307,7 +507,7 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
             Paste a Google Maps link or coordinates to save your location.
           </p>
 
-          <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
+          <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto_auto]">
             <div className="space-y-2">
               <Label htmlFor="mapsLink" className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" /> Google Maps Link
@@ -323,6 +523,19 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
               </p>
             </div>
 
+            {googleMapsLink.trim() ? (
+              <Button variant="outline" className="self-end rounded-full" asChild>
+                <a href={googleMapsLink.trim()} target="_blank" rel="noreferrer">
+                  <ArrowUpRight className="mr-2 h-4 w-4" />
+                  Open map
+                </a>
+              </Button>
+            ) : (
+              <Button variant="outline" className="self-end rounded-full" disabled>
+                <ArrowUpRight className="mr-2 h-4 w-4" />
+                Open map
+              </Button>
+            )}
             <Button onClick={handleSaveLocation} disabled={isSavingLocation} className="self-end rounded-full">
               {isSavingLocation ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save location'}
             </Button>

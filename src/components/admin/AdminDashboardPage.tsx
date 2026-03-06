@@ -64,8 +64,9 @@ import { TrialStatus } from '@/components/admin/TrialStatus'
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal'
 import { SiteBuilderCard } from '@/components/admin/SiteBuilderCard'
 import { getDailyPrice, PLAN_TYPES } from '@/lib/menuData'
-import { CANONICAL_TABS, deriveVisibleTabs } from '@/components/admin/dashboard/tabs'
+import { CANONICAL_TABS, deriveVisibleTabs, type CanonicalTabId } from '@/components/admin/dashboard/tabs'
 import type { Client, Order } from '@/components/admin/dashboard/types'
+import { DASHBOARD_TAB_META, getDashboardTabLabels } from '@/components/admin/dashboard/tabMeta'
 import { DesktopTabsNav } from '@/components/admin/dashboard/DesktopTabsNav'
 import { useDashboardData } from '@/components/admin/dashboard/useDashboardData'
 import { AdminsTab } from '@/components/admin/dashboard/tabs-content/AdminsTab'
@@ -215,6 +216,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     finance: t.finance.title,
     interface: t.admin.interface,
   }
+  const tabLabels = useMemo(() => getDashboardTabLabels(t), [t])
   const [courierFormData, setCourierFormData] = useState({
     name: '',
     email: '',
@@ -326,6 +328,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     () => Object.values(filters).reduce((count, value) => count + (value ? 1 : 0), 0),
     [filters]
   )
+  const commandTabShortcuts = useMemo(() => {
+    return visibleTabs
+      .filter((tab): tab is CanonicalTabId => Object.prototype.hasOwnProperty.call(DASHBOARD_TAB_META, tab))
+      .slice(0, 6)
+      .map((tab) => ({
+        id: tab,
+        label: tabLabels[tab] || tab,
+        icon: DASHBOARD_TAB_META[tab].icon,
+      }))
+  }, [tabLabels, visibleTabs])
 
   const isSelectedDateToday = useMemo(() => {
     if (!selectedDate) return false
@@ -1729,7 +1741,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     })
   }
 
-  const getDateRange = () => {
+  const getDateRange = useCallback(() => {
     const dates: Date[] = []
     const today = dateCursor
 
@@ -1740,7 +1752,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     }
 
     return dates
-  }
+  }, [dateCursor])
+  const commandDateWindow = useMemo(() => getDateRange(), [getDateRange])
 
   const DispatchActionIcon = !selectedDate
     ? CalendarDays
@@ -1872,6 +1885,218 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       <MobileTabIndicator activeTab={activeTab} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6 mobile-bottom-space">
+        <section className="mb-5 rounded-[1.6rem] border border-white/10 bg-[linear-gradient(130deg,rgba(8,17,32,0.92),rgba(14,26,45,0.88))] p-4 text-white shadow-[0_28px_70px_-50px_rgba(2,6,23,0.9)] md:p-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.24em] text-slate-300">
+                {mode === 'middle' ? 'Middle admin command' : 'Low admin command'}
+              </p>
+              <h2 className="mt-2 font-display text-2xl tracking-tight">
+                {mode === 'middle' ? 'Run daily operations from one control strip' : 'Track today&apos;s operational status'}
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm text-slate-300">
+                Selected day: <span className="font-medium text-white">{selectedDate ? selectedDate.toLocaleDateString() : 'All dates'}</span>
+                {' · '}
+                Visible orders: <span className="font-medium text-white">{filteredOrders.length}</span>
+                {' · '}
+                Visible clients: <span className="font-medium text-white">{filteredClients.length}</span>
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/8 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-slate-200">
+                  <span
+                    className={`h-2 w-2 rounded-full ${
+                      !selectedDate
+                        ? getStatusColor('FAILED')
+                        : selectedDayIsActive
+                          ? getStatusColor('IN_DELIVERY')
+                          : getStatusColor('PENDING')
+                    }`}
+                  />
+                  Dispatch: {selectedDate ? getStatusText(selectedDayIsActive ? 'IN_DELIVERY' : 'PENDING') : 'Date required'}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/8 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-slate-200">
+                  <Filter className="h-3 w-3" />
+                  Filters: {activeFiltersCount}
+                </span>
+              </div>
+              <p className="mt-2 text-xs text-slate-400">{dispatchActionHint}</p>
+
+              <div className="mt-3 flex items-center gap-2">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-8 w-8 rounded-full border-white/20 bg-white/8 text-white hover:bg-white/14 hover:text-white"
+                  onClick={() => shiftDateWindow(-7)}
+                  aria-label="Previous date window"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <div className="flex flex-wrap gap-1.5">
+                  {commandDateWindow.map((date) => {
+                    const dayLabel = date.toLocaleDateString(language === 'ru' ? 'ru-RU' : 'en-US', { weekday: 'short' })
+                    const dateLabel = date.toLocaleDateString(language === 'ru' ? 'ru-RU' : 'en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                    })
+                    const isSelected = selectedDate ? date.toDateString() === selectedDate.toDateString() : false
+                    const isToday = date.toDateString() === new Date().toDateString()
+
+                    return (
+                      <button
+                        key={date.toISOString()}
+                        type="button"
+                        onClick={() => {
+                          setSelectedDate(date)
+                          setDateCursor(date)
+                        }}
+                        className={`rounded-xl border px-2.5 py-1 text-left text-[11px] transition ${
+                          isSelected
+                            ? 'border-white/60 bg-white/18 text-white'
+                            : 'border-white/14 bg-white/6 text-slate-200 hover:border-white/32 hover:bg-white/12'
+                        }`}
+                      >
+                        <div className="uppercase tracking-[0.16em] text-slate-300">{dayLabel}</div>
+                        <div className="font-medium">{dateLabel}{isToday ? ' · Today' : ''}</div>
+                      </button>
+                    )
+                  })}
+                </div>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-8 w-8 rounded-full border-white/20 bg-white/8 text-white hover:bg-white/14 hover:text-white"
+                  onClick={() => shiftDateWindow(7)}
+                  aria-label="Next date window"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 rounded-full border-white/20 bg-white/8 px-3 text-xs text-white hover:bg-white/14 hover:text-white"
+                  onClick={() => {
+                    const today = new Date()
+                    setSelectedDate(today)
+                    setDateCursor(today)
+                  }}
+                >
+                  Today
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 rounded-full border-white/20 bg-white/8 px-3 text-xs text-white hover:bg-white/14 hover:text-white"
+                  onClick={() => {
+                    const tomorrow = new Date()
+                    tomorrow.setDate(tomorrow.getDate() + 1)
+                    setSelectedDate(tomorrow)
+                    setDateCursor(tomorrow)
+                  }}
+                >
+                  Tomorrow
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 rounded-full border-white/20 bg-white/8 px-3 text-xs text-white hover:bg-white/14 hover:text-white"
+                  onClick={() => setSelectedDate(null)}
+                >
+                  All Dates
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {!isLowAdminView ? (
+                <>
+                  <Button
+                    size="sm"
+                    className="rounded-full bg-[#f3efe6] text-[#08111d] hover:bg-white"
+                    onClick={() => setIsCreateOrderModalOpen(true)}
+                  >
+                    <Plus className="mr-1.5 h-4 w-4" />
+                    Quick Order
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full border-white/20 bg-white/8 text-white hover:bg-white/14 hover:text-white"
+                    onClick={() => setIsCreateClientModalOpen(true)}
+                  >
+                    <User className="mr-1.5 h-4 w-4" />
+                    Quick Client
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full border-white/20 bg-white/8 text-white hover:bg-white/14 hover:text-white"
+                    onClick={() => setIsDispatchOpen(true)}
+                    disabled={!selectedDate}
+                  >
+                    <DispatchActionIcon className="mr-1.5 h-4 w-4" />
+                    {dispatchActionLabel}
+                  </Button>
+                </>
+              ) : null}
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-full border-white/20 bg-white/8 text-white hover:bg-white/14 hover:text-white"
+                onClick={fetchData}
+              >
+                <Save className="mr-1.5 h-4 w-4" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-white/12 bg-white/6 p-3">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-300">Pending</p>
+              <p className="mt-2 text-2xl font-semibold">{stats?.pendingOrders || 0}</p>
+            </div>
+            <div className="rounded-xl border border-white/12 bg-white/6 p-3">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-300">In Delivery</p>
+              <p className="mt-2 text-2xl font-semibold">{stats?.inDeliveryOrders || 0}</p>
+            </div>
+            <div className="rounded-xl border border-white/12 bg-white/6 p-3">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-300">Selected Orders</p>
+              <p className="mt-2 text-2xl font-semibold">{selectedOrders.size}</p>
+            </div>
+            <div className="rounded-xl border border-white/12 bg-white/6 p-3">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-300">Couriers Online</p>
+              <p className="mt-2 text-2xl font-semibold">{Array.isArray(couriers) ? couriers.length : 0}</p>
+            </div>
+          </div>
+
+          {commandTabShortcuts.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {commandTabShortcuts.map((tab) => {
+                const Icon = tab.icon
+                const isActive = activeTab === tab.id
+                return (
+                  <Button
+                    key={tab.id}
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`rounded-full border-white/20 text-white hover:text-white ${
+                      isActive
+                        ? 'bg-white/20 hover:bg-white/24'
+                        : 'bg-white/8 hover:bg-white/14'
+                    }`}
+                  >
+                    <Icon className="mr-1.5 h-4 w-4" />
+                    {tab.label}
+                  </Button>
+                )
+              })}
+            </div>
+          )}
+        </section>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <DesktopTabsNav
@@ -2254,25 +2479,35 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   )
                 }
 
-                <div className="mb-3 grid gap-2 rounded-md border bg-muted/20 p-2 md:grid-cols-[minmax(0,1fr)_auto]">
-                  <Input
-                    ref={searchInputRef}
-                    value={searchTerm}
-                    onChange={(event) => setSearchTerm(event.target.value)}
-                    placeholder="Поиск по имени, адресу или номеру заказа..."
-                    aria-label="Поиск заказов"
-                    className="h-9"
-                  />
-                  <div className="flex items-center gap-2">
+                <div className="mb-3 space-y-3">
+                  <SectionMetrics items={orderMetrics} columnsClassName="sm:grid-cols-2 xl:grid-cols-4" />
+                  <FilterToolbar
+                    inputRef={searchInputRef}
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    searchPlaceholder="Поиск по имени, адресу или номеру заказа..."
+                    searchAriaLabel="Поиск заказов"
+                  >
+                    <Badge variant="secondary" className="h-9 rounded-full px-3">
+                      {filteredOrders.length} rows
+                    </Badge>
+                    {activeFiltersCount > 0 && (
+                      <Badge variant="outline" className="h-9 rounded-full px-3">
+                        <Filter className="mr-1 h-3.5 w-3.5" />
+                        {activeFiltersCount} filters
+                      </Badge>
+                    )}
                     {searchTerm && (
                       <Button variant="outline" size="sm" onClick={() => setSearchTerm('')} className="h-9 px-3">
                         Clear
                       </Button>
                     )}
-                    <span className="rounded-md border bg-background px-2 py-1 text-xs text-muted-foreground">
-                      {filteredOrders.length} rows
-                    </span>
-                  </div>
+                    {activeFiltersCount > 0 && (
+                      <Button variant="outline" size="sm" onClick={clearOrderFilters} className="h-9 px-3">
+                        Reset filters
+                      </Button>
+                    )}
+                  </FilterToolbar>
                 </div>
 
                 {filteredOrders.length === 0 ? (
@@ -2316,7 +2551,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       )}
                     </CardDescription>
                   </div>
-                  <div className="grid w-full gap-2 lg:w-auto lg:grid-cols-[170px_minmax(0,260px)_auto_auto]">
+                  <div className="grid w-full gap-2 lg:w-auto lg:grid-cols-[190px_auto]">
                     <Select value={clientStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setClientStatusFilter(value)}>
                       <SelectTrigger className="h-9 w-full">
                         <SelectValue placeholder="Фильтр статуса" />
@@ -2327,17 +2562,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         <SelectItem value="inactive">Только приостановленные</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Input
-                      value={clientSearchTerm}
-                      onChange={(event) => setClientSearchTerm(event.target.value)}
-                      placeholder="Поиск клиента..."
-                      className="h-9"
-                    />
-                    <Button
-                      variant="outline"
-                      className="h-9"
-                      onClick={() => setActiveTab('bin')}
-                    >
+                    <Button variant="outline" className="h-9" onClick={() => setActiveTab('bin')}>
                       Корзина
                     </Button>
                   </div>
@@ -2641,6 +2866,25 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     </Dialog>
               </CardHeader>
               <CardContent>
+                <div className="mb-4 space-y-3">
+                  <SectionMetrics items={clientMetrics} columnsClassName="sm:grid-cols-2 xl:grid-cols-4" />
+                  <FilterToolbar
+                    searchValue={clientSearchTerm}
+                    onSearchChange={setClientSearchTerm}
+                    searchPlaceholder="Поиск клиента..."
+                    searchAriaLabel="Поиск клиентов"
+                  >
+                    {clientSearchTerm && (
+                      <Button variant="outline" size="sm" className="h-9" onClick={() => setClientSearchTerm('')}>
+                        Clear
+                      </Button>
+                    )}
+                    <Badge variant="secondary" className="h-9 rounded-full px-3">
+                      {filteredClients.length} clients
+                    </Badge>
+                  </FilterToolbar>
+                </div>
+
                 {/* Client Management Buttons */}
                 {selectedClients.size > 0 && (
                   <div className="mb-4 rounded-lg border bg-muted/20 p-3">

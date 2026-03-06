@@ -3,21 +3,16 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import {
-  BarChart3,
-  DollarSign,
-  History,
   Menu,
   Package,
-  Settings,
-  Trash2,
-  User,
-  Users,
   X,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { cn } from '@/lib/utils'
+import { DASHBOARD_TAB_META, DASHBOARD_TAB_ORDER, getDashboardTabLabels } from '@/components/admin/dashboard/tabMeta'
+import type { CanonicalTabId } from '@/components/admin/dashboard/tabs'
 
 interface MobileSidebarProps {
   activeTab: string
@@ -25,22 +20,10 @@ interface MobileSidebarProps {
   visibleTabs?: string[]
 }
 
-const TAB_CONFIG: Record<string, { icon: typeof Package; accent: string }> = {
-  orders: { icon: Package, accent: 'bg-teal-500' },
-  clients: { icon: Users, accent: 'bg-cyan-500' },
-  admins: { icon: Users, accent: 'bg-amber-500' },
-  bin: { icon: Trash2, accent: 'bg-rose-500' },
-  statistics: { icon: BarChart3, accent: 'bg-emerald-500' },
-  history: { icon: History, accent: 'bg-yellow-500' },
-  interface: { icon: Settings, accent: 'bg-slate-500' },
-  profile: { icon: User, accent: 'bg-sky-500' },
-  warehouse: { icon: Package, accent: 'bg-emerald-500' },
-  finance: { icon: DollarSign, accent: 'bg-lime-500' },
-}
-
 export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSidebarProps) {
   const [isOpen, setIsOpen] = useState(false)
   const { t } = useLanguage()
+  const labels = getDashboardTabLabels(t)
 
   useEffect(() => {
     const onEsc = (event: KeyboardEvent) => {
@@ -58,18 +41,10 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
     }
   }, [isOpen])
 
-  const allTabs = [
-    { id: 'statistics', label: t.admin.statistics },
-    { id: 'orders', label: t.admin.orders },
-    { id: 'clients', label: t.admin.clients },
-    { id: 'admins', label: t.admin.admins },
-    { id: 'warehouse', label: t.warehouse.title },
-    { id: 'finance', label: t.finance.title },
-    { id: 'history', label: t.admin.history },
-    { id: 'bin', label: t.admin.bin },
-    { id: 'interface', label: t.admin.interface },
-    { id: 'profile', label: t.common.profile },
-  ]
+  const allTabs = DASHBOARD_TAB_ORDER.map((id) => ({
+    id,
+    label: labels[id],
+  }))
 
   const effectiveTabs = visibleTabs?.length
     ? allTabs.filter((tab) => visibleTabs.includes(tab.id))
@@ -162,7 +137,11 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
             {/* Nav Items */}
             <nav className="p-3 space-y-1">
               {effectiveTabs.map((tab, index) => {
-                const config = TAB_CONFIG[tab.id] || { icon: Package, accent: 'bg-slate-500' }
+                const config = DASHBOARD_TAB_META[tab.id as CanonicalTabId] || {
+                  icon: Package,
+                  mobileAccent: 'bg-slate-500',
+                  desktopAccent: '',
+                }
                 const Icon = config.icon
                 const isActive = activeTab === tab.id
 
@@ -186,7 +165,7 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
                     <div
                       className={cn(
                         'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-all duration-200',
-                        isActive ? `${config.accent} text-white shadow-sm` : 'bg-muted text-muted-foreground'
+                        isActive ? `${config.mobileAccent} text-white shadow-sm` : 'bg-muted text-muted-foreground'
                       )}
                     >
                       <Icon className="h-3.5 w-3.5" />
