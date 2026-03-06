@@ -12,14 +12,18 @@ export default async function AuthRedirectPage() {
     switch (role) {
         case "SUPER_ADMIN":
             redirect("/super-admin")
+            break
         case "MIDDLE_ADMIN":
             redirect("/middle-admin")
+            break
         case "LOW_ADMIN":
             redirect("/low-admin")
+            break
         case "COURIER":
             redirect("/courier")
+            break
         default:
             redirect("/middle-admin")
+            break
     }
 }
-

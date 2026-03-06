@@ -1,20 +1,10 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import {
-  AlertCircle,
-  ArrowRight,
-  CheckCircle2,
-  Eye,
-  EyeOff,
-  Loader2,
-  ShieldCheck,
-  Sparkles,
-  UserPlus,
-} from 'lucide-react'
+import { AlertCircle, ArrowRight, CheckCircle2, Eye, EyeOff, Loader2, ShieldCheck, Sparkles, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { AuthShell } from '@/components/auth/AuthShell'
@@ -39,8 +29,8 @@ export default function SignUpPage() {
   const highlights = useMemo(
     () => [
       { icon: Sparkles, label: '30-day trial', detail: 'Start with full access and no credit card required.' },
-      { icon: ShieldCheck, label: 'Role-ready access', detail: 'Bring admins and couriers into one coordinated workspace.' },
-      { icon: UserPlus, label: 'Fast onboarding', detail: 'Create account, configure flows, and launch operations quickly.' },
+      { icon: ShieldCheck, label: 'Role-ready access', detail: 'Bring admins and couriers into one workspace.' },
+      { icon: UserPlus, label: 'Fast onboarding', detail: 'Create account and start operations quickly.' },
     ],
     []
   )
@@ -115,29 +105,29 @@ export default function SignUpPage() {
   return (
     <AuthShell
       badge="30-day trial access"
-      headline="Launch your operations stack in minutes."
-      description="Create your account and immediately access dispatch, warehouse, finance, and customer workflows."
+      headline="Create your operations workspace"
+      description="Register once and start using dispatch, warehouse, finance, and customer workflows."
       highlights={highlights}
       cardTitle="Create account"
       cardSubtitle="Start your AutoFood workspace"
       footer={
-        <p className="text-center text-sm text-slate-400">
+        <p className="text-center text-sm text-muted-foreground">
           Already have an account?{' '}
-          <Link href="/login" className="font-semibold text-white hover:underline">
+          <Link href="/login" className="font-semibold text-foreground hover:underline">
             Sign in
           </Link>
         </p>
       }
     >
       {error ? (
-        <Alert variant="destructive" className="mb-5">
+        <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : null}
 
-      <Button type="button" variant="outline" className="h-11 w-full rounded-full border-white/12 bg-white/4 text-white hover:bg-white/8 hover:text-white" onClick={handleGoogleSignUp}>
-        <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+      <Button type="button" variant="outline" className="h-10 w-full" onClick={handleGoogleSignUp}>
+        <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
           <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
           <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
           <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -146,23 +136,22 @@ export default function SignUpPage() {
         Continue with Google
       </Button>
 
-      <div className="relative my-6">
+      <div className="relative my-5">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-white/10" />
+          <span className="w-full border-t" />
         </div>
-        <div className="relative flex justify-center text-[11px] uppercase tracking-[0.14em] text-slate-400">
-          <span className="bg-[#0d1726] px-3">Or sign up with email</span>
+        <div className="relative flex justify-center text-xs text-muted-foreground">
+          <span className="bg-card px-2">or sign up with email</span>
         </div>
       </div>
 
       <form onSubmit={handleSignup} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="name" className="text-slate-200">Full name</Label>
+          <Label htmlFor="name">Full name</Label>
           <Input
             id="name"
             type="text"
             placeholder="John Doe"
-            className="h-11 rounded-xl border-white/10 bg-white/6 text-white placeholder:text-slate-400"
             value={signupData.name}
             onChange={(event) => setSignupData((prev) => ({ ...prev, name: event.target.value }))}
             required
@@ -170,12 +159,11 @@ export default function SignUpPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-slate-200">Email</Label>
+          <Label htmlFor="email">Email</Label>
           <Input
             id="email"
             type="email"
             placeholder="you@example.com"
-            className="h-11 rounded-xl border-white/10 bg-white/6 text-white placeholder:text-slate-400"
             value={signupData.email}
             onChange={(event) => setSignupData((prev) => ({ ...prev, email: event.target.value }))}
             required
@@ -183,19 +171,19 @@ export default function SignUpPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-slate-200">Password</Label>
+          <Label htmlFor="password">Password</Label>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
-              className="h-11 rounded-xl border-white/10 bg-white/6 pr-10 text-white"
+              className="pr-10"
               value={signupData.password}
               onChange={(event) => setSignupData((prev) => ({ ...prev, password: event.target.value }))}
               required
             />
             <button
               type="button"
-              className="absolute right-2 top-1.5 inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:text-white"
+              className="absolute right-2 top-1 inline-flex h-7 w-7 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground"
               onClick={() => setShowPassword((prev) => !prev)}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -208,33 +196,29 @@ export default function SignUpPage() {
                 {Array.from({ length: 5 }).map((_, index) => (
                   <div
                     key={index}
-                    className={`h-1.5 flex-1 rounded-full transition-all ${
-                      index < passwordStrength ? strengthColors[Math.max(passwordStrength - 1, 0)] : 'bg-white/10'
-                    }`}
+                    className={`h-1.5 flex-1 rounded-sm ${index < passwordStrength ? strengthColors[Math.max(passwordStrength - 1, 0)] : 'bg-muted'}`}
                   />
                 ))}
               </div>
-              <p className="text-xs text-slate-400">
-                Strength: {strengthLabels[Math.max(passwordStrength - 1, 0)] || 'Too short'}
-              </p>
+              <p className="text-xs text-muted-foreground">Strength: {strengthLabels[Math.max(passwordStrength - 1, 0)] || 'Too short'}</p>
             </div>
           ) : null}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword" className="text-slate-200">Confirm password</Label>
+          <Label htmlFor="confirmPassword">Confirm password</Label>
           <div className="relative">
             <Input
               id="confirmPassword"
               type={showConfirmPassword ? 'text' : 'password'}
-              className="h-11 rounded-xl border-white/10 bg-white/6 pr-10 text-white"
+              className="pr-10"
               value={signupData.confirmPassword}
               onChange={(event) => setSignupData((prev) => ({ ...prev, confirmPassword: event.target.value }))}
               required
             />
             <button
               type="button"
-              className="absolute right-2 top-1.5 inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:text-white"
+              className="absolute right-2 top-1 inline-flex h-7 w-7 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground"
               onClick={() => setShowConfirmPassword((prev) => !prev)}
             >
               {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -242,11 +226,7 @@ export default function SignUpPage() {
           </div>
         </div>
 
-        <Button
-          type="submit"
-          className="h-11 w-full rounded-full bg-[#f3efe6] text-[#08111d] hover:bg-white"
-          disabled={isLoading}
-        >
+        <Button type="submit" className="h-10 w-full" disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -261,11 +241,10 @@ export default function SignUpPage() {
         </Button>
       </form>
 
-      <div className="mt-5 flex items-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-xs text-emerald-100">
+      <div className="mt-4 flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
         <CheckCircle2 className="h-4 w-4" />
         Trial includes all core modules during onboarding.
       </div>
     </AuthShell>
   )
 }
-

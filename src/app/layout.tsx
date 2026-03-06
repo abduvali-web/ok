@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   description: "O'zbekistonda restoran va kafelar uchun zamonaviy yetkazib berishni avtomatlashtirish tizimi.",
   keywords: [
     "AutoFood", "yetkazib berish", "dostavka", "restoran", "delivery system",
-    "food delivery software", "автоматизация доставки"
+    "food delivery software", "avtomatlashtirish dostavki"
   ],
   authors: [{ name: "AutoFood Team", url: "https://autofood.uz" }],
   creator: "AutoFood Inc.",
@@ -82,13 +82,19 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body
-        className={`${sans.variable} ${display.variable} antialiased bg-background text-foreground`}
+        className={`${sans.variable} ${display.variable} antialiased bg-background text-foreground `}
       >
         <LanguageProvider>
           <AdminSettingsProvider>
             <TamboProviderClient>
               <ServiceWorkerRegistration />
-              {children}
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-elevated"
+              >
+                Skip to content
+              </a>
+              <div id="main-content">{children}</div>
               <PWAInstallPrompt />
               <Toaster />
             </TamboProviderClient>
@@ -98,3 +104,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+

@@ -144,7 +144,7 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
       <main className="mx-auto max-w-6xl space-y-4 px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ borderColor: 'var(--site-border)', color: 'var(--site-accent)' }}>
+            <div className="inline-flex items-center gap-2 rounded-md border px-3 py-1 text-xs font-medium" style={{ borderColor: 'var(--site-border)', color: 'var(--site-accent)' }}>
               <ReceiptText className="h-3.5 w-3.5" />
               Client records
             </div>
@@ -152,41 +152,41 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
           </div>
           <div className="flex gap-2">
             <SiteClientNav subdomain={params.subdomain} currentPath={makeClientSiteHref(params.subdomain, '/history')} />
-            <Button variant="outline" className="rounded-full" onClick={() => router.push(makeClientSiteHref(params.subdomain, '/client'))}>
+            <Button variant="outline" className="rounded-md" onClick={() => router.push(makeClientSiteHref(params.subdomain, '/client'))}>
               Back to client
             </Button>
           </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <SitePanel className="rounded-[1.3rem] p-4">
-            <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Total orders</p>
+          <SitePanel className="rounded-md p-4">
+            <p className="text-xs" style={{ color: 'var(--site-muted)' }}>Total orders</p>
             <p className="mt-2 text-2xl font-semibold">{orders.length}</p>
           </SitePanel>
-          <SitePanel className="rounded-[1.3rem] p-4">
+          <SitePanel className="rounded-md p-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Delivered</p>
+              <p className="text-xs" style={{ color: 'var(--site-muted)' }}>Delivered</p>
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
             </div>
             <p className="mt-2 text-2xl font-semibold">{deliveredCount}</p>
           </SitePanel>
-          <SitePanel className="rounded-[1.3rem] p-4">
+          <SitePanel className="rounded-md p-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Active</p>
+              <p className="text-xs" style={{ color: 'var(--site-muted)' }}>Active</p>
               <Truck className="h-4 w-4 text-blue-600" />
             </div>
             <p className="mt-2 text-2xl font-semibold">{activeCount}</p>
           </SitePanel>
-          <SitePanel className="rounded-[1.3rem] p-4">
+          <SitePanel className="rounded-md p-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Paid</p>
+              <p className="text-xs" style={{ color: 'var(--site-muted)' }}>Paid</p>
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
             </div>
             <p className="mt-2 text-2xl font-semibold">{paidCount}</p>
           </SitePanel>
-          <SitePanel className="rounded-[1.3rem] p-4">
+          <SitePanel className="rounded-md p-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Failed</p>
+              <p className="text-xs" style={{ color: 'var(--site-muted)' }}>Failed</p>
               <AlertCircle className="h-4 w-4 text-rose-600" />
             </div>
             <p className="mt-2 text-2xl font-semibold">{failedCount}</p>
@@ -216,7 +216,7 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
                   size="sm"
                   type="button"
                   variant={statusFilter === option.id ? 'default' : 'outline'}
-                  className="rounded-full"
+                  className="rounded-md"
                   onClick={() => setStatusFilter(option.id)}
                 >
                   {option.label}
@@ -226,7 +226,7 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
                 size="sm"
                 type="button"
                 variant={sortDirection === 'LATEST' ? 'default' : 'outline'}
-                className="rounded-full"
+                className="rounded-md"
                 onClick={() => setSortDirection('LATEST')}
               >
                 Newest
@@ -235,7 +235,7 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
                 size="sm"
                 type="button"
                 variant={sortDirection === 'OLDEST' ? 'default' : 'outline'}
-                className="rounded-full"
+                className="rounded-md"
                 onClick={() => setSortDirection('OLDEST')}
               >
                 Oldest
@@ -245,7 +245,7 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
                   size="sm"
                   type="button"
                   variant="outline"
-                  className="rounded-full"
+                  className="rounded-md"
                   onClick={() => {
                     setStatusFilter('ALL')
                     setSearchTerm('')
@@ -264,7 +264,7 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
 
         <SitePanel>
           {filteredOrders.length === 0 ? (
-            <div className="rounded-[1.2rem] border border-dashed p-8 text-center" style={{ borderColor: 'var(--site-border)' }}>
+            <div className="rounded-md border border-dashed p-8 text-center" style={{ borderColor: 'var(--site-border)' }}>
               <AlertCircle className="mx-auto h-5 w-5" style={{ color: 'var(--site-muted)' }} />
               <p className="mt-3 text-sm" style={{ color: 'var(--site-muted)' }}>
                 {searchTerm || statusFilter !== 'ALL' ? 'No orders match the current filters.' : 'No order history yet.'}
@@ -275,12 +275,12 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
               {filteredOrders.map((order, index) => (
                 <div
                   key={order.id}
-                  className="rounded-[1.2rem] border p-4"
-                  style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-panel) 90%, white)' }}
+                  className="rounded-md border p-4"
+                  style={{ borderColor: 'var(--site-border)', backgroundColor: 'var(--site-panel)' }}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>
+                      <p className="text-xs" style={{ color: 'var(--site-muted)' }}>
                         Order #{order.orderNumber || index + 1}
                       </p>
                       <p className="mt-2 text-sm">
@@ -290,7 +290,7 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
                         Payment: <strong>{order.paymentStatus}</strong>
                       </p>
                     </div>
-                    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${statusTone(order.orderStatus)}`}>
+                    <span className={`inline-flex rounded-md px-2.5 py-1 text-xs font-medium ${statusTone(order.orderStatus)}`}>
                       {getStatusLabel(order.orderStatus)}
                     </span>
                   </div>
@@ -307,3 +307,6 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
     </SitePageSurface>
   )
 }
+
+
+

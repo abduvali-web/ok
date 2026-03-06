@@ -1,311 +1,322 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import {
-    Send,
-    X,
-    Loader2,
-    CheckCircle2,
-    AlertCircle,
-    Sparkles,
-    Bot,
-    User
-} from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { AlertCircle, Bot, CheckCircle2, Loader2, Send, Sparkles, User, X } from 'lucide-react'
 
-interface Message {
-    id: string
-    role: 'user' | 'assistant' | 'system'
-    content: string
-    timestamp: Date
-    tasks?: SubTask[]
-}
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+
+type TaskStatus = 'pending' | 'running' | 'completed' | 'failed'
 
 interface SubTask {
+  id: number
+  description: string
+  status: TaskStatus
+  parameters?: Record<string, unknown>
+}
+
+interface Message {
+  id: string
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  timestamp: Date
+  tasks?: SubTask[]
+}
+
+interface ChatResponse {
+  response?: string
+  tasks?: Array<{
     id: number
     description: string
-    status: 'pending' | 'running' | 'completed' | 'failed'
+    parameters?: Record<string, unknown>
+  }>
 }
 
 interface AIChatInterfaceProps {
-    adminId: string
-    websiteId?: string
-    onTaskExecute?: (task: string, context: any) => Promise<any>
+  adminId: string
+  websiteId?: string
+  onTaskExecute?: (task: string, context: unknown) => Promise<unknown>
+}
+
+const START_MESSAGE: Message = {
+  id: 'start-message',
+  role: 'assistant',
+  content:
+    'Hi, I can help with operations across your portal: clients, orders, website edits, and daily admin workflows. Describe what you want to update.',
+  timestamp: new Date(),
 }
 
 export function AIChatInterface({ adminId, websiteId, onTaskExecute }: AIChatInterfaceProps) {
-    const [isOpen, setIsOpen] = useState(false)
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: '1',
-            role: 'assistant',
-            content: 'Привет! Я AI ассистент. Могу помочь вам с:\n• Созданием и редактированием вкладок\n• Работой с данными клиентов и заказов\n• Модификацией вашего сайта\n\nЧто бы вы хотели сделать?',
-            timestamp: new Date()
-        }
-    ])
-    const [input, setInput] = useState('')
-    const [isLoading, setIsLoading] = useState(false)
-    const scrollRef = useRef<HTMLDivElement>(null)
+  const [isOpen, setIsOpen] = useState(false)
+  const [messages, setMessages] = useState<Message[]>([START_MESSAGE])
+  const [input, setInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const messagesRef = useRef<HTMLDivElement | null>(null)
 
-    useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-        }
-    }, [messages])
+  useEffect(() => {
+    const node = messagesRef.current
+    if (!node) return
+    node.scrollTop = node.scrollHeight
+  }, [messages, isLoading])
 
-    const handleSend = async () => {
-        if (!input.trim() || isLoading) return
+  const canSend = useMemo(() => input.trim().length > 0 && !isLoading, [input, isLoading])
 
-        const userMessage: Message = {
-            id: Date.now().toString(),
-            role: 'user',
-            content: input,
-            timestamp: new Date()
-        }
+  const handleSend = async () => {
+    const trimmed = input.trim()
+    if (!trimmed || isLoading) return
 
-        setMessages(prev => [...prev, userMessage])
-        setInput('')
-        setIsLoading(true)
-
-        try {
-            // Send to AI API
-            const response = await fetch('/api/ai/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: input,
-                    adminId,
-                    websiteId,
-                    history: messages.slice(-10) // Last 10 messages for context
-                })
-            })
-
-            const data = await response.json()
-
-            const assistantMessage: Message = {
-                id: (Date.now() + 1).toString(),
-                role: 'assistant',
-                content: data.response || 'Обработка запроса...',
-                timestamp: new Date(),
-                tasks: data.tasks
-            }
-
-            setMessages(prev => [...prev, assistantMessage])
-
-            // If there are tasks to execute
-            if (data.tasks && data.tasks.length > 0 && onTaskExecute) {
-                // Execute all tasks in parallel
-                const taskPromises = data.tasks.map(async (task) => {
-                    // Update status to running
-                    setMessages(prev => prev.map(msg => {
-                        if (msg.id === assistantMessage.id && msg.tasks) {
-                            return {
-                                ...msg,
-                                tasks: msg.tasks.map(t =>
-                                    t.id === task.id ? { ...t, status: 'running' as const } : t
-                                )
-                            }
-                        }
-                        return msg
-                    }))
-
-                    try {
-                        await onTaskExecute(task.description, task.parameters)
-                        // Update status to completed
-                        setMessages(prev => prev.map(msg => {
-                            if (msg.id === assistantMessage.id && msg.tasks) {
-                                return {
-                                    ...msg,
-                                    tasks: msg.tasks.map(t =>
-                                        t.id === task.id ? { ...t, status: 'completed' as const } : t
-                                    )
-                                }
-                            }
-                            return msg
-                        }))
-                    } catch {
-                        // Update status to failed
-                        setMessages(prev => prev.map(msg => {
-                            if (msg.id === assistantMessage.id && msg.tasks) {
-                                return {
-                                    ...msg,
-                                    tasks: msg.tasks.map(t =>
-                                        t.id === task.id ? { ...t, status: 'failed' as const } : t
-                                    )
-                                }
-                            }
-                            return msg
-                        }))
-                    }
-                })
-
-                await Promise.all(taskPromises)
-            }
-        } catch {
-            setMessages(prev => [...prev, {
-                id: (Date.now() + 1).toString(),
-                role: 'assistant',
-                content: 'Произошла ошибка. Пожалуйста, попробуйте еще раз.',
-                timestamp: new Date()
-            }])
-        } finally {
-            setIsLoading(false)
-        }
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: trimmed,
+      timestamp: new Date(),
     }
 
-    return (
-        <>
-            {/* Floating Button */}
-            <AnimatePresence>
-                {!isOpen && (
-                    <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        exit={{ scale: 0 }}
-                        className="fixed bottom-6 right-6 z-50"
-                    >
-                        <Button
-                            onClick={() => setIsOpen(true)}
-                            className="rounded-full w-14 h-14 shadow-lg bg-purple-600 hover:bg-purple-700"
-                        >
-                            <Sparkles className="w-6 h-6" />
-                        </Button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+    setMessages((prev) => [...prev, userMessage])
+    setInput('')
+    setIsLoading(true)
 
-            {/* Chat Window */}
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 20 }}
-                        className="fixed bottom-6 right-6 z-50 w-[400px]"
-                    >
-                        <Card className="shadow-2xl border-purple-200">
-                            <CardHeader className="pb-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-t-lg">
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="flex items-center gap-2 text-lg">
-                                        <Bot className="w-5 h-5" />
-                                        AI Ассистент
-                                    </CardTitle>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 text-white hover:bg-white/20"
-                                        onClick={() => setIsOpen(false)}
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </Button>
+    try {
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: trimmed,
+          adminId,
+          websiteId,
+          history: messages.slice(-10),
+        }),
+      })
+
+      const data = (await response.json().catch(() => ({}))) as ChatResponse
+      const normalizedTasks: SubTask[] = Array.isArray(data.tasks)
+        ? data.tasks.map((task, index) => ({
+            id: Number.isFinite(task?.id) ? Number(task.id) : index + 1,
+            description: task?.description || `Task ${index + 1}`,
+            status: 'pending',
+            parameters: task?.parameters,
+          }))
+        : []
+
+      const assistantMessage: Message = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: data.response || 'Request processed. I am ready for the next step.',
+        timestamp: new Date(),
+        tasks: normalizedTasks,
+      }
+
+      setMessages((prev) => [...prev, assistantMessage])
+
+      if (normalizedTasks.length > 0 && onTaskExecute) {
+        await Promise.all(
+          normalizedTasks.map(async (task) => {
+            setMessages((prev) =>
+              prev.map((message) => {
+                if (message.id !== assistantMessage.id || !message.tasks) return message
+                return {
+                  ...message,
+                  tasks: message.tasks.map((row) =>
+                    row.id === task.id ? { ...row, status: 'running' as const } : row
+                  ),
+                }
+              })
+            )
+
+            try {
+              await onTaskExecute(task.description, task.parameters || {})
+              setMessages((prev) =>
+                prev.map((message) => {
+                  if (message.id !== assistantMessage.id || !message.tasks) return message
+                  return {
+                    ...message,
+                    tasks: message.tasks.map((row) =>
+                      row.id === task.id ? { ...row, status: 'completed' as const } : row
+                    ),
+                  }
+                })
+              )
+            } catch {
+              setMessages((prev) =>
+                prev.map((message) => {
+                  if (message.id !== assistantMessage.id || !message.tasks) return message
+                  return {
+                    ...message,
+                    tasks: message.tasks.map((row) =>
+                      row.id === task.id ? { ...row, status: 'failed' as const } : row
+                    ),
+                  }
+                })
+              )
+            }
+          })
+        )
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `assistant-error-${Date.now()}`,
+          role: 'assistant',
+          content: 'I could not process this request. Please try again.',
+          timestamp: new Date(),
+        },
+      ])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const renderTaskStatus = (status: TaskStatus) => {
+    if (status === 'running') return <Loader2 className="h-3.5 w-3.5 animate-spin text-sky-600" />
+    if (status === 'completed') return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+    if (status === 'failed') return <AlertCircle className="h-3.5 w-3.5 text-rose-600" />
+    return <div className="h-3.5 w-3.5 rounded-full border border-muted-foreground/40" />
+  }
+
+  return (
+    <>
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-5 right-5 z-50"
+          >
+            <Button
+              onClick={() => setIsOpen(true)}
+              size="icon"
+              className="h-14 w-14 rounded-full shadow-[0_20px_45px_-24px_rgba(0,0,0,0.65)]"
+            >
+              <Sparkles className="h-6 w-6" />
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 18 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-5 right-3 z-50 w-[calc(100vw-1.5rem)] max-w-[430px]"
+          >
+            <Card className="overflow-hidden border-border/70 shadow-[0_28px_70px_-48px_rgba(15,23,42,0.85)]">
+              <CardHeader className="border-b border-border/60 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 pb-3 text-slate-50">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                      <Bot className="h-4.5 w-4.5" />
+                      AI Assistant
+                    </CardTitle>
+                    <p className="mt-1 text-xs text-slate-300">Clients, orders, and website actions from one chat window.</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsOpen(false)}
+                    className="h-8 w-8 rounded-full text-slate-200 hover:bg-white/10 hover:text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+
+              <CardContent className="p-0">
+                <div ref={messagesRef} className="h-[420px] space-y-4 overflow-y-auto p-4">
+                  {messages.map((message) => {
+                    const assistantMessage = message.role === 'assistant'
+                    const userMessage = message.role === 'user'
+
+                    return (
+                      <div key={message.id} className={`flex gap-2 ${userMessage ? 'justify-end' : 'justify-start'}`}>
+                        {assistantMessage && (
+                          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-slate-700">
+                            <Bot className="h-4 w-4" />
+                          </div>
+                        )}
+
+                        <div className={`max-w-[82%] ${userMessage ? 'order-first' : ''}`}>
+                          <div
+                            className={`rounded-2xl px-3 py-2.5 text-sm leading-6 ${
+                              userMessage
+                                ? 'bg-slate-900 text-slate-50 shadow-[0_12px_24px_-16px_rgba(15,23,42,0.8)]'
+                                : 'border border-border/65 bg-muted/65 text-foreground'
+                            }`}
+                          >
+                            <p className="whitespace-pre-wrap">{message.content}</p>
+                          </div>
+
+                          {message.tasks && message.tasks.length > 0 && (
+                            <div className="mt-2 space-y-1.5 rounded-xl border border-border/60 bg-card/70 px-2.5 py-2 text-xs">
+                              {message.tasks.map((task) => (
+                                <div key={task.id} className="flex items-center gap-2 text-muted-foreground">
+                                  {renderTaskStatus(task.status)}
+                                  <span>{task.description}</span>
                                 </div>
-                            </CardHeader>
-                            <CardContent className="p-0">
-                                {/* Messages */}
-                                <ScrollArea className="h-[400px] p-4" ref={scrollRef}>
-                                    <div className="space-y-4">
-                                        {messages.map((message) => (
-                                            <div
-                                                key={message.id}
-                                                className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                                            >
-                                                {message.role === 'assistant' && (
-                                                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                                                        <Bot className="w-4 h-4 text-purple-600" />
-                                                    </div>
-                                                )}
-                                                <div className={`max-w-[80%] ${message.role === 'user' ? 'order-first' : ''}`}>
-                                                    <div
-                                                        className={`rounded-lg px-3 py-2 text-sm ${message.role === 'user'
-                                                            ? 'bg-purple-600 text-white'
-                                                            : 'bg-muted'
-                                                            }`}
-                                                    >
-                                                        <p className="whitespace-pre-wrap">{message.content}</p>
-                                                    </div>
+                              ))}
+                            </div>
+                          )}
 
-                                                    {/* Task List */}
-                                                    {message.tasks && message.tasks.length > 0 && (
-                                                        <div className="mt-2 space-y-1">
-                                                            {message.tasks.map((task) => (
-                                                                <div
-                                                                    key={task.id}
-                                                                    className="flex items-center gap-2 text-xs text-muted-foreground"
-                                                                >
-                                                                    {task.status === 'pending' && (
-                                                                        <div className="w-4 h-4 border-2 rounded-full" />
-                                                                    )}
-                                                                    {task.status === 'running' && (
-                                                                        <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-                                                                    )}
-                                                                    {task.status === 'completed' && (
-                                                                        <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                                                    )}
-                                                                    {task.status === 'failed' && (
-                                                                        <AlertCircle className="w-4 h-4 text-red-500" />
-                                                                    )}
-                                                                    <span>{task.description}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
+                          <p className="mt-1 px-1 text-[11px] text-muted-foreground">
+                            {message.timestamp.toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </p>
+                        </div>
 
-                                                    <p className="text-xs text-muted-foreground mt-1">
-                                                        {message.timestamp.toLocaleTimeString('ru-RU', {
-                                                            hour: '2-digit',
-                                                            minute: '2-digit'
-                                                        })}
-                                                    </p>
-                                                </div>
-                                                {message.role === 'user' && (
-                                                    <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0">
-                                                        <User className="w-4 h-4 text-white" />
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
+                        {userMessage && (
+                          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-white">
+                            <User className="h-4 w-4" />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
 
-                                        {isLoading && (
-                                            <div className="flex gap-2">
-                                                <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-                                                    <Bot className="w-4 h-4 text-purple-600" />
-                                                </div>
-                                                <div className="bg-muted rounded-lg px-3 py-2">
-                                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </ScrollArea>
+                  {isLoading && (
+                    <div className="flex items-start gap-2">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-slate-700">
+                        <Bot className="h-4 w-4" />
+                      </div>
+                      <div className="inline-flex rounded-2xl border border-border/65 bg-muted/65 px-3 py-2.5">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-                                {/* Input */}
-                                <div className="p-4 border-t">
-                                    <div className="flex gap-2">
-                                        <Input
-                                            value={input}
-                                            onChange={(e) => setInput(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                                            placeholder="Напишите сообщение..."
-                                            disabled={isLoading}
-                                        />
-                                        <Button
-                                            onClick={handleSend}
-                                            disabled={isLoading || !input.trim()}
-                                            className="bg-purple-600 hover:bg-purple-700"
-                                        >
-                                            <Send className="w-4 h-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </>
-    )
+                <div className="border-t border-border/65 p-3">
+                  <div className="flex gap-2">
+                    <Input
+                      value={input}
+                      onChange={(event) => setInput(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault()
+                          void handleSend()
+                        }
+                      }}
+                      placeholder="Describe what to change..."
+                      disabled={isLoading}
+                    />
+                    <Button onClick={() => void handleSend()} disabled={!canSend} className="px-3" aria-label="Send message">
+                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  )
 }

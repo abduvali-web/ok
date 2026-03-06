@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { signOut } from 'next-auth/react'
@@ -528,10 +528,10 @@ export default function CourierPage() {
       <header className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50 safe-top">
         <div className="max-w-3xl mx-auto px-4 h-16 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+            <div className="w-8 h-8 bg-primary/10 rounded-md flex items-center justify-center text-primary">
               <Package className="w-5 h-5" />
             </div>
-            <h1 className="font-bold text-lg text-gradient">{t.courier.title}</h1>
+            <h1 className="font-bold text-lg ">{t.courier.title}</h1>
           </div>
           <div className="flex items-center space-x-2">
             <LanguageSwitcher />
@@ -568,19 +568,19 @@ export default function CourierPage() {
             <Card className="border-border/70 bg-card/90 shadow-sm">
               <CardContent className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Active</p>
+                  <p className="text-xs text-muted-foreground">Active</p>
                   <p className="mt-1 text-2xl font-semibold">{activeOrdersCount}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Paused</p>
+                  <p className="text-xs text-muted-foreground">Paused</p>
                   <p className="mt-1 text-2xl font-semibold">{pausedOrdersCount}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Last Sync</p>
+                  <p className="text-xs text-muted-foreground">Last Sync</p>
                   <p className="mt-1 text-sm font-medium">{lastSyncLabel}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Delivery Momentum</p>
+                  <p className="text-xs text-muted-foreground">Delivery Momentum</p>
                   <p className="mt-1 text-2xl font-semibold">{deliveryMomentum}%</p>
                 </div>
               </CardContent>
@@ -596,7 +596,7 @@ export default function CourierPage() {
               <CardContent className="p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Next stop</p>
+                    <p className="text-xs text-muted-foreground">Next stop</p>
                     {nextStopOrder ? (
                       <>
                         <p className="mt-1 text-base font-semibold">
@@ -628,10 +628,10 @@ export default function CourierPage() {
                   </div>
                   {nextStopOrder && (
                     <div className="flex flex-wrap items-center gap-2">
-                      <Button variant="outline" size="sm" className="rounded-full" onClick={() => openRouteForOrder(nextStopOrder)}>
+                      <Button variant="outline" size="sm" className="rounded-md" onClick={() => openRouteForOrder(nextStopOrder)}>
                         Navigate
                       </Button>
-                      <Button variant="outline" size="sm" className="rounded-full" onClick={() => handleOpenOrder(nextStopOrder)}>
+                      <Button variant="outline" size="sm" className="rounded-md" onClick={() => handleOpenOrder(nextStopOrder)}>
                         Review
                       </Button>
                     </div>
@@ -647,7 +647,7 @@ export default function CourierPage() {
                   {t.courier.todayOrders} ({orderedVisibleOrders.length}
                   {orderStatusFilter !== 'ALL' ? `/${orders.length}` : ''})
                 </h2>
-                <Button variant="outline" size="sm" className="rounded-full" onClick={() => fetchOrders(true)} disabled={isRefreshing}>
+                <Button variant="outline" size="sm" className="rounded-md" onClick={() => fetchOrders(true)} disabled={isRefreshing}>
                   <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
@@ -665,7 +665,7 @@ export default function CourierPage() {
                     type="button"
                     size="sm"
                     variant={orderStatusFilter === option.id ? 'default' : 'outline'}
-                    className="rounded-full"
+                    className="rounded-md"
                     onClick={() => setOrderStatusFilter(option.id)}
                   >
                     {option.label}
@@ -696,7 +696,7 @@ export default function CourierPage() {
               <AnimatePresence mode="popLayout">
                 {orderedVisibleOrders.length === 0 ? (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 bg-card rounded-2xl shadow-sm">
-                    <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="bg-muted w-16 h-16 rounded-md flex items-center justify-center mx-auto mb-4">
                       <Package className="w-8 h-8 text-slate-400" />
                     </div>
                     <h3 className="text-lg font-medium text-slate-900">
@@ -942,3 +942,6 @@ export default function CourierPage() {
     </div>
   )
 }
+
+
+

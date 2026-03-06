@@ -1,18 +1,10 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { getSession, signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import {
-  ArrowRight,
-  ChartColumnIncreasing,
-  Eye,
-  EyeOff,
-  Loader2,
-  Route,
-  Zap,
-} from 'lucide-react'
+import { ArrowRight, ChartColumnIncreasing, Eye, EyeOff, Loader2, Route, Zap } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { AuthShell } from '@/components/auth/AuthShell'
@@ -39,9 +31,9 @@ export default function LoginPage() {
 
   const highlights = useMemo(
     () => [
-      { icon: Zap, label: 'Auto Orders', detail: 'Structured recurring order scheduling.' },
-      { icon: Route, label: 'Dispatch', detail: 'Live routing, courier status, and delivery control.' },
-      { icon: ChartColumnIncreasing, label: 'Finance', detail: 'Debt, salary, and company visibility.' },
+      { icon: Zap, label: 'Auto orders', detail: 'Recurring order scheduling.' },
+      { icon: Route, label: 'Dispatch', detail: 'Courier and route control.' },
+      { icon: ChartColumnIncreasing, label: 'Finance', detail: 'Debt and salary visibility.' },
     ],
     []
   )
@@ -85,50 +77,39 @@ export default function LoginPage() {
 
   return (
     <AuthShell
-      badge="Professional delivery operations"
-      headline="Sign in to the command layer behind orders, warehouse, and dispatch."
-      description="This portal is built for operating teams who need the next decision to be obvious: what is delayed, what is failing, and what needs intervention now."
+      badge="Operations access"
+      headline="Sign in to manage delivery operations"
+      description="Use your admin account to access orders, clients, couriers, and finance tools."
       highlights={highlights}
       cardTitle={t.auth.loginTitle}
-      cardSubtitle="Enter the platform"
+      cardSubtitle="Enter platform"
       footer={
-        <div className="space-y-2 text-center text-xs text-slate-400">
+        <div className="space-y-2 text-center text-xs text-muted-foreground">
           <p>
             No account?{' '}
-            <Link href="/signup" className="font-medium text-white hover:underline">
+            <Link href="/signup" className="font-medium text-foreground hover:underline">
               Start free trial
             </Link>
           </p>
           <p>
-            <button
-              type="button"
-              className="hover:text-white hover:underline"
-              onClick={() => toast.info('Policy pages coming soon.')}
-            >
+            <button type="button" className="hover:underline" onClick={() => toast.info('Policy pages coming soon.')}>
               {t.auth.privacyPolicy}
             </button>
             {' · '}
-            <button
-              type="button"
-              className="hover:text-white hover:underline"
-              onClick={() => toast.info('Policy pages coming soon.')}
-            >
+            <button type="button" className="hover:underline" onClick={() => toast.info('Policy pages coming soon.')}>
               {t.auth.termsOfUse}
             </button>
           </p>
         </div>
       }
     >
-      <form onSubmit={handleLogin} className="space-y-5">
+      <form onSubmit={handleLogin} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-slate-200">
-            {t.auth.email}
-          </Label>
+          <Label htmlFor="email">{t.auth.email}</Label>
           <Input
             id="email"
             type="email"
             placeholder="admin@autofood.uz"
-            className="h-11 rounded-xl border-white/10 bg-white/6 text-white placeholder:text-slate-400"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
@@ -138,14 +119,8 @@ export default function LoginPage() {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-slate-200">
-              {t.auth.password}
-            </Label>
-            <button
-              type="button"
-              className="text-xs text-slate-400 transition-colors hover:text-white"
-              onClick={() => toast.info('Password recovery coming soon.')}
-            >
+            <Label htmlFor="password">{t.auth.password}</Label>
+            <button type="button" className="text-xs text-muted-foreground hover:underline" onClick={() => toast.info('Password recovery coming soon.')}>
               {t.auth.forgotPassword}
             </button>
           </div>
@@ -153,7 +128,7 @@ export default function LoginPage() {
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
-              className="h-11 rounded-xl border-white/10 bg-white/6 pr-10 text-white"
+              className="pr-10"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
@@ -161,7 +136,7 @@ export default function LoginPage() {
             />
             <button
               type="button"
-              className="absolute right-2 top-1.5 inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:text-white"
+              className="absolute right-2 top-1 inline-flex h-7 w-7 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground"
               onClick={() => setShowPassword((prev) => !prev)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
@@ -170,11 +145,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <Button
-          type="submit"
-          className="h-11 w-full rounded-full bg-[#f3efe6] text-[#08111d] hover:bg-white"
-          disabled={isLoading}
-        >
+        <Button type="submit" className="h-10 w-full" disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -189,21 +160,16 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <div className="relative my-7">
+      <div className="relative my-5">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-white/10" />
+          <span className="w-full border-t" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-[#0d1726] px-3 text-[11px] uppercase tracking-widest text-slate-400">or</span>
+          <span className="bg-card px-2 text-xs text-muted-foreground">or</span>
         </div>
       </div>
 
-      <Button
-        type="button"
-        variant="outline"
-        className="h-11 w-full rounded-full border-white/12 bg-white/4 text-white hover:bg-white/8 hover:text-white"
-        onClick={() => signIn('google', { callbackUrl: '/auth/redirect' })}
-      >
+      <Button type="button" variant="outline" className="h-10 w-full" onClick={() => signIn('google', { callbackUrl: '/auth/redirect' })}>
         <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
           <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
           <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />

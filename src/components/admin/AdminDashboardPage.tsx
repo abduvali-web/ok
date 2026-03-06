@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { signOut } from 'next-auth/react'
@@ -46,6 +47,8 @@ import {
   Pause,
   Play,
   Save,
+  RefreshCw,
+  Database,
   Filter,
   Route,
   CalendarDays,
@@ -455,6 +458,31 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       },
     ]
   }, [filteredClients, selectedClients.size])
+
+  const commandSnapshot = useMemo(() => {
+    const successful = stats?.successfulOrders ?? 0
+    const failed = stats?.failedOrders ?? 0
+    const pending = stats?.pendingOrders ?? 0
+    const inDelivery = stats?.inDeliveryOrders ?? 0
+    const paused = stats?.pausedOrders ?? 0
+    const totalOrders = successful + failed + pending + inDelivery + paused
+    const activePipeline = pending + inDelivery + paused
+    const activeClientsCount = clients.filter((client) => client.isActive).length
+    const availableCouriersCount = couriers.filter((courier) => courier.isActive).length
+    const completionRate = totalOrders > 0 ? Math.round((successful / totalOrders) * 100) : 0
+    const locale = language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'
+    const dispatchDateLabel = selectedDate ? selectedDate.toLocaleDateString(locale) : 'No date selected'
+
+    return {
+      totalOrders,
+      activePipeline,
+      activeClientsCount,
+      availableCouriersCount,
+      completionRate,
+      dispatchDateLabel,
+      selectedWorkload: selectedOrders.size + selectedClients.size,
+    }
+  }, [clients, couriers, language, selectedClients.size, selectedDate, selectedOrders.size, stats])
 
   const selectedClientsSnapshot = useMemo(
     () => clients.filter((client) => selectedClients.has(client.id)),
@@ -1738,9 +1766,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center animate-fade-in">
           <div className="flex items-center justify-center gap-1.5 mb-3">
-            <span className="h-2 w-2 rounded-full bg-foreground/60 animate-pulse" style={{ animationDelay: '0ms' }} />
-            <span className="h-2 w-2 rounded-full bg-foreground/40 animate-pulse" style={{ animationDelay: '150ms' }} />
-            <span className="h-2 w-2 rounded-full bg-foreground/20 animate-pulse" style={{ animationDelay: '300ms' }} />
+            <span className="h-2 w-2 rounded-md bg-foreground/60 animate-pulse" style={{ animationDelay: '0ms' }} />
+            <span className="h-2 w-2 rounded-md bg-foreground/40 animate-pulse" style={{ animationDelay: '150ms' }} />
+            <span className="h-2 w-2 rounded-md bg-foreground/20 animate-pulse" style={{ animationDelay: '300ms' }} />
           </div>
           <p className="text-xs text-muted-foreground tracking-wide">Загрузка...</p>
         </div>
@@ -1823,6 +1851,72 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       <MobileTabIndicator activeTab={activeTab} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6 mobile-bottom-space">
+        <section className="mb-4 rounded-xl border border-border bg-card p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium">Operations Summary</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Date: {commandSnapshot.dispatchDateLabel} · Selected entities: {commandSnapshot.selectedWorkload}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {mode === 'middle' && (
+                <Button asChild size="sm">
+                  <Link href="/middle-admin/database">
+                    <Database className="mr-2 h-4 w-4" />
+                    Database
+                  </Link>
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={fetchData}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Sync
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            {[
+              {
+                id: 'pipeline',
+                label: 'Pipeline orders',
+                value: commandSnapshot.activePipeline,
+                detail: `Total tracked ${commandSnapshot.totalOrders}`,
+              },
+              {
+                id: 'clients',
+                label: 'Active clients',
+                value: commandSnapshot.activeClientsCount,
+                detail: `${clients.length} total records`,
+              },
+              {
+                id: 'couriers',
+                label: 'Available couriers',
+                value: commandSnapshot.availableCouriersCount,
+                detail: `${couriers.length} registered`,
+              },
+              {
+                id: 'completion',
+                label: 'Completion rate',
+                value: `${commandSnapshot.completionRate}%`,
+                detail: 'Successful deliveries',
+              },
+              {
+                id: 'selected',
+                label: 'Selected entities',
+                value: commandSnapshot.selectedWorkload,
+                detail: 'Orders + clients in focus',
+              },
+            ].map((item) => (
+              <div key={item.id} className="rounded-md border border-border bg-background p-3">
+                <p className="text-xs text-muted-foreground">{item.label}</p>
+                <p className="mt-2 text-2xl font-semibold">{item.value}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{item.detail}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <DesktopTabsNav
             visibleTabs={visibleTabs}
@@ -1841,9 +1935,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   { label: t.admin.stats.inDelivery, value: stats?.inDeliveryOrders || 0, sub: 'В процессе', color: 'text-blue-600', dot: 'bg-blue-500' },
                   { label: t.admin.stats.pending, value: stats?.pendingOrders || 0, sub: 'В очереди', color: 'text-amber-600', dot: 'bg-amber-500' },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
+                  <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={`inline-block h-2 w-2 rounded-full ${s.dot}`} />
+                      <span className={`inline-block h-2 w-2 rounded-md ${s.dot}`} />
                       <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
                     </div>
                     <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
@@ -1863,9 +1957,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   { label: t.admin.stats.card, value: stats?.cardOrders || 0, sub: 'Онлайн', color: 'text-blue-600', dot: 'bg-blue-500' },
                   { label: t.admin.stats.cash, value: stats?.cashOrders || 0, sub: 'Наличные', color: 'text-teal-600', dot: 'bg-teal-500' },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
+                  <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={`inline-block h-2 w-2 rounded-full ${s.dot}`} />
+                      <span className={`inline-block h-2 w-2 rounded-md ${s.dot}`} />
                       <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
                     </div>
                     <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
@@ -1885,9 +1979,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   { label: t.admin.stats.oddDay, value: stats?.oddDayCustomers || 0, sub: 'Нечётные дни', color: 'text-pink-600', dot: 'bg-pink-500' },
                   { label: t.admin.stats.special, value: stats?.specialPreferenceCustomers || 0, sub: 'С особенностями', color: 'text-orange-600', dot: 'bg-orange-500' },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
+                  <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={`inline-block h-2 w-2 rounded-full ${s.dot}`} />
+                      <span className={`inline-block h-2 w-2 rounded-md ${s.dot}`} />
                       <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
                     </div>
                     <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
@@ -1908,9 +2002,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   { label: t.admin.stats.high, value: stats?.orders2500 || 0, sub: '2500 ккал', color: 'text-emerald-600', dot: 'bg-emerald-500' },
                   { label: t.admin.stats.max, value: stats?.orders3000 || 0, sub: '3000 ккал', color: 'text-blue-600', dot: 'bg-blue-500' },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
+                  <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={`inline-block h-2 w-2 rounded-full ${s.dot}`} />
+                      <span className={`inline-block h-2 w-2 rounded-md ${s.dot}`} />
                       <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
                     </div>
                     <div className={`text-xl md:text-2xl font-bold ${s.color}`}>{s.value}</div>
@@ -1926,9 +2020,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 { label: t.admin.stats.single, value: stats?.singleItemOrders || 0, sub: '1 порция', color: 'text-indigo-600', dot: 'bg-indigo-500' },
                 { label: t.admin.stats.multi, value: stats?.multiItemOrders || 0, sub: 'Два и более рационов', color: 'text-violet-600', dot: 'bg-violet-500' },
               ].map((s) => (
-                <div key={s.label} className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
+                <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`inline-block h-2 w-2 rounded-full ${s.dot}`} />
+                    <span className={`inline-block h-2 w-2 rounded-md ${s.dot}`} />
                     <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
                   </div>
                   <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
@@ -2213,11 +2307,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     searchPlaceholder="Поиск по имени, адресу или номеру заказа..."
                     searchAriaLabel="Поиск заказов"
                   >
-                    <Badge variant="secondary" className="h-9 rounded-full px-3">
+                    <Badge variant="secondary" className="h-9 rounded-md px-3">
                       {filteredOrders.length} rows
                     </Badge>
                     {activeFiltersCount > 0 && (
-                      <Badge variant="outline" className="h-9 rounded-full px-3">
+                      <Badge variant="outline" className="h-9 rounded-md px-3">
                         <Filter className="mr-1 h-3.5 w-3.5" />
                         {activeFiltersCount} filters
                       </Badge>
@@ -2604,7 +2698,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         Clear
                       </Button>
                     )}
-                    <Badge variant="secondary" className="h-9 rounded-full px-3">
+                    <Badge variant="secondary" className="h-9 rounded-md px-3">
                       {filteredClients.length} clients
                     </Badge>
                   </FilterToolbar>
@@ -3296,7 +3390,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 <div className="border-t pt-4 space-y-3">
                   <h4 className="font-semibold text-sm">Клиент</h4>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-md bg-slate-100 flex items-center justify-center">
                       <User className="w-5 h-5 text-slate-500" />
                     </div>
                     <div>
@@ -3366,7 +3460,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   <div className="border-t pt-4 space-y-2">
                     <h4 className="font-semibold text-sm">Курьер</h4>
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-md bg-blue-50 flex items-center justify-center">
                         <Truck className="w-4 h-4 text-blue-500" />
                       </div>
                       <p className="text-sm">{selectedOrder.courierName}</p>
@@ -3482,5 +3576,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 }
 
 export default AdminDashboardPage
+
+
 
 

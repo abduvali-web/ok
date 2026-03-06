@@ -268,7 +268,7 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
       <main className="mx-auto max-w-6xl space-y-5 px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ borderColor: 'var(--site-border)', color: 'var(--site-accent)' }}>
+            <div className="inline-flex items-center gap-2 rounded-md border px-3 py-1 text-xs font-medium" style={{ borderColor: 'var(--site-border)', color: 'var(--site-accent)' }}>
               <ShieldCheck className="h-3.5 w-3.5" />
               Client dashboard
             </div>
@@ -289,41 +289,41 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
             <Button
               variant="outline"
               onClick={() => void loadDashboardData(true)}
-              className="gap-2 rounded-full"
+              className="gap-2 rounded-md"
               disabled={isRefreshing}
             >
               {isRefreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
               Refresh
             </Button>
-            <Button variant="outline" onClick={handleLogout} className="gap-2 rounded-full">
+            <Button variant="outline" onClick={handleLogout} className="gap-2 rounded-md">
               <LogOut className="h-4 w-4" /> Logout
             </Button>
           </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <SitePanel className="rounded-[1.3rem] p-4">
-            <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Balance</p>
+          <SitePanel className="rounded-md p-4">
+            <p className="text-xs" style={{ color: 'var(--site-muted)' }}>Balance</p>
             <p className="mt-2 text-2xl font-semibold">{(profile.balance || 0).toLocaleString()} UZS</p>
           </SitePanel>
-          <SitePanel className="rounded-[1.3rem] p-4">
+          <SitePanel className="rounded-md p-4">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Active orders</p>
+              <p className="text-xs" style={{ color: 'var(--site-muted)' }}>Active orders</p>
               <Package className="h-4 w-4" style={{ color: 'var(--site-accent)' }} />
             </div>
             <p className="mt-2 text-2xl font-semibold">{pendingOrders}</p>
           </SitePanel>
-          <SitePanel className="rounded-[1.3rem] p-4">
+          <SitePanel className="rounded-md p-4">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Delivered</p>
+              <p className="text-xs" style={{ color: 'var(--site-muted)' }}>Delivered</p>
               <ReceiptText className="h-4 w-4" style={{ color: 'var(--site-accent)' }} />
             </div>
             <p className="mt-2 text-2xl font-semibold">{deliveredOrders}</p>
             <p className="mt-1 text-xs" style={{ color: 'var(--site-muted)' }}>Completion rate: {completionRate}%</p>
           </SitePanel>
-          <SitePanel className="rounded-[1.3rem] p-4">
+          <SitePanel className="rounded-md p-4">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>Plan mode</p>
+              <p className="text-xs" style={{ color: 'var(--site-muted)' }}>Plan mode</p>
               <Clock3 className="h-4 w-4" style={{ color: 'var(--site-accent)' }} />
             </div>
             <p className="mt-2 text-2xl font-semibold">{profile.autoOrdersEnabled ? 'Active' : 'Paused'}</p>
@@ -334,10 +334,10 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-xs" style={{ color: 'var(--site-muted)' }}>
-          <span className="rounded-full border px-3 py-1" style={{ borderColor: 'var(--site-border)' }}>
+          <span className="rounded-md border px-3 py-1" style={{ borderColor: 'var(--site-border)' }}>
             Last sync: {lastRefreshLabel}
           </span>
-          <span className="rounded-full border px-3 py-1" style={{ borderColor: 'var(--site-border)' }}>
+          <span className="rounded-md border px-3 py-1" style={{ borderColor: 'var(--site-border)' }}>
             Total orders tracked: {orders.length}
           </span>
         </div>
@@ -351,20 +351,20 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
                   Balance, plan status, and current delivery information in one place.
                 </p>
               </div>
-              <div className="rounded-[1.25rem] border px-4 py-3 text-right" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 52%, white)' }}>
-                <p className="text-xs uppercase tracking-[0.22em]" style={{ color: 'var(--site-muted)' }}>Calories target</p>
+              <div className="rounded-md border px-4 py-3 text-right" style={{ borderColor: 'var(--site-border)', backgroundColor: 'var(--site-panel)' }}>
+                <p className="text-xs" style={{ color: 'var(--site-muted)' }}>Calories target</p>
                 <p className="mt-2 text-2xl font-semibold">{profile.calories || 0}</p>
               </div>
             </div>
 
-            <div className="rounded-[1.2rem] border px-4 py-3" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 36%, white)' }}>
-              <div className="flex items-center justify-between gap-2 text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>
+            <div className="rounded-md border px-4 py-3" style={{ borderColor: 'var(--site-border)', backgroundColor: 'var(--site-panel)' }}>
+              <div className="flex items-center justify-between gap-2 text-xs" style={{ color: 'var(--site-muted)' }}>
                 <span>Delivery consistency</span>
                 <span>{completionRate}%</span>
               </div>
-              <div className="mt-3 h-2 rounded-full bg-white/70">
+              <div className="mt-3 h-2 rounded-md bg-white/70">
                 <div
-                  className="h-2 rounded-full"
+                  className="h-2 rounded-md"
                   style={{
                     width: `${completionRate}%`,
                     backgroundColor: 'var(--site-accent)',
@@ -379,7 +379,7 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-[1.4rem] border p-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 45%, white)' }}>
+              <div className="rounded-md border p-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'var(--site-panel)' }}>
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="text-sm font-medium" style={{ color: 'var(--site-muted)' }}>Client Balance</h3>
@@ -389,13 +389,13 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
                 </div>
               </div>
 
-              <div className="rounded-[1.4rem] border p-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 45%, white)' }}>
+              <div className="rounded-md border p-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'var(--site-panel)' }}>
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-sm font-medium" style={{ color: 'var(--site-muted)' }}>Current Order</h3>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 rounded-full px-3 text-xs"
+                    className="h-7 rounded-md px-3 text-xs"
                     onClick={() => router.push(makeClientSiteHref(params.subdomain, '/history'))}
                   >
                     History
@@ -405,7 +405,7 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
                   <div className="mt-2 space-y-1 text-sm">
                     <p>
                       Status:{' '}
-                      <strong className={`inline-flex rounded-full px-2 py-0.5 text-xs ${currentOrderTone}`}>
+                      <strong className={`inline-flex rounded-md px-2 py-0.5 text-xs ${currentOrderTone}`}>
                         {normalizeOrderStatus(activeOrder.orderStatus)}
                       </strong>
                     </p>
@@ -436,8 +436,8 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
                     deliveryDayLabels.map((day) => (
                       <span
                         key={day}
-                        className="inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium"
-                        style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 56%, white)' }}
+                        className="inline-flex rounded-md border px-2.5 py-1 text-[11px] font-medium"
+                        style={{ borderColor: 'var(--site-border)', backgroundColor: 'var(--site-panel)' }}
                       >
                         {day}
                       </span>
@@ -483,12 +483,12 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
               {todayMenu.dishes.map((dish) => (
                 <div
                   key={`${dish.id}-${dish.mealType}`}
-                  className="rounded-[1.25rem] border p-3"
+                  className="rounded-md border p-3"
                   style={{ borderColor: 'var(--site-border)', backgroundColor: 'var(--site-bg)' }}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs uppercase tracking-wide" style={{ color: 'var(--site-muted)' }}>{dish.mealType}</p>
+                      <p className="text-xs" style={{ color: 'var(--site-muted)' }}>{dish.mealType}</p>
                       <p className="mt-1 font-medium">{dish.name}</p>
                     </div>
                     <Salad className="mt-0.5 h-4 w-4 shrink-0" style={{ color: 'var(--site-accent)' }} />
@@ -524,19 +524,19 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
             </div>
 
             {googleMapsLink.trim() ? (
-              <Button variant="outline" className="self-end rounded-full" asChild>
+              <Button variant="outline" className="self-end rounded-md" asChild>
                 <a href={googleMapsLink.trim()} target="_blank" rel="noreferrer">
                   <ArrowUpRight className="mr-2 h-4 w-4" />
                   Open map
                 </a>
               </Button>
             ) : (
-              <Button variant="outline" className="self-end rounded-full" disabled>
+              <Button variant="outline" className="self-end rounded-md" disabled>
                 <ArrowUpRight className="mr-2 h-4 w-4" />
                 Open map
               </Button>
             )}
-            <Button onClick={handleSaveLocation} disabled={isSavingLocation} className="self-end rounded-full">
+            <Button onClick={handleSaveLocation} disabled={isSavingLocation} className="self-end rounded-md">
               {isSavingLocation ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save location'}
             </Button>
           </div>
