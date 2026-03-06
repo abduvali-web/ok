@@ -58,10 +58,14 @@ const fileExportOutputSchema = z.object({
 
 const websiteEditInputSchema = z
   .object({
-    prompt: z.string().min(10).max(4000),
+    prompt: z.string().min(10).max(4000).optional(),
     apply: z.boolean().optional(),
+    // Some agent backends append execution metadata to tool args.
+    // Accept and ignore these keys so website edits still run.
+    status: z.string().optional(),
+    completion: z.union([z.string(), z.number(), z.boolean()]).optional(),
   })
-  .strict();
+  .passthrough();
 
 const websiteEditOutputSchema = z.object({
   ok: z.boolean(),
@@ -617,6 +621,32 @@ export const editSubdomainWebsiteTool = registerTamboTool({
   defaultMessage: "Failed to update subdomain website.",
   tool: async (input) => {
     const payload = websiteEditInputSchema.parse(input);
+    const rawInput =
+      input && typeof input === "object"
+        ? (input as Record<string, unknown>)
+        : ({} as Record<string, unknown>);
+
+    const promptCandidates = [
+      payload.prompt,
+      typeof rawInput.prompt === "string" ? rawInput.prompt : undefined,
+      typeof rawInput.request === "string" ? rawInput.request : undefined,
+      typeof rawInput.instruction === "string" ? rawInput.instruction : undefined,
+      typeof rawInput.task === "string" ? rawInput.task : undefined,
+      typeof rawInput.message === "string" ? rawInput.message : undefined,
+    ];
+
+    const prompt =
+      promptCandidates.find((candidate) => typeof candidate === "string" && candidate.trim().length >= 10)?.trim() || "";
+
+    if (!prompt) {
+      return {
+        ok: false,
+        applied: false,
+        message: "Website update failed.",
+        error: "Prompt is required (min 10 characters).",
+      };
+    }
+
     const token = getOptionalBearerToken();
 
     const response = await fetch("/api/admin/website/ai-edit", {
@@ -627,7 +657,7 @@ export const editSubdomainWebsiteTool = registerTamboTool({
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({
-        prompt: payload.prompt,
+        prompt,
         apply: payload.apply ?? true,
       }),
     });

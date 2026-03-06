@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { signOut } from 'next-auth/react'
@@ -31,6 +30,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
@@ -85,6 +86,7 @@ import {
   parseGoogleMapsUrl,
   type LatLng,
 } from '@/lib/geo'
+import { extractSubdomainFromHost } from '@/lib/subdomain-host'
 
 import { MobileSidebar } from '@/components/MobileSidebar'
 import { MobileTabIndicator } from '@/components/MobileTabIndicator'
@@ -218,6 +220,29 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     finance: t.finance.title,
     interface: t.admin.interface,
   }
+  const databaseWorkspaceHref = useMemo(() => {
+    const fallbackPath = '/middle-admin/database'
+    const configuredRoot = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || '')
+      .trim()
+      .replace(/^https?:\/\//i, '')
+      .replace(/\/.*$/, '')
+      .toLowerCase()
+
+    if (typeof window === 'undefined') return fallbackPath
+
+    const currentHost = window.location.host.toLowerCase()
+    const subdomain = extractSubdomainFromHost(currentHost, configuredRoot || undefined)
+
+    if (subdomain && configuredRoot) {
+      return `https://${configuredRoot}${fallbackPath}`
+    }
+
+    return fallbackPath
+  }, [])
+  const openDatabaseWorkspace = useCallback(() => {
+    if (typeof window === 'undefined') return
+    window.location.assign(databaseWorkspaceHref)
+  }, [databaseWorkspaceHref])
   const [courierFormData, setCourierFormData] = useState({
     name: '',
     email: '',
@@ -376,15 +401,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       setDateCursor(normalizedDate)
     }
   }, [])
-
-  const handleDateInputChange = useCallback((value: string) => {
-    if (!value) {
-      applySelectedDate(null)
-      return
-    }
-
-    applySelectedDate(new Date(`${value}T00:00:00`))
-  }, [applySelectedDate])
 
   const shiftSelectedDate = useCallback((days: number) => {
     const baseDate = selectedDate ? new Date(selectedDate) : new Date()
@@ -1906,11 +1922,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {mode === 'middle' && (
-                <Button asChild size="sm">
-                  <Link href="/middle-admin/database">
-                    <Database className="mr-2 h-4 w-4" />
-                    Database
-                  </Link>
+                <Button size="sm" onClick={openDatabaseWorkspace}>
+                  <Database className="mr-2 h-4 w-4" />
+                  Database
                 </Button>
               )}
               <Button variant="outline" size="sm" onClick={fetchData}>
@@ -2125,31 +2139,67 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     </div>
                   </div>
 
-                  <div className="mt-3 grid gap-2 rounded-md border border-border/60 bg-background p-2 md:grid-cols-[auto_auto_auto_minmax(0,220px)_1fr]">
-                    <Button variant="outline" className="h-9 gap-1.5" onClick={() => shiftSelectedDate(-1)}>
-                      <ChevronLeft className="h-4 w-4" />
-                      Prev day
-                    </Button>
-                    <Button variant="outline" className="h-9" onClick={() => applySelectedDate(new Date())}>
-                      Today
-                    </Button>
-                    <Button variant="outline" className="h-9 gap-1.5" onClick={() => shiftSelectedDate(1)}>
-                      Next day
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                    <Input
-                      type="date"
-                      className="h-9"
-                      value={selectedDateISO}
-                      onChange={(event) => handleDateInputChange(event.target.value)}
-                    />
-                    <div className="flex items-center justify-between gap-2 rounded-md border border-dashed border-border/60 px-3 text-xs text-muted-foreground">
-                      <span className="truncate">{selectedDateLabel}</span>
-                      {selectedDate && (
-                        <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => applySelectedDate(null)}>
-                          Clear
+                  <div className="mt-3 rounded-xl border border-border/60 bg-gradient-to-r from-background to-muted/20 p-3">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button variant="outline" className="h-9 gap-1.5" onClick={() => shiftSelectedDate(-1)}>
+                          <ChevronLeft className="h-4 w-4" />
+                          Prev
                         </Button>
-                      )}
+
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="secondary" className="h-9 min-w-[240px] justify-between gap-2 px-3 text-left">
+                              <span className="flex min-w-0 items-center gap-2">
+                                <CalendarDays className="h-4 w-4 shrink-0 text-primary" />
+                                <span className="truncate text-sm font-medium">{selectedDateLabel}</span>
+                              </span>
+                              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                                calendar
+                              </span>
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={selectedDate ?? undefined}
+                              onSelect={(nextDate) => applySelectedDate(nextDate ?? null)}
+                              initialFocus
+                            />
+                            <div className="flex items-center justify-between border-t px-3 py-2">
+                              <Button type="button" size="sm" variant="outline" className="h-8" onClick={() => applySelectedDate(new Date())}>
+                                Today
+                              </Button>
+                              {selectedDate ? (
+                                <Button type="button" size="sm" variant="ghost" className="h-8" onClick={() => applySelectedDate(null)}>
+                                  Clear date
+                                </Button>
+                              ) : null}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+
+                        <Button variant="outline" className="h-9 gap-1.5" onClick={() => shiftSelectedDate(1)}>
+                          Next
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => shiftSelectedDate(-1)}>
+                          Yesterday
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => applySelectedDate(new Date())}>
+                          Today
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => shiftSelectedDate(1)}>
+                          Tomorrow
+                        </Button>
+                        <div className="flex items-center gap-2 rounded-md border border-dashed border-border/60 px-2.5 py-1.5 text-xs text-muted-foreground">
+                          <Clock className="h-3.5 w-3.5" />
+                          <span className="max-w-[210px] truncate">{selectedDateLabel}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

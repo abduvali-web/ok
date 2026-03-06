@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import Link from 'next/link'
-import { type CSSProperties, type ReactNode } from 'react'
+import { type CSSProperties, type ReactNode, useEffect, useState } from 'react'
 import { LogIn, UserRound, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { SiteConfig } from '@/hooks/useSiteConfig'
@@ -31,7 +31,44 @@ export function SitePageSurface({ site, children }: { site: SiteConfig; children
   )
 }
 
+function useCustomerAuthenticated() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('customerToken')
+        const response = await fetch('/api/customers/profile', {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          cache: 'no-store',
+        })
+
+        if (isMounted) {
+          setIsAuthenticated(response.ok)
+        }
+      } catch {
+        if (isMounted) {
+          setIsAuthenticated(false)
+        }
+      }
+    }
+
+    void checkAuth()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  return isAuthenticated
+}
+
 export function SitePublicHeader({ site, rightSlot }: { site: SiteConfig; rightSlot?: ReactNode }) {
+  const isAuthenticated = useCustomerAuthenticated()
+  const showAuthButtons = isAuthenticated !== true
+
   return (
     <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur" style={{ borderColor: 'var(--site-border)' }}>
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
@@ -44,21 +81,25 @@ export function SitePublicHeader({ site, rightSlot }: { site: SiteConfig; rightS
 
         <div className="flex flex-wrap items-center justify-end gap-2">
           {rightSlot}
-          <Link href={makeClientSiteHref(site.subdomain, '/login')}>
-            <Button variant="outline" size="sm" className="gap-1">
-              <LogIn className="h-4 w-4" /> Login
-            </Button>
-          </Link>
-          <Link href={makeClientSiteHref(site.subdomain, '/register')}>
-            <Button variant="outline" size="sm" className="gap-1">
-              <UserPlus className="h-4 w-4" /> Register
-            </Button>
-          </Link>
-          <Link href={makeClientSiteHref(site.subdomain, '/client')}>
-            <Button size="sm" className="gap-1">
-              <UserRound className="h-4 w-4" /> Client
-            </Button>
-          </Link>
+          {showAuthButtons ? (
+            <>
+              <Link href={makeClientSiteHref(site.subdomain, '/login')}>
+                <Button variant="outline" size="sm" className="gap-1">
+                  <LogIn className="h-4 w-4" /> Login
+                </Button>
+              </Link>
+              <Link href={makeClientSiteHref(site.subdomain, '/register')}>
+                <Button variant="outline" size="sm" className="gap-1">
+                  <UserPlus className="h-4 w-4" /> Register
+                </Button>
+              </Link>
+              <Link href={makeClientSiteHref(site.subdomain, '/client')}>
+                <Button size="sm" className="gap-1">
+                  <UserRound className="h-4 w-4" /> Client
+                </Button>
+              </Link>
+            </>
+          ) : null}
         </div>
       </div>
     </header>

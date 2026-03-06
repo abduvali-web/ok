@@ -65,24 +65,8 @@ type FileArtifact = {
 
 type TamboArtifact = WebsiteArtifact | FileArtifact;
 
-function getToolResultText(content: unknown): string {
-  if (!content || typeof content !== "object") return "";
-  const blocks = (content as { content?: unknown }).content;
-  if (!Array.isArray(blocks)) return "";
-
-  const text = blocks
-    .map((block) => {
-      if (!block || typeof block !== "object") return "";
-      const type = (block as { type?: unknown }).type;
-      if (type !== "text") return "";
-      const value = (block as { text?: unknown }).text;
-      return typeof value === "string" ? value : "";
-    })
-    .filter((value) => value.length > 0)
-    .join("\n")
-    .trim();
-
-  return text;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function parseToolResultObject(raw: string): Record<string, unknown> | null {
@@ -108,6 +92,110 @@ function parseToolResultObject(raw: string): Record<string, unknown> | null {
       }
     } catch {
       // ignore parsing attempts until a valid JSON object is found.
+    }
+  }
+
+  return null;
+}
+
+function inferFileFormat(input?: string, mimeType?: string): string {
+  if (typeof input === "string" && input.length > 0) {
+    const match = input.toLowerCase().match(/\.([a-z0-9]{2,8})(?:$|\?|#)/);
+    if (match?.[1]) return match[1];
+  }
+
+  if (typeof mimeType === "string" && mimeType.includes("/")) {
+    const subtype = mimeType.split("/")[1]?.toLowerCase();
+    if (subtype) return subtype.replace(/^x-/, "");
+  }
+
+  return "file";
+}
+
+function looksLikeArtifactPayload(value: Record<string, unknown>): boolean {
+  return (
+    typeof value.downloadUrl === "string" ||
+    typeof value.fileName === "string" ||
+    typeof value.pathUrl === "string" ||
+    typeof value.hostUrl === "string" ||
+    typeof value.subdomain === "string" ||
+    typeof value.applied === "boolean"
+  );
+}
+
+function findArtifactPayload(value: unknown, depth = 0): Record<string, unknown> | null {
+  if (depth > 5 || value == null) return null;
+
+  if (typeof value === "string") {
+    const parsed = parseToolResultObject(value);
+    return parsed ? findArtifactPayload(parsed, depth + 1) : null;
+  }
+
+  if (!isRecord(value)) return null;
+  if (looksLikeArtifactPayload(value)) return value;
+
+  const objectContainerKeys = [
+    "result",
+    "output",
+    "data",
+    "payload",
+    "value",
+    "resource",
+    "response",
+  ] as const;
+
+  for (const key of objectContainerKeys) {
+    const nested = value[key];
+    const resolved = findArtifactPayload(nested, depth + 1);
+    if (resolved) return resolved;
+  }
+
+  if (Array.isArray(value.content)) {
+    for (const item of value.content) {
+      const resolved = findArtifactPayload(item, depth + 1);
+      if (resolved) return resolved;
+    }
+  }
+
+  return null;
+}
+
+function extractToolResultPayload(content: unknown): Record<string, unknown> | null {
+  if (!isRecord(content) || !Array.isArray(content.content)) return null;
+
+  for (const block of content.content) {
+    if (!isRecord(block)) continue;
+
+    if (block.type === "text" && typeof block.text === "string") {
+      const resolved = findArtifactPayload(block.text);
+      if (resolved) return resolved;
+      continue;
+    }
+
+    if (block.type !== "resource" || !isRecord(block.resource)) continue;
+    const resource = block.resource;
+
+    const resourcePayload = findArtifactPayload(resource);
+    if (resourcePayload) return resourcePayload;
+
+    if (typeof resource.text === "string") {
+      const textPayload = findArtifactPayload(resource.text);
+      if (textPayload) return textPayload;
+    }
+
+    if (typeof resource.uri === "string") {
+      return {
+        ok: true,
+        fileName:
+          typeof resource.name === "string" && resource.name.length > 0
+            ? resource.name
+            : "artifact",
+        format: inferFileFormat(
+          resource.uri,
+          typeof resource.mimeType === "string" ? resource.mimeType : undefined
+        ),
+        downloadUrl: resource.uri,
+      };
     }
   }
 
@@ -393,7 +481,7 @@ export function TamboAgentWidget() {
         const toolName = toolNamesById.get(content.toolUseId);
         if (!toolName) return;
 
-        const parsed = parseToolResultObject(getToolResultText(content));
+        const parsed = extractToolResultPayload(content);
         if (!parsed) return;
 
         if (toolName === "create_database_file" || typeof parsed.downloadUrl === "string" || typeof parsed.fileName === "string") {

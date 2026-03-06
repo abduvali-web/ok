@@ -12,7 +12,12 @@ function shouldSkipPath(pathname: string) {
     pathname === '/favicon.ico' ||
     pathname === '/robots.txt' ||
     pathname === '/sitemap.xml' ||
-    pathname.startsWith('/sites/')
+    pathname.startsWith('/sites/') ||
+    pathname.startsWith('/auth/') ||
+    pathname.startsWith('/middle-admin') ||
+    pathname.startsWith('/low-admin') ||
+    pathname.startsWith('/super-admin') ||
+    pathname.startsWith('/courier')
   )
 }
 
