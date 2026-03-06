@@ -152,6 +152,25 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-geist-sans), sans-serif;
+    position: relative;
+    background-image:
+      radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 55%, transparent) 0, transparent 34%),
+      radial-gradient(circle at top right, color-mix(in srgb, var(--secondary) 70%, transparent) 0, transparent 28%),
+      linear-gradient(180deg, color-mix(in srgb, var(--background) 94%, white) 0%, var(--background) 38%, color-mix(in srgb, var(--muted) 45%, var(--background)) 100%);
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.7;
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--border) 16%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--border) 14%, transparent) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.45), transparent 88%);
   }
 
   ::selection {
@@ -228,17 +247,22 @@
   .surface-panel,
   .surface-panel-strong,
   .surface-polished {
-    background-color: var(--card);
-    border: 1px solid var(--border);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    background: color-mix(in srgb, var(--card) 88%, white);
+    border: 1px solid color-mix(in srgb, var(--border) 92%, white);
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.04),
+      0 18px 48px -28px rgba(15, 23, 42, 0.18);
+    backdrop-filter: blur(14px);
   }
 
   .surface-polished:hover,
   .glass-card:hover,
   .glass-card-light:hover {
-    border-color: var(--border);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-    transform: none;
+    border-color: color-mix(in srgb, var(--ring) 24%, var(--border));
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.05),
+      0 24px 60px -34px rgba(15, 23, 42, 0.24);
+    transform: translateY(-1px);
   }
 
   .section-kicker {
@@ -249,6 +273,7 @@
 
   .app-shell {
     position: relative;
+    isolation: isolate;
   }
 
   .app-shell::before {
@@ -309,27 +334,32 @@
   .shadow-smooth,
   .shadow-elegant,
   .shadow-elevated {
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    box-shadow:
+      0 6px 16px rgba(15, 23, 42, 0.08),
+      0 24px 70px -36px rgba(15, 23, 42, 0.3);
   }
 
   .bg-mesh-gradient {
-    background: var(--background);
+    background:
+      radial-gradient(circle at 20% 10%, color-mix(in srgb, var(--accent) 52%, transparent), transparent 26%),
+      radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--secondary) 68%, transparent), transparent 30%),
+      linear-gradient(135deg, color-mix(in srgb, var(--background) 94%, white), color-mix(in srgb, var(--muted) 44%, var(--background)));
   }
 
   .stat-card {
-    @apply rounded-md border border-border bg-card p-4;
+    @apply rounded-2xl border border-border/80 bg-card/90 p-4 shadow-[0_18px_46px_-34px_rgba(15,23,42,0.32)] backdrop-blur-sm;
   }
 
   .btn-primary-modern {
-    @apply bg-primary text-primary-foreground rounded-md px-4 py-2;
+    @apply rounded-xl bg-primary px-4 py-2 text-primary-foreground shadow-lg shadow-primary/20;
   }
 
   .btn-secondary-modern {
-    @apply border border-border bg-transparent rounded-md px-4 py-2;
+    @apply rounded-xl border border-border bg-background/80 px-4 py-2 shadow-sm backdrop-blur-sm;
   }
 
   .input-modern {
-    @apply border border-input bg-background rounded-md px-3 py-2 text-sm;
+    @apply rounded-xl border border-input bg-background/90 px-3 py-2 text-sm shadow-inner;
   }
 }
 

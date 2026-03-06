@@ -25,7 +25,26 @@ function toCssVars(site: SiteConfig) {
 
 export function SitePageSurface({ site, children }: { site: SiteConfig; children: ReactNode }) {
   return (
-    <div className={cn('min-h-screen', site.bodyClass)} style={{ ...toCssVars(site), backgroundColor: 'var(--site-bg)', color: 'var(--site-text)' }}>
+    <div
+      className={cn('min-h-screen overflow-x-hidden', site.bodyClass)}
+      style={{
+        ...toCssVars(site),
+        backgroundColor: 'var(--site-bg)',
+        backgroundImage:
+          'radial-gradient(circle at top left, color-mix(in srgb, var(--site-accent-soft) 70%, transparent) 0, transparent 30%), radial-gradient(circle at top right, color-mix(in srgb, var(--site-hero-to) 34%, transparent) 0, transparent 24%), linear-gradient(180deg, color-mix(in srgb, var(--site-bg) 94%, white) 0%, var(--site-bg) 54%, color-mix(in srgb, var(--site-panel) 35%, var(--site-bg)) 100%)',
+        color: 'var(--site-text)',
+      }}
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 opacity-60"
+        style={{
+          backgroundImage:
+            'linear-gradient(to right, color-mix(in srgb, var(--site-border) 18%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--site-border) 12%, transparent) 1px, transparent 1px)',
+          backgroundSize: '38px 38px',
+          maskImage: 'linear-gradient(180deg, rgba(0,0,0,0.4), transparent 86%)',
+        }}
+      />
       {children}
     </div>
   )
@@ -70,13 +89,31 @@ export function SitePublicHeader({ site, rightSlot }: { site: SiteConfig; rightS
   const showAuthButtons = isAuthenticated !== true
 
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur" style={{ borderColor: 'var(--site-border)' }}>
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+    <header className="sticky top-0 z-30 px-3 pt-3 sm:px-4" style={{ color: 'var(--site-text)' }}>
+      <div
+        className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 rounded-[1.4rem] border px-4 py-3 shadow-[0_24px_64px_-42px_rgba(15,23,42,0.38)] backdrop-blur-xl"
+        style={{
+          borderColor: 'color-mix(in srgb, var(--site-border) 90%, white)',
+          backgroundColor: 'color-mix(in srgb, var(--site-panel) 82%, white)',
+        }}
+      >
         <Link href={makeClientSiteHref(site.subdomain, '')} className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-md border text-sm font-semibold" style={{ borderColor: 'var(--site-border)' }}>
+          <span
+            className="flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-semibold shadow-sm"
+            style={{
+              borderColor: 'var(--site-border)',
+              background:
+                'linear-gradient(135deg, color-mix(in srgb, var(--site-accent-soft) 86%, white), color-mix(in srgb, var(--site-hero-to) 26%, white))',
+            }}
+          >
             {site.siteName.slice(0, 2)}
           </span>
-          <span className={cn('text-base font-semibold', site.headingClass)}>{site.siteName}</span>
+          <div>
+            <span className={cn('block text-base font-semibold tracking-tight', site.headingClass)}>{site.siteName}</span>
+            <span className="block text-[11px] uppercase tracking-[0.22em]" style={{ color: 'var(--site-muted)' }}>
+              client portal
+            </span>
+          </div>
         </Link>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
@@ -109,7 +146,10 @@ export function SitePublicHeader({ site, rightSlot }: { site: SiteConfig; rightS
 export function SiteHero({
   title,
   subtitle,
+  eyebrow,
   actions,
+  asideTitle,
+  asideDetail,
 }: {
   title: string
   subtitle: string
@@ -119,13 +159,71 @@ export function SiteHero({
   asideDetail?: string
 }) {
   return (
-    <section className="border-b" style={{ borderColor: 'var(--site-border)', backgroundColor: 'var(--site-panel)' }}>
-      <div className="mx-auto max-w-6xl px-4 py-10">
-        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{title}</h1>
-        <p className="mt-3 max-w-2xl text-sm" style={{ color: 'var(--site-muted)' }}>
-          {subtitle}
-        </p>
-        {actions ? <div className="mt-5 flex flex-wrap gap-2">{actions}</div> : null}
+    <section className="px-4 pt-5">
+      <div
+        className="mx-auto grid max-w-6xl gap-6 overflow-hidden rounded-[2rem] border px-5 py-8 shadow-[0_30px_90px_-56px_rgba(15,23,42,0.4)] lg:grid-cols-[minmax(0,1.3fr)_320px] lg:px-8 lg:py-10"
+        style={{
+          borderColor: 'var(--site-border)',
+          background:
+            'linear-gradient(145deg, color-mix(in srgb, var(--site-panel) 92%, white), color-mix(in srgb, var(--site-hero-from) 42%, white) 55%, color-mix(in srgb, var(--site-hero-to) 36%, white))',
+        }}
+      >
+        <div className="relative">
+          {eyebrow ? (
+            <p
+              className="inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em]"
+              style={{
+                borderColor: 'color-mix(in srgb, var(--site-border) 85%, white)',
+                backgroundColor: 'color-mix(in srgb, var(--site-panel) 78%, white)',
+                color: 'var(--site-accent)',
+              }}
+            >
+              {eyebrow}
+            </p>
+          ) : null}
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight md:text-5xl">{title}</h1>
+          <p className="mt-4 max-w-2xl text-sm leading-7 md:text-base" style={{ color: 'var(--site-muted)' }}>
+            {subtitle}
+          </p>
+          {actions ? <div className="mt-6 flex flex-wrap gap-3">{actions}</div> : null}
+        </div>
+
+        <div
+          className="rounded-[1.6rem] border p-5"
+          style={{
+            borderColor: 'color-mix(in srgb, var(--site-border) 92%, white)',
+            backgroundColor: 'color-mix(in srgb, var(--site-panel) 74%, white)',
+          }}
+        >
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: 'var(--site-accent)' }}>
+            Live snapshot
+          </p>
+          <h2 className="mt-3 text-xl font-semibold">{asideTitle ?? 'Fast, direct client flow'}</h2>
+          <p className="mt-3 text-sm leading-6" style={{ color: 'var(--site-muted)' }}>
+            {asideDetail ?? 'Landing, login, balance, daily menu, and order history stay inside one clear journey.'}
+          </p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            {[
+              { label: 'Access', value: '24/7' },
+              { label: 'Menu view', value: 'Daily' },
+              { label: 'Support load', value: 'Lower' },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="rounded-xl border px-4 py-3"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--site-border) 90%, white)',
+                  backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 38%, white)',
+                }}
+              >
+                <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>
+                  {item.label}
+                </p>
+                <p className="mt-2 text-2xl font-semibold">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   )
@@ -134,10 +232,10 @@ export function SiteHero({
 export function SitePanel({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <div
-      className={`rounded-lg border p-4 md:p-5 ${className}`}
+      className={`rounded-[1.6rem] border p-4 shadow-[0_24px_70px_-48px_rgba(15,23,42,0.32)] backdrop-blur-sm md:p-5 ${className}`}
       style={{
         borderColor: 'var(--site-border)',
-        backgroundColor: 'var(--site-panel)',
+        backgroundColor: 'color-mix(in srgb, var(--site-panel) 88%, white)',
       }}
     >
       {children}
@@ -155,7 +253,11 @@ export function SiteClientNav({ subdomain, currentPath }: { subdomain: string; c
     <nav className="flex flex-wrap gap-2">
       {items.map((item) => (
         <Link key={item.href} href={item.href}>
-          <Button variant={currentPath === item.href ? 'default' : 'outline'} size="sm">
+          <Button
+            variant={currentPath === item.href ? 'default' : 'outline'}
+            size="sm"
+            className={currentPath === item.href ? 'shadow-lg shadow-primary/15' : ''}
+          >
             {item.label}
           </Button>
         </Link>
