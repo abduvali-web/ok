@@ -262,10 +262,10 @@ export async function POST(request: NextRequest) {
 
     // Validate enums early to avoid Prisma throwing internal errors
     if (paymentStatus && !['PAID', 'UNPAID', 'PARTIAL'].includes(String(paymentStatus))) {
-      return NextResponse.json({ error: 'ÐÐµÐ²ÐµÑ€Ð½Ñ‹Ð¹ ÑÑ‚Ð°Ñ‚ÑƒÑ Ð¾Ð¿Ð»Ð°Ñ‚Ñ‹' }, { status: 400 })
+      return NextResponse.json({ error: 'Неверный статус оплаты' }, { status: 400 })
     }
     if (paymentMethod && !['CASH', 'CARD', 'TRANSFER'].includes(String(paymentMethod))) {
-      return NextResponse.json({ error: 'ÐÐµÐ²ÐµÑ€Ð½Ñ‹Ð¹ ÑÐ¿Ð¾ÑÐ¾Ð± Ð¾Ð¿Ð»Ð°Ñ‚Ñ‹' }, { status: 400 })
+      return NextResponse.json({ error: 'Неверный способ оплаты' }, { status: 400 })
     }
 
     // Sanitize courierId
@@ -320,7 +320,7 @@ export async function POST(request: NextRequest) {
         }
       })
       if (!customer) {
-        return NextResponse.json({ error: 'ÐšÐ»Ð¸ÐµÐ½Ñ‚ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½' }, { status: 404 })
+        return NextResponse.json({ error: 'Клиент не найден' }, { status: 404 })
       }
     } else {
       customer = await db.customer.findFirst({
@@ -421,7 +421,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!newOrder) {
-      return NextResponse.json({ error: 'ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ ÑÐ³ÐµÐ½ÐµÑ€Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ Ð½Ð¾Ð¼ÐµÑ€ Ð·Ð°ÐºÐ°Ð·Ð°' }, { status: 500 })
+      return NextResponse.json({ error: 'Не удалось сгенерировать номер заказа' }, { status: 500 })
     }
 
     await appendOrderAudit(db, {

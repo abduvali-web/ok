@@ -273,6 +273,13 @@ export const SITE_ENDPOINT_CATALOG = [
     "description": "middle admins endpoint (GET/POST)."
   },
   {
+    "path": "/api/admin/orders/[orderId]/timeline",
+    "methods": [
+      "GET"
+    ],
+    "description": "timeline endpoint (GET)."
+  },
+  {
     "path": "/api/admin/orders/bulk-update",
     "methods": [
       "PATCH"
@@ -426,6 +433,13 @@ export const SITE_ENDPOINT_CATALOG = [
       "PUT"
     ],
     "description": "website endpoint (GET/PUT)."
+  },
+  {
+    "path": "/api/admin/website/ai-edit",
+    "methods": [
+      "POST"
+    ],
+    "description": "ai edit endpoint (POST)."
   },
   {
     "path": "/api/ai/chat",

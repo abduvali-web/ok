@@ -21,11 +21,18 @@ export function getSubdomainUrlStyle(rootHost?: string): SubdomainUrlStyle {
   return parseStyleFromEnv(rootHost)
 }
 
+export function usesPathRoutingForSubdomains(rootHost?: string) {
+  const safeRoot = stripPort(rootHost || process.env.NEXT_PUBLIC_ROOT_DOMAIN || '')
+  if (!safeRoot) return false
+  return safeRoot.endsWith('.vercel.app')
+}
+
 export function buildSubdomainHost(subdomain: string, rootHost: string | undefined) {
   const normalizedSubdomain = subdomain.trim().toLowerCase()
   const safeRoot = stripPort(rootHost || 'localhost:3000')
 
   if (!normalizedSubdomain) return safeRoot
+  if (usesPathRoutingForSubdomains(safeRoot)) return safeRoot
 
   const style = getSubdomainUrlStyle(safeRoot)
 
@@ -43,7 +50,18 @@ export function buildSubdomainHost(subdomain: string, rootHost: string | undefin
 }
 
 export function buildSubdomainUrl(subdomain: string, rootHost: string | undefined) {
-  return `https://${buildSubdomainHost(subdomain, rootHost)}`
+  const normalizedSubdomain = subdomain.trim().toLowerCase()
+  const safeRoot = stripPort(rootHost || 'localhost:3000')
+
+  if (!normalizedSubdomain) {
+    return `https://${safeRoot}`
+  }
+
+  if (usesPathRoutingForSubdomains(safeRoot)) {
+    return `https://${safeRoot}/sites/${normalizedSubdomain}`
+  }
+
+  return `https://${buildSubdomainHost(normalizedSubdomain, safeRoot)}`
 }
 
 export function extractSubdomainFromHost(hostHeader: string | null, rootHost: string | undefined) {
@@ -102,7 +120,7 @@ export function isHostForSubdomain(hostname: string, subdomain: string, rootHost
 
   if (safeRoot) {
     const expected = buildSubdomainHost(normalizedSubdomain, safeRoot)
-    if (hostWithoutPort === expected) return true
+    if (expected !== safeRoot && hostWithoutPort === expected) return true
 
     // Be permissive when style changed but old links are still open.
     if (style !== 'project-first' && safeRoot.endsWith('.vercel.app')) {

@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { buildSubdomainHost, buildSubdomainUrl } from '@/lib/subdomain-host'
+import { buildSubdomainHost, buildSubdomainUrl, usesPathRoutingForSubdomains } from '@/lib/subdomain-host'
 import { DEFAULT_STYLE_VARIANT, normalizeSubdomain, type SiteStyleVariant } from '@/lib/site-builder'
 
 type WebsiteSettingsResponse = {
@@ -43,10 +43,13 @@ export function SiteBuilderCard() {
     return buildSubdomainUrl(normalizedSubdomain, baseHost)
   }, [baseHost, normalizedSubdomain])
 
+  const isPathRouting = useMemo(() => usesPathRoutingForSubdomains(baseHost), [baseHost])
+
   const hostLabel = useMemo(() => {
     if (!normalizedSubdomain) return '-'
+    if (isPathRouting) return `${baseHost}/sites/${normalizedSubdomain}`
     return buildSubdomainHost(normalizedSubdomain, baseHost)
-  }, [baseHost, normalizedSubdomain])
+  }, [baseHost, isPathRouting, normalizedSubdomain])
 
   useEffect(() => {
     const load = async () => {
@@ -145,7 +148,11 @@ export function SiteBuilderCard() {
       <Card className="border-border/70">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Subdomain URL</CardTitle>
-          <CardDescription>Set subdomain and open website directly.</CardDescription>
+          <CardDescription>
+            {isPathRouting
+              ? 'Set subdomain and open website with Vercel path URL mode.'
+              : 'Set subdomain and open website directly.'}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">

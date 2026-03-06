@@ -26,7 +26,7 @@ export async function DELETE(
     // Hard delete orders and client (consider soft delete instead)
     const groupAdminIds = user.role === 'SUPER_ADMIN' ? null : await getGroupAdminIds(user)
     if (groupAdminIds && (!client.createdBy || !groupAdminIds.includes(client.createdBy))) {
-      return NextResponse.json({ error: 'ÐšÐ»Ð¸ÐµÐ½Ñ‚ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½' }, { status: 404 })
+      return NextResponse.json({ error: 'Клиент не найден' }, { status: 404 })
     }
 
     const today = new Date()

@@ -92,7 +92,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
     if (!user || !hasRole(user, ['MIDDLE_ADMIN', 'SUPER_ADMIN', 'LOW_ADMIN'])) {
-      return NextResponse.json({ error: 'ÐÐµÐ´Ð¾ÑÑ‚Ð°Ñ‚Ð¾Ñ‡Ð½Ð¾ Ð¿Ñ€Ð°Ð²' }, { status: 403 })
+      return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
     }
 
     const raw = await request.json().catch(() => null)
@@ -175,7 +175,7 @@ export async function PATCH(request: NextRequest) {
     console.error('Error updating courier:', error)
     return NextResponse.json(
       {
-        error: 'Ð’Ð½ÑƒÑ‚Ñ€ÐµÐ½Ð½ÑÑ Ð¾ÑˆÐ¸Ð±ÐºÐ° ÑÐµÑ€Ð²ÐµÑ€Ð°',
+        error: 'Внутренняя ошибка сервера',
         ...(process.env.NODE_ENV === 'development' && {
           details: error instanceof Error ? error.message : 'Unknown error',
         }),

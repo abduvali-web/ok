@@ -43,6 +43,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "source": "components/ui/aspect-ratio.tsx"
   },
   {
+    "name": "AuthShell",
+    "purpose": "UI component from components auth AuthShell",
+    "source": "components/auth/AuthShell.tsx"
+  },
+  {
     "name": "avatar",
     "purpose": "UI component from components ui avatar",
     "source": "components/ui/avatar.tsx"
@@ -173,6 +178,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "source": "components/ui/dropdown-menu.tsx"
   },
   {
+    "name": "EntityStatusBadge",
+    "purpose": "UI component from components admin dashboard shared EntityStatusBadge",
+    "source": "components/admin/dashboard/shared/EntityStatusBadge.tsx"
+  },
+  {
     "name": "excel",
     "purpose": "UI component from components excel index",
     "source": "components/excel/index.ts"
@@ -188,6 +198,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "source": "components/admin/features/FeaturesTab.tsx"
   },
   {
+    "name": "FilterToolbar",
+    "purpose": "UI component from components admin dashboard shared FilterToolbar",
+    "source": "components/admin/dashboard/shared/FilterToolbar.tsx"
+  },
+  {
     "name": "FinanceTab",
     "purpose": "UI component from components admin FinanceTab",
     "source": "components/admin/FinanceTab.tsx"
@@ -196,6 +211,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "name": "form",
     "purpose": "UI component from components ui form",
     "source": "components/ui/form.tsx"
+  },
+  {
+    "name": "FormField",
+    "purpose": "UI component from components admin dashboard shared FormField",
+    "source": "components/admin/dashboard/shared/FormField.tsx"
   },
   {
     "name": "HistoryTable",
@@ -323,6 +343,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "source": "components/ui/scroll-area.tsx"
   },
   {
+    "name": "SectionMetrics",
+    "purpose": "UI component from components admin dashboard shared SectionMetrics",
+    "source": "components/admin/dashboard/shared/SectionMetrics.tsx"
+  },
+  {
     "name": "select",
     "purpose": "UI component from components ui select",
     "source": "components/ui/select.tsx"
@@ -361,6 +386,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "name": "Sidebar",
     "purpose": "UI component from components layout Sidebar",
     "source": "components/layout/Sidebar.tsx"
+  },
+  {
+    "name": "SiteAuthShell",
+    "purpose": "UI component from components site SiteAuthShell",
+    "source": "components/site/SiteAuthShell.tsx"
   },
   {
     "name": "SiteBuilderCard",
@@ -413,9 +443,19 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "source": "components/excel/TabBar.tsx"
   },
   {
+    "name": "TabEmptyState",
+    "purpose": "UI component from components admin dashboard shared TabEmptyState",
+    "source": "components/admin/dashboard/shared/TabEmptyState.tsx"
+  },
+  {
     "name": "table",
     "purpose": "UI component from components ui table",
     "source": "components/ui/table.tsx"
+  },
+  {
+    "name": "tabMeta",
+    "purpose": "UI component from components admin dashboard tabMeta",
+    "source": "components/admin/dashboard/tabMeta.ts"
   },
   {
     "name": "tabs",
