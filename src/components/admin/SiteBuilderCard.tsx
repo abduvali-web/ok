@@ -1,21 +1,16 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Eye, Globe, Loader2, Palette, Save } from 'lucide-react'
+import { Globe, Loader2, MessageSquare, Save, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { SiteStyleRendersDialog } from '@/components/admin/SiteStyleRendersDialog'
-import {
-  DEFAULT_STYLE_VARIANT,
-  SITE_RENDER_PAGES,
-  SITE_STYLE_PRESETS,
-  normalizeSubdomain,
-  type SiteStyleVariant,
-} from '@/lib/site-builder'
-import { buildSubdomainHost } from '@/lib/subdomain-host'
+import { Textarea } from '@/components/ui/textarea'
+import { buildSubdomainHost, buildSubdomainUrl } from '@/lib/subdomain-host'
+import { DEFAULT_STYLE_VARIANT, normalizeSubdomain, type SiteStyleVariant } from '@/lib/site-builder'
 
 type WebsiteSettingsResponse = {
   website: {
@@ -29,20 +24,29 @@ type WebsiteSettingsResponse = {
 
 export function SiteBuilderCard() {
   const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
+  const [isSavingSubdomain, setIsSavingSubdomain] = useState(false)
   const [baseHost, setBaseHost] = useState('localhost:3000')
-
-  const [siteName, setSiteName] = useState('')
   const [subdomain, setSubdomain] = useState('')
+  const [siteName, setSiteName] = useState('')
   const [styleVariant, setStyleVariant] = useState<SiteStyleVariant>(DEFAULT_STYLE_VARIANT)
-  const [previewPresetId, setPreviewPresetId] = useState<SiteStyleVariant | null>(null)
-  const [previewOpen, setPreviewOpen] = useState(false)
+  const [aiPrompt, setAiPrompt] = useState('')
 
   const normalizedSubdomain = useMemo(() => normalizeSubdomain(subdomain), [subdomain])
-  const previewPreset = useMemo(
-    () => SITE_STYLE_PRESETS.find((preset) => preset.id === previewPresetId) ?? null,
-    [previewPresetId]
-  )
+
+  const pathPreviewUrl = useMemo(() => {
+    if (!normalizedSubdomain) return ''
+    return `/sites/${normalizedSubdomain}`
+  }, [normalizedSubdomain])
+
+  const hostPreviewUrl = useMemo(() => {
+    if (!normalizedSubdomain) return ''
+    return buildSubdomainUrl(normalizedSubdomain, baseHost)
+  }, [baseHost, normalizedSubdomain])
+
+  const hostLabel = useMemo(() => {
+    if (!normalizedSubdomain) return '-'
+    return buildSubdomainHost(normalizedSubdomain, baseHost)
+  }, [baseHost, normalizedSubdomain])
 
   useEffect(() => {
     const load = async () => {
@@ -53,11 +57,12 @@ export function SiteBuilderCard() {
         }
 
         const data = (await response.json()) as WebsiteSettingsResponse
-        setSiteName(data.website.siteName || '')
         setSubdomain(data.website.subdomain || '')
+        setSiteName(data.website.siteName || '')
         setStyleVariant(data.website.styleVariant || DEFAULT_STYLE_VARIANT)
         setBaseHost(data.baseHost || 'localhost:3000')
       } catch (error) {
+        // eslint-disable-next-line no-console -- preserve dashboard diagnostics for failed fetches
         console.error(error)
         toast.error(error instanceof Error ? error.message : 'Failed to load website settings')
       } finally {
@@ -65,194 +70,177 @@ export function SiteBuilderCard() {
       }
     }
 
-    load()
+    void load()
   }, [])
 
-  const handleSave = async () => {
-    if (!siteName.trim()) {
-      toast.error('Site name is required')
-      return
-    }
+  const openTamboChat = (prompt?: string) => {
+    if (typeof window === 'undefined') return
+    window.dispatchEvent(
+      new CustomEvent('tambo:open-chat', {
+        detail: {
+          prompt: prompt?.trim() || undefined,
+        },
+      })
+    )
+  }
 
-    if (!normalizedSubdomain) {
+  const handleSaveSubdomain = async () => {
+    const nextSubdomain = normalizeSubdomain(subdomain)
+
+    if (!nextSubdomain) {
       toast.error('Subdomain is required')
       return
     }
 
-    setIsSaving(true)
+    setIsSavingSubdomain(true)
 
     try {
       const response = await fetch('/api/admin/website', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          siteName: siteName.trim(),
-          subdomain: normalizedSubdomain,
+          siteName: siteName || 'My Site',
+          subdomain: nextSubdomain,
           styleVariant,
         }),
       })
 
       const data = await response.json().catch(() => ({}))
-
       if (!response.ok) {
-        throw new Error(data?.error || 'Failed to save website settings')
+        throw new Error(data?.error || 'Failed to save subdomain URL')
       }
 
-      setSubdomain(normalizedSubdomain)
-      toast.success('Website settings saved')
+      setSubdomain(nextSubdomain)
+      toast.success('Subdomain URL saved')
     } catch (error) {
+      // eslint-disable-next-line no-console -- preserve dashboard diagnostics for failed save attempts
       console.error(error)
-      toast.error(error instanceof Error ? error.message : 'Failed to save website settings')
+      toast.error(error instanceof Error ? error.message : 'Failed to save subdomain URL')
     } finally {
-      setIsSaving(false)
+      setIsSavingSubdomain(false)
     }
   }
 
-  const styleCards = SITE_STYLE_PRESETS.map((preset) => {
-    const selected = preset.id === styleVariant
+  const handleSendPrompt = () => {
+    const trimmed = aiPrompt.trim()
+    if (!trimmed) {
+      toast.error('Write a prompt for Tambo AI first')
+      return
+    }
 
-    return (
-      <div
-        key={preset.id}
-        onClick={() => setStyleVariant(preset.id)}
-        className={`cursor-pointer rounded-xl border p-3 text-left transition-all ${
-          selected ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-primary/40'
-        }`}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') setStyleVariant(preset.id)
-        }}
-      >
-        <div
-          className="rounded-lg border p-2"
-          style={{
-            background: `linear-gradient(140deg, ${preset.palette.heroFrom}, ${preset.palette.heroTo})`,
-            borderColor: preset.palette.border,
-          }}
-        >
-          <div className="mb-2 flex items-center justify-between text-xs" style={{ color: preset.palette.heroText }}>
-            <span className="font-semibold">{preset.title}</span>
-            <span>{selected ? 'Selected' : 'Preview'}</span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-1.5">
-            {SITE_RENDER_PAGES.map((page) => (
-              <div
-                key={page.id}
-                className="rounded border p-1"
-                style={{
-                  backgroundColor: preset.palette.panelBackground,
-                  borderColor: preset.palette.border,
-                  color: preset.palette.textPrimary,
-                }}
-              >
-                <div className="mb-1 h-1.5 rounded" style={{ backgroundColor: preset.palette.accent }} />
-                <div className="truncate text-[9px]">{page.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground">{preset.description}</p>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-8 gap-2"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              setPreviewPresetId(preset.id)
-              setPreviewOpen(true)
-            }}
-          >
-            <Eye className="h-4 w-4" /> Renders
-          </Button>
-        </div>
-      </div>
-    )
-  })
+    openTamboChat(trimmed)
+    toast.success('Prompt sent to Tambo AI chat')
+  }
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Palette className="h-4 w-4" /> Website Builder</CardTitle>
-          <CardDescription>Loading website settings...</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Please wait
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading website preview...
+      </div>
     )
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Palette className="h-4 w-4" /> Website Builder
-        </CardTitle>
-        <CardDescription>
-          Choose subdomain, brand name, and one of 4 style variants. Each style previews 5 pages.
-        </CardDescription>
-      </CardHeader>
+    <div className="space-y-4">
+      <Card className="border-border/70">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Subdomain URL</CardTitle>
+          <CardDescription>Set subdomain and open website directly.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+            <div className="space-y-2">
+              <Label htmlFor="subdomainUrlInput">Subdomain</Label>
+              <Input
+                id="subdomainUrlInput"
+                value={subdomain}
+                onChange={(event) => setSubdomain(event.target.value)}
+                placeholder="healthy-meals"
+              />
+              <div className="text-xs text-muted-foreground">
+                Host: {hostLabel}
+              </div>
+            </div>
+            <Button type="button" className="gap-2" onClick={() => void handleSaveSubdomain()} disabled={isSavingSubdomain}>
+              {isSavingSubdomain ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Set subdomain URL
+            </Button>
+          </div>
 
-      <CardContent className="space-y-5">
-        <SiteStyleRendersDialog
-          open={previewOpen}
-          onOpenChange={setPreviewOpen}
-          preset={previewPreset}
-          siteName={siteName.trim() || 'Company'}
-          subdomain={normalizedSubdomain || 'your-subdomain'}
-        />
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="gap-2"
+              disabled={!pathPreviewUrl}
+              onClick={() => window.open(pathPreviewUrl, '_blank', 'noopener,noreferrer')}
+            >
+              <Globe className="h-4 w-4" /> Open path preview
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              className="gap-2"
+              disabled={!hostPreviewUrl}
+              onClick={() => window.open(hostPreviewUrl, '_blank', 'noopener,noreferrer')}
+            >
+              <Globe className="h-4 w-4" /> Go to subdomain URL
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-        <div className="grid gap-4 md:grid-cols-2">
+      {normalizedSubdomain ? (
+        <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
+          <div className="mb-2">
+            <p className="text-sm font-semibold">{siteName || 'Website preview'}</p>
+            <p className="text-xs text-muted-foreground">{hostLabel}</p>
+          </div>
+          <div className="overflow-hidden rounded-lg border bg-background">
+            <iframe
+              title={`Subdomain preview ${normalizedSubdomain}`}
+              src={pathPreviewUrl}
+              loading="lazy"
+              className="h-[420px] w-full bg-white"
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+          Enter and save a subdomain to render website preview.
+        </div>
+      )}
+
+      <Card className="border-border/70">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Tambo AI website prompt</CardTitle>
+          <CardDescription>
+            Write what to improve on this subdomain website, then open Tambo AI chat with one click.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
           <div className="space-y-2">
-            <Label htmlFor="siteName">Site Name</Label>
-            <Input
-              id="siteName"
-              value={siteName}
-              onChange={(e) => setSiteName(e.target.value)}
-              placeholder="Healthy Meals"
+            <Label htmlFor="websiteAiPrompt">Prompt for Tambo AI</Label>
+            <Textarea
+              id="websiteAiPrompt"
+              value={aiPrompt}
+              onChange={(event) => setAiPrompt(event.target.value)}
+              placeholder="Example: Improve hero section, add trust blocks, better CTA flow, and premium color system for conversion."
+              className="min-h-24"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="subdomain">Subdomain</Label>
-            <Input
-              id="subdomain"
-              value={subdomain}
-              onChange={(e) => setSubdomain(e.target.value)}
-              placeholder="healthy-meals"
-            />
-            <p className="text-xs text-muted-foreground">Path URL: `/sites/{normalizedSubdomain || 'your-subdomain'}`</p>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" className="gap-2" onClick={handleSendPrompt}>
+              <Sparkles className="h-4 w-4" /> Send to Tambo AI chat
+            </Button>
+            <Button type="button" variant="outline" className="gap-2" onClick={() => openTamboChat()}>
+              <MessageSquare className="h-4 w-4" /> Open Tambo AI chat tab
+            </Button>
           </div>
-        </div>
-
-        <div>
-          <p className="mb-2 text-sm font-medium">Style Variant</p>
-          <div className="grid gap-3 md:grid-cols-2">{styleCards}</div>
-        </div>
-
-        <div className="rounded-lg border border-dashed border-border p-3 text-sm">
-          <div className="mb-1 flex items-center gap-2 font-medium">
-            <Globe className="h-4 w-4" /> URLs
-          </div>
-          <div className="space-y-1 text-muted-foreground">
-            <div>Path: `/sites/{normalizedSubdomain || 'your-subdomain'}`</div>
-            <div>Host: https://{buildSubdomainHost(normalizedSubdomain || 'your-subdomain', baseHost)}</div>
-          </div>
-        </div>
-
-        <Button onClick={handleSave} disabled={isSaving} className="w-full sm:w-auto">
-          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          Save Site Settings
-        </Button>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

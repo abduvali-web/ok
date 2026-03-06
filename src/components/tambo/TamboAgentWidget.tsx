@@ -240,6 +240,24 @@ export function TamboAgentWidget() {
   }, [isOpen, isFullscreen]);
 
   useEffect(() => {
+    const onOpenChat = (event: Event) => {
+      const custom = event as CustomEvent<{ prompt?: string }>
+      setIsOpen(true)
+      setIsFullscreen(false)
+
+      if (typeof custom.detail?.prompt === "string") {
+        setValue(custom.detail.prompt)
+      }
+
+      requestAnimationFrame(() => textareaRef.current?.focus())
+    }
+
+    window.addEventListener("tambo:open-chat", onOpenChat as EventListener)
+    return () => window.removeEventListener("tambo:open-chat", onOpenChat as EventListener)
+  }, [setValue])
+
+
+  useEffect(() => {
     if (!isOpen) return;
     const timeoutId = window.setTimeout(() => textareaRef.current?.focus(), 40);
     return () => window.clearTimeout(timeoutId);
