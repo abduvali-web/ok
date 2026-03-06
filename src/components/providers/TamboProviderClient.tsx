@@ -10,6 +10,8 @@ import { MessageSquare } from "lucide-react";
 
 import { tamboComponents } from "@/lib/tambo/components";
 import {
+  createDatabaseFileTool,
+  editSubdomainWebsiteTool,
   getAdminStatisticsTool,
   siteApiCatalogTool,
   siteApiRequestTool,
@@ -51,6 +53,8 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
       siteApiCatalogTool,
       siteUiCatalogTool,
       siteApiRequestTool,
+      createDatabaseFileTool,
+      editSubdomainWebsiteTool,
     ],
     []
   );
@@ -90,7 +94,7 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
           content: [
             {
               type: "text",
-              text: "You are AutoFood admin AI in strict generative UI mode. Use site_api_catalog and site_ui_catalog, then call site_api_request for live data (GET/POST/PUT/PATCH/DELETE). Build responses only with AdminStatsGrid, SiteMetricGrid, SiteDataTable, SiteEntityCards, SiteBarChart, QuickLinks, and SiteJsonPanel. Never embed, mirror, or copy full site pages; compose original interactive UI from data and components. Prefer dense table-first layouts, concise summaries, and minimal action controls.",
+              text: "You are AutoFood admin AI in strict generative UI mode. Use site_api_catalog and site_ui_catalog, then call site_api_request for live data (GET/POST/PUT/PATCH/DELETE). When users ask for downloadable outputs, use create_database_file and always return the generated downloadUrl. When users ask to improve a subdomain website, use edit_subdomain_website with an actionable prompt and report resulting pathUrl/hostUrl. Build responses only with AdminStatsGrid, SiteMetricGrid, SiteDataTable, SiteEntityCards, SiteBarChart, QuickLinks, and SiteJsonPanel. Never embed, mirror, or copy full site pages; compose original interactive UI from data and components. Prefer dense table-first layouts, concise summaries, and minimal action controls.",
             },
           ],
         },

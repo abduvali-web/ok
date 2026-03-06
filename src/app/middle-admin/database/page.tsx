@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -58,6 +58,12 @@ type DashboardStats = {
   unpaidOrders?: number
 }
 
+function formatCsvCell(value: unknown): string {
+  const raw = value == null ? '' : String(value)
+  if (!/[",\n]/.test(raw)) return raw
+  return `"${raw.replace(/"/g, '""')}"`
+}
+
 function normalizeClient(record: any): ClientRecord {
   const lat = typeof record?.latitude === 'number' ? record.latitude : null
   const lng = typeof record?.longitude === 'number' ? record.longitude : null
@@ -89,7 +95,7 @@ function normalizeOrder(record: any): OrderRecord {
 export default function DatabasePage() {
   const router = useRouter()
 
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState('unified')
   const [showAIChat, setShowAIChat] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -188,6 +194,152 @@ export default function DatabasePage() {
     [lastSyncedAt]
   )
 
+  const orderStatusBreakdown = useMemo(() => {
+    return orders.reduce<Record<string, number>>((acc, order) => {
+      const key = order.orderStatus || 'UNKNOWN'
+      acc[key] = (acc[key] ?? 0) + 1
+      return acc
+    }, {})
+  }, [orders])
+
+  const paymentStatusBreakdown = useMemo(() => {
+    return orders.reduce<Record<string, number>>((acc, order) => {
+      const key = order.paymentStatus || 'UNKNOWN'
+      acc[key] = (acc[key] ?? 0) + 1
+      return acc
+    }, {})
+  }, [orders])
+
+  const unifiedSheetRows = useMemo(
+    () => [
+      {
+        sheet: 'Clients',
+        metric: 'Records',
+        value: clients.length,
+        detail: `${activeClients} active / ${clients.length - activeClients} paused`,
+      },
+      {
+        sheet: 'Clients',
+        metric: 'Mapped addresses',
+        value: clientsWithLocation,
+        detail: `Coverage ${dataCoverage}%`,
+      },
+      {
+        sheet: 'Orders',
+        metric: 'Records',
+        value: orders.length,
+        detail: `${activeOrders} active pipeline`,
+      },
+      {
+        sheet: 'Orders',
+        metric: 'Status buckets',
+        value: Object.keys(orderStatusBreakdown).length,
+        detail:
+          Object.entries(orderStatusBreakdown)
+            .map(([status, count]) => `${status}:${count}`)
+            .join(' | ') || 'No orders',
+      },
+      {
+        sheet: 'Payments',
+        metric: 'Status buckets',
+        value: Object.keys(paymentStatusBreakdown).length,
+        detail:
+          Object.entries(paymentStatusBreakdown)
+            .map(([status, count]) => `${status}:${count}`)
+            .join(' | ') || 'No payments',
+      },
+      {
+        sheet: 'Statistics',
+        metric: 'Successful / Failed',
+        value: `${stats.successfulOrders ?? 0} / ${stats.failedOrders ?? 0}`,
+        detail: `Pending ${stats.pendingOrders ?? 0} - In delivery ${stats.inDeliveryOrders ?? 0}`,
+      },
+      {
+        sheet: 'Couriers',
+        metric: 'Online now',
+        value: couriersOnline,
+        detail: `Unpaid orders ${stats.unpaidOrders ?? unpaidOrders}`,
+      },
+    ],
+    [
+      activeClients,
+      activeOrders,
+      clients.length,
+      clientsWithLocation,
+      couriersOnline,
+      dataCoverage,
+      orderStatusBreakdown,
+      orders.length,
+      paymentStatusBreakdown,
+      stats.failedOrders,
+      stats.inDeliveryOrders,
+      stats.pendingOrders,
+      stats.successfulOrders,
+      stats.unpaidOrders,
+      unpaidOrders,
+    ]
+  )
+
+  const handleDownloadUnifiedSnapshot = useCallback(() => {
+    const csvRows: Array<Array<string | number>> = []
+    const generatedAt = new Date().toISOString()
+
+    csvRows.push(['meta_key', 'meta_value'])
+    csvRows.push(['generated_at', generatedAt])
+    csvRows.push(['last_synced_at', lastSyncedAt ? lastSyncedAt.toISOString() : ''])
+    csvRows.push([])
+
+    csvRows.push(['sheet', 'metric', 'value', 'detail'])
+    unifiedSheetRows.forEach((row) => {
+      csvRows.push([row.sheet, row.metric, row.value, row.detail])
+    })
+    csvRows.push([])
+
+    csvRows.push(['clients', 'id', 'name', 'phone', 'address', 'status', 'calories', 'has_location'])
+    clients.forEach((client) => {
+      csvRows.push([
+        'client',
+        client.id,
+        client.name,
+        client.phone,
+        client.address,
+        client.isActive ? 'ACTIVE' : 'PAUSED',
+        client.calories ?? '',
+        client.hasLocation ? 'YES' : 'NO',
+      ])
+    })
+    csvRows.push([])
+
+    csvRows.push(['orders', 'id', 'order_number', 'customer_name', 'delivery_address', 'status', 'payment', 'calories', 'created_at'])
+    orders.forEach((order) => {
+      csvRows.push([
+        'order',
+        order.id,
+        order.orderNumber ?? '',
+        order.customerName,
+        order.deliveryAddress,
+        order.orderStatus,
+        order.paymentStatus,
+        order.calories ?? '',
+        order.createdAt,
+      ])
+    })
+
+    const csvContent = csvRows.map((row) => row.map((value) => formatCsvCell(value)).join(',')).join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `unified-database-${generatedAt.slice(0, 10)}.csv`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+
+    toast.success('Unified database CSV downloaded')
+  }, [clients, lastSyncedAt, orders, unifiedSheetRows])
+
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -218,6 +370,10 @@ export default function DatabasePage() {
               <Button variant="outline" onClick={() => void loadSnapshot(true)} disabled={isRefreshing}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 Refresh
+              </Button>
+              <Button variant="outline" onClick={handleDownloadUnifiedSnapshot}>
+                <Download className="mr-2 h-4 w-4" />
+                Download unified CSV
               </Button>
               <Button onClick={() => setShowAIChat((prev) => !prev)}>
                 <Bot className="mr-2 h-4 w-4" />
@@ -257,7 +413,7 @@ export default function DatabasePage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <CardTitle>Data modules</CardTitle>
-              <CardDescription>Overview, editor, clients, orders, and settings</CardDescription>
+              <CardDescription>Unified database, editor, clients, orders, and settings</CardDescription>
             </div>
             <div className="relative w-full max-w-sm">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -268,7 +424,7 @@ export default function DatabasePage() {
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList className="w-full justify-start overflow-x-auto">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="unified">Unified DB</TabsTrigger>
               <TabsTrigger value="editor" className="gap-1.5">
                 <Table2 className="h-4 w-4" />
                 Editor
@@ -287,24 +443,61 @@ export default function DatabasePage() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-3">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <TabsContent value="unified" className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                 <div className="rounded-md border bg-background p-3">
-                  <p className="text-xs text-muted-foreground">Pending</p>
+                  <p className="text-xs text-muted-foreground">Client records</p>
+                  <p className="mt-1 text-xl font-semibold">{clients.length}</p>
+                </div>
+                <div className="rounded-md border bg-background p-3">
+                  <p className="text-xs text-muted-foreground">Order records</p>
+                  <p className="mt-1 text-xl font-semibold">{orders.length}</p>
+                </div>
+                <div className="rounded-md border bg-background p-3">
+                  <p className="text-xs text-muted-foreground">Pending orders</p>
                   <p className="mt-1 text-xl font-semibold">{stats.pendingOrders ?? 0}</p>
                 </div>
                 <div className="rounded-md border bg-background p-3">
-                  <p className="text-xs text-muted-foreground">In delivery</p>
-                  <p className="mt-1 text-xl font-semibold">{stats.inDeliveryOrders ?? 0}</p>
-                </div>
-                <div className="rounded-md border bg-background p-3">
-                  <p className="text-xs text-muted-foreground">Paused</p>
-                  <p className="mt-1 text-xl font-semibold">{stats.pausedOrders ?? 0}</p>
-                </div>
-                <div className="rounded-md border bg-background p-3">
-                  <p className="text-xs text-muted-foreground">Unpaid</p>
+                  <p className="text-xs text-muted-foreground">Unpaid orders</p>
                   <p className="mt-1 text-xl font-semibold">{stats.unpaidOrders ?? unpaidOrders}</p>
                 </div>
+                <div className="rounded-md border bg-background p-3">
+                  <p className="text-xs text-muted-foreground">Couriers online</p>
+                  <p className="mt-1 text-xl font-semibold">{couriersOnline}</p>
+                </div>
+              </div>
+
+              <div className="rounded-md border">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b p-3">
+                  <div>
+                    <p className="text-sm font-semibold">Unified sheets summary</p>
+                    <p className="text-xs text-muted-foreground">Clients, orders, statistics, and courier sheet totals in one table.</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleDownloadUnifiedSnapshot}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download CSV
+                  </Button>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Sheet</TableHead>
+                      <TableHead>Metric</TableHead>
+                      <TableHead>Value</TableHead>
+                      <TableHead>Details</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {unifiedSheetRows.map((row) => (
+                      <TableRow key={`${row.sheet}-${row.metric}`}>
+                        <TableCell className="font-medium">{row.sheet}</TableCell>
+                        <TableCell>{row.metric}</TableCell>
+                        <TableCell>{row.value}</TableCell>
+                        <TableCell className="max-w-[420px] truncate">{row.detail}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             </TabsContent>
 
@@ -374,13 +567,13 @@ export default function DatabasePage() {
 
             <TabsContent value="settings" className="space-y-3">
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={() => toast.success('CSV export queued')}>
+                <Button variant="outline" size="sm" onClick={handleDownloadUnifiedSnapshot}>
                   <Download className="mr-2 h-4 w-4" />
-                  CSV export
+                  Download unified CSV
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => toast.success('JSON export queued')}>
-                  <Download className="mr-2 h-4 w-4" />
-                  JSON export
+                <Button variant="outline" size="sm" onClick={() => void loadSnapshot(true)} disabled={isRefreshing}>
+                  <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  Refresh database snapshot
                 </Button>
                 <Button variant="destructive" size="sm" onClick={() => toast.warning('Temporary cache purge scheduled')}>
                   <Trash2 className="mr-2 h-4 w-4" />
@@ -409,3 +602,4 @@ export default function DatabasePage() {
     </div>
   )
 }
+

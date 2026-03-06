@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -42,6 +42,8 @@ import {
   History,
   User,
   LogOut,
+  ChevronLeft,
+  ChevronRight,
   Plus,
   Trash2,
   Pause,
@@ -155,7 +157,7 @@ const DEFAULT_ORDER_FILTERS = {
 export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const { t, language } = useLanguage()
   const searchInputRef = useRef<HTMLInputElement | null>(null)
-  const [activeTab, setActiveTab] = useState('statistics')
+  const [activeTab, setActiveTab] = useState(() => (mode === 'middle' ? 'orders' : 'statistics'))
   const [currentDate, setCurrentDate] = useState('')
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => (mode === 'middle' ? new Date() : null))
   const [, setDateCursor] = useState<Date>(() => new Date())
@@ -314,14 +316,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const fetchBinClients = () => refreshBinClients()
   const fetchBinOrders = () => refreshBinOrders()
 
-  const visibleTabs = useMemo(() => {
-    if (!Array.isArray(allowedTabs)) {
-      return [...(CANONICAL_TABS as unknown as string[])]
-    }
-    return deriveVisibleTabs(allowedTabs)
-  }, [allowedTabs])
-  const uiStateStorageKey = useMemo(() => `${DASHBOARD_UI_STORAGE_PREFIX}:${mode}`, [mode])
+  const isMiddleAdminView = mode === 'middle' || meRole === 'MIDDLE_ADMIN'
   const isLowAdminView = mode === 'low' || meRole === 'LOW_ADMIN'
+
+  const visibleTabs = useMemo(() => {
+    const derivedTabs = Array.isArray(allowedTabs)
+      ? deriveVisibleTabs(allowedTabs)
+      : [...(CANONICAL_TABS as unknown as string[])]
+
+    return isMiddleAdminView ? derivedTabs.filter((tab) => tab !== 'statistics') : derivedTabs
+  }, [allowedTabs, isMiddleAdminView])
+  const uiStateStorageKey = useMemo(() => `${DASHBOARD_UI_STORAGE_PREFIX}:${mode}`, [mode])
   const isWarehouseReadOnly = isLowAdminView
   const activeFiltersCount = useMemo(
     () => Object.values(filters).reduce((count, value) => count + (value ? 1 : 0), 0),
@@ -345,6 +350,47 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       return hasCourier && status !== 'NEW' && status !== 'IN_PROCESS'
     })
   }, [isSelectedDateToday, orders, selectedDate])
+
+  const dateLocale = language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'
+  const selectedDateISO = selectedDate ? selectedDate.toISOString().split('T')[0] : ''
+  const selectedDateLabel = selectedDate
+    ? selectedDate.toLocaleDateString(dateLocale, {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+    : 'No date selected'
+
+  const applySelectedDate = useCallback((nextDate: Date | null) => {
+    if (!nextDate) {
+      setSelectedDate(null)
+      return
+    }
+
+    const normalizedDate = new Date(nextDate)
+    normalizedDate.setHours(0, 0, 0, 0)
+
+    if (!Number.isNaN(normalizedDate.getTime())) {
+      setSelectedDate(normalizedDate)
+      setDateCursor(normalizedDate)
+    }
+  }, [])
+
+  const handleDateInputChange = useCallback((value: string) => {
+    if (!value) {
+      applySelectedDate(null)
+      return
+    }
+
+    applySelectedDate(new Date(`${value}T00:00:00`))
+  }, [applySelectedDate])
+
+  const shiftSelectedDate = useCallback((days: number) => {
+    const baseDate = selectedDate ? new Date(selectedDate) : new Date()
+    baseDate.setDate(baseDate.getDate() + days)
+    applySelectedDate(baseDate)
+  }, [applySelectedDate, selectedDate])
 
   const normalizedOrdersForSelectedDate = useMemo(() => {
     if (!selectedDate) return orders
@@ -470,8 +516,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     const activeClientsCount = clients.filter((client) => client.isActive).length
     const availableCouriersCount = couriers.filter((courier) => courier.isActive).length
     const completionRate = totalOrders > 0 ? Math.round((successful / totalOrders) * 100) : 0
-    const locale = language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'
-    const dispatchDateLabel = selectedDate ? selectedDate.toLocaleDateString(locale) : 'No date selected'
+    const dispatchDateLabel = selectedDateLabel
 
     return {
       totalOrders,
@@ -482,7 +527,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       dispatchDateLabel,
       selectedWorkload: selectedOrders.size + selectedClients.size,
     }
-  }, [clients, couriers, language, selectedClients.size, selectedDate, selectedOrders.size, stats])
+  }, [clients, couriers, selectedClients.size, selectedDateLabel, selectedOrders.size, stats])
 
   const selectedClientsSnapshot = useMemo(
     () => clients.filter((client) => selectedClients.has(client.id)),
@@ -1923,8 +1968,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
             copy={tabsCopy}
           />
 
-          {/* Statistics Tab */}
-          <TabsContent value="statistics" className="space-y-5 animate-fade-in">
+          {!isMiddleAdminView && (
+            <>
+              {/* Statistics Tab */}
+              <TabsContent value="statistics" className="space-y-5 animate-fade-in">
             {/* ── Order Status ── */}
             <div>
               <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.admin.stats.successful} / {t.admin.stats.failed}</h3>
@@ -2030,9 +2077,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 </div>
               ))}
             </div>
-          </TabsContent>
-
-
+              </TabsContent>
+            </>
+          )}
 
           {/* Orders Tab */}
           <TabsContent value="orders" className="space-y-4">
@@ -2050,7 +2097,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               <CardContent>
                 {/* Unified action panel */}
                 <div className="mb-4 rounded-lg border bg-muted/20 p-3">
-                  <div className="grid gap-2 lg:grid-cols-[auto_auto_auto_minmax(0,220px)_1fr]">
+                  <div className="grid gap-2 lg:grid-cols-[auto_auto_auto_1fr]">
                     <Button onClick={() => setIsCreateOrderModalOpen(true)} className="h-9 gap-2 px-3">
                       <Plus className="w-4 h-4" />
                       {t.admin.createOrder}
@@ -2073,25 +2120,36 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       <DispatchActionIcon className="w-4 h-4" />
                       {dispatchActionLabel}
                     </Button>
+                    <div className="flex items-center justify-end text-xs text-muted-foreground">
+                      {selectedOrders.size > 0 ? `${selectedOrders.size} selected` : 'No selection'}
+                    </div>
+                  </div>
+
+                  <div className="mt-3 grid gap-2 rounded-md border border-border/60 bg-background p-2 md:grid-cols-[auto_auto_auto_minmax(0,220px)_1fr]">
+                    <Button variant="outline" className="h-9 gap-1.5" onClick={() => shiftSelectedDate(-1)}>
+                      <ChevronLeft className="h-4 w-4" />
+                      Prev day
+                    </Button>
+                    <Button variant="outline" className="h-9" onClick={() => applySelectedDate(new Date())}>
+                      Today
+                    </Button>
+                    <Button variant="outline" className="h-9 gap-1.5" onClick={() => shiftSelectedDate(1)}>
+                      Next day
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
                     <Input
                       type="date"
                       className="h-9"
-                      value={selectedDate ? selectedDate.toISOString().split('T')[0] : ''}
-                      onChange={(event) => {
-                        const value = event.target.value
-                        if (!value) {
-                          setSelectedDate(null)
-                          return
-                        }
-                        const nextDate = new Date(`${value}T00:00:00`)
-                        if (!Number.isNaN(nextDate.getTime())) {
-                          setSelectedDate(nextDate)
-                          setDateCursor(nextDate)
-                        }
-                      }}
+                      value={selectedDateISO}
+                      onChange={(event) => handleDateInputChange(event.target.value)}
                     />
-                    <div className="flex items-center justify-end text-xs text-muted-foreground">
-                      {selectedOrders.size > 0 ? `${selectedOrders.size} selected` : 'No selection'}
+                    <div className="flex items-center justify-between gap-2 rounded-md border border-dashed border-border/60 px-3 text-xs text-muted-foreground">
+                      <span className="truncate">{selectedDateLabel}</span>
+                      {selectedDate && (
+                        <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => applySelectedDate(null)}>
+                          Clear
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2953,12 +3011,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               onOpenChange={setIsDispatchOpen}
               orders={orders}
               couriers={couriers}
-              selectedDateLabel={
-                selectedDate
-                  ? selectedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
-                  : 'Все заказы'
-              }
-              selectedDateISO={selectedDate ? selectedDate.toISOString().split('T')[0] : undefined}
+              selectedDateLabel={selectedDate ? selectedDateLabel : 'All orders'}
+              selectedDateISO={selectedDateISO || undefined}
               warehousePoint={warehousePoint}
               onSaved={fetchData}
             />
@@ -2978,112 +3032,136 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
             <HistoryTable role={meRole || 'MIDDLE_ADMIN'} />
           </TabsContent >
 
-          {/* Profile Tab with Chat and Settings */}
+          {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Профиль и Настройки</CardTitle>
-                <CardDescription>
-                  Управляйте своим профилем и общайтесь с командой
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Change Password Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Безопасность</h3>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsChangePasswordOpen(true)}
-                    className="w-full sm:w-auto"
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Изменить пароль
-                  </Button>
-                  <ChangePasswordModal
-                    isOpen={isChangePasswordOpen}
-                    onClose={() => setIsChangePasswordOpen(false)}
-                  />
-                </div>
+            <ChangePasswordModal
+              isOpen={isChangePasswordOpen}
+              onClose={() => setIsChangePasswordOpen(false)}
+            />
 
-                {/* Divider */}
-                <div className="border-t" />
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+              <Card className="border-border/70">
+                <CardHeader>
+                  <CardTitle>Profile center</CardTitle>
+                  <CardDescription>Security, account context, and quick navigation from one place</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <div className="rounded-md border bg-background p-3">
+                      <p className="text-xs text-muted-foreground">Role</p>
+                      <p className="mt-1 text-sm font-semibold">{meRole || 'MIDDLE_ADMIN'}</p>
+                    </div>
+                    <div className="rounded-md border bg-background p-3">
+                      <p className="text-xs text-muted-foreground">Visible tabs</p>
+                      <p className="mt-1 text-sm font-semibold">{visibleTabs.length}</p>
+                    </div>
+                    <div className="rounded-md border bg-background p-3">
+                      <p className="text-xs text-muted-foreground">Dispatch date</p>
+                      <p className="mt-1 truncate text-sm font-semibold">{selectedDateLabel}</p>
+                    </div>
+                  </div>
 
-                {/* Warehouse Start Point */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Склад (точка старта)</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Используется для сортировки и построения маршрутов для всех курьеров.
-                  </p>
+                  <div className="rounded-md border bg-muted/20 p-3">
+                    <p className="text-sm font-semibold">Security</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Protect account access and end sessions quickly.</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Button variant="outline" onClick={() => setIsChangePasswordOpen(true)} className="gap-2">
+                        <User className="h-4 w-4" />
+                        Change password
+                      </Button>
+                      <Button variant="ghost" onClick={handleLogout} className="gap-2">
+                        <LogOut className="h-4 w-4" />
+                        {t.common.logout}
+                      </Button>
+                    </div>
+                  </div>
 
+                  <div className="rounded-md border bg-muted/20 p-3">
+                    <p className="text-sm font-semibold">Quick navigation</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setActiveTab('orders')}>Orders</Button>
+                      <Button variant="outline" size="sm" onClick={() => setActiveTab('clients')}>Clients</Button>
+                      <Button variant="outline" size="sm" onClick={() => setActiveTab('history')}>History</Button>
+                      {visibleTabs.includes('interface') && (
+                        <Button variant="outline" size="sm" onClick={() => setActiveTab('interface')}>Interface</Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border/70">
+                <CardHeader>
+                  <CardTitle>Warehouse start point</CardTitle>
+                  <CardDescription>Used for route generation and sorting for all couriers.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
                   <div className="grid gap-2">
                     <Label htmlFor="warehousePoint">
-                      Ссылка Google Maps или координаты (lat,lng)
-                      {isWarehouseReadOnly && <span className="ml-2 text-xs text-slate-500">(только просмотр)</span>}
+                      Google Maps URL or coordinates (lat,lng)
+                      {isWarehouseReadOnly && <span className="ml-2 text-xs text-muted-foreground">(read only)</span>}
                     </Label>
                     <Input
                       id="warehousePoint"
                       value={warehouseInput}
-                      onChange={(e) => handleWarehouseInputChange(e.target.value)}
+                      onChange={(event) => handleWarehouseInputChange(event.target.value)}
                       onBlur={() => void handleWarehouseInputBlur()}
-                      placeholder="Пример: 41.311081,69.240562 или ссылка Google Maps"
+                      placeholder="Example: 41.311081,69.240562"
                       disabled={isWarehouseReadOnly || isWarehouseLoading || isWarehouseSaving}
                     />
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-muted-foreground">
                       {warehousePoint
-                        ? `Текущие координаты: ${warehousePoint.lat.toFixed(6)}, ${warehousePoint.lng.toFixed(6)}`
-                        : 'Текущие координаты: не заданы (будет использован дефолт)'}
+                        ? `Current: ${warehousePoint.lat.toFixed(6)}, ${warehousePoint.lng.toFixed(6)}`
+                        : 'Current: not configured'}
                       {warehousePreview && (
-                        <span className="ml-2 text-slate-400">
-                          • Превью: {warehousePreview.lat.toFixed(6)}, {warehousePreview.lng.toFixed(6)}
+                        <span className="ml-2 text-muted-foreground/80">
+                          Preview: {warehousePreview.lat.toFixed(6)}, {warehousePreview.lng.toFixed(6)}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex flex-wrap gap-2">
                     <Button
-                      onClick={() => void refreshWarehousePoint()}
                       variant="outline"
+                      onClick={() => void refreshWarehousePoint()}
                       disabled={isWarehouseLoading || isWarehouseSaving}
                     >
-                      Обновить
+                      Refresh
                     </Button>
                     <Button
                       onClick={() => void handleSaveWarehousePoint()}
                       disabled={isWarehouseReadOnly || isWarehouseSaving || isWarehouseLoading || !warehouseInput.trim()}
                     >
-                      {isWarehouseSaving ? 'Сохранение...' : 'Сохранить'}
+                      {isWarehouseSaving ? 'Saving...' : 'Save location'}
                     </Button>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
+            </div>
 
-                {/* Divider */}
-                <div className="border-t" />
+            {!isLowAdminView && (
+              <Card className="border-border/70">
+                <CardHeader>
+                  <CardTitle>Website builder</CardTitle>
+                  <CardDescription>Configure the client-facing website and publish updates.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <SiteBuilderCard />
+                </CardContent>
+              </Card>
+            )}
 
-                {!isLowAdminView && (
-                  <>
-                    {/* Website Builder */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">Website Builder</h3>
-                      <SiteBuilderCard />
-                    </div>
-
-                    {/* Divider */}
-                    <div className="border-t" />
-                  </>
-                )}
-
-                {/* Chat Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Сообщения</h3>
-                  <ChatTab />
-                </div>
-
-                
+            <Card className="border-border/70">
+              <CardHeader>
+                <CardTitle>Messages</CardTitle>
+                <CardDescription>Team conversations and quick coordination.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChatTab />
               </CardContent>
             </Card>
           </TabsContent>
-
           <TabsContent value="bin" className="space-y-4">
             <Tabs defaultValue="orders" className="w-full">
               <TabsList>
