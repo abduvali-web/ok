@@ -60,12 +60,11 @@ const websiteEditInputSchema = z
   .object({
     prompt: z.string().min(10).max(4000).optional(),
     apply: z.boolean().optional(),
-    // Some agent backends append execution metadata to tool args.
-    // Accept and ignore these keys so website edits still run.
+    // Explicitly allow known execution metadata keys.
     status: z.string().optional(),
     completion: z.union([z.string(), z.number(), z.boolean()]).optional(),
   })
-  .passthrough();
+  .strip();
 
 const websiteEditOutputSchema = z.object({
   ok: z.boolean(),
