@@ -56,6 +56,110 @@ function downloadCsv(fileName: string, rows: Array<Array<string | number>>) {
   URL.revokeObjectURL(url)
 }
 
+function escapeXml(value: unknown) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+}
+
+function sanitizeWorksheetName(name: string, usedNames: Set<string>) {
+  const cleaned = name.replace(/[\\/:?*\[\]]/g, ' ').trim() || 'Sheet'
+  const base = cleaned.slice(0, 31)
+  let candidate = base
+  let counter = 2
+
+  while (usedNames.has(candidate)) {
+    const suffix = ` ${counter}`
+    candidate = `${base.slice(0, Math.max(1, 31 - suffix.length))}${suffix}`
+    counter += 1
+  }
+
+  usedNames.add(candidate)
+  return candidate
+}
+
+function detectCellType(value: string) {
+  if (/^-?\d+(?:\.\d+)?$/.test(value)) return 'Number'
+  return 'String'
+}
+
+function buildWorkbookXml(snapshot: SnapshotPayload) {
+  const usedSheetNames = new Set<string>()
+  const sheets: string[] = []
+
+  const summaryRows = [
+    ['Scope', snapshot.scope],
+    ['Generated At', snapshot.generatedAt],
+    [],
+    ['Sheet', 'Rows', 'Columns', 'Description'],
+    ...snapshot.summary.map((item) => [item.title, String(item.rowCount), String(item.columnCount), item.description]),
+  ]
+
+  const workbookSheets: Array<{ name: string; rows: string[][] }> = [
+    { name: 'Summary', rows: summaryRows.map((row) => row.map((value) => String(value ?? ''))) },
+    ...snapshot.tables.map((table) => ({
+      name: table.title,
+      rows: [table.columns, ...table.rows.map((row) => table.columns.map((column) => row[column] ?? ''))],
+    })),
+  ]
+
+  workbookSheets.forEach((sheet) => {
+    const sheetName = sanitizeWorksheetName(sheet.name, usedSheetNames)
+    const rowsXml = sheet.rows
+      .map((row) => {
+        const cellsXml = row
+          .map((cell) => {
+            const value = String(cell ?? '')
+            const type = detectCellType(value)
+            return `<Cell><Data ss:Type="${type}">${escapeXml(value)}</Data></Cell>`
+          })
+          .join('')
+        return `<Row>${cellsXml}</Row>`
+      })
+      .join('')
+
+    sheets.push(`
+      <Worksheet ss:Name="${escapeXml(sheetName)}">
+        <Table>
+          ${rowsXml}
+        </Table>
+      </Worksheet>
+    `)
+  })
+
+  return `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook
+  xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:o="urn:schemas-microsoft-com:office:office"
+  xmlns:x="urn:schemas-microsoft-com:office:excel"
+  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:html="http://www.w3.org/TR/REC-html40">
+  <Styles>
+    <Style ss:ID="Header">
+      <Font ss:Bold="1"/>
+      <Interior ss:Color="#E8EEF9" ss:Pattern="Solid"/>
+    </Style>
+  </Styles>
+  ${sheets.join('\n')}
+</Workbook>`
+}
+
+function downloadWorkbook(fileName: string, xml: string) {
+  const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+
 export default function DatabasePage() {
   const router = useRouter()
   const [snapshot, setSnapshot] = useState<SnapshotPayload | null>(null)
@@ -131,26 +235,9 @@ export default function DatabasePage() {
     if (!snapshot) return
 
     const generatedAt = new Date(snapshot.generatedAt).toISOString().slice(0, 10)
-    const rows: Array<Array<string | number>> = [
-      ['scope', snapshot.scope],
-      ['generated_at', snapshot.generatedAt],
-      [],
-      ['sheet', 'row_count', 'column_count', 'description'],
-      ...summary.map((item) => [item.title, item.rowCount, item.columnCount, item.description]),
-      [],
-    ]
-
-    tables.forEach((table) => {
-      rows.push([table.title])
-      rows.push(table.columns)
-      table.rows.forEach((row) => {
-        rows.push(table.columns.map((column) => row[column] ?? ''))
-      })
-      rows.push([])
-    })
-
-    downloadCsv(`neon-database-full-${generatedAt}.csv`, rows)
-    toast.success('Full Neon database export downloaded')
+    const xml = buildWorkbookXml(snapshot)
+    downloadWorkbook(`neon-database-full-${generatedAt}.xls`, xml)
+    toast.success('Excel workbook downloaded with separate sheets')
   }
 
   const handleDownloadCurrentTable = () => {
