@@ -55,37 +55,37 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
 
   return (
     <>
-      {isOpen && <div className="fixed inset-0 z-40 bg-black/35 lg:hidden" onClick={onClose} />}
+      {isOpen && <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden" onClick={onClose} />}
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-72 -translate-x-full border-r border-border bg-sidebar transition-transform duration-200 ease-out lg:static lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 w-72 -translate-x-full border-r border-white/10 bg-black/40 backdrop-blur-2xl transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:bg-transparent lg:border-none lg:w-64 lg:m-4 lg:rounded-[2rem] lg:bg-white/[0.02]',
           isOpen && 'translate-x-0',
           className
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b border-border px-4 py-4">
+          <div className="flex items-center justify-between border-b border-white/10 px-6 py-6 lg:border-none lg:pb-2">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                <ChefHat className="h-5 w-5" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.15)]">
+                <ChefHat className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-lg font-semibold">AutoFood</p>
-                <p className="text-xs text-muted-foreground">{language === 'ru' ? 'Панель' : language === 'uz' ? 'Panel' : 'Dashboard'}</p>
+                <p className="text-xl font-bold tracking-tight text-white/90">AutoFood</p>
+                <p className="text-xs font-medium text-white/50">{language === 'ru' ? 'Панель' : language === 'uz' ? 'Panel' : 'Dashboard'}</p>
               </div>
             </div>
 
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={onClose}>
+            <Button variant="ghost" size="icon" className="lg:hidden text-white/70 hover:text-white hover:bg-white/10" onClick={onClose}>
               <X className="h-5 w-5" />
             </Button>
           </div>
 
           <ScrollArea className="flex-1 py-3">
-            <nav className="space-y-1 px-3">
+            <nav className="space-y-1 px-4 lg:px-2">
               {menuItems.map((item) => {
                 if ('type' in item && item.type === 'divider') {
-                  return <div key={item.id} className="mx-2 my-2 h-px bg-border/70" />;
+                  return <div key={item.id} className="mx-4 my-3 h-[1px] bg-white/5" />;
                 }
 
                 const Icon = item.icon;
@@ -96,20 +96,20 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                     key={item.id}
                     variant="ghost"
                     className={cn(
-                      'h-10 w-full justify-start gap-3 rounded-md border px-3 text-sm font-medium transition-colors',
+                      'h-11 w-full justify-start gap-4 rounded-xl border px-4 text-sm font-medium transition-all duration-300',
                       isActive
-                        ? 'border-border bg-accent text-foreground'
-                        : 'border-transparent text-muted-foreground hover:border-border hover:bg-accent hover:text-foreground'
+                        ? 'border-white/10 bg-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.05)]'
+                        : 'border-transparent text-white/60 hover:border-white/5 hover:bg-white/5 hover:text-white'
                     )}
                     onClick={() => {
                       onTabChange(item.id);
                       onClose();
                     }}
                   >
-                    <Icon className={cn('h-4 w-4', isActive && 'text-primary')} />
-                    <span className="flex-1 text-left">{item.label}</span>
+                    <Icon className={cn('h-5 w-5', isActive && 'text-white')} />
+                    <span className="flex-1 text-left tracking-wide">{item.label}</span>
                     {item.badge !== null && item.badge > 0 && (
-                      <Badge className="h-5 min-w-5 px-1.5 text-[10px]">{item.badge}</Badge>
+                      <Badge className="h-5 min-w-5 bg-white/20 text-white border-transparent px-1.5 text-[10px] shadow-none">{item.badge}</Badge>
                     )}
                   </Button>
                 );
@@ -117,8 +117,12 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
             </nav>
           </ScrollArea>
 
-          <div className="border-t border-border p-3">
-            <Button variant="ghost" className="h-10 w-full justify-start gap-3 rounded-md text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={onLogout}>
+          <div className="p-4 border-t border-white/10 lg:border-none">
+            <Button 
+              variant="ghost" 
+              className="h-11 w-full justify-start gap-4 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors" 
+              onClick={onLogout}
+            >
               <LogOut className="h-4 w-4" />
               {t.common.logout}
             </Button>

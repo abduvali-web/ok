@@ -51,7 +51,6 @@ import {
   Play,
   Save,
   RefreshCw,
-  Database,
   Filter,
   Route,
   CalendarDays,
@@ -86,7 +85,6 @@ import {
   parseGoogleMapsUrl,
   type LatLng,
 } from '@/lib/geo'
-import { extractSubdomainFromHost } from '@/lib/subdomain-host'
 
 import { MobileSidebar } from '@/components/MobileSidebar'
 import { MobileTabIndicator } from '@/components/MobileTabIndicator'
@@ -220,29 +218,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     finance: t.finance.title,
     interface: t.admin.interface,
   }
-  const databaseWorkspaceHref = useMemo(() => {
-    const fallbackPath = '/middle-admin/database'
-    const configuredRoot = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || '')
-      .trim()
-      .replace(/^https?:\/\//i, '')
-      .replace(/\/.*$/, '')
-      .toLowerCase()
-
-    if (typeof window === 'undefined') return fallbackPath
-
-    const currentHost = window.location.host.toLowerCase()
-    const subdomain = extractSubdomainFromHost(currentHost, configuredRoot || undefined)
-
-    if (subdomain && configuredRoot) {
-      return `https://${configuredRoot}${fallbackPath}`
-    }
-
-    return fallbackPath
-  }, [])
-  const openDatabaseWorkspace = useCallback(() => {
-    if (typeof window === 'undefined') return
-    window.location.assign(databaseWorkspaceHref)
-  }, [databaseWorkspaceHref])
   const [courierFormData, setCourierFormData] = useState({
     name: '',
     email: '',
@@ -520,30 +495,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       },
     ]
   }, [filteredClients, selectedClients.size])
-
-  const commandSnapshot = useMemo(() => {
-    const successful = stats?.successfulOrders ?? 0
-    const failed = stats?.failedOrders ?? 0
-    const pending = stats?.pendingOrders ?? 0
-    const inDelivery = stats?.inDeliveryOrders ?? 0
-    const paused = stats?.pausedOrders ?? 0
-    const totalOrders = successful + failed + pending + inDelivery + paused
-    const activePipeline = pending + inDelivery + paused
-    const activeClientsCount = clients.filter((client) => client.isActive).length
-    const availableCouriersCount = couriers.filter((courier) => courier.isActive).length
-    const completionRate = totalOrders > 0 ? Math.round((successful / totalOrders) * 100) : 0
-    const dispatchDateLabel = selectedDateLabel
-
-    return {
-      totalOrders,
-      activePipeline,
-      activeClientsCount,
-      availableCouriersCount,
-      completionRate,
-      dispatchDateLabel,
-      selectedWorkload: selectedOrders.size + selectedClients.size,
-    }
-  }, [clients, couriers, selectedClients.size, selectedDateLabel, selectedOrders.size, stats])
 
   const selectedClientsSnapshot = useMemo(
     () => clients.filter((client) => selectedClients.has(client.id)),
@@ -1912,70 +1863,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       <MobileTabIndicator activeTab={activeTab} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6 mobile-bottom-space">
-        <section className="mb-4 rounded-xl border border-border bg-card p-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium">Operations summary</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Date: {commandSnapshot.dispatchDateLabel} | Selected entities: {commandSnapshot.selectedWorkload}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {mode === 'middle' && (
-                <Button size="sm" onClick={openDatabaseWorkspace}>
-                  <Database className="mr-2 h-4 w-4" />
-                  Database
-                </Button>
-              )}
-              <Button variant="outline" size="sm" onClick={fetchData}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Sync
-              </Button>
-            </div>
-          </div>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            {[
-              {
-                id: 'pipeline',
-                label: 'Pipeline orders',
-                value: commandSnapshot.activePipeline,
-                detail: `Total tracked ${commandSnapshot.totalOrders}`,
-              },
-              {
-                id: 'clients',
-                label: 'Active clients',
-                value: commandSnapshot.activeClientsCount,
-                detail: `${clients.length} total records`,
-              },
-              {
-                id: 'couriers',
-                label: 'Available couriers',
-                value: commandSnapshot.availableCouriersCount,
-                detail: `${couriers.length} registered`,
-              },
-              {
-                id: 'completion',
-                label: 'Completion rate',
-                value: `${commandSnapshot.completionRate}%`,
-                detail: 'Successful deliveries',
-              },
-              {
-                id: 'selected',
-                label: 'Selected entities',
-                value: commandSnapshot.selectedWorkload,
-                detail: 'Orders + clients in focus',
-              },
-            ].map((item) => (
-              <div key={item.id} className="rounded-lg border border-border bg-background p-3">
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-                <p className="mt-2 text-2xl font-semibold">{item.value}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{item.detail}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <DesktopTabsNav
             visibleTabs={visibleTabs}

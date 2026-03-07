@@ -558,14 +558,23 @@ export default function SuperAdminPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 xl:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: 'easeOut' }}
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+          }}
           className="space-y-6"
         >
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <motion.section 
+            variants={{
+              hidden: { opacity: 0, y: 20 },
+              visible: { opacity: 1, y: 0 }
+            }}
+            className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+          >
             <MetricCard
               icon={Users}
               label="Middle admins"
@@ -594,8 +603,12 @@ export default function SuperAdminPage() {
               detail="Card / Cash"
               tone="amber"
             />
-          </section>
+          </motion.section>
 
+          <motion.div variants={{
+            hidden: { opacity: 0, scale: 0.98 },
+            visible: { opacity: 1, scale: 1 }
+          }}>
           <Card>
             <CardHeader>
               <CardTitle>Platform governance</CardTitle>
@@ -896,6 +909,7 @@ export default function SuperAdminPage() {
               </Tabs>
             </CardContent>
           </Card>
+          </motion.div>
         </motion.div>
       </main>
 

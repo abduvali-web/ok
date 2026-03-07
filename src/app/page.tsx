@@ -1,7 +1,9 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowRight, CheckCircle2, Globe2, Layers3, Phone, Route, ShieldCheck, WalletCards } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { ArrowRight, CheckCircle2, Globe2, Layers3, Phone, Route, ShieldCheck, WalletCards, ChevronRight, Sparkles } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
@@ -227,139 +229,209 @@ export default function LandingPage() {
   const { t, language } = useLanguage()
   const copy = localized[language]
 
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
-          <Link href="/" className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-primary text-sm font-semibold text-primary-foreground">
-              AF
-            </span>
-            <div>
-              <p className="text-lg font-semibold">AutoFood</p>
-              <p className="text-xs text-muted-foreground">{copy.platform}</p>
-            </div>
-          </Link>
+  const fadeUp = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+  }
 
-          <div className="flex items-center gap-2">
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  }
+
+  return (
+    <div className="dark min-h-screen bg-background text-foreground selection:bg-primary/30">
+      {/* Dynamic Background */}
+      <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-900 via-background to-background pointer-events-none" />
+      <div className="fixed top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-primary/10 to-transparent blur-[100px] pointer-events-none" />
+
+      {/* Floating Modern Header */}
+      <motion.header 
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="fixed left-0 right-0 top-0 z-50 flex justify-center pt-6 px-4 pointer-events-none"
+      >
+        <div className="pointer-events-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-white/10 bg-black/40 px-6 py-3 backdrop-blur-xl shadow-2xl">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-black text-xs font-bold transition-transform group-hover:scale-110">
+              AF
+            </div>
+            <span className="font-semibold tracking-tight text-white/90 group-hover:text-white transition-colors">AutoFood</span>
+          </Link>
+          <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <Link href="/login">
-              <Button variant="outline" size="sm">{copy.adminLogin}</Button>
+            <Link href="/login" className="hidden sm:block">
+              <span className="text-sm font-medium text-white/60 hover:text-white transition-colors">{copy.adminLogin}</span>
             </Link>
             <Link href="/login">
-              <Button size="sm">
-                {copy.openDashboard}
-                <ArrowRight className="h-4 w-4" />
+              <Button className="rounded-full bg-white text-black hover:bg-neutral-200 shadow-lg transition-transform hover:scale-105 active:scale-95">
+                {copy.openDashboard} <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>
           </div>
         </div>
-      </header>
+      </motion.header>
 
-      <main className="mx-auto max-w-7xl space-y-8 px-4 py-8">
-        <section className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_390px]">
-          <div className="rounded-lg border border-border bg-card p-6 sm:p-8">
-            <p className="text-sm font-medium text-muted-foreground">{copy.heroTag}</p>
-            <h1 className="mt-3 text-3xl font-semibold leading-tight sm:text-4xl">{copy.heroTitle}</h1>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground">{copy.heroDescription}</p>
+      <main className="relative z-10 mx-auto max-w-7xl px-4 pt-40 pb-24 space-y-24">
+        {/* HERO SECTION */}
+        <motion.section 
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="flex flex-col items-center text-center max-w-4xl mx-auto"
+        >
+          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm text-xs font-medium text-white/70 mb-8">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            {copy.heroTag}
+          </motion.div>
+          <motion.h1 
+            variants={fadeUp}
+            className="text-5xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 drop-shadow-sm mb-6 leading-tight"
+          >
+            {copy.heroTitle}
+          </motion.h1>
+          <motion.p 
+            variants={fadeUp}
+            className="text-lg md:text-xl text-white/50 max-w-2xl font-light leading-relaxed mb-10"
+          >
+            {copy.heroDescription}
+          </motion.p>
+          <motion.div variants={fadeUp} className="flex flex-wrap justify-center gap-4">
+            <Link href="/login">
+              <Button className="h-12 px-8 rounded-full bg-white text-black text-base hover:bg-neutral-200 hover:scale-105 transition-all active:scale-95">
+                {(t.common as any)?.login || copy.adminLogin} <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="tel:+998977087373">
+              <Button variant="outline" className="h-12 px-8 rounded-full border-white/10 bg-white/5 text-white hover:bg-white/10 text-base backdrop-blur-md transition-all">
+                <Phone className="mr-2 h-4 w-4 text-white/50" />
+                +998 97 708 73 73
+              </Button>
+            </Link>
+          </motion.div>
+        </motion.section>
 
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/login">
-                <Button>
-                  {t.common.login}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="tel:+998977087373">
-                <Button variant="outline">
-                  <Phone className="h-4 w-4" />
-                  +998 97 708 73 73
-                </Button>
-              </Link>
-            </div>
-
-            <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {copy.stats.map((item) => (
-                <div key={item.label} className="rounded-md border border-border bg-background p-4">
-                  <p className="text-xs text-muted-foreground">{item.label}</p>
-                  <p className="mt-2 text-base font-semibold">{item.value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <aside className="rounded-lg border border-border bg-card p-5">
-            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <Globe2 className="h-4 w-4" />
-              {copy.portalLabel}
-            </div>
-            <h2 className="mt-3 text-xl font-semibold">{copy.portalTitle}</h2>
-            <p className="mt-3 text-sm leading-7 text-muted-foreground">{copy.portalDescription}</p>
-
-            <div className="mt-5 space-y-3">
-              {copy.promises.map((item) => (
-                <div key={item} className="flex items-start gap-2 rounded-md border border-border bg-background p-3">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  <p className="text-sm">{item}</p>
-                </div>
-              ))}
-            </div>
-          </aside>
-        </section>
-
-        <section className="grid gap-4 lg:grid-cols-3">
-          {copy.points.map((item) => {
+        {/* BENTO GRID 1: Features */}
+        <motion.section 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={staggerContainer}
+          className="grid gap-6 md:grid-cols-3"
+        >
+          {copy.points.map((item, i) => {
             const Icon = item.icon
             return (
-              <div key={item.title} className="rounded-lg border border-border bg-card p-5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-background">
-                  <Icon className="h-5 w-5 text-primary" />
+              <motion.div 
+                key={item.title} 
+                variants={fadeUp}
+                className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] p-8 hover:bg-white/[0.04] transition-colors"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white mb-6 backdrop-blur-md border border-white/10 group-hover:scale-110 transition-transform duration-500">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white/90 mb-3">{item.title}</h3>
+                  <p className="text-white/50 leading-relaxed font-light">{item.detail}</p>
                 </div>
-                <h2 className="mt-4 text-lg font-semibold">{item.title}</h2>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.detail}</p>
-              </div>
+              </motion.div>
             )
           })}
-        </section>
+        </motion.section>
 
-        <section className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-          <div className="rounded-lg border border-border bg-card p-6">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <h2 className="text-2xl font-semibold">{copy.roleTitle}</h2>
-              <div className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1 text-xs text-muted-foreground">
-                <ShieldCheck className="h-4 w-4 text-primary" />
-                {copy.roleBadge}
+        {/* BENTO GRID 2: Portal & Stats */}
+        <motion.section 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={staggerContainer}
+          className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
+        >
+          <motion.div variants={fadeUp} className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] p-8 md:p-12">
+            <div className="absolute top-0 right-0 -mr-20 -mt-20 h-[300px] w-[300px] rounded-full bg-primary/20 blur-[80px] opacity-50" />
+            <div className="relative z-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-xs font-medium text-white/70 mb-6">
+                <Globe2 className="h-3.5 w-3.5" />
+                {copy.portalLabel}
+              </div>
+              <h2 className="text-3xl font-semibold text-white/90 mb-4 tracking-tight">{copy.portalTitle}</h2>
+              <p className="text-lg text-white/50 leading-relaxed font-light max-w-md mb-8">{copy.portalDescription}</p>
+              
+              <div className="space-y-4">
+                {copy.promises.slice(0, 3).map((item) => (
+                  <div key={item} className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                    <span className="text-white/70 font-light">{item}</span>
+                  </div>
+                ))}
               </div>
             </div>
+          </motion.div>
 
-            <div className="mt-5 grid gap-3 md:grid-cols-2">
+          <motion.div variants={fadeUp} className="grid grid-cols-2 gap-4">
+            {copy.stats.map((stat, i) => (
+              <div key={stat.label} className="flex flex-col justify-center rounded-3xl border border-white/10 bg-white/[0.02] p-6 hover:bg-white/[0.04] transition-colors">
+                <p className="text-3xl font-bold tracking-tight text-white/90 mb-2">{stat.value}</p>
+                <p className="text-sm text-white/50 font-light">{stat.label}</p>
+              </div>
+            ))}
+          </motion.div>
+        </motion.section>
+
+        {/* BENTO GRID 3: Roles & Pricing */}
+        <motion.section 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={staggerContainer}
+          className="grid gap-6 lg:grid-cols-[1fr_1fr]"
+        >
+          <motion.div variants={fadeUp} className="rounded-3xl border border-white/10 bg-white/[0.02] p-8 md:p-10 flex flex-col">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-semibold text-white/90">{copy.roleTitle}</h2>
+              <ShieldCheck className="h-6 w-6 text-primary" />
+            </div>
+            <div className="grid gap-4 flex-1">
               {copy.roles.map((role) => (
-                <div key={role.title} className="rounded-md border border-border bg-background p-4">
-                  <p className="text-base font-semibold">{role.title}</p>
-                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{role.detail}</p>
+                <div key={role.title} className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 hover:bg-white/[0.05] transition-colors">
+                  <h4 className="text-lg font-medium text-white/90 mb-1">{role.title}</h4>
+                  <p className="text-sm text-white/50 font-light">{role.detail}</p>
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
 
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-2xl font-semibold">{copy.pricingTitle}</h2>
-            <p className="mt-3 text-sm leading-7 text-muted-foreground">{copy.pricingDescription}</p>
-
-            <div className="mt-5 grid gap-3">
-              <div className="rounded-md border border-border bg-background p-4">
-                <p className="text-sm text-muted-foreground">{copy.monthly}</p>
-                <p className="mt-1 text-2xl font-semibold">$100</p>
-                <p className="mt-2 text-sm text-muted-foreground">{copy.monthlyNote}</p>
+          <motion.div variants={fadeUp} className="rounded-3xl border border-white/10 bg-white/[0.02] p-8 md:p-10 flex flex-col justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-white/90 mb-4">{copy.pricingTitle}</h2>
+              <p className="text-white/50 font-light leading-relaxed mb-8">{copy.pricingDescription}</p>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="group rounded-2xl border border-white/10 bg-white/[0.03] p-6 flex justify-between items-center hover:bg-white/[0.06] transition-all cursor-pointer">
+                <div>
+                  <h4 className="text-lg font-medium text-white/90">{copy.monthly}</h4>
+                  <p className="text-sm text-white/50 font-light">{copy.monthlyNote}</p>
+                </div>
+                <div className="text-3xl font-bold tracking-tight text-white">$100</div>
               </div>
-              <div className="rounded-md border border-border bg-background p-4">
-                <p className="text-sm text-muted-foreground">{copy.quarterly}</p>
-                <p className="mt-1 text-2xl font-semibold">$200</p>
-                <p className="mt-2 text-sm text-muted-foreground">{copy.quarterlyNote}</p>
+              <div className="group rounded-2xl border border-primary/30 bg-primary/5 p-6 flex justify-between items-center hover:bg-primary/10 transition-all cursor-pointer relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative z-10">
+                  <h4 className="text-lg font-medium text-white/90 flex items-center gap-2">
+                    {copy.quarterly}
+                    <span className="px-2 py-0.5 rounded-full bg-primary/20 text-[10px] text-primary font-bold uppercase tracking-wider">Popular</span>
+                  </h4>
+                  <p className="text-sm text-white/50 font-light">{copy.quarterlyNote}</p>
+                </div>
+                <div className="text-3xl font-bold tracking-tight relative z-10 text-white">$200</div>
               </div>
             </div>
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
+
       </main>
     </div>
   )

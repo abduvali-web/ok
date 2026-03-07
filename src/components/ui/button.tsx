@@ -9,13 +9,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "border border-primary bg-primary text-primary-foreground shadow-sm hover:bg-primary/92",
-        success: "border border-emerald-600 bg-emerald-600 text-white shadow-sm hover:bg-emerald-700",
-        warning: "border border-amber-500 bg-amber-500 text-black shadow-sm hover:bg-amber-600",
-        destructive: "border border-destructive bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/92",
-        outline: "border border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground",
-        secondary: "border border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "border border-transparent hover:bg-accent hover:text-accent-foreground",
+        default: "border border-primary bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.3)] hover:opacity-90 hover:scale-[0.98]",
+        success: "border border-emerald-600 bg-emerald-600 text-white shadow-[0_0_15px_rgba(5,150,105,0.3)] hover:opacity-90 hover:scale-[0.98]",
+        warning: "border border-amber-500 bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:opacity-90 hover:scale-[0.98]",
+        destructive: "border border-destructive bg-destructive text-destructive-foreground shadow-[0_0_15px_rgba(var(--destructive),0.3)] hover:opacity-90 hover:scale-[0.98]",
+        outline: "border border-white/10 bg-white/5 text-white hover:bg-white/10 shadow-sm",
+        secondary: "border border-white/10 bg-white/10 text-white hover:bg-white/20 shadow-sm",
+        ghost: "border border-transparent text-white/70 hover:bg-white/10 hover:text-white",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { ChefHat, DollarSign, ShoppingCart, Users } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -54,20 +55,25 @@ export function AdminLayout({ children, activeTab, onTabChange, onLogout, userNa
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background text-foreground dark selection:bg-primary/30 relative overflow-hidden">
+      {/* Dynamic Background matching Landing/Login */}
+      <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-900 via-background to-background pointer-events-none" />
+      <div className="absolute top-0 left-0 right-0 h-[300px] bg-gradient-to-b from-primary/10 to-transparent blur-[80px] pointer-events-none" />
+
       <Sidebar
         activeTab={activeTab}
         onTabChange={onTabChange}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         onLogout={onLogout}
+        className="z-50"
       />
 
-      <div className="relative flex min-w-0 flex-1 flex-col">
+      <div className="relative flex min-w-0 flex-1 flex-col z-10">
         <Button
           variant="outline"
           size="icon"
-          className="fixed left-3 top-3 z-[120] h-9 w-9 bg-card lg:hidden"
+          className="fixed left-3 top-3 z-[120] h-9 w-9 bg-black/40 border-white/10 backdrop-blur-xl text-white lg:hidden"
           onClick={() => setIsSidebarOpen((prev) => !prev)}
         >
           <svg
@@ -95,11 +101,22 @@ export function AdminLayout({ children, activeTab, onTabChange, onLogout, userNa
           onLogout={onLogout}
         />
 
-        <main className="flex-1 overflow-auto">
-          <div className="p-4 md:p-6 lg:p-8">{children}</div>
+        <main className="flex-1 overflow-auto relative z-10 pt-4 px-4 pb-20 lg:p-6 xl:p-8">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10, scale: 0.99 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.99 }}
+              transition={{ duration: 0.3 }}
+              className="h-full min-h-[80vh] rounded-2xl md:rounded-[2rem] border border-white/10 bg-black/40 p-4 md:p-6 lg:p-8 shadow-2xl backdrop-blur-xl"
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </main>
 
-        <nav className="safe-area-inset-bottom fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card px-2 py-2 lg:hidden">
+        <nav className="safe-area-inset-bottom fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-black/60 backdrop-blur-xl px-2 py-2 lg:hidden">
           <div className="mx-auto flex max-w-md items-center justify-around">
             <MobileNavItem
               isActive={activeTab === 'orders'}
@@ -149,8 +166,10 @@ function MobileNavItem({
     <button
       onClick={onClick}
       className={cn(
-        'flex min-w-[60px] flex-col items-center justify-center rounded-md px-3 py-1.5 transition-colors',
-        isActive ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'
+        'flex min-w-[60px] flex-col items-center justify-center rounded-xl px-3 py-1.5 transition-all duration-300',
+        isActive 
+          ? 'bg-white/10 text-white shadow-sm' 
+          : 'text-white/50 hover:text-white hover:bg-white/5'
       )}
     >
       <Icon className="h-4 w-4" />
