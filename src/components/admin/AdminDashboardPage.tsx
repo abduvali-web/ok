@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
@@ -780,7 +780,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   const handleDeleteSelectedOrders = async ({ skipConfirm = false }: { skipConfirm?: boolean } = {}) => {
     if (selectedOrders.size === 0) {
-      toast.error('Пожалуйста, выберите заказы для удаления')
+      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ Ð·Ð°ÐºÐ°Ð·Ñ‹ Ð´Ð»Ñ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ')
       return
     }
 
@@ -801,17 +801,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(`Успешно удалено ${data.deletedCount} заказ(ов)`)
+        toast.success(`Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¾ ${data.deletedCount} Ð·Ð°ÐºÐ°Ð·(Ð¾Ð²)`)
         setSelectedOrders(new Set())
         setIsDeleteOrdersDialogOpen(false)
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(`Ошибка: ${data.error || 'Ошибка удаления заказов'}`)
+        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²'}`)
       }
     } catch (error) {
       console.error('Delete orders error:', error)
-      toast.error('Ошибка соединения с сервером')
+      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
     } finally {
       setIsDeletingOrders(false)
     }
@@ -823,16 +823,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       return
     }
     if (selectedOrders.size === 0) {
-      toast.error('Пожалуйста, выберите заказы для удаления')
+      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ Ð·Ð°ÐºÐ°Ð·Ñ‹ Ð´Ð»Ñ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ')
       return
     }
 
-    const confirmMessage = `⚠️ ВНИМАНИЕ! Вы уверены, что хотите НАВСЕГДА удалить ${selectedOrders.size} заказ(ов)?\n\nЭто действие НЕЛЬЗЯ отменить!`
+    const confirmMessage = `âš ï¸ Ð’ÐÐ˜ÐœÐÐÐ˜Ð•! Ð’Ñ‹ ÑƒÐ²ÐµÑ€ÐµÐ½Ñ‹, Ñ‡Ñ‚Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ ÐÐÐ’Ð¡Ð•Ð“Ð”Ð ÑƒÐ´Ð°Ð»Ð¸Ñ‚ÑŒ ${selectedOrders.size} Ð·Ð°ÐºÐ°Ð·(Ð¾Ð²)?\n\nÐ­Ñ‚Ð¾ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ðµ ÐÐ•Ð›Ð¬Ð—Ð¯ Ð¾Ñ‚Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ!`
     if (!confirm(confirmMessage)) {
       return
     }
 
-    const doubleConfirm = confirm('Подтвердите еще раз: вы действительно хотите удалить эти заказы навсегда?')
+    const doubleConfirm = confirm('ÐŸÐ¾Ð´Ñ‚Ð²ÐµÑ€Ð´Ð¸Ñ‚Ðµ ÐµÑ‰Ðµ Ñ€Ð°Ð·: Ð²Ñ‹ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ñ‚ÐµÐ»ÑŒÐ½Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ ÑƒÐ´Ð°Ð»Ð¸Ñ‚ÑŒ ÑÑ‚Ð¸ Ð·Ð°ÐºÐ°Ð·Ñ‹ Ð½Ð°Ð²ÑÐµÐ³Ð´Ð°?')
     if (!doubleConfirm) {
       return
     }
@@ -848,26 +848,26 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(`Успешно удалено навсегда ${data.deletedCount} заказ(ов)`)
+        toast.success(`Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¾ Ð½Ð°Ð²ÑÐµÐ³Ð´Ð° ${data.deletedCount} Ð·Ð°ÐºÐ°Ð·(Ð¾Ð²)`)
         setSelectedOrders(new Set())
         fetchBinOrders()
       } else {
         const data = await response.json()
-        toast.error(`Ошибка: ${data.error || 'Ошибка удаления заказов'}`)
+        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²'}`)
       }
     } catch (error) {
       console.error('Permanent delete orders error:', error)
-      toast.error('Ошибка соединения с сервером')
+      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
     }
   }
 
   const handleRestoreSelectedOrders = async () => {
     if (selectedOrders.size === 0) {
-      toast.error('Пожалуйста, выберите заказы для восстановления')
+      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ Ð·Ð°ÐºÐ°Ð·Ñ‹ Ð´Ð»Ñ Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ')
       return
     }
 
-    if (!confirm(`Вы уверены, что хотите восстановить ${selectedOrders.size} заказ(ов)?`)) {
+    if (!confirm(`Ð’Ñ‹ ÑƒÐ²ÐµÑ€ÐµÐ½Ñ‹, Ñ‡Ñ‚Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ ${selectedOrders.size} Ð·Ð°ÐºÐ°Ð·(Ð¾Ð²)?`)) {
       return
     }
 
@@ -882,17 +882,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(data.message || `Успешно восстановлено ${data.updatedCount} заказ(ов)`)
+        toast.success(data.message || `Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð¾ ${data.updatedCount} Ð·Ð°ÐºÐ°Ð·(Ð¾Ð²)`)
         setSelectedOrders(new Set())
         fetchBinOrders()
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(`Ошибка: ${data.error || 'Ошибка восстановления заказов'}`)
+        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²'}`)
       }
     } catch (error) {
       console.error('Restore orders error:', error)
-      toast.error('Ошибка соединения с сервером')
+      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
     }
   }
 
@@ -910,16 +910,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       return
     }
     if (selectedBinClients.size === 0) {
-      toast.error('Пожалуйста, выберите клиентов для удаления')
+      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð² Ð´Ð»Ñ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ')
       return
     }
 
-    const confirmMessage = `⚠️ ВНИМАНИЕ! Вы уверены, что хотите НАВСЕГДА удалить ${selectedBinClients.size} клиент(ов)?\n\nВместе с клиентами будут удалены ВСЕ их заказы и история.\n\nЭто действие НЕЛЬЗЯ отменить!`
+    const confirmMessage = `âš ï¸ Ð’ÐÐ˜ÐœÐÐÐ˜Ð•! Ð’Ñ‹ ÑƒÐ²ÐµÑ€ÐµÐ½Ñ‹, Ñ‡Ñ‚Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ ÐÐÐ’Ð¡Ð•Ð“Ð”Ð ÑƒÐ´Ð°Ð»Ð¸Ñ‚ÑŒ ${selectedBinClients.size} ÐºÐ»Ð¸ÐµÐ½Ñ‚(Ð¾Ð²)?\n\nÐ’Ð¼ÐµÑÑ‚Ðµ Ñ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°Ð¼Ð¸ Ð±ÑƒÐ´ÑƒÑ‚ ÑƒÐ´Ð°Ð»ÐµÐ½Ñ‹ Ð’Ð¡Ð• Ð¸Ñ… Ð·Ð°ÐºÐ°Ð·Ñ‹ Ð¸ Ð¸ÑÑ‚Ð¾Ñ€Ð¸Ñ.\n\nÐ­Ñ‚Ð¾ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ðµ ÐÐ•Ð›Ð¬Ð—Ð¯ Ð¾Ñ‚Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ!`
     if (!confirm(confirmMessage)) {
       return
     }
 
-    const doubleConfirm = confirm('Подтвердите еще раз: вы действительно хотите удалить этих клиентов навсегда?')
+    const doubleConfirm = confirm('ÐŸÐ¾Ð´Ñ‚Ð²ÐµÑ€Ð´Ð¸Ñ‚Ðµ ÐµÑ‰Ðµ Ñ€Ð°Ð·: Ð²Ñ‹ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ñ‚ÐµÐ»ÑŒÐ½Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ ÑƒÐ´Ð°Ð»Ð¸Ñ‚ÑŒ ÑÑ‚Ð¸Ñ… ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð² Ð½Ð°Ð²ÑÐµÐ³Ð´Ð°?')
     if (!doubleConfirm) {
       return
     }
@@ -935,16 +935,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(data.message || `Успешно удалено навсегда ${data.deletedClients} клиент(ов)`)
+        toast.success(data.message || `Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¾ Ð½Ð°Ð²ÑÐµÐ³Ð´Ð° ${data.deletedClients} ÐºÐ»Ð¸ÐµÐ½Ñ‚(Ð¾Ð²)`)
         setSelectedBinClients(new Set())
         fetchBinClients()
       } else {
         const data = await response.json()
-        toast.error(`Ошибка: ${data.error || 'Ошибка удаления клиентов'}`)
+        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²'}`)
       }
     } catch (error) {
       console.error('Permanent delete clients error:', error)
-      toast.error('Ошибка соединения с сервером')
+      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
     }
   }
 
@@ -971,7 +971,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const handleSaveWarehousePoint = async () => {
     if (isWarehouseReadOnly) return
     if (!warehouseInput.trim()) {
-      toast.error('Укажите ссылку Google Maps или координаты')
+      toast.error('Ð£ÐºÐ°Ð¶Ð¸Ñ‚Ðµ ÑÑÑ‹Ð»ÐºÑƒ Google Maps Ð¸Ð»Ð¸ ÐºÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ñ‹')
       return
     }
 
@@ -984,7 +984,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) {
-        throw new Error((data && data.error) || 'Ошибка сохранения склада')
+        throw new Error((data && data.error) || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð¸Ñ ÑÐºÐ»Ð°Ð´Ð°')
       }
 
       const lat = data && typeof data.lat === 'number' ? data.lat : null
@@ -994,9 +994,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       setWarehousePreview(point)
       setWarehouseInput(point ? `${lat},${lng}` : '')
 
-      toast.success('Склад сохранён')
+      toast.success('Ð¡ÐºÐ»Ð°Ð´ ÑÐ¾Ñ…Ñ€Ð°Ð½Ñ‘Ð½')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Ошибка сохранения склада')
+      toast.error(error instanceof Error ? error.message : 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð¸Ñ ÑÐºÐ»Ð°Ð´Ð°')
     } finally {
       setIsWarehouseSaving(false)
     }
@@ -1041,7 +1041,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   const handleDeleteSelectedClients = async ({ skipConfirm = false }: { skipConfirm?: boolean } = {}) => {
     if (selectedClients.size === 0) {
-      toast.error('Пожалуйста, выберите клиентов для удаления')
+      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð² Ð´Ð»Ñ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ')
       return
     }
 
@@ -1066,17 +1066,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(`Успешно удалено:\n- ${data.deletedClients} клиент(ов)\n- ${data.deletedOrders} заказ(ов)`)
+        toast.success(`Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¾:\n- ${data.deletedClients} ÐºÐ»Ð¸ÐµÐ½Ñ‚(Ð¾Ð²)\n- ${data.deletedOrders} Ð·Ð°ÐºÐ°Ð·(Ð¾Ð²)`)
         setSelectedClients(new Set())
         setIsDeleteClientsDialogOpen(false)
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(`Ошибка: ${data.error || 'Ошибка удаления клиентов'}`)
+        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²'}`)
       }
     } catch (error) {
       console.error('Delete clients error:', error)
-      toast.error('Ошибка соединения с сервером')
+      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
     } finally {
       setIsMutatingClients(false)
     }
@@ -1102,7 +1102,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         })
       }
     } else {
-      // Если клиент не выбран или выбран ручной ввод, очищаем поля но оставляем значения по умолчанию
+      // Ð•ÑÐ»Ð¸ ÐºÐ»Ð¸ÐµÐ½Ñ‚ Ð½Ðµ Ð²Ñ‹Ð±Ñ€Ð°Ð½ Ð¸Ð»Ð¸ Ð²Ñ‹Ð±Ñ€Ð°Ð½ Ñ€ÑƒÑ‡Ð½Ð¾Ð¹ Ð²Ð²Ð¾Ð´, Ð¾Ñ‡Ð¸Ñ‰Ð°ÐµÐ¼ Ð¿Ð¾Ð»Ñ Ð½Ð¾ Ð¾ÑÑ‚Ð°Ð²Ð»ÑÐµÐ¼ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ñ Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ
       setOrderFormData(prev => ({
         ...prev,
         selectedClientId: clientId === "manual" ? "manual" : '',
@@ -1198,10 +1198,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         setEditingOrderId(null)
         fetchData()
       } else {
-        setOrderError(data.error || 'Ошибка сохранения заказа')
+        setOrderError(data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð¸Ñ Ð·Ð°ÐºÐ°Ð·Ð°')
       }
     } catch {
-      setOrderError('Ошибка соединения с сервером')
+      setOrderError('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
     } finally {
       setIsCreatingOrder(false)
     }
@@ -1255,12 +1255,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         setIsCreateCourierModalOpen(false)
         setCourierFormData({ name: '', email: '', password: '', salary: '' })
         fetchData()
-        toast.success('Курьер успешно создан')
+        toast.success('ÐšÑƒÑ€ÑŒÐµÑ€ ÑƒÑÐ¿ÐµÑˆÐ½Ð¾ ÑÐ¾Ð·Ð´Ð°Ð½')
       } else {
-        setCourierError(data.error || 'Ошибка создания курьера')
+        setCourierError(data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ ÐºÑƒÑ€ÑŒÐµÑ€Ð°')
       }
     } catch {
-      setCourierError('Ошибка соединения с сервером')
+      setCourierError('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
     } finally {
       setIsCreatingCourier(false)
     }
@@ -1320,23 +1320,23 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         setEditingClientId(null)
 
         // Show success message
-        const action = editingClientId ? 'обновлен' : 'создан'
-        const message = `Клиент "${data.client?.name || clientFormData.name}" успешно ${action}!`
+        const action = editingClientId ? 'Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½' : 'ÑÐ¾Ð·Ð´Ð°Ð½'
+        const message = `ÐšÐ»Ð¸ÐµÐ½Ñ‚ "${data.client?.name || clientFormData.name}" ÑƒÑÐ¿ÐµÑˆÐ½Ð¾ ${action}!`
         let description = ''
         if (!editingClientId && data.autoOrdersCreated && data.autoOrdersCreated > 0) {
-          description = `Автоматически создано заказов: ${data.autoOrdersCreated} (на следующие 30 дней)`
+          description = `ÐÐ²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸ ÑÐ¾Ð·Ð´Ð°Ð½Ð¾ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²: ${data.autoOrdersCreated} (Ð½Ð° ÑÐ»ÐµÐ´ÑƒÑŽÑ‰Ð¸Ðµ 30 Ð´Ð½ÐµÐ¹)`
         }
 
         toast.success(message, { description })
         fetchData()
       } else {
-        const errorMessage = data.error || `Ошибка ${editingClientId ? 'обновления' : 'создания'} клиента`
+        const errorMessage = data.error || `ÐžÑˆÐ¸Ð±ÐºÐ° ${editingClientId ? 'Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ' : 'ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ'} ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°`
         const errorDetails = data.details ? `\n${data.details}` : ''
         setClientError(`${errorMessage}${errorDetails}`)
         toast.error(errorMessage, { description: data.details })
       }
     } catch {
-      setClientError('Ошибка соединения с сервером')
+      setClientError('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
     } finally {
       setIsCreatingClient(false)
     }
@@ -1391,14 +1391,14 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       })
 
       if (response.ok) {
-        toast.success(`Клиент ${!currentStatus ? 'активирован' : 'приостановлен'}`)
+        toast.success(`ÐšÐ»Ð¸ÐµÐ½Ñ‚ ${!currentStatus ? 'Ð°ÐºÑ‚Ð¸Ð²Ð¸Ñ€Ð¾Ð²Ð°Ð½' : 'Ð¿Ñ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½'}`)
         fetchData()
       } else {
-        toast.error('Не удалось изменить статус клиента')
+        toast.error('ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð¸Ð·Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ ÑÑ‚Ð°Ñ‚ÑƒÑ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°')
       }
     } catch (error) {
       console.error('Error toggling client status:', error)
-      toast.error('Ошибка соединения с сервером')
+      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
     }
   }
 
@@ -1435,7 +1435,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   const handlePauseSelectedClients = async ({ skipConfirm = false }: { skipConfirm?: boolean } = {}) => {
     if (selectedClients.size === 0) {
-      toast.error('Пожалуйста, выберите клиентов для приостановки')
+      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð² Ð´Ð»Ñ Ð¿Ñ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²ÐºÐ¸')
       return
     }
 
@@ -1459,17 +1459,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(`Успешно приостановлено клиентов: ${data.updatedCount}`)
+        toast.success(`Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ Ð¿Ñ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð¾ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²: ${data.updatedCount}`)
         setSelectedClients(new Set())
         setIsPauseClientsDialogOpen(false)
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(`Ошибка: ${data.error || 'Ошибка приостановки клиентов'}`)
+        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð¿Ñ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²ÐºÐ¸ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²'}`)
       }
     } catch (error) {
       console.error('Error pausing clients:', error)
-      toast.error('Ошибка соединения с сервером. Пожалуйста, попробуйте еще раз.')
+      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼. ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð¿Ð¾Ð¿Ñ€Ð¾Ð±ÑƒÐ¹Ñ‚Ðµ ÐµÑ‰Ðµ Ñ€Ð°Ð·.')
     } finally {
       setIsMutatingClients(false)
     }
@@ -1477,7 +1477,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   const handleResumeSelectedClients = async ({ skipConfirm = false }: { skipConfirm?: boolean } = {}) => {
     if (selectedClients.size === 0) {
-      toast.error('Пожалуйста, выберите клиентов для возобновления')
+      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð² Ð´Ð»Ñ Ð²Ð¾Ð·Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ')
       return
     }
 
@@ -1501,17 +1501,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(`Успешно возобновлено клиентов: ${data.updatedCount}`)
+        toast.success(`Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ Ð²Ð¾Ð·Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¾ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²: ${data.updatedCount}`)
         setSelectedClients(new Set())
         setIsResumeClientsDialogOpen(false)
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(`Ошибка: ${data.error || 'Ошибка возобновления клиентов'}`)
+        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð²Ð¾Ð·Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²'}`)
       }
     } catch (error) {
       console.error('Error resuming clients:', error)
-      toast.error('Ошибка соединения с сервером. Пожалуйста, попробуйте еще раз.')
+      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼. ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð¿Ð¾Ð¿Ñ€Ð¾Ð±ÑƒÐ¹Ñ‚Ðµ ÐµÑ‰Ðµ Ñ€Ð°Ð·.')
     } finally {
       setIsMutatingClients(false)
     }
@@ -1541,7 +1541,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(`Обновлено заказов: ${data.updatedCount}`)
+        toast.success(`ÐžÐ±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¾ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²: ${data.updatedCount}`)
         setIsBulkEditOrdersModalOpen(false)
         setSelectedOrders(new Set())
         setBulkOrderUpdates({
@@ -1553,13 +1553,13 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(data.error || 'Ошибка обновления заказов', {
+        toast.error(data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²', {
           description: data.details || undefined
         })
       }
     } catch (error) {
       console.error('Error bulk updating orders:', error)
-      toast.error('Ошибка соединения с сервером')
+      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
     } finally {
       setIsUpdatingBulk(false)
     }
@@ -1589,7 +1589,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(`Обновлено клиентов: ${data.updatedCount}`)
+        toast.success(`ÐžÐ±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¾ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²: ${data.updatedCount}`)
         setIsBulkEditClientsModalOpen(false)
         setSelectedClients(new Set())
         setBulkClientUpdates({
@@ -1599,11 +1599,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(data.error || 'Ошибка обновления клиентов')
+        toast.error(data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²')
       }
     } catch (error) {
       console.error('Error bulk updating clients:', error)
-      toast.error('Ошибка соединения с сервером')
+      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
     } finally {
       setIsUpdatingBulk(false)
     }
@@ -1611,16 +1611,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   const handleRestoreSelectedClients = async () => {
     if (selectedBinClients.size === 0) {
-      toast.error('Пожалуйста, выберите клиентов для восстановления')
+      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð² Ð´Ð»Ñ Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ')
       return
     }
 
     const selectedClientsList = Array.from(selectedBinClients).map(id =>
-      binClients.find(c => c.id === id)?.name || 'Неизвестный клиент'
+      binClients.find(c => c.id === id)?.name || 'ÐÐµÐ¸Ð·Ð²ÐµÑÑ‚Ð½Ñ‹Ð¹ ÐºÐ»Ð¸ÐµÐ½Ñ‚'
     ).join(', ')
 
     const hasActiveClients = binClients.some(c => selectedBinClients.has(c.id) && c.isActive)
-    const confirmMessage = `Вы уверены, что хотите восстановить следующих клиентов:\n\n${selectedClientsList}\n\n${hasActiveClients ? 'Автоматические заказы будут созданы для активных клиентов.' : ''}`
+    const confirmMessage = `Ð’Ñ‹ ÑƒÐ²ÐµÑ€ÐµÐ½Ñ‹, Ñ‡Ñ‚Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ ÑÐ»ÐµÐ´ÑƒÑŽÑ‰Ð¸Ñ… ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²:\n\n${selectedClientsList}\n\n${hasActiveClients ? 'ÐÐ²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸Ðµ Ð·Ð°ÐºÐ°Ð·Ñ‹ Ð±ÑƒÐ´ÑƒÑ‚ ÑÐ¾Ð·Ð´Ð°Ð½Ñ‹ Ð´Ð»Ñ Ð°ÐºÑ‚Ð¸Ð²Ð½Ñ‹Ñ… ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð².' : ''}`
 
     if (!confirm(confirmMessage)) {
       return
@@ -1639,36 +1639,36 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(data.message || `Успешно восстановлено: ${data.restoredClients} клиентов`)
+        toast.success(data.message || `Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð¾: ${data.restoredClients} ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²`)
         setSelectedBinClients(new Set())
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(`Ошибка: ${data.error || 'Ошибка восстановления клиентов'}`)
+        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²'}`)
       }
     } catch (error) {
       console.error('Restore clients error:', error)
-      toast.error('Ошибка соединения с сервером')
+      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
     }
   }
 
   const _handlePermanentDeleteSelected = async () => {
     if (selectedBinClients.size === 0) {
-      toast.error('Пожалуйста, выберите клиентов для окончательного удаления')
+      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð² Ð´Ð»Ñ Ð¾ÐºÐ¾Ð½Ñ‡Ð°Ñ‚ÐµÐ»ÑŒÐ½Ð¾Ð³Ð¾ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ')
       return
     }
 
     const selectedClientsList = Array.from(selectedBinClients).map(id =>
-      binClients.find(c => c.id === id)?.name || 'Неизвестный клиент'
+      binClients.find(c => c.id === id)?.name || 'ÐÐµÐ¸Ð·Ð²ÐµÑÑ‚Ð½Ñ‹Ð¹ ÐºÐ»Ð¸ÐµÐ½Ñ‚'
     ).join(', ')
 
-    const confirmMessage = `⚠️ ВНИМАНИЕ! Вы уверены, что хотите НАВСЕГДА удалить следующих клиентов:\n\n${selectedClientsList}\n\nВсе данные и заказы этих клиентов будут удалены безвозвратно.\n\nЭто действие НЕЛЬЗЯ отменить!`
+    const confirmMessage = `âš ï¸ Ð’ÐÐ˜ÐœÐÐÐ˜Ð•! Ð’Ñ‹ ÑƒÐ²ÐµÑ€ÐµÐ½Ñ‹, Ñ‡Ñ‚Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ ÐÐÐ’Ð¡Ð•Ð“Ð”Ð ÑƒÐ´Ð°Ð»Ð¸Ñ‚ÑŒ ÑÐ»ÐµÐ´ÑƒÑŽÑ‰Ð¸Ñ… ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²:\n\n${selectedClientsList}\n\nÐ’ÑÐµ Ð´Ð°Ð½Ð½Ñ‹Ðµ Ð¸ Ð·Ð°ÐºÐ°Ð·Ñ‹ ÑÑ‚Ð¸Ñ… ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð² Ð±ÑƒÐ´ÑƒÑ‚ ÑƒÐ´Ð°Ð»ÐµÐ½Ñ‹ Ð±ÐµÐ·Ð²Ð¾Ð·Ð²Ñ€Ð°Ñ‚Ð½Ð¾.\n\nÐ­Ñ‚Ð¾ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ðµ ÐÐ•Ð›Ð¬Ð—Ð¯ Ð¾Ñ‚Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ!`
 
     if (!confirm(confirmMessage)) {
       return
     }
 
-    const doubleConfirm = confirm('Подтвердите еще раз: вы действительно хотите удалить навсегда?')
+    const doubleConfirm = confirm('ÐŸÐ¾Ð´Ñ‚Ð²ÐµÑ€Ð´Ð¸Ñ‚Ðµ ÐµÑ‰Ðµ Ñ€Ð°Ð·: Ð²Ñ‹ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ñ‚ÐµÐ»ÑŒÐ½Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ ÑƒÐ´Ð°Ð»Ð¸Ñ‚ÑŒ Ð½Ð°Ð²ÑÐµÐ³Ð´Ð°?')
     if (!doubleConfirm) {
       return
     }
@@ -1686,22 +1686,22 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(data.message || `Успешно удалено навсегда: ${data.deletedClients} клиентов`)
+        toast.success(data.message || `Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¾ Ð½Ð°Ð²ÑÐµÐ³Ð´Ð°: ${data.deletedClients} ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²`)
         setSelectedBinClients(new Set())
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(`Ошибка: ${data.error || 'Ошибка удаления клиентов'}`)
+        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²'}`)
       }
     } catch (error) {
       console.error('Permanent delete error:', error)
-      toast.error('Ошибка соединения с сервером')
+      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
     }
   }
 
   const handleRunAutoOrders = async () => {
     try {
-      toast.info('Запуск создания автоматических заказов...')
+      toast.info('Ð—Ð°Ð¿ÑƒÑÐº ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸Ñ… Ð·Ð°ÐºÐ°Ð·Ð¾Ð²...')
 
       const response = await fetch('/api/admin/auto-orders/create', {
         method: 'POST',
@@ -1713,15 +1713,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(data.message || `Создано ${data.ordersCreated} автоматических заказов`)
+        toast.success(data.message || `Ð¡Ð¾Ð·Ð´Ð°Ð½Ð¾ ${data.ordersCreated} Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸Ñ… Ð·Ð°ÐºÐ°Ð·Ð¾Ð²`)
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(`Ошибка: ${data.error || 'Ошибка создания заказов'}`)
+        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²'}`)
       }
     } catch (error) {
       console.error('Run auto orders error:', error)
-      toast.error('Ошибка соединения с сервером')
+      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
     }
   }
 
@@ -1792,15 +1792,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     try {
       let destination = order.deliveryAddress
 
-      // Если есть координаты, используем их для точной навигации
+      // Ð•ÑÐ»Ð¸ ÐµÑÑ‚ÑŒ ÐºÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ñ‹, Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÐµÐ¼ Ð¸Ñ… Ð´Ð»Ñ Ñ‚Ð¾Ñ‡Ð½Ð¾Ð¹ Ð½Ð°Ð²Ð¸Ð³Ð°Ñ†Ð¸Ð¸
       if (order.latitude && order.longitude) {
         destination = `${order.latitude},${order.longitude}`
       }
 
-      // Создаем ссылку для навигации от текущего местоположения к точке назначения
+      // Ð¡Ð¾Ð·Ð´Ð°ÐµÐ¼ ÑÑÑ‹Ð»ÐºÑƒ Ð´Ð»Ñ Ð½Ð°Ð²Ð¸Ð³Ð°Ñ†Ð¸Ð¸ Ð¾Ñ‚ Ñ‚ÐµÐºÑƒÑ‰ÐµÐ³Ð¾ Ð¼ÐµÑÑ‚Ð¾Ð¿Ð¾Ð»Ð¾Ð¶ÐµÐ½Ð¸Ñ Ðº Ñ‚Ð¾Ñ‡ÐºÐµ Ð½Ð°Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ñ
       const navigationUrl = `https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=${destination}&travelmode=driving&dir_action=navigate`
 
-      // Открываем ссылку в новой вкладке
+      // ÐžÑ‚ÐºÑ€Ñ‹Ð²Ð°ÐµÐ¼ ÑÑÑ‹Ð»ÐºÑƒ Ð² Ð½Ð¾Ð²Ð¾Ð¹ Ð²ÐºÐ»Ð°Ð´ÐºÐµ
       window.open(navigationUrl, '_blank')
     } catch (error) {
       console.error('Error getting route:', error)
@@ -1831,7 +1831,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
             <span className="h-2 w-2 rounded-md bg-foreground/40 animate-pulse" style={{ animationDelay: '150ms' }} />
             <span className="h-2 w-2 rounded-md bg-foreground/20 animate-pulse" style={{ animationDelay: '300ms' }} />
           </div>
-          <p className="text-xs text-muted-foreground tracking-wide">Загрузка...</p>
+          <p className="text-xs text-muted-foreground tracking-wide">Ð—Ð°Ð³Ñ€ÑƒÐ·ÐºÐ°...</p>
         </div>
       </div>
     )
@@ -1840,11 +1840,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-background/70 backdrop-blur-xl border-b border-border/60">
+      <header className="border-b border-border bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14">
             <div className="flex items-center gap-4">
-              <h1 className="font-display text-base font-semibold tracking-tight hidden md:block">{t.admin.dashboard}</h1>
+              <h1 className="text-base font-semibold tracking-tight hidden md:block">{t.admin.dashboard}</h1>
               <span className="hidden md:block text-xs text-muted-foreground">|</span>
               <span className="text-xs text-muted-foreground hidden md:block">
                 {currentDate || ' '}
@@ -1915,9 +1915,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         <section className="mb-4 rounded-xl border border-border bg-card p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-medium">Operations Summary</p>
+              <p className="text-sm font-medium">Operations summary</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Date: {commandSnapshot.dispatchDateLabel} - Selected entities: {commandSnapshot.selectedWorkload}
+                Date: {commandSnapshot.dispatchDateLabel} | Selected entities: {commandSnapshot.selectedWorkload}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -1967,7 +1967,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 detail: 'Orders + clients in focus',
               },
             ].map((item) => (
-              <div key={item.id} className="rounded-md border border-border bg-background p-3">
+              <div key={item.id} className="rounded-lg border border-border bg-background p-3">
                 <p className="text-xs text-muted-foreground">{item.label}</p>
                 <p className="mt-2 text-2xl font-semibold">{item.value}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{item.detail}</p>
@@ -1986,15 +1986,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
             <>
               {/* Statistics Tab */}
               <TabsContent value="statistics" className="space-y-5 animate-fade-in">
-            {/* ── Order Status ── */}
+            {/* â”€â”€ Order Status â”€â”€ */}
             <div>
               <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.admin.stats.successful} / {t.admin.stats.failed}</h3>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { label: t.admin.stats.successful, value: stats?.successfulOrders || 0, sub: 'Доставлено', color: 'text-emerald-600', dot: 'bg-emerald-500' },
-                  { label: t.admin.stats.failed, value: stats?.failedOrders || 0, sub: 'Отменено', color: 'text-rose-600', dot: 'bg-rose-500' },
-                  { label: t.admin.stats.inDelivery, value: stats?.inDeliveryOrders || 0, sub: 'В процессе', color: 'text-blue-600', dot: 'bg-blue-500' },
-                  { label: t.admin.stats.pending, value: stats?.pendingOrders || 0, sub: 'В очереди', color: 'text-amber-600', dot: 'bg-amber-500' },
+                  { label: t.admin.stats.successful, value: stats?.successfulOrders || 0, sub: 'Ð”Ð¾ÑÑ‚Ð°Ð²Ð»ÐµÐ½Ð¾', color: 'text-emerald-600', dot: 'bg-emerald-500' },
+                  { label: t.admin.stats.failed, value: stats?.failedOrders || 0, sub: 'ÐžÑ‚Ð¼ÐµÐ½ÐµÐ½Ð¾', color: 'text-rose-600', dot: 'bg-rose-500' },
+                  { label: t.admin.stats.inDelivery, value: stats?.inDeliveryOrders || 0, sub: 'Ð’ Ð¿Ñ€Ð¾Ñ†ÐµÑÑÐµ', color: 'text-blue-600', dot: 'bg-blue-500' },
+                  { label: t.admin.stats.pending, value: stats?.pendingOrders || 0, sub: 'Ð’ Ð¾Ñ‡ÐµÑ€ÐµÐ´Ð¸', color: 'text-amber-600', dot: 'bg-amber-500' },
                 ].map((s) => (
                   <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
                     <div className="flex items-center gap-2 mb-2">
@@ -2008,15 +2008,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </div>
             </div>
 
-            {/* ── Payment Stats ── */}
+            {/* â”€â”€ Payment Stats â”€â”€ */}
             <div>
               <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.admin.stats.prepaid} / {t.admin.stats.unpaid}</h3>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { label: t.admin.stats.prepaid, value: stats?.prepaidOrders || 0, sub: 'Оплачено', color: 'text-emerald-600', dot: 'bg-emerald-500' },
-                  { label: t.admin.stats.unpaid, value: stats?.unpaidOrders || 0, sub: 'При получении', color: 'text-rose-600', dot: 'bg-rose-500' },
-                  { label: t.admin.stats.card, value: stats?.cardOrders || 0, sub: 'Онлайн', color: 'text-blue-600', dot: 'bg-blue-500' },
-                  { label: t.admin.stats.cash, value: stats?.cashOrders || 0, sub: 'Наличные', color: 'text-teal-600', dot: 'bg-teal-500' },
+                  { label: t.admin.stats.prepaid, value: stats?.prepaidOrders || 0, sub: 'ÐžÐ¿Ð»Ð°Ñ‡ÐµÐ½Ð¾', color: 'text-emerald-600', dot: 'bg-emerald-500' },
+                  { label: t.admin.stats.unpaid, value: stats?.unpaidOrders || 0, sub: 'ÐŸÑ€Ð¸ Ð¿Ð¾Ð»ÑƒÑ‡ÐµÐ½Ð¸Ð¸', color: 'text-rose-600', dot: 'bg-rose-500' },
+                  { label: t.admin.stats.card, value: stats?.cardOrders || 0, sub: 'ÐžÐ½Ð»Ð°Ð¹Ð½', color: 'text-blue-600', dot: 'bg-blue-500' },
+                  { label: t.admin.stats.cash, value: stats?.cashOrders || 0, sub: 'ÐÐ°Ð»Ð¸Ñ‡Ð½Ñ‹Ðµ', color: 'text-teal-600', dot: 'bg-teal-500' },
                 ].map((s) => (
                   <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
                     <div className="flex items-center gap-2 mb-2">
@@ -2030,15 +2030,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </div>
             </div>
 
-            {/* ── Customer Stats ── */}
+            {/* â”€â”€ Customer Stats â”€â”€ */}
             <div>
               <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.admin.stats.daily}</h3>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { label: t.admin.stats.daily, value: stats?.dailyCustomers || 0, sub: 'Каждый день', color: 'text-violet-600', dot: 'bg-violet-500' },
-                  { label: t.admin.stats.evenDay, value: stats?.evenDayCustomers || 0, sub: 'Чётные дни', color: 'text-indigo-600', dot: 'bg-indigo-500' },
-                  { label: t.admin.stats.oddDay, value: stats?.oddDayCustomers || 0, sub: 'Нечётные дни', color: 'text-pink-600', dot: 'bg-pink-500' },
-                  { label: t.admin.stats.special, value: stats?.specialPreferenceCustomers || 0, sub: 'С особенностями', color: 'text-orange-600', dot: 'bg-orange-500' },
+                  { label: t.admin.stats.daily, value: stats?.dailyCustomers || 0, sub: 'ÐšÐ°Ð¶Ð´Ñ‹Ð¹ Ð´ÐµÐ½ÑŒ', color: 'text-violet-600', dot: 'bg-violet-500' },
+                  { label: t.admin.stats.evenDay, value: stats?.evenDayCustomers || 0, sub: 'Ð§Ñ‘Ñ‚Ð½Ñ‹Ðµ Ð´Ð½Ð¸', color: 'text-indigo-600', dot: 'bg-indigo-500' },
+                  { label: t.admin.stats.oddDay, value: stats?.oddDayCustomers || 0, sub: 'ÐÐµÑ‡Ñ‘Ñ‚Ð½Ñ‹Ðµ Ð´Ð½Ð¸', color: 'text-pink-600', dot: 'bg-pink-500' },
+                  { label: t.admin.stats.special, value: stats?.specialPreferenceCustomers || 0, sub: 'Ð¡ Ð¾ÑÐ¾Ð±ÐµÐ½Ð½Ð¾ÑÑ‚ÑÐ¼Ð¸', color: 'text-orange-600', dot: 'bg-orange-500' },
                 ].map((s) => (
                   <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
                     <div className="flex items-center gap-2 mb-2">
@@ -2052,16 +2052,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </div>
             </div>
 
-            {/* ── Calories ── */}
+            {/* â”€â”€ Calories â”€â”€ */}
             <div>
               <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.admin.stats.lowCal}</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                 {[
-                  { label: t.admin.stats.lowCal, value: stats?.orders1200 || 0, sub: '1200 ккал', color: 'text-rose-600', dot: 'bg-rose-500' },
-                  { label: t.admin.stats.standard, value: stats?.orders1600 || 0, sub: '1600 ккал', color: 'text-orange-600', dot: 'bg-orange-500' },
-                  { label: t.admin.stats.medium, value: stats?.orders2000 || 0, sub: '2000 ккал', color: 'text-yellow-600', dot: 'bg-yellow-500' },
-                  { label: t.admin.stats.high, value: stats?.orders2500 || 0, sub: '2500 ккал', color: 'text-emerald-600', dot: 'bg-emerald-500' },
-                  { label: t.admin.stats.max, value: stats?.orders3000 || 0, sub: '3000 ккал', color: 'text-blue-600', dot: 'bg-blue-500' },
+                  { label: t.admin.stats.lowCal, value: stats?.orders1200 || 0, sub: '1200 ÐºÐºÐ°Ð»', color: 'text-rose-600', dot: 'bg-rose-500' },
+                  { label: t.admin.stats.standard, value: stats?.orders1600 || 0, sub: '1600 ÐºÐºÐ°Ð»', color: 'text-orange-600', dot: 'bg-orange-500' },
+                  { label: t.admin.stats.medium, value: stats?.orders2000 || 0, sub: '2000 ÐºÐºÐ°Ð»', color: 'text-yellow-600', dot: 'bg-yellow-500' },
+                  { label: t.admin.stats.high, value: stats?.orders2500 || 0, sub: '2500 ÐºÐºÐ°Ð»', color: 'text-emerald-600', dot: 'bg-emerald-500' },
+                  { label: t.admin.stats.max, value: stats?.orders3000 || 0, sub: '3000 ÐºÐºÐ°Ð»', color: 'text-blue-600', dot: 'bg-blue-500' },
                 ].map((s) => (
                   <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
                     <div className="flex items-center gap-2 mb-2">
@@ -2075,11 +2075,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </div>
             </div>
 
-            {/* ── Item Count ── */}
+            {/* â”€â”€ Item Count â”€â”€ */}
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: t.admin.stats.single, value: stats?.singleItemOrders || 0, sub: '1 порция', color: 'text-indigo-600', dot: 'bg-indigo-500' },
-                { label: t.admin.stats.multi, value: stats?.multiItemOrders || 0, sub: 'Два и более рационов', color: 'text-violet-600', dot: 'bg-violet-500' },
+                { label: t.admin.stats.single, value: stats?.singleItemOrders || 0, sub: '1 Ð¿Ð¾Ñ€Ñ†Ð¸Ñ', color: 'text-indigo-600', dot: 'bg-indigo-500' },
+                { label: t.admin.stats.multi, value: stats?.multiItemOrders || 0, sub: 'Ð”Ð²Ð° Ð¸ Ð±Ð¾Ð»ÐµÐµ Ñ€Ð°Ñ†Ð¸Ð¾Ð½Ð¾Ð²', color: 'text-violet-600', dot: 'bg-violet-500' },
               ].map((s) => (
                 <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
                   <div className="flex items-center gap-2 mb-2">
@@ -2283,7 +2283,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 onChange={(e) => setFilters({ ...filters, prepaid: e.target.checked })}
                                 className="rounded"
                               />
-                              <span className="text-sm">{t.admin.filterGroups.prepaid} (⭐)</span>
+                              <span className="text-sm">{t.admin.filterGroups.prepaid} (â­)</span>
                             </label>
                             <div className="hidden md:block"></div>
                             <label className="flex items-center space-x-2">
@@ -2412,8 +2412,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     inputRef={searchInputRef}
                     searchValue={searchTerm}
                     onSearchChange={setSearchTerm}
-                    searchPlaceholder="Поиск по имени, адресу или номеру заказа..."
-                    searchAriaLabel="Поиск заказов"
+                    searchPlaceholder="ÐŸÐ¾Ð¸ÑÐº Ð¿Ð¾ Ð¸Ð¼ÐµÐ½Ð¸, Ð°Ð´Ñ€ÐµÑÑƒ Ð¸Ð»Ð¸ Ð½Ð¾Ð¼ÐµÑ€Ñƒ Ð·Ð°ÐºÐ°Ð·Ð°..."
+                    searchAriaLabel="ÐŸÐ¾Ð¸ÑÐº Ð·Ð°ÐºÐ°Ð·Ð¾Ð²"
                   >
                     <Badge variant="secondary" className="h-9 rounded-md px-3">
                       {filteredOrders.length} rows
@@ -2439,8 +2439,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
                 {filteredOrders.length === 0 ? (
                   <TabEmptyState
-                    title="Заказы не найдены"
-                    description="Измените фильтры или поисковый запрос."
+                    title="Ð—Ð°ÐºÐ°Ð·Ñ‹ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ñ‹"
+                    description="Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚Ðµ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ñ‹ Ð¸Ð»Ð¸ Ð¿Ð¾Ð¸ÑÐºÐ¾Ð²Ñ‹Ð¹ Ð·Ð°Ð¿Ñ€Ð¾Ñ."
                   />
                 ) : (
                   <div className="rounded-md border">
@@ -2473,7 +2473,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       {t.admin.manageClientsDesc}
                       {clientStatusFilter !== 'all' && (
                         <span className="ml-2 text-sm">
-                          (Показано: {filteredClients.length} из {clients.length})
+                          (ÐŸÐ¾ÐºÐ°Ð·Ð°Ð½Ð¾: {filteredClients.length} Ð¸Ð· {clients.length})
                         </span>
                       )}
                     </CardDescription>
@@ -2481,16 +2481,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   <div className="grid w-full gap-2 lg:w-auto lg:grid-cols-[190px_auto]">
                     <Select value={clientStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setClientStatusFilter(value)}>
                       <SelectTrigger className="h-9 w-full">
-                        <SelectValue placeholder="Фильтр статуса" />
+                        <SelectValue placeholder="Ð¤Ð¸Ð»ÑŒÑ‚Ñ€ ÑÑ‚Ð°Ñ‚ÑƒÑÐ°" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Все клиенты</SelectItem>
-                        <SelectItem value="active">Только активные</SelectItem>
-                        <SelectItem value="inactive">Только приостановленные</SelectItem>
+                        <SelectItem value="all">Ð’ÑÐµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ñ‹</SelectItem>
+                        <SelectItem value="active">Ð¢Ð¾Ð»ÑŒÐºÐ¾ Ð°ÐºÑ‚Ð¸Ð²Ð½Ñ‹Ðµ</SelectItem>
+                        <SelectItem value="inactive">Ð¢Ð¾Ð»ÑŒÐºÐ¾ Ð¿Ñ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð½Ñ‹Ðµ</SelectItem>
                       </SelectContent>
                     </Select>
                     <Button variant="outline" className="h-9" onClick={() => setActiveTab('bin')}>
-                      Корзина
+                      ÐšÐ¾Ñ€Ð·Ð¸Ð½Ð°
                     </Button>
                   </div>
                 </div>
@@ -2498,21 +2498,21 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       <DialogTrigger asChild>
                         <Button>
                           <Plus className="w-4 h-4 mr-2" />
-                          Создать клиента
+                          Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
-                          <DialogTitle>{editingClientId ? 'Редактировать Клиента' : 'Создать Клиента'}</DialogTitle>
+                          <DialogTitle>{editingClientId ? 'Ð ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ ÐšÐ»Ð¸ÐµÐ½Ñ‚Ð°' : 'Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ ÐšÐ»Ð¸ÐµÐ½Ñ‚Ð°'}</DialogTitle>
                           <DialogDescription>
-                            {editingClientId ? 'Измените данные клиента' : 'Создайте нового клиента в системе'}
+                            {editingClientId ? 'Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚Ðµ Ð´Ð°Ð½Ð½Ñ‹Ðµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°' : 'Ð¡Ð¾Ð·Ð´Ð°Ð¹Ñ‚Ðµ Ð½Ð¾Ð²Ð¾Ð³Ð¾ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð° Ð² ÑÐ¸ÑÑ‚ÐµÐ¼Ðµ'}
                           </DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleCreateClient}>
                           <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientName" className="text-right">
-                                Имя
+                                Ð˜Ð¼Ñ
                               </Label>
                               <Input
                                 id="clientName"
@@ -2524,19 +2524,19 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientNickName" className="text-right">
-                                Никнейм
+                                ÐÐ¸ÐºÐ½ÐµÐ¹Ð¼
                               </Label>
                               <Input
                                 id="clientNickName"
                                 value={clientFormData.nickName || ''}
                                 onChange={(e) => setClientFormData(prev => ({ ...prev, nickName: e.target.value }))}
                                 className="col-span-3"
-                                placeholder="Например: Офис, Дом... (необязательно)"
+                                placeholder="ÐÐ°Ð¿Ñ€Ð¸Ð¼ÐµÑ€: ÐžÑ„Ð¸Ñ, Ð”Ð¾Ð¼... (Ð½ÐµÐ¾Ð±ÑÐ·Ð°Ñ‚ÐµÐ»ÑŒÐ½Ð¾)"
                               />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientPhone" className="text-right">
-                                Телефон
+                                Ð¢ÐµÐ»ÐµÑ„Ð¾Ð½
                               </Label>
                               <div className="col-span-3">
                                 <Input
@@ -2547,12 +2547,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                   onChange={(e) => setClientFormData(prev => ({ ...prev, phone: e.target.value }))}
                                   required
                                 />
-                                <p className="text-xs text-muted-foreground mt-1">Формат: +998 XX XXX XX XX</p>
+                                <p className="text-xs text-muted-foreground mt-1">Ð¤Ð¾Ñ€Ð¼Ð°Ñ‚: +998 XX XXX XX XX</p>
                               </div>
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientAddress" className="text-right">
-                                Адрес
+                                ÐÐ´Ñ€ÐµÑ
                               </Label>
                               <Input
                                 id="clientAddress"
@@ -2564,7 +2564,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="googleMapsLink" className="text-right">
-                                Ссылка на карту
+                                Ð¡ÑÑ‹Ð»ÐºÐ° Ð½Ð° ÐºÐ°Ñ€Ñ‚Ñƒ
                               </Label>
 
                               <Input
@@ -2577,7 +2577,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientPlanType" className="text-right">
-                                Тариф
+                                Ð¢Ð°Ñ€Ð¸Ñ„
                               </Label>
                               <select
                                 id="clientPlanType"
@@ -2600,7 +2600,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientCalories" className="text-right">
-                                Калории
+                                ÐšÐ°Ð»Ð¾Ñ€Ð¸Ð¸
                               </Label>
                               <select
                                 id="clientCalories"
@@ -2615,17 +2615,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 }}
                                 className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                               >
-                                <option value="1200">1200 ккал</option>
-                                <option value="1600">1600 ккал</option>
-                                <option value="2000">2000 ккал</option>
-                                <option value="2500">2500 ккал</option>
-                                <option value="3000">3000 ккал</option>
+                                <option value="1200">1200 ÐºÐºÐ°Ð»</option>
+                                <option value="1600">1600 ÐºÐºÐ°Ð»</option>
+                                <option value="2000">2000 ÐºÐºÐ°Ð»</option>
+                                <option value="2500">2500 ÐºÐºÐ°Ð»</option>
+                                <option value="3000">3000 ÐºÐºÐ°Ð»</option>
                               </select>
                             </div>
 
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientPrice" className="text-right">
-                                Цена (сум)
+                                Ð¦ÐµÐ½Ð° (ÑÑƒÐ¼)
                               </Label>
                               <Input
                                 id="clientPrice"
@@ -2638,35 +2638,35 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientNotes" className="text-right">
-                                Заметки
+                                Ð—Ð°Ð¼ÐµÑ‚ÐºÐ¸
                               </Label>
                               <Input
                                 id="clientNotes"
                                 value={clientFormData.notes || ''}
                                 onChange={(e) => setClientFormData(prev => ({ ...prev, notes: e.target.value }))}
                                 className="col-span-3"
-                                placeholder="Индивидуальные предпочтения..."
+                                placeholder="Ð˜Ð½Ð´Ð¸Ð²Ð¸Ð´ÑƒÐ°Ð»ÑŒÐ½Ñ‹Ðµ Ð¿Ñ€ÐµÐ´Ð¿Ð¾Ñ‡Ñ‚ÐµÐ½Ð¸Ñ..."
                               />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientSpecialFeatures" className="text-right">
-                                Особенности
+                                ÐžÑÐ¾Ð±ÐµÐ½Ð½Ð¾ÑÑ‚Ð¸
                               </Label>
                               <Input
                                 id="clientSpecialFeatures"
                                 value={clientFormData.specialFeatures}
                                 onChange={(e) => setClientFormData(prev => ({ ...prev, specialFeatures: e.target.value }))}
                                 className="col-span-3"
-                                placeholder="Особые пожелания (необязательно)"
+                                placeholder="ÐžÑÐ¾Ð±Ñ‹Ðµ Ð¿Ð¾Ð¶ÐµÐ»Ð°Ð½Ð¸Ñ (Ð½ÐµÐ¾Ð±ÑÐ·Ð°Ñ‚ÐµÐ»ÑŒÐ½Ð¾)"
                               />
                             </div>
                             <div className="grid grid-cols-4 items-start gap-2">
                               <Label className="text-right pt-2">
-                                Дни доставки
+                                Ð”Ð½Ð¸ Ð´Ð¾ÑÑ‚Ð°Ð²ÐºÐ¸
                               </Label>
                               <div className="col-span-3 space-y-2">
                                 <div className="text-xs text-slate-500 mb-2">
-                                  Выберите дни недели для автоматического создания заказов
+                                  Ð’Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ Ð´Ð½Ð¸ Ð½ÐµÐ´ÐµÐ»Ð¸ Ð´Ð»Ñ Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¾Ð³Ð¾ ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                   <div className="flex items-center space-x-2">
@@ -2675,7 +2675,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                       checked={clientFormData.deliveryDays.monday}
                                       onCheckedChange={(checked) => handleDeliveryDayChange('monday', checked === true)}
                                     />
-                                    <Label htmlFor="monday" className="text-sm">Понедельник</Label>
+                                    <Label htmlFor="monday" className="text-sm">ÐŸÐ¾Ð½ÐµÐ´ÐµÐ»ÑŒÐ½Ð¸Ðº</Label>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <Checkbox
@@ -2683,7 +2683,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                       checked={clientFormData.deliveryDays.tuesday}
                                       onCheckedChange={(checked) => handleDeliveryDayChange('tuesday', checked === true)}
                                     />
-                                    <Label htmlFor="tuesday" className="text-sm">Вторник</Label>
+                                    <Label htmlFor="tuesday" className="text-sm">Ð’Ñ‚Ð¾Ñ€Ð½Ð¸Ðº</Label>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <Checkbox
@@ -2691,7 +2691,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                       checked={clientFormData.deliveryDays.wednesday}
                                       onCheckedChange={(checked) => handleDeliveryDayChange('wednesday', checked === true)}
                                     />
-                                    <Label htmlFor="wednesday" className="text-sm">Среда</Label>
+                                    <Label htmlFor="wednesday" className="text-sm">Ð¡Ñ€ÐµÐ´Ð°</Label>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <Checkbox
@@ -2699,7 +2699,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                       checked={clientFormData.deliveryDays.thursday}
                                       onCheckedChange={(checked) => handleDeliveryDayChange('thursday', checked === true)}
                                     />
-                                    <Label htmlFor="thursday" className="text-sm">Четверг</Label>
+                                    <Label htmlFor="thursday" className="text-sm">Ð§ÐµÑ‚Ð²ÐµÑ€Ð³</Label>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <Checkbox
@@ -2707,7 +2707,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                       checked={clientFormData.deliveryDays.friday}
                                       onCheckedChange={(checked) => handleDeliveryDayChange('friday', checked === true)}
                                     />
-                                    <Label htmlFor="friday" className="text-sm">Пятница</Label>
+                                    <Label htmlFor="friday" className="text-sm">ÐŸÑÑ‚Ð½Ð¸Ñ†Ð°</Label>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <Checkbox
@@ -2715,7 +2715,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                       checked={clientFormData.deliveryDays.saturday}
                                       onCheckedChange={(checked) => handleDeliveryDayChange('saturday', checked === true)}
                                     />
-                                    <Label htmlFor="saturday" className="text-sm">Суббота</Label>
+                                    <Label htmlFor="saturday" className="text-sm">Ð¡ÑƒÐ±Ð±Ð¾Ñ‚Ð°</Label>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <Checkbox
@@ -2723,19 +2723,19 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                       checked={clientFormData.deliveryDays.sunday}
                                       onCheckedChange={(checked) => handleDeliveryDayChange('sunday', checked === true)}
                                     />
-                                    <Label htmlFor="sunday" className="text-sm">Воскресенье</Label>
+                                    <Label htmlFor="sunday" className="text-sm">Ð’Ð¾ÑÐºÑ€ÐµÑÐµÐ½ÑŒÐµ</Label>
                                   </div>
                                 </div>
                                 <div className="flex items-center space-x-2 pt-2">
                                   <Label htmlFor="defaultCourier" className="text-sm w-full">
-                                    Курьер по умолчанию:
+                                    ÐšÑƒÑ€ÑŒÐµÑ€ Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ:
                                     <select
                                       id="defaultCourier"
                                       value={clientFormData.defaultCourierId}
                                       onChange={(e) => setClientFormData(prev => ({ ...prev, defaultCourierId: e.target.value }))}
                                       className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                      <option value="">Нет</option>
+                                      <option value="">ÐÐµÑ‚</option>
                                       {couriers.map((courier) => (
                                         <option key={courier.id} value={courier.id}>
                                           {courier.name}
@@ -2746,17 +2746,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 </div>
                                 <div className="flex items-center space-x-2 pt-2">
                                   <Label htmlFor="assignedSet" className="text-sm w-full">
-                                    Назначенный сет (меню):
+                                    ÐÐ°Ð·Ð½Ð°Ñ‡ÐµÐ½Ð½Ñ‹Ð¹ ÑÐµÑ‚ (Ð¼ÐµÐ½ÑŽ):
                                     <select
                                       id="assignedSet"
                                       value={clientFormData.assignedSetId}
                                       onChange={(e) => setClientFormData(prev => ({ ...prev, assignedSetId: e.target.value }))}
                                       className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                      <option value="">Авто (Активный глобальный)</option>
+                                      <option value="">ÐÐ²Ñ‚Ð¾ (ÐÐºÑ‚Ð¸Ð²Ð½Ñ‹Ð¹ Ð³Ð»Ð¾Ð±Ð°Ð»ÑŒÐ½Ñ‹Ð¹)</option>
                                       {availableSets.map((set) => (
                                         <option key={set.id} value={set.id}>
-                                          {set.name} {set.isActive ? '(Активный)' : ''}
+                                          {set.name} {set.isActive ? '(ÐÐºÑ‚Ð¸Ð²Ð½Ñ‹Ð¹)' : ''}
                                         </option>
                                       ))}
                                     </select>
@@ -2769,7 +2769,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                     onCheckedChange={(checked) => setClientFormData(prev => ({ ...prev, autoOrdersEnabled: checked === true }))}
                                   />
                                   <Label htmlFor="autoOrdersEnabled" className="text-sm">
-                                    Включить автоматическое создание заказов
+                                    Ð’ÐºÐ»ÑŽÑ‡Ð¸Ñ‚ÑŒ Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¾Ðµ ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ðµ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²
                                   </Label>
                                 </div>
                               </div>
@@ -2782,10 +2782,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           )}
                           <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setIsCreateClientModalOpen(false)}>
-                              Отмена
+                              ÐžÑ‚Ð¼ÐµÐ½Ð°
                             </Button>
                             <Button type="submit" disabled={isCreatingClient}>
-                              {isCreatingClient ? 'Сохранение...' : (editingClientId ? 'Сохранить' : 'Создать')}
+                              {isCreatingClient ? 'Ð¡Ð¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð¸Ðµ...' : (editingClientId ? 'Ð¡Ð¾Ñ…Ñ€Ð°Ð½Ð¸Ñ‚ÑŒ' : 'Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ')}
                             </Button>
                           </DialogFooter>
                         </form>
@@ -2798,8 +2798,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   <FilterToolbar
                     searchValue={clientSearchTerm}
                     onSearchChange={setClientSearchTerm}
-                    searchPlaceholder="Поиск клиента..."
-                    searchAriaLabel="Поиск клиентов"
+                    searchPlaceholder="ÐŸÐ¾Ð¸ÑÐº ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°..."
+                    searchAriaLabel="ÐŸÐ¾Ð¸ÑÐº ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²"
                   >
                     {clientSearchTerm && (
                       <Button variant="outline" size="sm" className="h-9" onClick={() => setClientSearchTerm('')}>
@@ -2817,7 +2817,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   <div className="mb-4 rounded-lg border bg-muted/20 p-3">
                     <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                       <span className="text-sm text-muted-foreground">
-                        Выбрано клиентов: {selectedClients.size}
+                        Ð’Ñ‹Ð±Ñ€Ð°Ð½Ð¾ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²: {selectedClients.size}
                       </span>
                       <div className="flex flex-wrap gap-2">
                         <Button
@@ -2831,7 +2831,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           disabled={selectedClients.size !== 1}
                         >
                           <Edit className="w-4 h-4 mr-2" />
-                          Редактировать
+                          Ð ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ
                         </Button>
                         <Button
                           variant="outline"
@@ -2852,8 +2852,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           {isMutatingClients
                             ? t.common.loading
                             : shouldPauseSelectedClients
-                              ? 'Приостановить'
-                              : 'Возобновить'}
+                              ? 'ÐŸÑ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ'
+                              : 'Ð’Ð¾Ð·Ð¾Ð±Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ'}
                         </Button>
                         <Button
                           variant="destructive"
@@ -2862,7 +2862,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           onClick={() => setIsDeleteClientsDialogOpen(true)}
                           disabled={selectedClients.size === 0 || isMutatingClients}
                         >
-                          {isMutatingClients ? t.common.loading : 'Удалить'}
+                          {isMutatingClients ? t.common.loading : 'Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ'}
                         </Button>
                       </div>
                     </div>
@@ -2889,23 +2889,23 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                               checked={selectedClients.size === filteredClients.length && filteredClients.length > 0}
                             />
                           </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Имя</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Никнейм</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Телефон</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Адрес</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Калории</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Дни доставки</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ð˜Ð¼Ñ</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ÐÐ¸ÐºÐ½ÐµÐ¹Ð¼</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ð¢ÐµÐ»ÐµÑ„Ð¾Ð½</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ÐÐ´Ñ€ÐµÑ</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ÐšÐ°Ð»Ð¾Ñ€Ð¸Ð¸</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ð”Ð½Ð¸ Ð´Ð¾ÑÑ‚Ð°Ð²ÐºÐ¸</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                            Статус / Авто
+                            Ð¡Ñ‚Ð°Ñ‚ÑƒÑ / ÐÐ²Ñ‚Ð¾
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                            Особенности
+                            ÐžÑÐ¾Ð±ÐµÐ½Ð½Ð¾ÑÑ‚Ð¸
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                            Дата добавления
+                            Ð”Ð°Ñ‚Ð° Ð´Ð¾Ð±Ð°Ð²Ð»ÐµÐ½Ð¸Ñ
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                            Действия
+                            Ð”ÐµÐ¹ÑÑ‚Ð²Ð¸Ñ
                           </th>
                         </tr>
                       </thead>
@@ -2933,17 +2933,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 {client.address}
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
-                                {client.calories} ккал
+                                {client.calories} ÐºÐºÐ°Ð»
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
                                 <div className="text-xs">
-                                  {client.deliveryDays?.monday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Пн</span>}
-                                  {client.deliveryDays?.tuesday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Вт</span>}
-                                  {client.deliveryDays?.wednesday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Ср</span>}
-                                  {client.deliveryDays?.thursday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Чт</span>}
-                                  {client.deliveryDays?.friday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Пт</span>}
-                                  {client.deliveryDays?.saturday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Сб</span>}
-                                  {client.deliveryDays?.sunday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Вс</span>}
+                                  {client.deliveryDays?.monday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">ÐŸÐ½</span>}
+                                  {client.deliveryDays?.tuesday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Ð’Ñ‚</span>}
+                                  {client.deliveryDays?.wednesday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Ð¡Ñ€</span>}
+                                  {client.deliveryDays?.thursday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Ð§Ñ‚</span>}
+                                  {client.deliveryDays?.friday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">ÐŸÑ‚</span>}
+                                  {client.deliveryDays?.saturday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Ð¡Ð±</span>}
+                                  {client.deliveryDays?.sunday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Ð’Ñ</span>}
                                   {(!client.deliveryDays || Object.values(client.deliveryDays).every(day => !day)) && (
                                     <span className="text-slate-400">-</span>
                                   )}
@@ -2953,8 +2953,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 <div className="flex flex-col gap-1">
                                   <EntityStatusBadge
                                     isActive={client.isActive}
-                                    activeLabel="Активен"
-                                    inactiveLabel="Приостановлен"
+                                    activeLabel="ÐÐºÑ‚Ð¸Ð²ÐµÐ½"
+                                    inactiveLabel="ÐŸÑ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½"
                                     inactiveTone="danger"
                                     showDot
                                     onClick={() => handleToggleClientStatus(client.id, client.isActive)}
@@ -2965,7 +2965,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 {client.specialFeatures || '-'}
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
-                                📅 {new Date(client.createdAt).toLocaleDateString('ru-RU')}
+                                ðŸ“… {new Date(client.createdAt).toLocaleDateString('ru-RU')}
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
                                 <Button
@@ -2982,8 +2982,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           <tr>
                             <td colSpan={11} className="px-4 py-8 text-center">
                               <TabEmptyState
-                                title="Клиенты не найдены"
-                                description="Измените фильтры или поисковый запрос."
+                                title="ÐšÐ»Ð¸ÐµÐ½Ñ‚Ñ‹ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ñ‹"
+                                description="Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚Ðµ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ñ‹ Ð¸Ð»Ð¸ Ð¿Ð¾Ð¸ÑÐºÐ¾Ð²Ñ‹Ð¹ Ð·Ð°Ð¿Ñ€Ð¾Ñ."
                               />
                             </td>
                           </tr>
@@ -2997,8 +2997,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 <div className="md:hidden space-y-4">
                   {filteredClients.length === 0 && (
                     <TabEmptyState
-                      title="Клиенты не найдены"
-                      description="Измените фильтры или поисковый запрос."
+                      title="ÐšÐ»Ð¸ÐµÐ½Ñ‚Ñ‹ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ñ‹"
+                      description="Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚Ðµ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ñ‹ Ð¸Ð»Ð¸ Ð¿Ð¾Ð¸ÑÐºÐ¾Ð²Ñ‹Ð¹ Ð·Ð°Ð¿Ñ€Ð¾Ñ."
                     />
                   )}
                   {filteredClients.map((client) => (
@@ -3017,8 +3017,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             </div>
                             <EntityStatusBadge
                               isActive={client.isActive}
-                              activeLabel="Активен"
-                              inactiveLabel="Приостановлен"
+                              activeLabel="ÐÐºÑ‚Ð¸Ð²ÐµÐ½"
+                              inactiveLabel="ÐŸÑ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½"
                               inactiveTone="danger"
                               showDot
                               onClick={() => handleToggleClientStatus(client.id, client.isActive)}
@@ -3032,19 +3032,19 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           </div>
 
                           <div className="flex items-center gap-3">
-                            <div className="text-sm font-medium">Калории:</div>
-                            <div className="text-sm">{client.calories} ккал</div>
+                            <div className="text-sm font-medium">ÐšÐ°Ð»Ð¾Ñ€Ð¸Ð¸:</div>
+                            <div className="text-sm">{client.calories} ÐºÐºÐ°Ð»</div>
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            <div className="font-medium mb-1">Дни доставки:</div>
+                            <div className="font-medium mb-1">Ð”Ð½Ð¸ Ð´Ð¾ÑÑ‚Ð°Ð²ÐºÐ¸:</div>
                             <div className="flex flex-wrap gap-1">
-                              {client.deliveryDays?.monday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Пн</span>}
-                              {client.deliveryDays?.tuesday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Вт</span>}
-                              {client.deliveryDays?.wednesday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Ср</span>}
-                              {client.deliveryDays?.thursday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Чт</span>}
-                              {client.deliveryDays?.friday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Пт</span>}
-                              {client.deliveryDays?.saturday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Сб</span>}
-                              {client.deliveryDays?.sunday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Вс</span>}
+                              {client.deliveryDays?.monday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">ÐŸÐ½</span>}
+                              {client.deliveryDays?.tuesday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Ð’Ñ‚</span>}
+                              {client.deliveryDays?.wednesday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Ð¡Ñ€</span>}
+                              {client.deliveryDays?.thursday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Ð§Ñ‚</span>}
+                              {client.deliveryDays?.friday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">ÐŸÑ‚</span>}
+                              {client.deliveryDays?.saturday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Ð¡Ð±</span>}
+                              {client.deliveryDays?.sunday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Ð’Ñ</span>}
                             </div>
                           </div>
                         </CardContent>
@@ -3210,9 +3210,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </TabsList>
 
               <TabsContent value="orders" className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold tracking-tight">Корзина заказов</h2>
-                  <div className="flex gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-2xl font-bold tracking-tight">Orders bin</h2>
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       onClick={handleRestoreSelectedOrders}
                       variant="outline"
@@ -3221,9 +3221,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       <History className="mr-2 h-4 w-4" />
                       {t.admin.restoreSelected} ({selectedOrders.size})
                     </Button>
+                    <Button
+                      onClick={handlePermanentDeleteOrders}
+                      variant="destructive"
+                      disabled={selectedOrders.size === 0}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      {t.admin.deleteSelected} ({selectedOrders.size})
+                    </Button>
                     <Button onClick={fetchBinOrders} variant="outline">
-                      <History className="mr-2 h-4 w-4" />
-                      {t.common.actions}
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Refresh
                     </Button>
                   </div>
                 </div>
@@ -3244,24 +3252,25 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </TabsContent>
 
               <TabsContent value="clients" className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold tracking-tight">Корзина клиентов</h2>
-                  <div className="flex gap-2">
-                    {selectedBinClients.size > 0 && (
-                      <div className="flex gap-2">
-                        <Button onClick={handleRestoreSelectedClients} variant="outline">
-                          <History className="mr-2 h-4 w-4" />
-                          Восстановить ({selectedBinClients.size})
-                        </Button>
-                        <Button
-                          onClick={handlePermanentDeleteClients}
-                          variant="destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Удалить навсегда ({selectedBinClients.size})
-                        </Button>
-                      </div>
-                    )}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-2xl font-bold tracking-tight">Clients bin</h2>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      onClick={handleRestoreSelectedClients}
+                      variant="outline"
+                      disabled={selectedBinClients.size === 0}
+                    >
+                      <History className="mr-2 h-4 w-4" />
+                      {t.admin.restoreSelected} ({selectedBinClients.size})
+                    </Button>
+                    <Button
+                      onClick={handlePermanentDeleteClients}
+                      variant="destructive"
+                      disabled={selectedBinClients.size === 0}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      {t.admin.deleteSelected} ({selectedBinClients.size})
+                    </Button>
                   </div>
                 </div>
 
@@ -3349,9 +3358,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       <AlertDialog open={isDeleteOrdersDialogOpen} onOpenChange={setIsDeleteOrdersDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Удалить выбранные заказы?</AlertDialogTitle>
+            <AlertDialogTitle>Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ Ð²Ñ‹Ð±Ñ€Ð°Ð½Ð½Ñ‹Ðµ Ð·Ð°ÐºÐ°Ð·Ñ‹?</AlertDialogTitle>
             <AlertDialogDescription>
-              Будет удалено заказов: {selectedOrders.size}. Это действие нельзя отменить.
+              Ð‘ÑƒÐ´ÐµÑ‚ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¾ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²: {selectedOrders.size}. Ð­Ñ‚Ð¾ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ðµ Ð½ÐµÐ»ÑŒÐ·Ñ Ð¾Ñ‚Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -3369,9 +3378,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       <AlertDialog open={isPauseClientsDialogOpen} onOpenChange={setIsPauseClientsDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Приостановить выбранных клиентов?</AlertDialogTitle>
+            <AlertDialogTitle>ÐŸÑ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ Ð²Ñ‹Ð±Ñ€Ð°Ð½Ð½Ñ‹Ñ… ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²?</AlertDialogTitle>
             <AlertDialogDescription>
-              Клиентов: {selectedClients.size}. Они не будут получать автоматические заказы.
+              ÐšÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²: {selectedClients.size}. ÐžÐ½Ð¸ Ð½Ðµ Ð±ÑƒÐ´ÑƒÑ‚ Ð¿Ð¾Ð»ÑƒÑ‡Ð°Ñ‚ÑŒ Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸Ðµ Ð·Ð°ÐºÐ°Ð·Ñ‹.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -3380,7 +3389,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               disabled={isMutatingClients}
               onClick={() => void handlePauseSelectedClients({ skipConfirm: true })}
             >
-              {isMutatingClients ? t.common.loading : 'Приостановить'}
+              {isMutatingClients ? t.common.loading : 'ÐŸÑ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -3389,9 +3398,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       <AlertDialog open={isResumeClientsDialogOpen} onOpenChange={setIsResumeClientsDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Возобновить выбранных клиентов?</AlertDialogTitle>
+            <AlertDialogTitle>Ð’Ð¾Ð·Ð¾Ð±Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ Ð²Ñ‹Ð±Ñ€Ð°Ð½Ð½Ñ‹Ñ… ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²?</AlertDialogTitle>
             <AlertDialogDescription>
-              Клиентов: {selectedClients.size}. Автоматические заказы снова будут включены.
+              ÐšÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²: {selectedClients.size}. ÐÐ²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸Ðµ Ð·Ð°ÐºÐ°Ð·Ñ‹ ÑÐ½Ð¾Ð²Ð° Ð±ÑƒÐ´ÑƒÑ‚ Ð²ÐºÐ»ÑŽÑ‡ÐµÐ½Ñ‹.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -3400,7 +3409,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               disabled={isMutatingClients}
               onClick={() => void handleResumeSelectedClients({ skipConfirm: true })}
             >
-              {isMutatingClients ? t.common.loading : 'Возобновить'}
+              {isMutatingClients ? t.common.loading : 'Ð’Ð¾Ð·Ð¾Ð±Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -3409,9 +3418,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       <AlertDialog open={isDeleteClientsDialogOpen} onOpenChange={setIsDeleteClientsDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Удалить выбранных клиентов?</AlertDialogTitle>
+            <AlertDialogTitle>Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ Ð²Ñ‹Ð±Ñ€Ð°Ð½Ð½Ñ‹Ñ… ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²?</AlertDialogTitle>
             <AlertDialogDescription>
-              Будут удалены клиенты: {selectedClients.size}, а также связанные авто-заказы за последние 30 дней.
+              Ð‘ÑƒÐ´ÑƒÑ‚ ÑƒÐ´Ð°Ð»ÐµÐ½Ñ‹ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ñ‹: {selectedClients.size}, Ð° Ñ‚Ð°ÐºÐ¶Ðµ ÑÐ²ÑÐ·Ð°Ð½Ð½Ñ‹Ðµ Ð°Ð²Ñ‚Ð¾-Ð·Ð°ÐºÐ°Ð·Ñ‹ Ð·Ð° Ð¿Ð¾ÑÐ»ÐµÐ´Ð½Ð¸Ðµ 30 Ð´Ð½ÐµÐ¹.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -3430,9 +3439,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       < Dialog open={isOrderDetailsModalOpen} onOpenChange={setIsOrderDetailsModalOpen} >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Детали заказа #{selectedOrder?.orderNumber}</DialogTitle>
+            <DialogTitle>Ð”ÐµÑ‚Ð°Ð»Ð¸ Ð·Ð°ÐºÐ°Ð·Ð° #{selectedOrder?.orderNumber}</DialogTitle>
             <DialogDescription>
-              Полная информация о заказе и клиенте
+              ÐŸÐ¾Ð»Ð½Ð°Ñ Ð¸Ð½Ñ„Ð¾Ñ€Ð¼Ð°Ñ†Ð¸Ñ Ð¾ Ð·Ð°ÐºÐ°Ð·Ðµ Ð¸ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ðµ
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
@@ -3441,7 +3450,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 {/* Basic Info */}
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-500">Статус:</span>
+                    <span className="text-sm font-medium text-slate-500">Ð¡Ñ‚Ð°Ñ‚ÑƒÑ:</span>
                     <Badge
                       className={
                         selectedOrder.orderStatus === 'DELIVERED'
@@ -3452,61 +3461,61 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       }
                     >
                       {selectedOrder.orderStatus === 'DELIVERED'
-                        ? "Доставлен"
+                        ? "Ð”Ð¾ÑÑ‚Ð°Ð²Ð»ÐµÐ½"
                         : selectedOrder.orderStatus === 'IN_DELIVERY'
-                          ? "В доставке"
-                          : "Ожидает"}
+                          ? "Ð’ Ð´Ð¾ÑÑ‚Ð°Ð²ÐºÐµ"
+                          : "ÐžÐ¶Ð¸Ð´Ð°ÐµÑ‚"}
                     </Badge>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-500">Оплата:</span>
+                    <span className="text-sm font-medium text-slate-500">ÐžÐ¿Ð»Ð°Ñ‚Ð°:</span>
                     <Badge
                       variant={selectedOrder.paymentStatus === 'PAID' ? "default" : "destructive"}
                       className={selectedOrder.paymentStatus === 'PAID' ? "bg-green-100 text-green-800" : ""}
                     >
-                      {selectedOrder.paymentStatus === 'PAID' ? "Оплачен" : "Не оплачен"}
+                      {selectedOrder.paymentStatus === 'PAID' ? "ÐžÐ¿Ð»Ð°Ñ‡ÐµÐ½" : "ÐÐµ Ð¾Ð¿Ð»Ð°Ñ‡ÐµÐ½"}
                     </Badge>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-500">Метод:</span>
-                    <span className="text-sm">{selectedOrder.paymentMethod === 'CASH' ? 'Наличные' : 'Карта'}</span>
+                    <span className="text-sm font-medium text-slate-500">ÐœÐµÑ‚Ð¾Ð´:</span>
+                    <span className="text-sm">{selectedOrder.paymentMethod === 'CASH' ? 'ÐÐ°Ð»Ð¸Ñ‡Ð½Ñ‹Ðµ' : 'ÐšÐ°Ñ€Ñ‚Ð°'}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-500">Количество:</span>
-                    <span className="text-sm font-bold">{selectedOrder.quantity} порц.</span>
+                    <span className="text-sm font-medium text-slate-500">ÐšÐ¾Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾:</span>
+                    <span className="text-sm font-bold">{selectedOrder.quantity} Ð¿Ð¾Ñ€Ñ†.</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-500">Калории:</span>
-                    <span className="text-sm">{selectedOrder.calories} ккал</span>
+                    <span className="text-sm font-medium text-slate-500">ÐšÐ°Ð»Ð¾Ñ€Ð¸Ð¸:</span>
+                    <span className="text-sm">{selectedOrder.calories} ÐºÐºÐ°Ð»</span>
                   </div>
                 </div>
 
                 <div className="border-t pt-4 space-y-3">
-                  <h4 className="font-semibold text-sm">Операционные детали</h4>
+                  <h4 className="font-semibold text-sm">ÐžÐ¿ÐµÑ€Ð°Ñ†Ð¸Ð¾Ð½Ð½Ñ‹Ðµ Ð´ÐµÑ‚Ð°Ð»Ð¸</h4>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                     <span className="text-slate-500">Priority</span>
                     <span>{selectedOrder.priority ?? 3}</span>
                     <span className="text-slate-500">ETA</span>
-                    <span>{selectedOrder.etaMinutes ? `${selectedOrder.etaMinutes} мин` : '-'}</span>
-                    <span className="text-slate-500">Последнее изменение</span>
+                    <span>{selectedOrder.etaMinutes ? `${selectedOrder.etaMinutes} Ð¼Ð¸Ð½` : '-'}</span>
+                    <span className="text-slate-500">ÐŸÐ¾ÑÐ»ÐµÐ´Ð½ÐµÐµ Ð¸Ð·Ð¼ÐµÐ½ÐµÐ½Ð¸Ðµ</span>
                     <span>
                       {selectedOrder.statusChangedAt
                         ? new Date(selectedOrder.statusChangedAt).toLocaleString('ru-RU')
                         : '-'}
                     </span>
-                    <span className="text-slate-500">Назначен курьер</span>
+                    <span className="text-slate-500">ÐÐ°Ð·Ð½Ð°Ñ‡ÐµÐ½ ÐºÑƒÑ€ÑŒÐµÑ€</span>
                     <span>{selectedOrder.assignedAt ? new Date(selectedOrder.assignedAt).toLocaleString('ru-RU') : '-'}</span>
-                    <span className="text-slate-500">Старт доставки</span>
+                    <span className="text-slate-500">Ð¡Ñ‚Ð°Ñ€Ñ‚ Ð´Ð¾ÑÑ‚Ð°Ð²ÐºÐ¸</span>
                     <span>{selectedOrder.pickedUpAt ? new Date(selectedOrder.pickedUpAt).toLocaleString('ru-RU') : '-'}</span>
-                    <span className="text-slate-500">Пауза</span>
+                    <span className="text-slate-500">ÐŸÐ°ÑƒÐ·Ð°</span>
                     <span>{selectedOrder.pausedAt ? new Date(selectedOrder.pausedAt).toLocaleString('ru-RU') : '-'}</span>
-                    <span className="text-slate-500">Завершен</span>
+                    <span className="text-slate-500">Ð—Ð°Ð²ÐµÑ€ÑˆÐµÐ½</span>
                     <span>{selectedOrder.deliveredAt ? new Date(selectedOrder.deliveredAt).toLocaleString('ru-RU') : '-'}</span>
                   </div>
                 </div>
 
                 <div className="border-t pt-4 space-y-3">
-                  <h4 className="font-semibold text-sm">Клиент</h4>
+                  <h4 className="font-semibold text-sm">ÐšÐ»Ð¸ÐµÐ½Ñ‚</h4>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-md bg-slate-100 flex items-center justify-center">
                       <User className="w-5 h-5 text-slate-500" />
@@ -3519,7 +3528,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 </div>
 
                 <div className="border-t pt-4 space-y-3">
-                  <h4 className="font-semibold text-sm">Доставка</h4>
+                  <h4 className="font-semibold text-sm">Ð”Ð¾ÑÑ‚Ð°Ð²ÐºÐ°</h4>
                   <div className="space-y-2">
                     <div className="flex items-start gap-2">
                       <MapPin className="w-4 h-4 mt-0.5 text-slate-400" />
@@ -3556,7 +3565,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             {' - '}
                             {event.message || event.eventType}
                             {event.previousStatus || event.nextStatus
-                              ? ` (${event.previousStatus || '-'} → ${event.nextStatus || '-'})`
+                              ? ` (${event.previousStatus || '-'} â†’ ${event.nextStatus || '-'})`
                               : ''}
                           </span>
                         </div>
@@ -3567,7 +3576,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
                 {selectedOrder.specialFeatures && (
                   <div className="border-t pt-4 space-y-2">
-                    <h4 className="font-semibold text-sm">Особенности</h4>
+                    <h4 className="font-semibold text-sm">ÐžÑÐ¾Ð±ÐµÐ½Ð½Ð¾ÑÑ‚Ð¸</h4>
                     <p className="text-sm bg-orange-50 p-2 rounded border border-orange-100 text-orange-800">
                       {selectedOrder.specialFeatures}
                     </p>
@@ -3576,7 +3585,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
                 {selectedOrder.courierName && (
                   <div className="border-t pt-4 space-y-2">
-                    <h4 className="font-semibold text-sm">Курьер</h4>
+                    <h4 className="font-semibold text-sm">ÐšÑƒÑ€ÑŒÐµÑ€</h4>
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-md bg-blue-50 flex items-center justify-center">
                         <Truck className="w-4 h-4 text-blue-500" />
@@ -3590,14 +3599,14 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsOrderDetailsModalOpen(false)}>
-              Закрыть
+              Ð—Ð°ÐºÑ€Ñ‹Ñ‚ÑŒ
             </Button>
             {selectedOrder && (
               <Button onClick={() => {
                 setIsOrderDetailsModalOpen(false)
                 handleEditOrder(selectedOrder)
               }}>
-                Редактировать
+                Ð ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ
               </Button>
             )}
           </DialogFooter>
@@ -3626,16 +3635,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       < Dialog open={isCreateCourierModalOpen} onOpenChange={setIsCreateCourierModalOpen} >
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Создать Курьера</DialogTitle>
+            <DialogTitle>Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ ÐšÑƒÑ€ÑŒÐµÑ€Ð°</DialogTitle>
             <DialogDescription>
-              Создайте новый аккаунт для курьера
+              Ð¡Ð¾Ð·Ð´Ð°Ð¹Ñ‚Ðµ Ð½Ð¾Ð²Ñ‹Ð¹ Ð°ÐºÐºÐ°ÑƒÐ½Ñ‚ Ð´Ð»Ñ ÐºÑƒÑ€ÑŒÐµÑ€Ð°
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateCourier}>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-2">
                 <Label htmlFor="courierName" className="text-right">
-                  Имя
+                  Ð˜Ð¼Ñ
                 </Label>
                 <Input
                   id="courierName"
@@ -3660,7 +3669,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </div>
               <div className="grid grid-cols-4 items-center gap-2">
                 <Label htmlFor="courierPassword" className="text-right">
-                  Пароль
+                  ÐŸÐ°Ñ€Ð¾Ð»ÑŒ
                 </Label>
                 <Input
                   id="courierPassword"
@@ -3679,10 +3688,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
             )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsCreateCourierModalOpen(false)}>
-                Отмена
+                ÐžÑ‚Ð¼ÐµÐ½Ð°
               </Button>
               <Button type="submit" disabled={isCreatingCourier}>
-                {isCreatingCourier ? 'Создание...' : 'Создать'}
+                {isCreatingCourier ? 'Ð¡Ð¾Ð·Ð´Ð°Ð½Ð¸Ðµ...' : 'Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ'}
               </Button>
             </DialogFooter>
           </form>

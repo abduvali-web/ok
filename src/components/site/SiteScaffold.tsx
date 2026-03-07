@@ -31,18 +31,15 @@ export function SitePageSurface({ site, children }: { site: SiteConfig; children
         ...toCssVars(site),
         backgroundColor: 'var(--site-bg)',
         backgroundImage:
-          'radial-gradient(circle at top left, color-mix(in srgb, var(--site-accent-soft) 70%, transparent) 0, transparent 30%), radial-gradient(circle at top right, color-mix(in srgb, var(--site-hero-to) 34%, transparent) 0, transparent 24%), linear-gradient(180deg, color-mix(in srgb, var(--site-bg) 94%, white) 0%, var(--site-bg) 54%, color-mix(in srgb, var(--site-panel) 35%, var(--site-bg)) 100%)',
+          'linear-gradient(180deg, color-mix(in srgb, var(--site-bg) 96%, white) 0%, var(--site-bg) 48%, color-mix(in srgb, var(--site-panel) 18%, var(--site-bg)) 100%)',
         color: 'var(--site-text)',
       }}
     >
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 opacity-60"
+        className="pointer-events-none fixed inset-0 -z-10 opacity-50"
         style={{
-          backgroundImage:
-            'linear-gradient(to right, color-mix(in srgb, var(--site-border) 18%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--site-border) 12%, transparent) 1px, transparent 1px)',
-          backgroundSize: '38px 38px',
-          maskImage: 'linear-gradient(180deg, rgba(0,0,0,0.4), transparent 86%)',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.55), transparent 22%, transparent 78%, rgba(255,255,255,0.7))',
         }}
       />
       {children}
@@ -91,26 +88,25 @@ export function SitePublicHeader({ site, rightSlot }: { site: SiteConfig; rightS
   return (
     <header className="sticky top-0 z-30 px-3 pt-3 sm:px-4" style={{ color: 'var(--site-text)' }}>
       <div
-        className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 rounded-[1.4rem] border px-4 py-3 shadow-[0_24px_64px_-42px_rgba(15,23,42,0.38)] backdrop-blur-xl"
+        className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 shadow-sm"
         style={{
           borderColor: 'color-mix(in srgb, var(--site-border) 90%, white)',
-          backgroundColor: 'color-mix(in srgb, var(--site-panel) 82%, white)',
+          backgroundColor: 'color-mix(in srgb, var(--site-panel) 94%, white)',
         }}
       >
         <Link href={makeClientSiteHref(site.subdomain, '')} className="flex items-center gap-3">
           <span
-            className="flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-semibold shadow-sm"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border text-sm font-semibold"
             style={{
               borderColor: 'var(--site-border)',
-              background:
-                'linear-gradient(135deg, color-mix(in srgb, var(--site-accent-soft) 86%, white), color-mix(in srgb, var(--site-hero-to) 26%, white))',
+              background: 'color-mix(in srgb, var(--site-accent-soft) 65%, white)',
             }}
           >
             {site.siteName.slice(0, 2)}
           </span>
           <div>
             <span className={cn('block text-base font-semibold tracking-tight', site.headingClass)}>{site.siteName}</span>
-            <span className="block text-[11px] uppercase tracking-[0.22em]" style={{ color: 'var(--site-muted)' }}>
+            <span className="block text-[11px] tracking-[0.14em]" style={{ color: 'var(--site-muted)' }}>
               client portal
             </span>
           </div>
@@ -161,20 +157,19 @@ export function SiteHero({
   return (
     <section className="px-4 pt-5">
       <div
-        className="mx-auto grid max-w-6xl gap-6 overflow-hidden rounded-[2rem] border px-5 py-8 shadow-[0_30px_90px_-56px_rgba(15,23,42,0.4)] lg:grid-cols-[minmax(0,1.3fr)_320px] lg:px-8 lg:py-10"
+        className="mx-auto grid max-w-6xl gap-6 overflow-hidden rounded-2xl border px-5 py-8 shadow-sm lg:grid-cols-[minmax(0,1.3fr)_320px] lg:px-8 lg:py-10"
         style={{
           borderColor: 'var(--site-border)',
-          background:
-            'linear-gradient(145deg, color-mix(in srgb, var(--site-panel) 92%, white), color-mix(in srgb, var(--site-hero-from) 42%, white) 55%, color-mix(in srgb, var(--site-hero-to) 36%, white))',
+          background: 'color-mix(in srgb, var(--site-panel) 96%, white)',
         }}
       >
         <div className="relative">
           {eyebrow ? (
             <p
-              className="inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em]"
+              className="inline-flex rounded-md border px-3 py-1 text-[11px] font-semibold tracking-[0.14em]"
               style={{
                 borderColor: 'color-mix(in srgb, var(--site-border) 85%, white)',
-                backgroundColor: 'color-mix(in srgb, var(--site-panel) 78%, white)',
+                backgroundColor: 'color-mix(in srgb, var(--site-panel) 96%, white)',
                 color: 'var(--site-accent)',
               }}
             >
@@ -189,10 +184,10 @@ export function SiteHero({
         </div>
 
         <div
-          className="rounded-[1.6rem] border p-5"
+          className="rounded-xl border p-5"
           style={{
             borderColor: 'color-mix(in srgb, var(--site-border) 92%, white)',
-            backgroundColor: 'color-mix(in srgb, var(--site-panel) 74%, white)',
+            backgroundColor: 'color-mix(in srgb, var(--site-panel) 96%, white)',
           }}
         >
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: 'var(--site-accent)' }}>
@@ -210,10 +205,10 @@ export function SiteHero({
             ].map((item) => (
               <div
                 key={item.label}
-                className="rounded-xl border px-4 py-3"
+                className="rounded-lg border px-4 py-3"
                 style={{
                   borderColor: 'color-mix(in srgb, var(--site-border) 90%, white)',
-                  backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 38%, white)',
+                  backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 18%, white)',
                 }}
               >
                 <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: 'var(--site-muted)' }}>
@@ -232,10 +227,10 @@ export function SiteHero({
 export function SitePanel({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <div
-      className={`rounded-[1.6rem] border p-4 shadow-[0_24px_70px_-48px_rgba(15,23,42,0.32)] backdrop-blur-sm md:p-5 ${className}`}
+      className={`rounded-xl border p-4 shadow-sm md:p-5 ${className}`}
       style={{
         borderColor: 'var(--site-border)',
-        backgroundColor: 'color-mix(in srgb, var(--site-panel) 88%, white)',
+        backgroundColor: 'color-mix(in srgb, var(--site-panel) 96%, white)',
       }}
     >
       {children}
@@ -256,7 +251,7 @@ export function SiteClientNav({ subdomain, currentPath }: { subdomain: string; c
           <Button
             variant={currentPath === item.href ? 'default' : 'outline'}
             size="sm"
-            className={currentPath === item.href ? 'shadow-lg shadow-primary/15' : ''}
+            className={currentPath === item.href ? 'shadow-sm' : ''}
           >
             {item.label}
           </Button>

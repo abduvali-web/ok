@@ -62,8 +62,8 @@ export function SiteContent({ content, subdomain, siteName, styleVariant = 'orga
         site={site}
         rightSlot={
           <div
-            className="flex items-center gap-2 rounded-full border px-2 py-1"
-            style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-panel) 70%, white)' }}
+            className="flex items-center gap-2 rounded-lg border px-2 py-1"
+            style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-panel) 96%, white)' }}
           >
             {(['uz', 'ru', 'en'] as const).map((language) => (
               <Button
@@ -71,7 +71,7 @@ export function SiteContent({ content, subdomain, siteName, styleVariant = 'orga
                 variant={lang === language ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setLang(language)}
-                className="h-8 rounded-full px-3 uppercase"
+                className="h-8 rounded-md px-3 uppercase"
               >
                 {language}
               </Button>
@@ -89,19 +89,19 @@ export function SiteContent({ content, subdomain, siteName, styleVariant = 'orga
         actions={
           <>
             <Link href={href('/client')}>
-              <Button size="lg" className="rounded-full px-7">
+              <Button size="lg" className="px-7">
                 {t(content.hero.cta)}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <Link href={href('/login')}>
-              <Button size="lg" variant="outline" className="rounded-full px-6">
+              <Button size="lg" variant="outline" className="px-6">
                 <LogIn className="h-4 w-4" />
                 Login
               </Button>
             </Link>
             <Link href={href('/register')}>
-              <Button size="lg" variant="outline" className="rounded-full px-6">
+              <Button size="lg" variant="outline" className="px-6">
                 <UserPlus className="h-4 w-4" />
                 Register
               </Button>
@@ -113,7 +113,7 @@ export function SiteContent({ content, subdomain, siteName, styleVariant = 'orga
       <section className="mx-auto max-w-6xl px-4 py-10">
         <div className="grid gap-4 md:grid-cols-3">
           {metrics.map((metric) => (
-            <SitePanel key={metric.label} className="rounded-[1.5rem] p-5">
+            <SitePanel key={metric.label} className="rounded-xl p-5">
               <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: 'var(--site-muted)' }}>
                 {metric.label}
               </p>
@@ -126,7 +126,7 @@ export function SiteContent({ content, subdomain, siteName, styleVariant = 'orga
       <section className="mx-auto max-w-6xl px-4 pb-14">
         <div className="mb-6 flex items-end justify-between gap-3">
           <div>
-            <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: 'var(--site-accent)' }}>
+            <p className="inline-flex items-center gap-2 text-[11px] font-semibold tracking-[0.16em]" style={{ color: 'var(--site-accent)' }}>
               <Sparkles className="h-3.5 w-3.5" />
               What clients get
             </p>
@@ -143,7 +143,7 @@ export function SiteContent({ content, subdomain, siteName, styleVariant = 'orga
             return (
               <Card
                 key={index}
-                className="rounded-[1.75rem] border-0 shadow-[0_28px_80px_-58px_rgba(15,23,42,0.45)]"
+                className="rounded-xl border"
                 style={{
                   backgroundColor: 'var(--site-panel)',
                   borderColor: 'var(--site-border)',
@@ -188,7 +188,7 @@ export function SiteContent({ content, subdomain, siteName, styleVariant = 'orga
           ].map((item) => (
             <Link key={item.href} href={item.href}>
               <div
-                className="rounded-[1.5rem] border p-5 transition-transform hover:-translate-y-0.5"
+                className="rounded-xl border p-5 transition-colors hover:bg-muted/20"
                 style={{ borderColor: 'var(--site-border)', backgroundColor: 'var(--site-panel)' }}
               >
                 <p className="font-medium">{item.label}</p>
@@ -208,13 +208,13 @@ export function SiteContent({ content, subdomain, siteName, styleVariant = 'orga
             {t(content.about.description)}
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-[1.25rem] border px-4 py-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 55%, white)' }}>
+            <div className="rounded-lg border px-4 py-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 24%, white)' }}>
               <p className="text-sm font-medium">Phone-first access</p>
               <p className="mt-2 text-sm leading-6" style={{ color: 'var(--site-muted)' }}>
                 Registration and login are optimized for quick client onboarding.
               </p>
             </div>
-            <div className="rounded-[1.25rem] border px-4 py-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 55%, white)' }}>
+            <div className="rounded-lg border px-4 py-4" style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-accent-soft) 24%, white)' }}>
               <p className="text-sm font-medium">Daily operations clarity</p>
               <p className="mt-2 text-sm leading-6" style={{ color: 'var(--site-muted)' }}>
                 Balance, menu, plan status, and history are visible without extra support calls.
@@ -228,7 +228,7 @@ export function SiteContent({ content, subdomain, siteName, styleVariant = 'orga
           {content.pricing.map((plan, index) => (
             <div
               key={index}
-              className="rounded-[1.5rem] border px-5 py-5"
+              className="rounded-xl border px-5 py-5"
               style={{
                 backgroundColor: 'color-mix(in srgb, var(--site-panel) 90%, white)',
                 borderColor: 'var(--site-border)',

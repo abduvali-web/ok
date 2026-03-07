@@ -1,8 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Bot, Database, Download, Loader2, RefreshCw, Search, Table2 } from 'lucide-react'
+import { ArrowLeft, Bot, Database, Download, Loader2, RefreshCw, Search, Table2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
@@ -35,25 +36,6 @@ type SnapshotPayload = {
   scope: string
   tables: DatabaseTable[]
   summary: DatabaseSummaryRow[]
-}
-
-function formatCsvCell(value: unknown): string {
-  const raw = value == null ? '' : String(value)
-  if (!/[",\n]/.test(raw)) return raw
-  return `"${raw.replace(/"/g, '""')}"`
-}
-
-function downloadCsv(fileName: string, rows: Array<Array<string | number>>) {
-  const csvContent = rows.map((row) => row.map((value) => formatCsvCell(value)).join(',')).join('\n')
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = fileName
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  URL.revokeObjectURL(url)
 }
 
 function escapeXml(value: unknown) {
@@ -146,6 +128,26 @@ function buildWorkbookXml(snapshot: SnapshotPayload) {
   </Styles>
   ${sheets.join('\n')}
 </Workbook>`
+}
+
+function buildSingleTableWorkbook(table: DatabaseTable, snapshot: SnapshotPayload) {
+  const singleSnapshot: SnapshotPayload = {
+    ok: snapshot.ok,
+    generatedAt: snapshot.generatedAt,
+    scope: snapshot.scope,
+    summary: [
+      {
+        id: table.id,
+        title: table.title,
+        description: table.description,
+        rowCount: table.rowCount,
+        columnCount: table.columns.length,
+      },
+    ],
+    tables: [table],
+  }
+
+  return buildWorkbookXml(singleSnapshot)
 }
 
 function downloadWorkbook(fileName: string, xml: string) {
@@ -243,14 +245,15 @@ export default function DatabasePage() {
   const handleDownloadCurrentTable = () => {
     if (!currentTable || !snapshot) return
     const generatedAt = new Date(snapshot.generatedAt).toISOString().slice(0, 10)
-    const rows: Array<Array<string | number>> = [currentTable.columns]
+    const exportTable: DatabaseTable = {
+      ...currentTable,
+      rowCount: filteredRows.length,
+      rows: filteredRows,
+    }
 
-    filteredRows.forEach((row) => {
-      rows.push(currentTable.columns.map((column) => row[column] ?? ''))
-    })
-
-    downloadCsv(`neon-${currentTable.id}-${generatedAt}.csv`, rows)
-    toast.success(`${currentTable.title} export downloaded`)
+    const xml = buildSingleTableWorkbook(exportTable, snapshot)
+    downloadWorkbook(`neon-${currentTable.id}-${generatedAt}.xls`, xml)
+    toast.success(`${currentTable.title} sheet downloaded`)
   }
 
   const handleOpenTambo = () => {
@@ -291,6 +294,12 @@ export default function DatabasePage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              <Button asChild variant="outline">
+                <Link href="/middle-admin">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to middle admin
+                </Link>
+              </Button>
               <Badge variant="secondary" className="h-8 rounded-full px-3">
                 {tables.length} sheets
               </Badge>

@@ -56,7 +56,7 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
       <Button
         variant="outline"
         size="icon"
-        className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-50 h-12 w-12 rounded-2xl border-border/70 bg-card/95 shadow-elevated backdrop-blur-md md:hidden"
+        className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-50 h-11 w-11 rounded-xl border-border bg-card shadow-sm md:hidden"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label={isOpen ? 'Close menu' : 'Open menu'}
       >
@@ -93,7 +93,7 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-40 bg-black/30 md:hidden"
             onClick={() => setIsOpen(false)}
           />
         )}
@@ -107,18 +107,18 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-            className="fixed left-0 top-0 bottom-0 z-50 w-[300px] overflow-y-auto border-r border-border/60 bg-card backdrop-blur-xl md:hidden"
+            className="fixed left-0 top-0 bottom-0 z-50 w-[300px] overflow-y-auto border-r border-border bg-card md:hidden"
           >
             {/* Header */}
-            <div className="sticky top-0 border-b border-border/60 bg-card p-4">
+            <div className="sticky top-0 border-b border-border bg-card p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground text-background">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-muted text-foreground">
                     <Package className="h-4 w-4" />
                   </div>
                   <div>
-                    <h2 className="font-display text-sm font-semibold">AutoFood</h2>
-                    <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
+                    <h2 className="text-sm font-semibold">AutoFood</h2>
+                    <p className="text-[10px] tracking-[0.08em] text-muted-foreground">
                       {t.admin.dashboard}
                     </p>
                   </div>
@@ -127,7 +127,7 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsOpen(false)}
-                  className="h-8 w-8 rounded-full"
+                  className="h-8 w-8 rounded-lg"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -139,7 +139,7 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
               {effectiveTabs.map((tab, index) => {
                 const config = DASHBOARD_TAB_META[tab.id as CanonicalTabId] || {
                   icon: Package,
-                  mobileAccent: 'bg-slate-500',
+                  mobileAccent: 'bg-foreground',
                   desktopAccent: '',
                 }
                 const Icon = config.icon
@@ -156,35 +156,29 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
                       setIsOpen(false)
                     }}
                     className={cn(
-                      'flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-all duration-200',
+                      'flex w-full items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors duration-150',
                       isActive
-                        ? 'bg-muted font-medium text-foreground'
-                        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                        ? 'border-border bg-muted text-foreground'
+                        : 'border-transparent text-muted-foreground hover:border-border hover:bg-muted/40 hover:text-foreground'
                     )}
                   >
                     <div
                       className={cn(
-                        'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-all duration-200',
-                        isActive ? `${config.mobileAccent} text-white shadow-sm` : 'bg-muted text-muted-foreground'
+                        'flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors duration-150',
+                        isActive ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'
                       )}
                     >
                       <Icon className="h-3.5 w-3.5" />
                     </div>
                     <span className="text-sm">{tab.label}</span>
-                    {isActive && (
-                      <motion.div
-                        layoutId="sidebar-active"
-                        className="ml-auto h-1.5 w-1.5 rounded-full bg-foreground"
-                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                      />
-                    )}
+                    {isActive ? <span className="ml-auto text-[11px] font-medium text-foreground">Open</span> : null}
                   </motion.button>
                 )
               })}
             </nav>
 
             {/* Footer */}
-            <div className="absolute bottom-0 left-0 right-0 border-t border-border/60 bg-card p-4">
+            <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-card p-4">
               <p className="text-center text-[10px] text-muted-foreground">
                 © {new Date().getFullYear()} AutoFood
               </p>
