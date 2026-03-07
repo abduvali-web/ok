@@ -15,7 +15,7 @@ const queryParamSchema = z.object({
 
 const apiMethodSchema = z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]);
 
-const fileFormatSchema = z.enum(["csv", "json", "txt", "html", "pdf", "xlsx"]);
+const fileFormatSchema = z.enum(["csv", "json", "txt", "html", "pdf", "xlsx", "xml"]);
 
 const siteApiResponseSchema = z.object({
   ok: z.boolean(),
@@ -273,6 +273,81 @@ function createSimplePdfBytes(text: string): ArrayBuffer {
   pdf += `startxref\n${xrefStart}\n%%EOF`;
 
   return encoder.encode(pdf).buffer as ArrayBuffer;
+}
+
+function escapeSpreadsheetXml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+function detectSpreadsheetCellType(value: string) {
+  if (/^-?\d+(?:\.\d+)?$/.test(value)) return "Number";
+  return "String";
+}
+
+function buildSpreadsheetXml(title: string, data: unknown): string {
+  const safeTitle = title.replace(/[\\/:?*\[\]]/g, " ").trim().slice(0, 31) || "Sheet1";
+
+  const rows: string[][] = [];
+  if (Array.isArray(data)) {
+    const objectRows = data.filter(
+      (item) => item && typeof item === "object" && !Array.isArray(item)
+    ) as Array<Record<string, unknown>>;
+
+    if (objectRows.length === data.length && objectRows.length > 0) {
+      const headers = Array.from(
+        objectRows.reduce((set, row) => {
+          Object.keys(row).forEach((key) => set.add(key));
+          return set;
+        }, new Set<string>())
+      );
+      rows.push(headers);
+      objectRows.forEach((row) => {
+        rows.push(headers.map((header) => String(row[header] ?? "")));
+      });
+    } else {
+      rows.push(["value"]);
+      data.forEach((item) => rows.push([String(item ?? "")]));
+    }
+  } else if (data && typeof data === "object") {
+    rows.push(["key", "value"]);
+    Object.entries(data as Record<string, unknown>).forEach(([key, value]) => {
+      rows.push([key, String(value ?? "")]);
+    });
+  } else {
+    rows.push(["value"], [String(data ?? "")]);
+  }
+
+  const rowsXml = rows
+    .map((row) => {
+      const cellsXml = row
+        .map((cell) => {
+          const value = String(cell ?? "");
+          return `<Cell><Data ss:Type="${detectSpreadsheetCellType(value)}">${escapeSpreadsheetXml(value)}</Data></Cell>`;
+        })
+        .join("");
+      return `<Row>${cellsXml}</Row>`;
+    })
+    .join("");
+
+  return `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook
+  xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:o="urn:schemas-microsoft-com:office:office"
+  xmlns:x="urn:schemas-microsoft-com:office:excel"
+  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:html="http://www.w3.org/TR/REC-html40">
+  <Worksheet ss:Name="${escapeSpreadsheetXml(safeTitle)}">
+    <Table>
+      ${rowsXml}
+    </Table>
+  </Worksheet>
+</Workbook>`;
 }
 
 function blobToDataUrl(blob: Blob): Promise<string> {
@@ -539,7 +614,7 @@ export const createDatabaseFileTool = registerTamboTool({
   name: "create_database_file",
   title: "Create database file",
   description:
-    "Create downloadable files (CSV, JSON, TXT, HTML, PDF, XLSX fallback) from live API data and user instructions.",
+    "Create downloadable files (CSV, JSON, TXT, HTML, PDF, XML spreadsheet) from live API data and user instructions.",
   annotations: {},
   inputSchema: fileExportInputSchema,
   outputSchema: fileExportOutputSchema,
@@ -580,10 +655,19 @@ export const createDatabaseFileTool = registerTamboTool({
         blob = new Blob([buildHtmlReport(safeInput.fileName, textSnapshot)], { type: "text/html;charset=utf-8;" });
       } else if (requestedFormat === "pdf") {
         blob = new Blob([createSimplePdfBytes(textSnapshot)], { type: "application/pdf" });
+      } else if (requestedFormat === "xml" || requestedFormat === "xlsx") {
+        fileExtension = "xml";
+        note =
+          requestedFormat === "xlsx"
+            ? "XLSX requested. Generated Excel XML workbook because native XLSX generation is not installed."
+            : "";
+        blob = new Blob([buildSpreadsheetXml(safeInput.fileName, payload)], {
+          type: "application/xml;charset=utf-8;",
+        });
       } else {
-        fileExtension = "csv";
-        note = "XLSX requested. Generated CSV fallback for compatibility.";
-        blob = new Blob([jsonToCsv(payload)], { type: "text/csv;charset=utf-8;" });
+        fileExtension = "txt";
+        note = "Unknown format requested. Generated TXT fallback.";
+        blob = new Blob([textSnapshot], { type: "text/plain;charset=utf-8;" });
       }
 
       const fileName = normalizeFileName(safeInput.fileName, fileExtension);
@@ -592,7 +676,7 @@ export const createDatabaseFileTool = registerTamboTool({
       return {
         ok: true,
         fileName,
-        format: requestedFormat,
+        format: fileExtension as z.infer<typeof fileFormatSchema>,
         downloadUrl,
         ...(note ? { note } : {}),
       };

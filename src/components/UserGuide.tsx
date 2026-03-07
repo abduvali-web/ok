@@ -29,16 +29,16 @@ export function UserGuide({ guides, title = "Yo'riqnoma" }: UserGuideProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsOpen(true)}
-                className="gap-2 hover-glow"
+                className="gap-2"
             >
                 <HelpCircle className="w-4 h-4" />
                 <span className="hidden sm:inline">Yordam</span>
             </Button>
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent className="glass-intense border-none max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto rounded-xl border border-border bg-card shadow-[0_20px_50px_-36px_rgba(15,23,42,0.22)]">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-bold text-gradient">{title}</DialogTitle>
+                        <DialogTitle className="text-xl font-semibold tracking-tight">{title}</DialogTitle>
                         <DialogDescription>
                             Tizimdan foydalanish bo'yicha qo'llanma
                         </DialogDescription>
@@ -62,12 +62,12 @@ export function UserGuide({ guides, title = "Yo'riqnoma" }: UserGuideProps) {
                                     >
                                         ← Orqaga
                                     </Button>
-                                    <div className="glass-card p-6 rounded-xl space-y-4">
+                                    <div className="space-y-4 rounded-xl border border-border bg-muted/20 p-6">
                                         <div className="flex items-center gap-3">
                                             {selectedGuide.icon}
-                                            <h3 className="text-xl font-bold">{selectedGuide.title}</h3>
+                                            <h3 className="text-xl font-semibold">{selectedGuide.title}</h3>
                                         </div>
-                                        <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
+                                        <Badge variant="secondary" className="w-fit">
                                             {selectedGuide.buttonName}
                                         </Badge>
                                         <p className="text-muted-foreground leading-relaxed">
@@ -90,13 +90,13 @@ export function UserGuide({ guides, title = "Yo'riqnoma" }: UserGuideProps) {
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: index * 0.05 }}
                                             onClick={() => setSelectedGuide(guide)}
-                                            className="glass-card p-4 rounded-xl text-left hover-lift transition-all group"
+                                            className="group rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-muted/20"
                                         >
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3 flex-1">
                                                     {guide.icon}
                                                     <div>
-                                                        <h4 className="font-semibold group-hover:text-primary transition-colors">
+                                                        <h4 className="font-semibold transition-colors group-hover:text-foreground">
                                                             {guide.title}
                                                         </h4>
                                                         <p className="text-sm text-muted-foreground line-clamp-1">
@@ -104,7 +104,7 @@ export function UserGuide({ guides, title = "Yo'riqnoma" }: UserGuideProps) {
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                                                <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
                                             </div>
                                         </motion.button>
                                     ))}

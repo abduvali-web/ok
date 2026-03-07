@@ -151,7 +151,7 @@ function buildSingleTableWorkbook(table: DatabaseTable, snapshot: SnapshotPayloa
 }
 
 function downloadWorkbook(fileName: string, xml: string) {
-  const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' })
+  const blob = new Blob([xml], { type: 'application/xml;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
@@ -238,8 +238,8 @@ export default function DatabasePage() {
 
     const generatedAt = new Date(snapshot.generatedAt).toISOString().slice(0, 10)
     const xml = buildWorkbookXml(snapshot)
-    downloadWorkbook(`neon-database-full-${generatedAt}.xls`, xml)
-    toast.success('Excel workbook downloaded with separate sheets')
+    downloadWorkbook(`neon-database-full-${generatedAt}.xml`, xml)
+    toast.success('Excel XML workbook downloaded with separate sheets')
   }
 
   const handleDownloadCurrentTable = () => {
@@ -252,8 +252,8 @@ export default function DatabasePage() {
     }
 
     const xml = buildSingleTableWorkbook(exportTable, snapshot)
-    downloadWorkbook(`neon-${currentTable.id}-${generatedAt}.xls`, xml)
-    toast.success(`${currentTable.title} sheet downloaded`)
+    downloadWorkbook(`neon-${currentTable.id}-${generatedAt}.xml`, xml)
+    toast.success(`${currentTable.title} sheet downloaded as Excel XML`)
   }
 
   const handleOpenTambo = () => {

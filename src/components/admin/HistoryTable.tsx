@@ -132,10 +132,10 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
   }, [selectedUser])
 
   function getActionBadgeColor(action: string) {
-    if (action.includes('CREATE')) return 'bg-emerald-100 text-emerald-800'
-    if (action.includes('UPDATE')) return 'bg-sky-100 text-sky-800'
-    if (action.includes('DELETE')) return 'bg-rose-100 text-rose-800'
-    return 'bg-slate-100 text-slate-800'
+    if (action.includes('CREATE')) return 'border border-border bg-background text-foreground'
+    if (action.includes('UPDATE')) return 'border border-border bg-background text-foreground'
+    if (action.includes('DELETE')) return 'border border-border bg-background text-foreground'
+    return 'border border-border bg-background text-foreground'
   }
 
   function getRoleLabel(role: string) {
@@ -198,7 +198,7 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
   }, [limit, logs.length, page, total])
 
   return (
-    <Card className="glass-card border-none">
+    <Card>
       <CardHeader className="space-y-3 pb-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
@@ -213,7 +213,7 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
         <div className="grid gap-2 md:grid-cols-[minmax(0,220px)_minmax(0,220px)_1fr]">
           {users.length > 0 ? (
             <Select value={selectedUser} onValueChange={setSelectedUser}>
-              <SelectTrigger>
+              <SelectTrigger className="border-border bg-background">
                 <SelectValue placeholder={t.admin.allUsers} />
               </SelectTrigger>
               <SelectContent>
@@ -230,7 +230,7 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
           )}
 
           <Select value={actionFilter} onValueChange={(value) => setActionFilter(value as ActionFilter)}>
-            <SelectTrigger>
+            <SelectTrigger className="border-border bg-background">
               <SelectValue placeholder="Action filter" />
             </SelectTrigger>
             <SelectContent>
@@ -248,7 +248,7 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder={t.admin.searchPlaceholder || 'Search logs'}
-              className="pl-9"
+              className="border-border bg-background pl-9"
             />
           </div>
         </div>
@@ -256,29 +256,29 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
 
       <CardContent className="space-y-4">
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
-          <div className="rounded-md border bg-background p-3">
+          <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
             <p className="text-xs text-muted-foreground">Visible</p>
             <p className="mt-1 text-xl font-semibold">{filteredLogs.length}</p>
           </div>
-          <div className="rounded-md border bg-background p-3">
+          <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
             <p className="text-xs text-muted-foreground">Create</p>
             <p className="mt-1 text-xl font-semibold text-emerald-600">{summary.create}</p>
           </div>
-          <div className="rounded-md border bg-background p-3">
+          <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
             <p className="text-xs text-muted-foreground">Update</p>
             <p className="mt-1 text-xl font-semibold text-sky-600">{summary.update}</p>
           </div>
-          <div className="rounded-md border bg-background p-3">
+          <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
             <p className="text-xs text-muted-foreground">Delete</p>
             <p className="mt-1 text-xl font-semibold text-rose-600">{summary.delete}</p>
           </div>
-          <div className="rounded-md border bg-background p-3">
+          <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
             <p className="text-xs text-muted-foreground">Other</p>
             <p className="mt-1 text-xl font-semibold">{summary.other}</p>
           </div>
         </div>
 
-        <div className="hidden rounded-md border md:block">
+        <div className="hidden rounded-lg border border-border md:block">
           <Table>
             <TableHeader>
               <TableRow>

@@ -163,6 +163,7 @@ export function SiteBuilderCard() {
                 value={subdomain}
                 onChange={(event) => setSubdomain(event.target.value)}
                 placeholder="healthy-meals"
+                className="border-border bg-background"
               />
               <div className="text-xs text-muted-foreground">
                 Host: {hostLabel}
@@ -199,12 +200,12 @@ export function SiteBuilderCard() {
       </Card>
 
       {normalizedSubdomain ? (
-        <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
+        <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
           <div className="mb-2">
             <p className="text-sm font-semibold">{siteName || 'Website preview'}</p>
             <p className="text-xs text-muted-foreground">{hostLabel}</p>
           </div>
-          <div className="overflow-hidden rounded-lg border bg-background">
+          <div className="overflow-hidden rounded-lg border border-border bg-background">
             <iframe
               title={`Subdomain preview ${normalizedSubdomain}`}
               src={pathPreviewUrl}
@@ -214,7 +215,7 @@ export function SiteBuilderCard() {
           </div>
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-border bg-card p-4 text-sm text-muted-foreground">
           Enter and save a subdomain to render website preview.
         </div>
       )}
@@ -234,7 +235,7 @@ export function SiteBuilderCard() {
               value={aiPrompt}
               onChange={(event) => setAiPrompt(event.target.value)}
               placeholder="Example: Improve hero section, add trust blocks, better CTA flow, and premium color system for conversion."
-              className="min-h-24"
+              className="min-h-24 border-border bg-background"
             />
           </div>
 

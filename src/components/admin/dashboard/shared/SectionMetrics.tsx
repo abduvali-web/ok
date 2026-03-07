@@ -7,11 +7,11 @@ import { cn } from '@/lib/utils'
 type MetricTone = 'neutral' | 'primary' | 'success' | 'warning' | 'danger'
 
 const toneClassMap: Record<MetricTone, string> = {
-  neutral: 'border-border/80 bg-card/80',
-  primary: 'border-primary/25 bg-primary/8',
-  success: 'border-emerald-500/20 bg-emerald-500/8',
-  warning: 'border-amber-500/20 bg-amber-500/8',
-  danger: 'border-rose-500/20 bg-rose-500/8',
+  neutral: 'border-border bg-card',
+  primary: 'border-border bg-card',
+  success: 'border-border bg-card',
+  warning: 'border-border bg-card',
+  danger: 'border-border bg-card',
 }
 
 export type SectionMetric = {
@@ -36,13 +36,13 @@ export function SectionMetrics({
         <div
           key={item.id}
           className={cn(
-            'rounded-xl border px-4 py-3 transition-all hover:-translate-y-0.5 hover:shadow-elegant',
+            'rounded-xl border px-4 py-3 shadow-sm transition-colors hover:bg-muted/20',
             toneClassMap[item.tone ?? 'neutral']
           )}
         >
           <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
             <span>{item.label}</span>
-            {item.icon}
+            <span className="text-foreground/70">{item.icon}</span>
           </div>
           <p className="mt-1 text-2xl font-semibold">{item.value}</p>
           {item.helper && <p className="mt-0.5 text-xs text-muted-foreground">{item.helper}</p>}
@@ -51,4 +51,3 @@ export function SectionMetrics({
     </div>
   )
 }
-

@@ -1330,7 +1330,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         toast.success(message, { description })
         fetchData()
       } else {
-        const errorMessage = data.error || `ÐžÑˆÐ¸Ð±ÐºÐ° ${editingClientId ? 'Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ' : 'ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ'} ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°`
+        const errorMessage = data.error || `ÐžÑˆÐ¸Ð±ÐºÐ° ${editingClientId ? 'Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ' : 'ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ'} клиента`
         const errorDetails = data.details ? `\n${data.details}` : ''
         setClientError(`${errorMessage}${errorDetails}`)
         toast.error(errorMessage, { description: data.details })
@@ -1391,7 +1391,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       })
 
       if (response.ok) {
-        toast.success(`ÐšÐ»Ð¸ÐµÐ½Ñ‚ ${!currentStatus ? 'Ð°ÐºÑ‚Ð¸Ð²Ð¸Ñ€Ð¾Ð²Ð°Ð½' : 'Ð¿Ñ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½'}`)
+        toast.success(`Клиент ${!currentStatus ? 'Ð°ÐºÑ‚Ð¸Ð²Ð¸Ñ€Ð¾Ð²Ð°Ð½' : 'Ð¿Ñ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½'}`)
         fetchData()
       } else {
         toast.error('ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð¸Ð·Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ ÑÑ‚Ð°Ñ‚ÑƒÑ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°')
@@ -1831,7 +1831,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
             <span className="h-2 w-2 rounded-md bg-foreground/40 animate-pulse" style={{ animationDelay: '150ms' }} />
             <span className="h-2 w-2 rounded-md bg-foreground/20 animate-pulse" style={{ animationDelay: '300ms' }} />
           </div>
-          <p className="text-xs text-muted-foreground tracking-wide">Ð—Ð°Ð³Ñ€ÑƒÐ·ÐºÐ°...</p>
+          <p className="text-xs text-muted-foreground tracking-wide">Loading...</p>
         </div>
       </div>
     )
@@ -2412,8 +2412,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     inputRef={searchInputRef}
                     searchValue={searchTerm}
                     onSearchChange={setSearchTerm}
-                    searchPlaceholder="ÐŸÐ¾Ð¸ÑÐº Ð¿Ð¾ Ð¸Ð¼ÐµÐ½Ð¸, Ð°Ð´Ñ€ÐµÑÑƒ Ð¸Ð»Ð¸ Ð½Ð¾Ð¼ÐµÑ€Ñƒ Ð·Ð°ÐºÐ°Ð·Ð°..."
-                    searchAriaLabel="ÐŸÐ¾Ð¸ÑÐº Ð·Ð°ÐºÐ°Ð·Ð¾Ð²"
+                    searchPlaceholder="Search by name, address, or order number..."
+                    searchAriaLabel="Search orders"
                   >
                     <Badge variant="secondary" className="h-9 rounded-md px-3">
                       {filteredOrders.length} rows
@@ -2439,8 +2439,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
                 {filteredOrders.length === 0 ? (
                   <TabEmptyState
-                    title="Ð—Ð°ÐºÐ°Ð·Ñ‹ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ñ‹"
-                    description="Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚Ðµ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ñ‹ Ð¸Ð»Ð¸ Ð¿Ð¾Ð¸ÑÐºÐ¾Ð²Ñ‹Ð¹ Ð·Ð°Ð¿Ñ€Ð¾Ñ."
+                    title="No orders found"
+                    description="Adjust the filters or search query."
                   />
                 ) : (
                   <div className="rounded-md border">
@@ -2473,7 +2473,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       {t.admin.manageClientsDesc}
                       {clientStatusFilter !== 'all' && (
                         <span className="ml-2 text-sm">
-                          (ÐŸÐ¾ÐºÐ°Ð·Ð°Ð½Ð¾: {filteredClients.length} Ð¸Ð· {clients.length})
+                          (Showing: {filteredClients.length} of {clients.length})
                         </span>
                       )}
                     </CardDescription>
@@ -2481,16 +2481,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   <div className="grid w-full gap-2 lg:w-auto lg:grid-cols-[190px_auto]">
                     <Select value={clientStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setClientStatusFilter(value)}>
                       <SelectTrigger className="h-9 w-full">
-                        <SelectValue placeholder="Ð¤Ð¸Ð»ÑŒÑ‚Ñ€ ÑÑ‚Ð°Ñ‚ÑƒÑÐ°" />
+                        <SelectValue placeholder="Status filter" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Ð’ÑÐµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ñ‹</SelectItem>
-                        <SelectItem value="active">Ð¢Ð¾Ð»ÑŒÐºÐ¾ Ð°ÐºÑ‚Ð¸Ð²Ð½Ñ‹Ðµ</SelectItem>
-                        <SelectItem value="inactive">Ð¢Ð¾Ð»ÑŒÐºÐ¾ Ð¿Ñ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð½Ñ‹Ðµ</SelectItem>
+                        <SelectItem value="all">All clients</SelectItem>
+                        <SelectItem value="active">Active only</SelectItem>
+                        <SelectItem value="inactive">Paused only</SelectItem>
                       </SelectContent>
                     </Select>
                     <Button variant="outline" className="h-9" onClick={() => setActiveTab('bin')}>
-                      ÐšÐ¾Ñ€Ð·Ð¸Ð½Ð°
+                      Bin
                     </Button>
                   </div>
                 </div>
@@ -2498,21 +2498,21 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       <DialogTrigger asChild>
                         <Button>
                           <Plus className="w-4 h-4 mr-2" />
-                          Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°
+                          Create client
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
-                          <DialogTitle>{editingClientId ? 'Ð ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ ÐšÐ»Ð¸ÐµÐ½Ñ‚Ð°' : 'Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ ÐšÐ»Ð¸ÐµÐ½Ñ‚Ð°'}</DialogTitle>
+                          <DialogTitle>{editingClientId ? 'Edit client' : 'Create client'}</DialogTitle>
                           <DialogDescription>
-                            {editingClientId ? 'Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚Ðµ Ð´Ð°Ð½Ð½Ñ‹Ðµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°' : 'Ð¡Ð¾Ð·Ð´Ð°Ð¹Ñ‚Ðµ Ð½Ð¾Ð²Ð¾Ð³Ð¾ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð° Ð² ÑÐ¸ÑÑ‚ÐµÐ¼Ðµ'}
+                            {editingClientId ? 'Update the client details.' : 'Create a new client in the system.'}
                           </DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleCreateClient}>
                           <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientName" className="text-right">
-                                Ð˜Ð¼Ñ
+                                Name
                               </Label>
                               <Input
                                 id="clientName"
@@ -2524,19 +2524,19 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientNickName" className="text-right">
-                                ÐÐ¸ÐºÐ½ÐµÐ¹Ð¼
+                                Nickname
                               </Label>
                               <Input
                                 id="clientNickName"
                                 value={clientFormData.nickName || ''}
                                 onChange={(e) => setClientFormData(prev => ({ ...prev, nickName: e.target.value }))}
                                 className="col-span-3"
-                                placeholder="ÐÐ°Ð¿Ñ€Ð¸Ð¼ÐµÑ€: ÐžÑ„Ð¸Ñ, Ð”Ð¾Ð¼... (Ð½ÐµÐ¾Ð±ÑÐ·Ð°Ñ‚ÐµÐ»ÑŒÐ½Ð¾)"
+                                placeholder="Example: Office, Home... (optional)"
                               />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientPhone" className="text-right">
-                                Ð¢ÐµÐ»ÐµÑ„Ð¾Ð½
+                                Phone
                               </Label>
                               <div className="col-span-3">
                                 <Input
@@ -2547,12 +2547,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                   onChange={(e) => setClientFormData(prev => ({ ...prev, phone: e.target.value }))}
                                   required
                                 />
-                                <p className="text-xs text-muted-foreground mt-1">Ð¤Ð¾Ñ€Ð¼Ð°Ñ‚: +998 XX XXX XX XX</p>
+                                <p className="text-xs text-muted-foreground mt-1">Format: +998 XX XXX XX XX</p>
                               </div>
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientAddress" className="text-right">
-                                ÐÐ´Ñ€ÐµÑ
+                                Address
                               </Label>
                               <Input
                                 id="clientAddress"
@@ -2564,7 +2564,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="googleMapsLink" className="text-right">
-                                Ð¡ÑÑ‹Ð»ÐºÐ° Ð½Ð° ÐºÐ°Ñ€Ñ‚Ñƒ
+                                Map link
                               </Label>
 
                               <Input
@@ -2577,7 +2577,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientPlanType" className="text-right">
-                                Ð¢Ð°Ñ€Ð¸Ñ„
+                                Plan
                               </Label>
                               <select
                                 id="clientPlanType"
@@ -2600,7 +2600,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientCalories" className="text-right">
-                                ÐšÐ°Ð»Ð¾Ñ€Ð¸Ð¸
+                                Calories
                               </Label>
                               <select
                                 id="clientCalories"
@@ -2615,17 +2615,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 }}
                                 className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                               >
-                                <option value="1200">1200 ÐºÐºÐ°Ð»</option>
-                                <option value="1600">1600 ÐºÐºÐ°Ð»</option>
-                                <option value="2000">2000 ÐºÐºÐ°Ð»</option>
-                                <option value="2500">2500 ÐºÐºÐ°Ð»</option>
-                                <option value="3000">3000 ÐºÐºÐ°Ð»</option>
+                                <option value="1200">1200 kcal</option>
+                                <option value="1600">1600 kcal</option>
+                                <option value="2000">2000 kcal</option>
+                                <option value="2500">2500 kcal</option>
+                                <option value="3000">3000 kcal</option>
                               </select>
                             </div>
 
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientPrice" className="text-right">
-                                Ð¦ÐµÐ½Ð° (ÑÑƒÐ¼)
+                                Price (UZS)
                               </Label>
                               <Input
                                 id="clientPrice"
@@ -2638,35 +2638,35 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientNotes" className="text-right">
-                                Ð—Ð°Ð¼ÐµÑ‚ÐºÐ¸
+                                Notes
                               </Label>
                               <Input
                                 id="clientNotes"
                                 value={clientFormData.notes || ''}
                                 onChange={(e) => setClientFormData(prev => ({ ...prev, notes: e.target.value }))}
                                 className="col-span-3"
-                                placeholder="Ð˜Ð½Ð´Ð¸Ð²Ð¸Ð´ÑƒÐ°Ð»ÑŒÐ½Ñ‹Ðµ Ð¿Ñ€ÐµÐ´Ð¿Ð¾Ñ‡Ñ‚ÐµÐ½Ð¸Ñ..."
+                                placeholder="Individual preferences..."
                               />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientSpecialFeatures" className="text-right">
-                                ÐžÑÐ¾Ð±ÐµÐ½Ð½Ð¾ÑÑ‚Ð¸
+                                Special features
                               </Label>
                               <Input
                                 id="clientSpecialFeatures"
                                 value={clientFormData.specialFeatures}
                                 onChange={(e) => setClientFormData(prev => ({ ...prev, specialFeatures: e.target.value }))}
                                 className="col-span-3"
-                                placeholder="ÐžÑÐ¾Ð±Ñ‹Ðµ Ð¿Ð¾Ð¶ÐµÐ»Ð°Ð½Ð¸Ñ (Ð½ÐµÐ¾Ð±ÑÐ·Ð°Ñ‚ÐµÐ»ÑŒÐ½Ð¾)"
+                                placeholder="Special requests (optional)"
                               />
                             </div>
                             <div className="grid grid-cols-4 items-start gap-2">
                               <Label className="text-right pt-2">
-                                Ð”Ð½Ð¸ Ð´Ð¾ÑÑ‚Ð°Ð²ÐºÐ¸
+                                Delivery days
                               </Label>
                               <div className="col-span-3 space-y-2">
                                 <div className="text-xs text-slate-500 mb-2">
-                                  Ð’Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ Ð´Ð½Ð¸ Ð½ÐµÐ´ÐµÐ»Ð¸ Ð´Ð»Ñ Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¾Ð³Ð¾ ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²
+                                  Select weekdays for automatic order creation
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                   <div className="flex items-center space-x-2">
@@ -2675,7 +2675,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                       checked={clientFormData.deliveryDays.monday}
                                       onCheckedChange={(checked) => handleDeliveryDayChange('monday', checked === true)}
                                     />
-                                    <Label htmlFor="monday" className="text-sm">ÐŸÐ¾Ð½ÐµÐ´ÐµÐ»ÑŒÐ½Ð¸Ðº</Label>
+                                    <Label htmlFor="monday" className="text-sm">Monday</Label>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <Checkbox
@@ -2683,7 +2683,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                       checked={clientFormData.deliveryDays.tuesday}
                                       onCheckedChange={(checked) => handleDeliveryDayChange('tuesday', checked === true)}
                                     />
-                                    <Label htmlFor="tuesday" className="text-sm">Ð’Ñ‚Ð¾Ñ€Ð½Ð¸Ðº</Label>
+                                    <Label htmlFor="tuesday" className="text-sm">Tuesday</Label>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <Checkbox
@@ -2691,7 +2691,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                       checked={clientFormData.deliveryDays.wednesday}
                                       onCheckedChange={(checked) => handleDeliveryDayChange('wednesday', checked === true)}
                                     />
-                                    <Label htmlFor="wednesday" className="text-sm">Ð¡Ñ€ÐµÐ´Ð°</Label>
+                                    <Label htmlFor="wednesday" className="text-sm">Wednesday</Label>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <Checkbox
@@ -2699,7 +2699,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                       checked={clientFormData.deliveryDays.thursday}
                                       onCheckedChange={(checked) => handleDeliveryDayChange('thursday', checked === true)}
                                     />
-                                    <Label htmlFor="thursday" className="text-sm">Ð§ÐµÑ‚Ð²ÐµÑ€Ð³</Label>
+                                    <Label htmlFor="thursday" className="text-sm">Thursday</Label>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <Checkbox
@@ -2707,7 +2707,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                       checked={clientFormData.deliveryDays.friday}
                                       onCheckedChange={(checked) => handleDeliveryDayChange('friday', checked === true)}
                                     />
-                                    <Label htmlFor="friday" className="text-sm">ÐŸÑÑ‚Ð½Ð¸Ñ†Ð°</Label>
+                                    <Label htmlFor="friday" className="text-sm">Friday</Label>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <Checkbox
@@ -2715,7 +2715,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                       checked={clientFormData.deliveryDays.saturday}
                                       onCheckedChange={(checked) => handleDeliveryDayChange('saturday', checked === true)}
                                     />
-                                    <Label htmlFor="saturday" className="text-sm">Ð¡ÑƒÐ±Ð±Ð¾Ñ‚Ð°</Label>
+                                    <Label htmlFor="saturday" className="text-sm">Saturday</Label>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <Checkbox
@@ -2723,19 +2723,19 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                       checked={clientFormData.deliveryDays.sunday}
                                       onCheckedChange={(checked) => handleDeliveryDayChange('sunday', checked === true)}
                                     />
-                                    <Label htmlFor="sunday" className="text-sm">Ð’Ð¾ÑÐºÑ€ÐµÑÐµÐ½ÑŒÐµ</Label>
+                                    <Label htmlFor="sunday" className="text-sm">Sunday</Label>
                                   </div>
                                 </div>
                                 <div className="flex items-center space-x-2 pt-2">
                                   <Label htmlFor="defaultCourier" className="text-sm w-full">
-                                    ÐšÑƒÑ€ÑŒÐµÑ€ Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ:
+                                    Default courier:
                                     <select
                                       id="defaultCourier"
                                       value={clientFormData.defaultCourierId}
                                       onChange={(e) => setClientFormData(prev => ({ ...prev, defaultCourierId: e.target.value }))}
                                       className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                      <option value="">ÐÐµÑ‚</option>
+                                      <option value="">None</option>
                                       {couriers.map((courier) => (
                                         <option key={courier.id} value={courier.id}>
                                           {courier.name}
@@ -2746,17 +2746,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 </div>
                                 <div className="flex items-center space-x-2 pt-2">
                                   <Label htmlFor="assignedSet" className="text-sm w-full">
-                                    ÐÐ°Ð·Ð½Ð°Ñ‡ÐµÐ½Ð½Ñ‹Ð¹ ÑÐµÑ‚ (Ð¼ÐµÐ½ÑŽ):
+                                    Assigned set (menu):
                                     <select
                                       id="assignedSet"
                                       value={clientFormData.assignedSetId}
                                       onChange={(e) => setClientFormData(prev => ({ ...prev, assignedSetId: e.target.value }))}
                                       className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                      <option value="">ÐÐ²Ñ‚Ð¾ (ÐÐºÑ‚Ð¸Ð²Ð½Ñ‹Ð¹ Ð³Ð»Ð¾Ð±Ð°Ð»ÑŒÐ½Ñ‹Ð¹)</option>
+                                      <option value="">Auto (active global set)</option>
                                       {availableSets.map((set) => (
                                         <option key={set.id} value={set.id}>
-                                          {set.name} {set.isActive ? '(ÐÐºÑ‚Ð¸Ð²Ð½Ñ‹Ð¹)' : ''}
+                                          {set.name} {set.isActive ? '(Active)' : ''}
                                         </option>
                                       ))}
                                     </select>
@@ -2769,7 +2769,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                     onCheckedChange={(checked) => setClientFormData(prev => ({ ...prev, autoOrdersEnabled: checked === true }))}
                                   />
                                   <Label htmlFor="autoOrdersEnabled" className="text-sm">
-                                    Ð’ÐºÐ»ÑŽÑ‡Ð¸Ñ‚ÑŒ Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¾Ðµ ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ðµ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²
+                                    Enable automatic order creation
                                   </Label>
                                 </div>
                               </div>
@@ -2782,10 +2782,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           )}
                           <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setIsCreateClientModalOpen(false)}>
-                              ÐžÑ‚Ð¼ÐµÐ½Ð°
+                              Cancel
                             </Button>
                             <Button type="submit" disabled={isCreatingClient}>
-                              {isCreatingClient ? 'Ð¡Ð¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð¸Ðµ...' : (editingClientId ? 'Ð¡Ð¾Ñ…Ñ€Ð°Ð½Ð¸Ñ‚ÑŒ' : 'Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ')}
+                              {isCreatingClient ? 'Saving...' : (editingClientId ? 'Save' : 'Create')}
                             </Button>
                           </DialogFooter>
                         </form>
@@ -2798,8 +2798,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   <FilterToolbar
                     searchValue={clientSearchTerm}
                     onSearchChange={setClientSearchTerm}
-                    searchPlaceholder="ÐŸÐ¾Ð¸ÑÐº ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°..."
-                    searchAriaLabel="ÐŸÐ¾Ð¸ÑÐº ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²"
+                    searchPlaceholder="Search client..."
+                    searchAriaLabel="Search clients"
                   >
                     {clientSearchTerm && (
                       <Button variant="outline" size="sm" className="h-9" onClick={() => setClientSearchTerm('')}>
@@ -2817,7 +2817,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   <div className="mb-4 rounded-lg border bg-muted/20 p-3">
                     <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                       <span className="text-sm text-muted-foreground">
-                        Ð’Ñ‹Ð±Ñ€Ð°Ð½Ð¾ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²: {selectedClients.size}
+                        Selected clients: {selectedClients.size}
                       </span>
                       <div className="flex flex-wrap gap-2">
                         <Button
@@ -2889,23 +2889,23 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                               checked={selectedClients.size === filteredClients.length && filteredClients.length > 0}
                             />
                           </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ð˜Ð¼Ñ</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ÐÐ¸ÐºÐ½ÐµÐ¹Ð¼</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ð¢ÐµÐ»ÐµÑ„Ð¾Ð½</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ÐÐ´Ñ€ÐµÑ</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ÐšÐ°Ð»Ð¾Ñ€Ð¸Ð¸</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ð”Ð½Ð¸ Ð´Ð¾ÑÑ‚Ð°Ð²ÐºÐ¸</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Name</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Nickname</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Phone</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Address</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Calories</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Delivery days</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                            Ð¡Ñ‚Ð°Ñ‚ÑƒÑ / ÐÐ²Ñ‚Ð¾
+                            Status / Auto
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                            ÐžÑÐ¾Ð±ÐµÐ½Ð½Ð¾ÑÑ‚Ð¸
+                            Notes
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                            Ð”Ð°Ñ‚Ð° Ð´Ð¾Ð±Ð°Ð²Ð»ÐµÐ½Ð¸Ñ
+                            Created
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                            Ð”ÐµÐ¹ÑÑ‚Ð²Ð¸Ñ
+                            Actions
                           </th>
                         </tr>
                       </thead>
@@ -2933,17 +2933,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 {client.address}
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
-                                {client.calories} ÐºÐºÐ°Ð»
+                                {client.calories} kcal
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
                                 <div className="text-xs">
-                                  {client.deliveryDays?.monday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">ÐŸÐ½</span>}
-                                  {client.deliveryDays?.tuesday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Ð’Ñ‚</span>}
-                                  {client.deliveryDays?.wednesday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Ð¡Ñ€</span>}
-                                  {client.deliveryDays?.thursday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Ð§Ñ‚</span>}
-                                  {client.deliveryDays?.friday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">ÐŸÑ‚</span>}
-                                  {client.deliveryDays?.saturday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Ð¡Ð±</span>}
-                                  {client.deliveryDays?.sunday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Ð’Ñ</span>}
+                                  {client.deliveryDays?.monday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Mon</span>}
+                                  {client.deliveryDays?.tuesday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Tue</span>}
+                                  {client.deliveryDays?.wednesday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Wed</span>}
+                                  {client.deliveryDays?.thursday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Thu</span>}
+                                  {client.deliveryDays?.friday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Fri</span>}
+                                  {client.deliveryDays?.saturday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Sat</span>}
+                                  {client.deliveryDays?.sunday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Sun</span>}
                                   {(!client.deliveryDays || Object.values(client.deliveryDays).every(day => !day)) && (
                                     <span className="text-slate-400">-</span>
                                   )}
@@ -2953,8 +2953,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 <div className="flex flex-col gap-1">
                                   <EntityStatusBadge
                                     isActive={client.isActive}
-                                    activeLabel="ÐÐºÑ‚Ð¸Ð²ÐµÐ½"
-                                    inactiveLabel="ÐŸÑ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½"
+                                    activeLabel="Active"
+                                    inactiveLabel="Paused"
                                     inactiveTone="danger"
                                     showDot
                                     onClick={() => handleToggleClientStatus(client.id, client.isActive)}
@@ -2965,7 +2965,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 {client.specialFeatures || '-'}
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
-                                ðŸ“… {new Date(client.createdAt).toLocaleDateString('ru-RU')}
+                                {new Date(client.createdAt).toLocaleDateString('en-GB')}
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
                                 <Button

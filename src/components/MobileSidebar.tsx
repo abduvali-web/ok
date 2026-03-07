@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
@@ -52,7 +52,7 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
 
   return (
     <>
-      {/* ─── FAB ─── */}
+      {/* â”€â”€â”€ FAB â”€â”€â”€ */}
       <Button
         variant="outline"
         size="icon"
@@ -85,7 +85,7 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
         </AnimatePresence>
       </Button>
 
-      {/* ─── Backdrop ─── */}
+      {/* â”€â”€â”€ Backdrop â”€â”€â”€ */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -99,7 +99,7 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
         )}
       </AnimatePresence>
 
-      {/* ─── Sidebar Panel ─── */}
+      {/* â”€â”€â”€ Sidebar Panel â”€â”€â”€ */}
       <AnimatePresence>
         {isOpen && (
           <motion.aside
@@ -180,7 +180,7 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
             {/* Footer */}
             <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-card p-4">
               <p className="text-center text-[10px] text-muted-foreground">
-                © {new Date().getFullYear()} AutoFood
+                (c) {new Date().getFullYear()} AutoFood
               </p>
             </div>
           </motion.aside>

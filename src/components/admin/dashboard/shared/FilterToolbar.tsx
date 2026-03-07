@@ -21,7 +21,7 @@ export function FilterToolbar({
   children?: ReactNode
 }) {
   return (
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+    <div className="grid gap-3 rounded-xl border border-border bg-card p-3 shadow-sm lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -29,7 +29,7 @@ export function FilterToolbar({
           value={searchValue}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder={searchPlaceholder}
-          className="pl-9"
+          className="border-border bg-background pl-9"
           aria-label={searchAriaLabel || searchPlaceholder}
         />
       </div>

@@ -1,22 +1,14 @@
 "use client";
 
 import {
-  Component,
-  type ErrorInfo,
   type KeyboardEvent,
-  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
-import {
-  ComponentRenderer,
-  useTambo,
-  useTamboSuggestions,
-  useTamboThreadInput,
-} from "@tambo-ai/react";
+import { useTambo, useTamboThreadInput } from "@tambo-ai/react";
 import {
   Bot,
   Loader2,
@@ -25,7 +17,6 @@ import {
   Minimize2,
   Plus,
   Send,
-  Sparkles,
   X,
 } from "lucide-react";
 
@@ -43,6 +34,7 @@ const MAX_TEXTAREA_HEIGHT = 156;
 type WebsiteArtifact = {
   id: string;
   kind: "website";
+  sourceMessageId: string;
   createdAt?: string;
   ok: boolean;
   applied: boolean;
@@ -55,6 +47,7 @@ type WebsiteArtifact = {
 type FileArtifact = {
   id: string;
   kind: "file";
+  sourceMessageId: string;
   createdAt?: string;
   ok: boolean;
   fileName: string;
@@ -64,6 +57,23 @@ type FileArtifact = {
 };
 
 type TamboArtifact = WebsiteArtifact | FileArtifact;
+
+function formatMessageTime(value?: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function summarizeMessageText(input: string, limit = 84): string {
+  const compact = input.replace(/\s+/g, " ").trim();
+  if (compact.length <= limit) return compact;
+  return `${compact.slice(0, limit - 1).trimEnd()}…`;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -202,82 +212,14 @@ function extractToolResultPayload(content: unknown): Record<string, unknown> | n
   return null;
 }
 
-class TamboComponentErrorBoundary extends Component<
-  { children: ReactNode; componentName: string },
-  { hasError: boolean }
-> {
-  state = { hasError: false };
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    // eslint-disable-next-line no-console -- preserve runtime diagnostics for third-party UI renderer failures.
-    console.error(
-      `[TamboComponentErrorBoundary] Failed to render "${this.props.componentName}"`,
-      error,
-      info
-    );
-  }
-
-  componentDidUpdate(prevProps: { componentName: string }) {
-    if (this.state.hasError && prevProps.componentName !== this.props.componentName) {
-      this.setState({ hasError: false });
-    }
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className={styles.componentError}>
-          Component render failed. Try reloading this chat response.
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-function TamboSuggestionsBar({ disabled }: { disabled: boolean }) {
-  const { suggestions, accept, isFetching } = useTamboSuggestions({
-    maxSuggestions: 3,
-  });
-
-  if (suggestions.length === 0) return null;
-
-  return (
-    <div className={styles.suggestions}>
-      {suggestions.map((suggestion) => (
-        <Button
-          key={suggestion.id}
-          type="button"
-          variant="secondary"
-          size="sm"
-          className={styles.suggestionButton}
-          onClick={() => accept({ suggestion })}
-          disabled={disabled || isFetching}
-          title={suggestion.detailedSuggestion}
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          {suggestion.title ?? "Suggestion"}
-        </Button>
-      ))}
-    </div>
-  );
-}
-
 function TamboEmptyState() {
   return (
     <div className={styles.emptyState}>
-      <div className={styles.emptyIcon} aria-hidden>
-        <Sparkles className="h-5 w-5" />
-      </div>
-      <div className="space-y-1.5">
-        <p className="text-sm font-semibold">Ask anything about your admin data</p>
-        <p className="text-xs text-muted-foreground">
-          Try requests like: latest order trends, low-performing couriers, monthly salary
-          changes, or render this as a chart.
+      <div className="space-y-1">
+        <p className={styles.emptyTitle}>Ask about orders, clients, couriers, or files</p>
+        <p className={styles.emptyCopy}>
+          Replies stay in plain chat format. Generated files appear as cards under the
+          assistant message.
         </p>
       </div>
     </div>
@@ -286,8 +228,6 @@ function TamboEmptyState() {
 
 export function TamboAgentWidget() {
   const apiKey = process.env.NEXT_PUBLIC_TAMBO_API_KEY;
-  const enableSuggestions =
-    process.env.NEXT_PUBLIC_TAMBO_ENABLE_SUGGESTIONS === "true";
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -300,7 +240,6 @@ export function TamboAgentWidget() {
     currentThreadId,
     initThread,
     startNewThread,
-    isIdentified,
   } = useTambo();
   const { value, setValue, submit, isPending, isDisabled } =
     useTamboThreadInput();
@@ -379,7 +318,6 @@ export function TamboAgentWidget() {
   }, [value, syncTextareaHeight, isOpen]);
 
   const hasRealThread = currentThreadId !== PLACEHOLDER_THREAD_ID;
-  const canUseSuggestions = enableSuggestions && isIdentified && hasRealThread;
   const hasInput = value.trim().length > 0;
 
   const handleSend = useCallback(async () => {
@@ -414,11 +352,6 @@ export function TamboAgentWidget() {
 
   type ThreadMessage = (typeof messages)[number];
   type ThreadContent = ThreadMessage["content"][number];
-
-  const isRenderableContent = useCallback(
-    (content: ThreadContent) => content.type === "text" || content.type === "component",
-    []
-  );
 
   const toolProgress = useMemo(() => {
     const started = new Set<string>();
@@ -493,6 +426,7 @@ export function TamboAgentWidget() {
           collected.push({
             id: content.toolUseId,
             kind: "file",
+            sourceMessageId: message.id,
             createdAt: message.createdAt,
             ok: parsed.ok !== false,
             fileName: typeof parsed.fileName === "string" ? parsed.fileName : "export",
@@ -507,6 +441,7 @@ export function TamboAgentWidget() {
           collected.push({
             id: content.toolUseId,
             kind: "website",
+            sourceMessageId: message.id,
             createdAt: message.createdAt,
             ok: parsed.ok !== false,
             applied: Boolean(parsed.applied),
@@ -536,11 +471,56 @@ export function TamboAgentWidget() {
       messages
         .map((message) => ({
           message,
-          visibleContent: message.content.filter(isRenderableContent),
+          visibleContent: message.content.filter((content) => content.type === "text"),
         }))
         .filter(({ visibleContent }) => visibleContent.length > 0),
-    [isRenderableContent, messages]
+    [messages]
   );
+
+  const artifactsByMessage = useMemo(() => {
+    const grouped = new Map<string, TamboArtifact[]>();
+    artifacts.forEach((artifact) => {
+      const existing = grouped.get(artifact.sourceMessageId) ?? [];
+      existing.push(artifact);
+      grouped.set(artifact.sourceMessageId, existing);
+    });
+    return grouped;
+  }, [artifacts]);
+
+  const visibleMessageIds = useMemo(
+    () => new Set(visibleMessages.map(({ message }) => message.id)),
+    [visibleMessages]
+  );
+
+  const orphanArtifacts = useMemo(
+    () => artifacts.filter((artifact) => !visibleMessageIds.has(artifact.sourceMessageId)),
+    [artifacts, visibleMessageIds]
+  );
+
+  const historyItems = useMemo(
+    () =>
+      visibleMessages.map(({ message, visibleContent }) => {
+        const preview = visibleContent
+          .filter((content): content is Extract<ThreadContent, { type: "text" }> => content.type === "text")
+          .map((content) => content.text)
+          .join(" ")
+          .trim();
+
+        return {
+          id: message.id,
+          role: message.role,
+          preview: summarizeMessageText(preview || (message.role === "user" ? "New request" : "Reply")),
+          timeLabel: formatMessageTime(message.createdAt),
+          fileCount: artifactsByMessage.get(message.id)?.length ?? 0,
+        };
+      }),
+    [artifactsByMessage, visibleMessages]
+  );
+
+  const scrollToMessage = useCallback((messageId: string) => {
+    const target = document.getElementById(`tambo-message-${messageId}`);
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
 
   const renderContent = useCallback(
     (message: ThreadMessage, content: ThreadContent, index: number) => {
@@ -555,43 +535,104 @@ export function TamboAgentWidget() {
         );
       }
 
-      if (content.type === "component") {
-        const componentId =
-          typeof content.id === "string"
-            ? content.id
-            : `${message.id}:component:${content.name}:${index}`;
-
-        return (
-          <div key={componentId} className="space-y-2 pt-1">
-            <div className={styles.componentPill}>Interactive UI: {content.name}</div>
-            <TamboComponentErrorBoundary componentName={content.name}>
-              <ComponentRenderer
-                content={content}
-                threadId={currentThreadId}
-                messageId={message.id}
-                fallback={
-                  <div className={styles.componentFallback}>
-                    Unknown component: {content.name}
-                  </div>
-                }
-              />
-            </TamboComponentErrorBoundary>
-          </div>
-        );
-      }
-
-      if (content.type === "tool_use") {
-        return null;
-      }
-
-      if (content.type === "tool_result") {
-        return null;
-      }
-
       return null;
     },
-    [currentThreadId]
+    []
   );
+
+  const renderArtifactCard = useCallback((artifact: TamboArtifact) => {
+    if (artifact.kind === "file") {
+      return (
+        <div key={`${artifact.kind}:${artifact.id}`} className={styles.fileCard}>
+          <div className={styles.fileCardHeader}>
+            <div className="min-w-0">
+              <p className={styles.fileCardTitle}>{artifact.fileName}</p>
+              <p className={styles.fileCardMeta}>
+                {artifact.ok ? "Generated file" : "File generation failed"}
+                {artifact.note ? ` - ${artifact.note}` : ""}
+              </p>
+            </div>
+            <Badge variant="outline" className={styles.fileBadge}>
+              {artifact.format.toUpperCase()}
+            </Badge>
+          </div>
+          <div className={styles.fileActions}>
+            {artifact.downloadUrl ? (
+              <>
+                <a
+                  href={artifact.downloadUrl}
+                  download={artifact.fileName}
+                  className={styles.fileAction}
+                >
+                  Download
+                </a>
+                <a
+                  href={artifact.downloadUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={styles.fileAction}
+                >
+                  Open
+                </a>
+              </>
+            ) : (
+              <p className={styles.fileCardMeta}>Download link unavailable for this result.</p>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div key={`${artifact.kind}:${artifact.id}`} className={styles.fileCard}>
+        <div className={styles.fileCardHeader}>
+          <div className="min-w-0">
+            <p className={styles.fileCardTitle}>
+              {artifact.subdomain ? `${artifact.subdomain} website` : "Edited website"}
+            </p>
+            <p className={styles.fileCardMeta}>
+              {artifact.message ?? (artifact.applied ? "Update applied" : "Preview generated")}
+            </p>
+          </div>
+          <Badge variant={artifact.ok ? "secondary" : "destructive"} className={styles.fileBadge}>
+            {artifact.ok ? "ok" : "error"}
+          </Badge>
+        </div>
+        <div className={styles.fileActions}>
+          {artifact.pathUrl ? (
+            <a
+              href={artifact.pathUrl}
+              target="_blank"
+              rel="noreferrer"
+              className={styles.fileAction}
+            >
+              Preview
+            </a>
+          ) : null}
+          {artifact.hostUrl ? (
+            <a
+              href={artifact.hostUrl}
+              target="_blank"
+              rel="noreferrer"
+              className={styles.fileAction}
+            >
+              Open site
+            </a>
+          ) : null}
+        </div>
+        {artifact.pathUrl ? (
+          <div className={styles.previewFrame}>
+            <iframe
+              title={artifact.subdomain ? `Site preview ${artifact.subdomain}` : "Site preview"}
+              src={artifact.pathUrl}
+              loading="lazy"
+              className="h-44 w-full bg-white"
+            />
+          </div>
+        ) : null}
+      </div>
+    );
+  }, []);
 
   if (!apiKey) return null;
 
@@ -692,40 +733,104 @@ export function TamboAgentWidget() {
               </div>
             </div>
 
-            <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-              <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-                <ScrollArea className="min-h-0 flex-1">
-                  <div className="flex min-h-full flex-col gap-4 p-4 sm:p-5" aria-live="polite">
-                    {messages.length === 0 ? <TamboEmptyState /> : null}
-
-                    {visibleMessages.map(({ message, visibleContent }) => (
-                      <article
-                        key={message.id}
-                        className={cn(
-                          "flex",
-                          styles.messageRow,
-                          message.role === "user" ? "justify-end" : "justify-start"
-                        )}
+            <div className={styles.shell}>
+              <aside className={styles.historyPanel}>
+                <div className={styles.panelHeader}>
+                  <div>
+                    <p className={styles.panelEyebrow}>History</p>
+                    <p className={styles.panelTitle}>Current session</p>
+                  </div>
+                  <span className={styles.panelCount}>{historyItems.length}</span>
+                </div>
+                <ScrollArea className="min-h-[160px] flex-1">
+                  <div className={styles.historyList}>
+                    {historyItems.length === 0 ? (
+                      <div className={styles.historyEmpty}>Your prompts and replies will appear here.</div>
+                    ) : null}
+                    {historyItems.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={styles.historyItem}
+                        onClick={() => scrollToMessage(item.id)}
                       >
-                        <div
-                          className={cn(
-                            "max-w-[92%] space-y-2 rounded-2xl px-3.5 py-3 text-sm sm:max-w-[86%]",
-                            message.role === "user" ? styles.userBubble : styles.assistantBubble
-                          )}
-                        >
-                          <div className="space-y-2">
-                            {visibleContent.map((content, idx) =>
-                              renderContent(message, content, idx)
-                            )}
+                        <div className={styles.historyItemHeader}>
+                          <span className={styles.historyRole}>
+                            {item.role === "user" ? "You" : "Tambo"}
+                          </span>
+                          <div className={styles.historyMeta}>
+                            {item.fileCount > 0 ? (
+                              <span className={styles.historyFileCount}>
+                                {item.fileCount} file{item.fileCount > 1 ? "s" : ""}
+                              </span>
+                            ) : null}
+                            {item.timeLabel ? <span>{item.timeLabel}</span> : null}
                           </div>
                         </div>
-                      </article>
+                        <p className={styles.historyPreview}>{item.preview}</p>
+                      </button>
                     ))}
+                  </div>
+                </ScrollArea>
+              </aside>
+
+              <div className={styles.chatColumn}>
+                <ScrollArea className="min-h-0 flex-1">
+                  <div className={styles.transcript} aria-live="polite">
+                    {messages.length === 0 ? <TamboEmptyState /> : null}
+
+                    {visibleMessages.map(({ message, visibleContent }) => {
+                      const messageArtifacts = artifactsByMessage.get(message.id) ?? [];
+
+                      return (
+                        <article
+                          key={message.id}
+                          id={`tambo-message-${message.id}`}
+                          className={cn(
+                            styles.messageRow,
+                            message.role === "user" ? styles.userRow : styles.assistantRow
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              styles.messageBubble,
+                              message.role === "user" ? styles.userBubble : styles.assistantBubble
+                            )}
+                          >
+                            <div className={styles.messageMeta}>
+                              <span>{message.role === "user" ? "You" : "Tambo"}</span>
+                              {formatMessageTime(message.createdAt) ? (
+                                <span>{formatMessageTime(message.createdAt)}</span>
+                              ) : null}
+                            </div>
+                            <div className={styles.messageBody}>
+                              {visibleContent.map((content, idx) =>
+                                renderContent(message, content, idx)
+                              )}
+                            </div>
+                            {message.role !== "user" && messageArtifacts.length > 0 ? (
+                              <div className={styles.messageFiles}>
+                                {messageArtifacts.map((artifact) => renderArtifactCard(artifact))}
+                              </div>
+                            ) : null}
+                          </div>
+                        </article>
+                      );
+                    })}
+
+                    {orphanArtifacts.length > 0 ? (
+                      <section className={styles.orphanSection}>
+                        <p className={styles.orphanTitle}>Latest files</p>
+                        <div className={styles.messageFiles}>
+                          {orphanArtifacts.map((artifact) => renderArtifactCard(artifact))}
+                        </div>
+                      </section>
+                    ) : null}
 
                     {toolProgress.active ? (
-                      <div className="space-y-1.5 rounded-xl border border-border/60 bg-muted/45 px-3 py-2.5">
-                        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                          <span>Tambo agent progress</span>
+                      <div className={styles.progressCard}>
+                        <div className={styles.progressHeader}>
+                          <span>Tambo is working</span>
                           <span>
                             {toolProgress.total > 0
                               ? `${toolProgress.completed}/${toolProgress.total}`
@@ -739,177 +844,45 @@ export function TamboAgentWidget() {
                     {isStreaming ? (
                       <div className={styles.streaming}>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Thinking</span>
-                        <span className={styles.typingDots} aria-hidden>
-                          <span />
-                          <span />
-                          <span />
-                        </span>
+                        <span>Generating answer</span>
                       </div>
-                    ) : null}
-
-                    {canUseSuggestions ? (
-                      <TamboSuggestionsBar disabled={isPending || isDisabled} />
                     ) : null}
 
                     <div ref={bottomRef} />
                   </div>
                 </ScrollArea>
-              </div>
 
-              <aside className="flex min-h-0 w-full shrink-0 flex-col border-t lg:w-[320px] lg:border-l lg:border-t-0">
-                <div className="flex items-center justify-between border-b px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                    Artifacts
-                  </p>
-                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
-                    {artifacts.length}
-                  </Badge>
-                </div>
-
-                <ScrollArea className="min-h-[180px] flex-1">
-                  <div className="space-y-3 p-4">
-                    {artifacts.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
-                        Files and previews created by Tambo appear here.
-                      </div>
-                    ) : null}
-
-                    {artifacts.map((artifact) => (
-                      <div
-                        key={`${artifact.kind}:${artifact.id}`}
-                        className="space-y-2 rounded-xl border border-border/60 bg-background/90 p-3"
-                      >
-                        {artifact.kind === "file" ? (
-                          <>
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-medium">{artifact.fileName}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {artifact.ok ? "Generated file" : "File generation failed"}
-                                  {artifact.note ? ` - ${artifact.note}` : ""}
-                                </p>
-                              </div>
-                              <Badge variant="outline" className="shrink-0">
-                                {artifact.format.toUpperCase()}
-                              </Badge>
-                            </div>
-
-                            <div className="flex flex-wrap gap-2">
-                              {artifact.downloadUrl ? (
-                                <>
-                                  <a
-                                    href={artifact.downloadUrl}
-                                    download={artifact.fileName}
-                                    className="inline-flex h-8 items-center rounded-md border px-2.5 text-xs font-medium hover:bg-accent"
-                                  >
-                                    Download
-                                  </a>
-                                  <a
-                                    href={artifact.downloadUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex h-8 items-center rounded-md border px-2.5 text-xs font-medium hover:bg-accent"
-                                  >
-                                    Open
-                                  </a>
-                                </>
-                              ) : (
-                                <p className="text-xs text-muted-foreground">
-                                  Download link unavailable for this result.
-                                </p>
-                              )}
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-medium">
-                                  {artifact.subdomain ? `${artifact.subdomain} website` : "Edited website result"}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {artifact.message ?? (artifact.applied ? "Update applied" : "Preview generated")}
-                                </p>
-                              </div>
-                              <Badge variant={artifact.ok ? "secondary" : "destructive"}>
-                                {artifact.ok ? "ok" : "error"}
-                              </Badge>
-                            </div>
-
-                            <div className="flex flex-wrap gap-2">
-                              {artifact.pathUrl ? (
-                                <a
-                                  href={artifact.pathUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="inline-flex h-8 items-center rounded-md border px-2.5 text-xs font-medium hover:bg-accent"
-                                >
-                                  Preview
-                                </a>
-                              ) : null}
-                              {artifact.hostUrl ? (
-                                <a
-                                  href={artifact.hostUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="inline-flex h-8 items-center rounded-md border px-2.5 text-xs font-medium hover:bg-accent"
-                                >
-                                  Open host
-                                </a>
-                              ) : null}
-                            </div>
-
-                            {artifact.pathUrl ? (
-                              <div className="overflow-hidden rounded-lg border">
-                                <iframe
-                                  title={artifact.subdomain ? `Site preview ${artifact.subdomain}` : "Site preview"}
-                                  src={artifact.pathUrl}
-                                  loading="lazy"
-                                  className="h-44 w-full bg-white"
-                                />
-                              </div>
-                            ) : null}
-                          </>
-                        )}
-                      </div>
-                    ))}
+                <div className={styles.footer}>
+                  <div className={styles.composer}>
+                    <Textarea
+                      ref={textareaRef}
+                      value={value}
+                      onChange={(event) => setValue(event.target.value)}
+                      onKeyDown={handleComposerKeyDown}
+                      onInput={syncTextareaHeight}
+                      rows={1}
+                      placeholder="Ask a question or request a file..."
+                      disabled={isDisabled || isPending}
+                      className={styles.composerInput}
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => void handleSend()}
+                      disabled={isDisabled || isPending || !hasInput}
+                      aria-label="Send"
+                      className={styles.sendButton}
+                    >
+                      {isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </Button>
                   </div>
-                </ScrollArea>
-              </aside>
-
-              <div className={cn("border-t px-3 pb-3 pt-3 sm:px-5 sm:pb-4", styles.footer)}>
-                <div className={styles.composer}>
-                  <Textarea
-                    ref={textareaRef}
-                    value={value}
-                    onChange={(event) => setValue(event.target.value)}
-                    onKeyDown={handleComposerKeyDown}
-                    onInput={syncTextareaHeight}
-                    rows={1}
-                    placeholder="Ask about stats, orders, users, or request visual cards/charts..."
-                    disabled={isDisabled || isPending}
-                    className="min-h-11 max-h-40 resize-none border-0 bg-transparent px-0 py-2 text-sm shadow-none focus-visible:ring-0"
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => void handleSend()}
-                    disabled={isDisabled || isPending || !hasInput}
-                    aria-label="Send"
-                    className={styles.sendButton}
-                  >
-                    {isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span>Enter to send</span>
-                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
-                    Shift+Enter newline
-                  </Badge>
+                  <div className={styles.footerMeta}>
+                    <span>Enter to send</span>
+                    <span>Shift + Enter for a new line</span>
+                  </div>
                 </div>
               </div>
             </div>
