@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { GeneratedSiteContent } from '@/lib/ai-site-generator'
 import { makeClientSiteHref } from '@/lib/site-urls'
 import { SiteHero, SitePageSurface, SitePanel, SitePublicHeader } from '@/components/site/SiteScaffold'
-import { getStylePreset } from '@/lib/site-builder'
+import { getStylePreset, type SiteStyleVariant } from '@/lib/site-builder'
 
 const iconMap: Record<string, LucideIcon> = {
   Zap,
@@ -24,11 +24,12 @@ interface SiteContentProps {
   content: GeneratedSiteContent
   subdomain: string
   siteName: string
+  styleVariant?: SiteStyleVariant
 }
 
-export function SiteContent({ content, subdomain, siteName }: SiteContentProps) {
+export function SiteContent({ content, subdomain, siteName, styleVariant = 'organic-warm' }: SiteContentProps) {
   const [lang, setLang] = useState<'uz' | 'ru' | 'en'>('en')
-  const theme = getStylePreset('organic-warm')
+  const theme = getStylePreset(styleVariant)
 
   const t = (obj: { uz: string; ru: string; en: string }) => obj[lang]
   const href = (path: string) => makeClientSiteHref(subdomain, path)

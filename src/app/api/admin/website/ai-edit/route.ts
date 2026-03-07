@@ -31,6 +31,28 @@ function buildFallbackSubdomain(adminName: string, adminId: string) {
   return `site-${idPart || 'admin'}`
 }
 
+function inferStyleVariantFromPrompt(prompt: string, current: string) {
+  const normalized = prompt.toLowerCase()
+
+  if (/(terminal|neon|cyber|dashboard|lime|matrix|tech)/.test(normalized)) {
+    return 'neo-terminal' as const
+  }
+
+  if (/(retro|poster|bold|orange|editorial|campaign)/.test(normalized)) {
+    return 'retro-poster' as const
+  }
+
+  if (/(paper|calm|minimal|luxury|serif|editorial|clean)/.test(normalized)) {
+    return 'nordic-paper' as const
+  }
+
+  if (/(organic|warm|natural|earth|soft|healthy|wellness)/.test(normalized)) {
+    return 'organic-warm' as const
+  }
+
+  return getStylePreset(current).id
+}
+
 export async function POST(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
@@ -70,8 +92,9 @@ export async function POST(request: NextRequest) {
     const inferredSiteName =
       currentContent.about?.title?.en?.replace(/^About\s+/, '')?.trim() || fallbackName
 
+    const currentVariant = parseThemePayload(existing?.theme).styleVariant || DEFAULT_STYLE_VARIANT
     const generatedContent = await generateWebsiteContent(prompt)
-    const themedVariant = getStylePreset(parseThemePayload(existing?.theme).styleVariant || DEFAULT_STYLE_VARIANT).id
+    const themedVariant = inferStyleVariantFromPrompt(prompt, currentVariant)
 
     if (!apply) {
       return NextResponse.json({
@@ -137,6 +160,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
+    // eslint-disable-next-line no-console -- route diagnostics for AI website edit failures.
     console.error('Error applying AI website edit:', error)
 
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {

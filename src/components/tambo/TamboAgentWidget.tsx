@@ -415,6 +415,11 @@ export function TamboAgentWidget() {
   type ThreadMessage = (typeof messages)[number];
   type ThreadContent = ThreadMessage["content"][number];
 
+  const isRenderableContent = useCallback(
+    (content: ThreadContent) => content.type === "text" || content.type === "component",
+    []
+  );
+
   const toolProgress = useMemo(() => {
     const started = new Set<string>();
     const completed = new Set<string>();
@@ -526,6 +531,17 @@ export function TamboAgentWidget() {
     return Array.from(deduped.values()).sort((a, b) => ts(b.createdAt) - ts(a.createdAt));
   }, [messages]);
 
+  const visibleMessages = useMemo(
+    () =>
+      messages
+        .map((message) => ({
+          message,
+          visibleContent: message.content.filter(isRenderableContent),
+        }))
+        .filter(({ visibleContent }) => visibleContent.length > 0),
+    [isRenderableContent, messages]
+  );
+
   const renderContent = useCallback(
     (message: ThreadMessage, content: ThreadContent, index: number) => {
       if (content.type === "text") {
@@ -572,17 +588,6 @@ export function TamboAgentWidget() {
         return null;
       }
 
-      if (content.type === "resource") {
-        return (
-          <div
-            key={`${message.id}:resource:${content.resource.uri}`}
-            className={styles.resourceInfo}
-          >
-            Resource: {content.resource.uri}
-          </div>
-        );
-      }
-
       return null;
     },
     [currentThreadId]
@@ -615,7 +620,7 @@ export function TamboAgentWidget() {
           className={
             isFullscreen
               ? "fixed inset-0 z-50 p-0 sm:p-2"
-              : "fixed bottom-4 right-4 z-50 h-[min(760px,calc(100vh-1.5rem))] w-[min(580px,calc(100vw-1.5rem))] max-sm:inset-x-3 max-sm:bottom-3 max-sm:top-[4.5rem] max-sm:h-auto max-sm:w-auto"
+              : "fixed bottom-4 right-4 z-50 h-[min(760px,calc(100vh-1.5rem))] w-[min(980px,calc(100vw-1.5rem))] max-sm:inset-x-3 max-sm:bottom-3 max-sm:top-[4.5rem] max-sm:h-auto max-sm:w-auto"
           }
         >
           <div
@@ -687,186 +692,191 @@ export function TamboAgentWidget() {
               </div>
             </div>
 
-            <div className="flex min-h-0 flex-1 flex-col">
-              <ScrollArea className="min-h-0 flex-1">
-                <div className="flex min-h-full flex-col gap-4 p-4 sm:p-5" aria-live="polite">
-                  {messages.length === 0 ? <TamboEmptyState /> : null}
+            <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+                <ScrollArea className="min-h-0 flex-1">
+                  <div className="flex min-h-full flex-col gap-4 p-4 sm:p-5" aria-live="polite">
+                    {messages.length === 0 ? <TamboEmptyState /> : null}
 
-                  {artifacts.length > 0 ? (
-                    <section className="space-y-2 rounded-2xl border border-border/60 bg-muted/30 p-3">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                          Artifacts panel
-                        </p>
-                        <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
-                          {artifacts.length}
-                        </Badge>
-                      </div>
-
-                      <div className="space-y-2">
-                        {artifacts.map((artifact) => (
-                          <div
-                            key={`${artifact.kind}:${artifact.id}`}
-                            className="space-y-2 rounded-xl border border-border/60 bg-background/90 p-2.5"
-                          >
-                            {artifact.kind === "file" ? (
-                              <>
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="min-w-0">
-                                    <p className="truncate text-sm font-medium">{artifact.fileName}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {artifact.ok ? "Generated" : "Failed"}
-                                      {artifact.note ? ` - ${artifact.note}` : ""}
-                                    </p>
-                                  </div>
-                                  <Badge variant="outline" className="shrink-0">
-                                    {artifact.format.toUpperCase()}
-                                  </Badge>
-                                </div>
-
-                                <div className="flex flex-wrap gap-2">
-                                  {artifact.downloadUrl ? (
-                                    <>
-                                      <a
-                                        href={artifact.downloadUrl}
-                                        download={artifact.fileName}
-                                        className="inline-flex h-7 items-center rounded-md border px-2.5 text-xs font-medium hover:bg-accent"
-                                      >
-                                        Download
-                                      </a>
-                                      <a
-                                        href={artifact.downloadUrl}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="inline-flex h-7 items-center rounded-md border px-2.5 text-xs font-medium hover:bg-accent"
-                                      >
-                                        View
-                                      </a>
-                                    </>
-                                  ) : (
-                                    <p className="text-xs text-muted-foreground">
-                                      Download link unavailable for this result.
-                                    </p>
-                                  )}
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="min-w-0">
-                                    <p className="truncate text-sm font-medium">
-                                      {artifact.subdomain ? `${artifact.subdomain} website` : "Edited website result"}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {artifact.message ?? (artifact.applied ? "Update applied" : "Preview generated")}
-                                    </p>
-                                  </div>
-                                  <Badge variant={artifact.ok ? "secondary" : "destructive"}>
-                                    {artifact.ok ? "ok" : "error"}
-                                  </Badge>
-                                </div>
-
-                                <div className="flex flex-wrap gap-2">
-                                  {artifact.pathUrl ? (
-                                    <a
-                                      href={artifact.pathUrl}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="inline-flex h-7 items-center rounded-md border px-2.5 text-xs font-medium hover:bg-accent"
-                                    >
-                                      Open preview
-                                    </a>
-                                  ) : null}
-                                  {artifact.hostUrl ? (
-                                    <a
-                                      href={artifact.hostUrl}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="inline-flex h-7 items-center rounded-md border px-2.5 text-xs font-medium hover:bg-accent"
-                                    >
-                                      Open host
-                                    </a>
-                                  ) : null}
-                                </div>
-
-                                {artifact.pathUrl ? (
-                                  <div className="overflow-hidden rounded-lg border">
-                                    <iframe
-                                      title={artifact.subdomain ? `Site preview ${artifact.subdomain}` : "Site preview"}
-                                      src={artifact.pathUrl}
-                                      loading="lazy"
-                                      className="h-56 w-full bg-white"
-                                    />
-                                  </div>
-                                ) : null}
-                              </>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-                  ) : null}
-
-                  {messages.map((message) => (
-                    <article
-                      key={message.id}
-                      className={cn(
-                        "flex",
-                        styles.messageRow,
-                        message.role === "user" ? "justify-end" : "justify-start"
-                      )}
-                    >
-                      <div
+                    {visibleMessages.map(({ message, visibleContent }) => (
+                      <article
+                        key={message.id}
                         className={cn(
-                          "max-w-[92%] space-y-2 rounded-2xl px-3.5 py-3 text-sm sm:max-w-[86%]",
-                          message.role === "user" ? styles.userBubble : styles.assistantBubble
+                          "flex",
+                          styles.messageRow,
+                          message.role === "user" ? "justify-end" : "justify-start"
                         )}
                       >
-                        {message.role !== "user" ? (
-                          <div className={styles.assistantLabel}>assistant</div>
-                        ) : null}
-                        <div className="space-y-2">
-                          {message.content.map((content, idx) =>
-                            renderContent(message, content, idx)
+                        <div
+                          className={cn(
+                            "max-w-[92%] space-y-2 rounded-2xl px-3.5 py-3 text-sm sm:max-w-[86%]",
+                            message.role === "user" ? styles.userBubble : styles.assistantBubble
                           )}
+                        >
+                          <div className="space-y-2">
+                            {visibleContent.map((content, idx) =>
+                              renderContent(message, content, idx)
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </article>
-                  ))}
+                      </article>
+                    ))}
 
-                  {toolProgress.active ? (
-                    <div className="space-y-1.5 rounded-xl border border-border/60 bg-muted/45 px-3 py-2.5">
-                      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                        <span>Tambo agent progress</span>
-                        <span>
-                          {toolProgress.total > 0
-                            ? `${toolProgress.completed}/${toolProgress.total}`
-                            : "in progress"}
+                    {toolProgress.active ? (
+                      <div className="space-y-1.5 rounded-xl border border-border/60 bg-muted/45 px-3 py-2.5">
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                          <span>Tambo agent progress</span>
+                          <span>
+                            {toolProgress.total > 0
+                              ? `${toolProgress.completed}/${toolProgress.total}`
+                              : "in progress"}
+                          </span>
+                        </div>
+                        <Progress value={toolProgress.value} className="h-1.5" />
+                      </div>
+                    ) : null}
+
+                    {isStreaming ? (
+                      <div className={styles.streaming}>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Thinking</span>
+                        <span className={styles.typingDots} aria-hidden>
+                          <span />
+                          <span />
+                          <span />
                         </span>
                       </div>
-                      <Progress value={toolProgress.value} className="h-1.5" />
-                    </div>
-                  ) : null}
+                    ) : null}
 
-                  {isStreaming ? (
-                    <div className={styles.streaming}>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Thinking</span>
-                      <span className={styles.typingDots} aria-hidden>
-                        <span />
-                        <span />
-                        <span />
-                      </span>
-                    </div>
-                  ) : null}
+                    {canUseSuggestions ? (
+                      <TamboSuggestionsBar disabled={isPending || isDisabled} />
+                    ) : null}
 
-                  {canUseSuggestions ? (
-                    <TamboSuggestionsBar disabled={isPending || isDisabled} />
-                  ) : null}
+                    <div ref={bottomRef} />
+                  </div>
+                </ScrollArea>
+              </div>
 
-                  <div ref={bottomRef} />
+              <aside className="flex min-h-0 w-full shrink-0 flex-col border-t lg:w-[320px] lg:border-l lg:border-t-0">
+                <div className="flex items-center justify-between border-b px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                    Artifacts
+                  </p>
+                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+                    {artifacts.length}
+                  </Badge>
                 </div>
-              </ScrollArea>
+
+                <ScrollArea className="min-h-[180px] flex-1">
+                  <div className="space-y-3 p-4">
+                    {artifacts.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
+                        Files and previews created by Tambo appear here.
+                      </div>
+                    ) : null}
+
+                    {artifacts.map((artifact) => (
+                      <div
+                        key={`${artifact.kind}:${artifact.id}`}
+                        className="space-y-2 rounded-xl border border-border/60 bg-background/90 p-3"
+                      >
+                        {artifact.kind === "file" ? (
+                          <>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium">{artifact.fileName}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {artifact.ok ? "Generated file" : "File generation failed"}
+                                  {artifact.note ? ` - ${artifact.note}` : ""}
+                                </p>
+                              </div>
+                              <Badge variant="outline" className="shrink-0">
+                                {artifact.format.toUpperCase()}
+                              </Badge>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                              {artifact.downloadUrl ? (
+                                <>
+                                  <a
+                                    href={artifact.downloadUrl}
+                                    download={artifact.fileName}
+                                    className="inline-flex h-8 items-center rounded-md border px-2.5 text-xs font-medium hover:bg-accent"
+                                  >
+                                    Download
+                                  </a>
+                                  <a
+                                    href={artifact.downloadUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex h-8 items-center rounded-md border px-2.5 text-xs font-medium hover:bg-accent"
+                                  >
+                                    Open
+                                  </a>
+                                </>
+                              ) : (
+                                <p className="text-xs text-muted-foreground">
+                                  Download link unavailable for this result.
+                                </p>
+                              )}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium">
+                                  {artifact.subdomain ? `${artifact.subdomain} website` : "Edited website result"}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {artifact.message ?? (artifact.applied ? "Update applied" : "Preview generated")}
+                                </p>
+                              </div>
+                              <Badge variant={artifact.ok ? "secondary" : "destructive"}>
+                                {artifact.ok ? "ok" : "error"}
+                              </Badge>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                              {artifact.pathUrl ? (
+                                <a
+                                  href={artifact.pathUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex h-8 items-center rounded-md border px-2.5 text-xs font-medium hover:bg-accent"
+                                >
+                                  Preview
+                                </a>
+                              ) : null}
+                              {artifact.hostUrl ? (
+                                <a
+                                  href={artifact.hostUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex h-8 items-center rounded-md border px-2.5 text-xs font-medium hover:bg-accent"
+                                >
+                                  Open host
+                                </a>
+                              ) : null}
+                            </div>
+
+                            {artifact.pathUrl ? (
+                              <div className="overflow-hidden rounded-lg border">
+                                <iframe
+                                  title={artifact.subdomain ? `Site preview ${artifact.subdomain}` : "Site preview"}
+                                  src={artifact.pathUrl}
+                                  loading="lazy"
+                                  className="h-44 w-full bg-white"
+                                />
+                              </div>
+                            ) : null}
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </aside>
 
               <div className={cn("border-t px-3 pb-3 pt-3 sm:px-5 sm:pb-4", styles.footer)}>
                 <div className={styles.composer}>
