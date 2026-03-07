@@ -40,3 +40,11 @@ test('/api/admin/warehouse validates payload with JWT auth', async ({ page }) =>
   expect(res.status()).toBe(400)
 })
 
+test('/api/customers/orders/[id] ignores spoofed customer header without token', async ({ page }) => {
+  const res = await page.request.get('/api/customers/orders/test-order-id', {
+    headers: {
+      'x-customer-id': 'spoofed-customer-id',
+    },
+  })
+  expect(res.status()).toBe(401)
+})

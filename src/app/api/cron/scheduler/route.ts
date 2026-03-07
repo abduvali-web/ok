@@ -17,8 +17,14 @@ function generateDeliveryTime(): string {
 export async function GET(req: Request) {
     try {
         // Verify cron secret for security
+        const cronSecret = process.env.CRON_SECRET
+        if (!cronSecret) {
+            console.error('[SECURITY] CRON_SECRET not configured!')
+            return NextResponse.json({ error: 'Service misconfigured' }, { status: 500 })
+        }
+
         const authHeader = req.headers.get('authorization')
-        if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+        if (authHeader !== `Bearer ${cronSecret}`) {
             return new Response('Unauthorized', { status: 401 })
         }
 

@@ -333,7 +333,7 @@ export function AdminsTab({
               {!isLowAdminView && (
                 <Button onClick={openCreateModal} className="h-9 gap-2 px-3">
                   <Plus className="size-4" />
-                  {t.admin.add}
+                  {t.admin.create}
                 </Button>
               )}
             </div>
@@ -388,7 +388,7 @@ export function AdminsTab({
                     <TableHead className="w-[150px]">{t.admin.table.role}</TableHead>
                     <TableHead className="w-[130px]">{t.common.status}</TableHead>
                     <TableHead className="w-[130px]">{t.finance.salary}</TableHead>
-                    <TableHead className="w-[160px] text-right">{t.admin.table.actions}</TableHead>
+                    <TableHead className="w-[260px] text-right">{t.admin.table.actions}</TableHead>
                   </TableRow>
                 </TableHeader>
 
@@ -416,34 +416,34 @@ export function AdminsTab({
                           {!isLowAdminView && (
                             <div className="flex justify-end gap-1">
                               <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 px-2"
                                 onClick={() => openEditModal(admin)}
                                 disabled={Boolean(pendingAction)}
-                                title={t.admin.edit}
                               >
                                 <Edit className="size-4" />
+                                {t.admin.edit}
                               </Button>
                               <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 px-2"
                                 onClick={() => handleToggleStatus(admin)}
                                 disabled={Boolean(pendingAction)}
-                                title={admin.isActive ? t.admin.pause : t.admin.resume}
                               >
                                 {admin.isActive ? <Pause className="size-4" /> : <Play className="size-4" />}
+                                {admin.isActive ? t.admin.pause : t.admin.resume}
                               </Button>
                               <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 border-destructive/40 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
                                 onClick={() => setAdminPendingDelete(admin)}
                                 disabled={Boolean(pendingAction)}
-                                title={t.admin.delete}
                               >
                                 <Trash2 className="size-4" />
+                                {t.admin.delete}
                               </Button>
                             </div>
                           )}

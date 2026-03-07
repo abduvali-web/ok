@@ -12,6 +12,7 @@ import {
   Loader2,
   LogOut,
   MessageSquare,
+  Pencil,
   Pause,
   Play,
   Plus,
@@ -113,6 +114,11 @@ const INITIAL_PROFILE_FORM = {
   password: '',
 }
 
+const INITIAL_EDIT_FORM = {
+  name: '',
+  email: '',
+}
+
 type AdminStatusFilter = 'all' | 'active' | 'inactive'
 
 function formatShortDate(value: string) {
@@ -138,6 +144,11 @@ export default function SuperAdminPage() {
   const [statusFilter, setStatusFilter] = useState<AdminStatusFilter>('all')
   const [mutatingAdminId, setMutatingAdminId] = useState<string | null>(null)
   const [adminIdPendingDelete, setAdminIdPendingDelete] = useState<string | null>(null)
+  const [adminIdEditing, setAdminIdEditing] = useState<string | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isUpdatingAdmin, setIsUpdatingAdmin] = useState(false)
+  const [editError, setEditError] = useState('')
+  const [editFormData, setEditFormData] = useState(INITIAL_EDIT_FORM)
 
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
   const [selectedPassword, setSelectedPassword] = useState('')
@@ -161,7 +172,12 @@ export default function SuperAdminPage() {
         fetch('/api/admin/statistics'),
       ])
 
-      if (adminsResponse.status === 401 || statsResponse.status === 401) {
+      if (
+        adminsResponse.status === 401 ||
+        adminsResponse.status === 403 ||
+        statsResponse.status === 401 ||
+        statsResponse.status === 403
+      ) {
         window.location.href = '/login'
         return
       }
@@ -365,6 +381,48 @@ export default function SuperAdminPage() {
     }
   }
 
+  const handleOpenEditAdmin = (admin: Admin) => {
+    setAdminIdEditing(admin.id)
+    setEditFormData({
+      name: admin.name,
+      email: admin.email,
+    })
+    setEditError('')
+    setIsEditModalOpen(true)
+  }
+
+  const handleEditAdmin = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!adminIdEditing) return
+
+    setIsUpdatingAdmin(true)
+    setEditError('')
+    try {
+      const response = await fetch(`/api/admin/${adminIdEditing}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editFormData),
+      })
+
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) {
+        setEditError(payload?.error || 'Failed to update admin')
+        return
+      }
+
+      toast.success('Admin updated')
+      setIsEditModalOpen(false)
+      setAdminIdEditing(null)
+      await loadDashboardData(true)
+    } catch {
+      setEditError('Could not connect to server')
+    } finally {
+      setIsUpdatingAdmin(false)
+    }
+  }
+
   const handleResetPassword = async (admin: Admin) => {
     setMutatingAdminId(admin.id)
     try {
@@ -401,19 +459,16 @@ export default function SuperAdminPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground">
-      <div className="pointer-events-none fixed inset-0 -z-20 bg-command-center opacity-92" />
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_8%_0%,rgba(243,200,135,0.14),transparent_28%),radial-gradient(circle_at_88%_8%,rgba(125,211,252,0.18),transparent_26%)]" />
-
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#07111d]/76 text-white backdrop-blur-2xl">
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-40 border-b bg-background">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/15 bg-white/7 text-[11px] font-semibold uppercase tracking-[0.22em]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md border text-xs font-semibold">
               AF
             </div>
             <div>
-              <p className="font-display text-lg leading-none">Super Admin</p>
-              <p className="mt-1 text-[10px] uppercase tracking-[0.22em] text-white/45">Control layer</p>
+              <p className="text-lg font-semibold leading-none">Super Admin</p>
+              <p className="mt-1 text-xs text-muted-foreground">Control layer</p>
             </div>
           </div>
 
@@ -421,7 +476,7 @@ export default function SuperAdminPage() {
             <Button
               variant="outline"
               size="icon"
-              className="h-9 w-9 border-white/20 bg-white/7 text-white hover:bg-white/12 hover:text-white"
+              className="h-9 w-9"
               onClick={() => loadDashboardData(true)}
               disabled={isRefreshing}
             >
@@ -434,7 +489,7 @@ export default function SuperAdminPage() {
               <DialogTrigger asChild>
                 <Button
                   variant="outline"
-                  className="hidden h-9 rounded-full border-white/20 bg-white/7 px-3 text-white hover:bg-white/12 hover:text-white md:inline-flex"
+                  className="hidden h-9 md:inline-flex"
                 >
                   <User className="mr-2 h-4 w-4" />
                   {adminName}
@@ -493,7 +548,7 @@ export default function SuperAdminPage() {
 
             <Button
               variant="outline"
-              className="h-9 rounded-full border-white/20 bg-white/7 px-3 text-white hover:bg-white/12 hover:text-white"
+              className="h-9"
               onClick={handleLogout}
             >
               <LogOut className="mr-2 h-4 w-4" />
@@ -541,48 +596,48 @@ export default function SuperAdminPage() {
             />
           </section>
 
-          <Card className="rounded-[1.9rem] border-white/15 bg-[#081426]/74 text-white shadow-[0_35px_90px_-56px_rgba(2,6,23,0.92)] backdrop-blur-xl">
+          <Card>
             <CardHeader>
-              <CardTitle className="font-display text-3xl tracking-tight">Platform Governance</CardTitle>
-              <CardDescription className="text-slate-300">
+              <CardTitle>Platform governance</CardTitle>
+              <CardDescription>
                 Manage middle admins, system visibility, communication, and audit history in one workflow.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
-                <TabsList className="grid h-auto w-full grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-white/6 p-2 md:grid-cols-5">
-                  <TabsTrigger value="admins" className="h-10 gap-2 rounded-xl">
+                <TabsList className="grid h-auto w-full grid-cols-2 gap-2 p-1 md:grid-cols-5">
+                  <TabsTrigger value="admins" className="h-9 gap-2">
                     <Users className="h-4 w-4" />
                     {t.admin.admins}
                   </TabsTrigger>
-                  <TabsTrigger value="interface" className="h-10 gap-2 rounded-xl">
+                  <TabsTrigger value="interface" className="h-9 gap-2">
                     <LayoutDashboard className="h-4 w-4" />
                     {t.admin.interface}
                   </TabsTrigger>
-                  <TabsTrigger value="chat" className="h-10 gap-2 rounded-xl">
+                  <TabsTrigger value="chat" className="h-9 gap-2">
                     <MessageSquare className="h-4 w-4" />
                     Chat
                   </TabsTrigger>
-                  <TabsTrigger value="statistics" className="h-10 gap-2 rounded-xl">
+                  <TabsTrigger value="statistics" className="h-9 gap-2">
                     <BarChart3 className="h-4 w-4" />
                     {t.admin.statistics}
                   </TabsTrigger>
-                  <TabsTrigger value="history" className="h-10 gap-2 rounded-xl">
+                  <TabsTrigger value="history" className="h-9 gap-2">
                     <History className="h-4 w-4" />
                     {t.admin.history}
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="admins" className="space-y-4">
-                  <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-center md:justify-between">
                     <div className="flex w-full flex-col gap-3 md:max-w-xl md:flex-row md:items-center">
                       <div className="relative w-full md:flex-1">
-                        <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                        <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
                           value={searchTerm}
                           onChange={(event) => setSearchTerm(event.target.value)}
                           placeholder="Search by name or email"
-                          className="h-10 border-white/15 bg-[#09182b] pl-9 text-white placeholder:text-slate-400"
+                          className="h-10 pl-9"
                         />
                       </div>
                       <div className="flex items-center gap-2">
@@ -606,9 +661,9 @@ export default function SuperAdminPage() {
 
                     <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
                       <DialogTrigger asChild>
-                        <Button className="h-10 rounded-full bg-[#f3efe6] px-5 text-[#08111d] hover:bg-white">
+                        <Button className="h-10 rounded-md">
                           <Plus className="mr-2 h-4 w-4" />
-                          Add middle admin
+                          Create
                         </Button>
                       </DialogTrigger>
                       <DialogContent>
@@ -689,32 +744,32 @@ export default function SuperAdminPage() {
                         return (
                           <div
                             key={admin.id}
-                            className="rounded-2xl border border-white/10 bg-[#09182b] p-4 shadow-[0_20px_50px_-34px_rgba(2,6,23,0.8)]"
+                            className="rounded-lg border bg-card p-4"
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
                                 <p className="truncate text-base font-semibold">{admin.name}</p>
-                                <p className="truncate text-sm text-slate-300">{admin.email}</p>
-                                <p className="mt-1 text-xs uppercase tracking-[0.14em] text-slate-500">
+                                <p className="truncate text-sm text-muted-foreground">{admin.email}</p>
+                                <p className="mt-1 text-xs text-muted-foreground">
                                   Created {formatShortDate(admin.createdAt)}
                                 </p>
                               </div>
                               <Badge
                                 className={cn(
-                                  'rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.18em]',
+                                  'rounded-md border px-2 py-1 text-xs',
                                   admin.isActive
-                                    ? 'border-emerald-300/35 bg-emerald-300/18 text-emerald-100'
-                                    : 'border-amber-300/35 bg-amber-300/18 text-amber-100'
+                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                    : 'border-amber-200 bg-amber-50 text-amber-700'
                                 )}
                               >
                                 {admin.isActive ? 'Active' : 'Paused'}
                               </Badge>
                             </div>
 
-                            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                            <div className="mt-4 grid gap-2 sm:grid-cols-4">
                               <Button
                                 variant="outline"
-                                className="h-9 border-white/15 bg-white/6 text-white hover:bg-white/10 hover:text-white"
+                                className="h-9 rounded-md"
                                 onClick={() => handleResetPassword(admin)}
                                 disabled={isBusy}
                               >
@@ -724,7 +779,17 @@ export default function SuperAdminPage() {
 
                               <Button
                                 variant="outline"
-                                className="h-9 border-white/15 bg-white/6 text-white hover:bg-white/10 hover:text-white"
+                                className="h-9 rounded-md"
+                                onClick={() => handleOpenEditAdmin(admin)}
+                                disabled={isBusy}
+                              >
+                                <Pencil className="mr-1.5 h-4 w-4" />
+                                Edit
+                              </Button>
+
+                              <Button
+                                variant="outline"
+                                className="h-9 rounded-md"
                                 onClick={() => toggleAdminStatus(admin)}
                                 disabled={isBusy}
                               >
@@ -738,7 +803,7 @@ export default function SuperAdminPage() {
 
                               <Button
                                 variant="outline"
-                                className="h-9 border-rose-300/35 bg-rose-300/10 text-rose-100 hover:bg-rose-300/18 hover:text-rose-50"
+                                className="h-9 rounded-md border-rose-200 text-rose-700 hover:bg-rose-50"
                                 onClick={() => setAdminIdPendingDelete(admin.id)}
                                 disabled={isBusy}
                               >
@@ -751,7 +816,7 @@ export default function SuperAdminPage() {
                       })}
                     </div>
                   ) : (
-                    <div className="rounded-2xl border border-dashed border-white/15 bg-white/4 px-5 py-8 text-center text-slate-300">
+                    <div className="rounded-lg border border-dashed px-5 py-8 text-center text-muted-foreground">
                       No admins found for the current filter.
                     </div>
                   )}
@@ -766,7 +831,7 @@ export default function SuperAdminPage() {
                   </div>
 
                   <div className="grid gap-4 xl:grid-cols-2">
-                    <Card className="rounded-2xl border-white/10 bg-[#09182b] text-white">
+                    <Card className="rounded-lg border bg-card">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base">Payment profile</CardTitle>
                       </CardHeader>
@@ -778,7 +843,7 @@ export default function SuperAdminPage() {
                       </CardContent>
                     </Card>
 
-                    <Card className="rounded-2xl border-white/10 bg-[#09182b] text-white">
+                    <Card className="rounded-lg border bg-card">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base">Customer cadence</CardTitle>
                       </CardHeader>
@@ -792,7 +857,7 @@ export default function SuperAdminPage() {
                   </div>
 
                   <div className="grid gap-4 xl:grid-cols-2">
-                    <Card className="rounded-2xl border-white/10 bg-[#09182b] text-white">
+                    <Card className="rounded-lg border bg-card">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base">Calories mix</CardTitle>
                       </CardHeader>
@@ -805,7 +870,7 @@ export default function SuperAdminPage() {
                       </CardContent>
                     </Card>
 
-                    <Card className="rounded-2xl border-white/10 bg-[#09182b] text-white">
+                    <Card className="rounded-lg border bg-card">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base">Basket size</CardTitle>
                       </CardHeader>
@@ -833,6 +898,72 @@ export default function SuperAdminPage() {
           </Card>
         </motion.div>
       </main>
+
+      <Dialog
+        open={isEditModalOpen}
+        onOpenChange={(open) => {
+          setIsEditModalOpen(open)
+          if (!open) {
+            setAdminIdEditing(null)
+            setEditError('')
+            setEditFormData(INITIAL_EDIT_FORM)
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit admin</DialogTitle>
+            <DialogDescription>Update middle admin name or email.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditAdmin} className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-admin-name">Full name</Label>
+              <Input
+                id="edit-admin-name"
+                value={editFormData.name}
+                onChange={(event) =>
+                  setEditFormData((prev) => ({ ...prev, name: event.target.value }))
+                }
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-admin-email">Email</Label>
+              <Input
+                id="edit-admin-email"
+                type="email"
+                value={editFormData.email}
+                onChange={(event) =>
+                  setEditFormData((prev) => ({ ...prev, email: event.target.value }))
+                }
+                required
+              />
+            </div>
+
+            {editError ? (
+              <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                {editError}
+              </div>
+            ) : null}
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)}>
+                {t.common.cancel}
+              </Button>
+              <Button type="submit" disabled={isUpdatingAdmin}>
+                {isUpdatingAdmin ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save changes'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={passwordModalOpen} onOpenChange={setPasswordModalOpen}>
         <DialogContent>
@@ -914,21 +1045,21 @@ function MetricCard({
   tone: 'teal' | 'sky' | 'emerald' | 'amber'
 }) {
   const toneClass: Record<typeof tone, string> = {
-    teal: 'text-teal-200 bg-teal-300/12 border-teal-300/25',
-    sky: 'text-sky-200 bg-sky-300/12 border-sky-300/25',
-    emerald: 'text-emerald-200 bg-emerald-300/12 border-emerald-300/25',
-    amber: 'text-amber-200 bg-amber-300/12 border-amber-300/25',
+    teal: 'text-teal-700 bg-teal-50 border-teal-200',
+    sky: 'text-sky-700 bg-sky-50 border-sky-200',
+    emerald: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+    amber: 'text-amber-700 bg-amber-50 border-amber-200',
   }
 
   return (
-    <div className="rounded-2xl border border-white/12 bg-[#081426]/74 p-4 text-white shadow-[0_30px_70px_-52px_rgba(2,6,23,0.95)] backdrop-blur-xl">
+    <div className="rounded-lg border bg-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-slate-300">{label}</p>
+          <p className="text-xs text-muted-foreground">{label}</p>
           <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
-          <p className="mt-2 text-xs text-slate-400">{detail}</p>
+          <p className="mt-2 text-xs text-muted-foreground">{detail}</p>
         </div>
-        <div className={cn('rounded-xl border p-2.5', toneClass[tone])}>
+        <div className={cn('rounded-md border p-2', toneClass[tone])}>
           <Icon className="h-4 w-4" />
         </div>
       </div>
@@ -950,8 +1081,8 @@ function StatusFilterButton({
       type="button"
       variant="outline"
       className={cn(
-        'h-9 rounded-full border-white/15 bg-white/6 px-3 text-xs uppercase tracking-[0.14em] text-white hover:bg-white/12 hover:text-white',
-        active && 'border-[#f3c887]/35 bg-[#f3c887]/16 text-[#ffe2b5]'
+        'h-9 rounded-md px-3',
+        active && 'border-primary bg-primary/10 text-primary'
       )}
       onClick={onClick}
     >
@@ -970,15 +1101,15 @@ function StatCard({
   tone: 'emerald' | 'rose' | 'sky' | 'amber'
 }) {
   const toneClass: Record<typeof tone, string> = {
-    emerald: 'text-emerald-200',
-    rose: 'text-rose-200',
-    sky: 'text-sky-200',
-    amber: 'text-amber-200',
+    emerald: 'text-emerald-700',
+    rose: 'text-rose-700',
+    sky: 'text-sky-700',
+    amber: 'text-amber-700',
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#09182b] px-4 py-4">
-      <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{label}</p>
+    <div className="rounded-lg border bg-card px-4 py-4">
+      <p className="text-xs text-muted-foreground">{label}</p>
       <p className={cn('mt-2 text-3xl font-semibold tracking-tight', toneClass[tone])}>{value}</p>
     </div>
   )
@@ -986,8 +1117,8 @@ function StatCard({
 
 function StatRow({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/4 px-3 py-3">
-      <p className="text-xs uppercase tracking-[0.14em] text-slate-400">{label}</p>
+    <div className="rounded-md border bg-card px-3 py-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p>
     </div>
   )

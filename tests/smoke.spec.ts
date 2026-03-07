@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken'
 test('login page loads', async ({ page }) => {
   await page.goto('/login')
   await expect(page.getByLabel(/email/i)).toBeVisible()
-  await expect(page.getByLabel(/password|пароль/i)).toBeVisible()
+  await expect(page.locator('input#password')).toBeVisible()
 })
 
 test('theme from adminSettings applies html class', async ({ page }) => {
@@ -47,3 +47,9 @@ test('features API validates payload with JWT auth', async ({ page }) => {
   expect(res.status()).toBe(400)
 })
 
+test('ai chat API rejects unauthenticated requests', async ({ page }) => {
+  const res = await page.request.post('/api/ai/chat', {
+    data: { message: 'hello' },
+  })
+  expect([401, 403]).toContain(res.status())
+})

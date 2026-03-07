@@ -61,8 +61,11 @@ export async function PATCH(
           return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
         }
       }
-    } else if (user.role === 'COURIER' && action !== 'start_delivery' && action !== 'pause_delivery' && action !== 'resume_delivery' && action !== 'complete_delivery') {
-      // Courier can only perform delivery-related actions on their own orders
+    } else if (user.role === 'COURIER') {
+      // Couriers can only execute delivery actions on orders assigned to themselves.
+      if (!['start_delivery', 'pause_delivery', 'resume_delivery', 'complete_delivery'].includes(action)) {
+        return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
+      }
       if (order.courierId !== user.id) {
         return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 })
       }

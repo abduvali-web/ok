@@ -4,6 +4,20 @@ import { RESERVED_SUBDOMAINS, normalizeSubdomain } from '@/lib/site-builder'
 import { extractSubdomainFromHost } from '@/lib/subdomain-host'
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN
+const ROLE_HOME: Record<string, string> = {
+  SUPER_ADMIN: '/super-admin',
+  MIDDLE_ADMIN: '/middle-admin',
+  LOW_ADMIN: '/low-admin',
+  COURIER: '/courier',
+}
+
+function requiredRoleForPath(pathname: string): string | null {
+  if (pathname.startsWith('/super-admin')) return 'SUPER_ADMIN'
+  if (pathname.startsWith('/middle-admin')) return 'MIDDLE_ADMIN'
+  if (pathname.startsWith('/low-admin')) return 'LOW_ADMIN'
+  if (pathname.startsWith('/courier')) return 'COURIER'
+  return null
+}
 
 function shouldSkipPath(pathname: string) {
   return (
@@ -23,6 +37,19 @@ function shouldSkipPath(pathname: string) {
 
 export default auth((request: NextRequest) => {
   const { nextUrl } = request
+  const requiredRole = requiredRoleForPath(nextUrl.pathname)
+  const authUser = (request as NextRequest & { auth?: { user?: { role?: string } } }).auth?.user
+
+  if (requiredRole) {
+    if (!authUser) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+
+    if (authUser.role !== requiredRole) {
+      const fallbackPath = ROLE_HOME[authUser.role || ''] || '/login'
+      return NextResponse.redirect(new URL(fallbackPath, request.url))
+    }
+  }
 
   if (shouldSkipPath(nextUrl.pathname)) {
     return NextResponse.next()

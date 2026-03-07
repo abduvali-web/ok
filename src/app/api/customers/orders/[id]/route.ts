@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getCustomerFromRequest } from '@/lib/customer-auth'
 
 export async function GET(
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) {
     try {
-        const customerId = request.headers.get('x-customer-id')
-        if (!customerId) {
-            return NextResponse.json({ error: 'Customer ID required' }, { status: 401 })
+        const customer = await getCustomerFromRequest(request)
+        if (!customer) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
         const { id } = await context.params
@@ -30,7 +31,7 @@ export async function GET(
             return NextResponse.json({ error: 'Order not found' }, { status: 404 })
         }
 
-        if (order.customerId !== customerId) {
+        if (order.customerId !== customer.id) {
             return NextResponse.json({ error: 'Access denied' }, { status: 403 })
         }
 

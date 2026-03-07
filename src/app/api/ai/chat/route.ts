@@ -1,13 +1,22 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { orchestrateTask } from '@/lib/ai/orchestrator'
+import { getAuthUser, hasRole } from '@/lib/auth-utils'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
     try {
+        const user = await getAuthUser(request)
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+        if (!hasRole(user, ['SUPER_ADMIN', 'MIDDLE_ADMIN', 'LOW_ADMIN'])) {
+            return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+        }
+
         const body = await request.json()
-        const { message, adminId, websiteId, history } = body
+        const { message, websiteId, history } = body
 
         if (!message) {
             return NextResponse.json(
@@ -32,7 +41,7 @@ export async function POST(request: Request) {
         if (isComplexTask) {
             // Use orchestrator for complex tasks
             const orchestratorResult = await orchestrateTask(message, {
-                adminId,
+                adminId: user.id,
                 websiteData: websiteId ? { id: websiteId } : undefined
             })
 
