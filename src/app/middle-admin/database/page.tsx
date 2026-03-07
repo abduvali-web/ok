@@ -38,15 +38,6 @@ type SnapshotPayload = {
   summary: DatabaseSummaryRow[]
 }
 
-function escapeXml(value: unknown) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-}
-
 function sanitizeWorksheetName(name: string, usedNames: Set<string>) {
   const cleaned = name.replace(/[\\/:?*\[\]]/g, ' ').trim() || 'Sheet'
   const base = cleaned.slice(0, 31)
@@ -63,15 +54,7 @@ function sanitizeWorksheetName(name: string, usedNames: Set<string>) {
   return candidate
 }
 
-function detectCellType(value: string) {
-  if (/^-?\d+(?:\.\d+)?$/.test(value)) return 'Number'
-  return 'String'
-}
-
-function buildWorkbookXml(snapshot: SnapshotPayload) {
-  const usedSheetNames = new Set<string>()
-  const sheets: string[] = []
-
+function buildWorkbookSheets(snapshot: SnapshotPayload) {
   const summaryRows = [
     ['Scope', snapshot.scope],
     ['Generated At', snapshot.generatedAt],
@@ -88,49 +71,10 @@ function buildWorkbookXml(snapshot: SnapshotPayload) {
     })),
   ]
 
-  workbookSheets.forEach((sheet) => {
-    const sheetName = sanitizeWorksheetName(sheet.name, usedSheetNames)
-    const rowsXml = sheet.rows
-      .map((row) => {
-        const cellsXml = row
-          .map((cell) => {
-            const value = String(cell ?? '')
-            const type = detectCellType(value)
-            return `<Cell><Data ss:Type="${type}">${escapeXml(value)}</Data></Cell>`
-          })
-          .join('')
-        return `<Row>${cellsXml}</Row>`
-      })
-      .join('')
-
-    sheets.push(`
-      <Worksheet ss:Name="${escapeXml(sheetName)}">
-        <Table>
-          ${rowsXml}
-        </Table>
-      </Worksheet>
-    `)
-  })
-
-  return `<?xml version="1.0"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook
-  xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-  xmlns:o="urn:schemas-microsoft-com:office:office"
-  xmlns:x="urn:schemas-microsoft-com:office:excel"
-  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
-  xmlns:html="http://www.w3.org/TR/REC-html40">
-  <Styles>
-    <Style ss:ID="Header">
-      <Font ss:Bold="1"/>
-      <Interior ss:Color="#E8EEF9" ss:Pattern="Solid"/>
-    </Style>
-  </Styles>
-  ${sheets.join('\n')}
-</Workbook>`
+  return workbookSheets
 }
 
-function buildSingleTableWorkbook(table: DatabaseTable, snapshot: SnapshotPayload) {
+function buildSingleTableSnapshot(table: DatabaseTable, snapshot: SnapshotPayload) {
   const singleSnapshot: SnapshotPayload = {
     ok: snapshot.ok,
     generatedAt: snapshot.generatedAt,
@@ -147,11 +91,10 @@ function buildSingleTableWorkbook(table: DatabaseTable, snapshot: SnapshotPayloa
     tables: [table],
   }
 
-  return buildWorkbookXml(singleSnapshot)
+  return singleSnapshot
 }
 
-function downloadWorkbook(fileName: string, xml: string) {
-  const blob = new Blob([xml], { type: 'application/xml;charset=utf-8;' })
+function downloadBlob(fileName: string, blob: Blob) {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
@@ -160,6 +103,25 @@ function downloadWorkbook(fileName: string, xml: string) {
   link.click()
   link.remove()
   URL.revokeObjectURL(url)
+}
+
+async function downloadWorkbookXlsx(fileName: string, snapshot: SnapshotPayload) {
+  const XLSX = await import('xlsx')
+  const workbook = XLSX.utils.book_new()
+  const usedSheetNames = new Set<string>()
+  const workbookSheets = buildWorkbookSheets(snapshot)
+
+  workbookSheets.forEach((sheet) => {
+    const sheetName = sanitizeWorksheetName(sheet.name, usedSheetNames)
+    const worksheet = XLSX.utils.aoa_to_sheet(sheet.rows)
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName)
+  })
+
+  const fileArrayBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })
+  const blob = new Blob([fileArrayBuffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
+  downloadBlob(fileName, blob)
 }
 
 export default function DatabasePage() {
@@ -233,27 +195,38 @@ export default function DatabasePage() {
     )
   }, [currentTable, searchTerm])
 
-  const handleDownloadUnifiedSnapshot = () => {
+  const handleDownloadUnifiedSnapshot = async () => {
     if (!snapshot) return
 
     const generatedAt = new Date(snapshot.generatedAt).toISOString().slice(0, 10)
-    const xml = buildWorkbookXml(snapshot)
-    downloadWorkbook(`neon-database-full-${generatedAt}.xml`, xml)
-    toast.success('Excel XML workbook downloaded with separate sheets')
+    await downloadWorkbookXlsx(`neon-database-full-${generatedAt}.xlsx`, snapshot)
+    toast.success('Excel workbook downloaded with separate sheets')
   }
 
-  const handleDownloadCurrentTable = () => {
+  const handleDownloadCurrentTable = async () => {
     if (!currentTable || !snapshot) return
+
     const generatedAt = new Date(snapshot.generatedAt).toISOString().slice(0, 10)
     const exportTable: DatabaseTable = {
       ...currentTable,
       rowCount: filteredRows.length,
       rows: filteredRows,
     }
+    const singleSnapshot = buildSingleTableSnapshot(exportTable, snapshot)
+    await downloadWorkbookXlsx(`neon-${currentTable.id}-${generatedAt}.xlsx`, singleSnapshot)
+    toast.success(`${currentTable.title} sheet downloaded as Excel`)
+  }
 
-    const xml = buildSingleTableWorkbook(exportTable, snapshot)
-    downloadWorkbook(`neon-${currentTable.id}-${generatedAt}.xml`, xml)
-    toast.success(`${currentTable.title} sheet downloaded as Excel XML`)
+  const handleDownloadUnifiedSnapshotClick = () => {
+    void handleDownloadUnifiedSnapshot().catch((error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to download workbook')
+    })
+  }
+
+  const handleDownloadCurrentTableClick = () => {
+    void handleDownloadCurrentTable().catch((error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to download sheet')
+    })
   }
 
   const handleOpenTambo = () => {
@@ -307,7 +280,7 @@ export default function DatabasePage() {
                 <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
-              <Button variant="outline" onClick={handleDownloadUnifiedSnapshot}>
+              <Button variant="outline" onClick={handleDownloadUnifiedSnapshotClick}>
                 <Download className="mr-2 h-4 w-4" />
                 Download all sheets
               </Button>
@@ -402,7 +375,7 @@ export default function DatabasePage() {
                     <Badge variant="outline" className="h-9 rounded-full px-3">
                       {filteredRows.length} / {table.rowCount} rows
                     </Badge>
-                    <Button variant="outline" onClick={handleDownloadCurrentTable}>
+                    <Button variant="outline" onClick={handleDownloadCurrentTableClick}>
                       <Download className="mr-2 h-4 w-4" />
                       Download sheet
                     </Button>
