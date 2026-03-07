@@ -22,30 +22,105 @@ const roleRoutes: Record<string, string> = {
 
 export default function LoginPage() {
   const router = useRouter()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
+  const uiText = useMemo(
+    () => ({
+      en: {
+        autoOrders: 'Auto orders',
+        autoOrdersDetail: 'Recurring order scheduling.',
+        dispatch: 'Dispatch',
+        dispatchDetail: 'Courier and route control.',
+        finance: 'Finance',
+        financeDetail: 'Debt and salary visibility.',
+        configError: 'Server configuration error',
+        invalidCreds: 'Invalid email or password',
+        connectionError: 'Could not connect to server',
+        accessBadge: 'Operations access',
+        headline: 'Sign in to manage delivery operations',
+        description: 'Use your admin account to access orders, clients, couriers, and finance tools.',
+        cardSubtitle: 'Enter platform',
+        noAccount: 'No account?',
+        startTrial: 'Start free trial',
+        policiesSoon: 'Policy pages coming soon.',
+        passwordRecoverySoon: 'Password recovery coming soon.',
+        hidePassword: 'Hide password',
+        showPassword: 'Show password',
+        or: 'or',
+        continueGoogle: 'Continue with Google',
+      },
+      uz: {
+        autoOrders: 'Avto buyurtmalar',
+        autoOrdersDetail: 'Takroriy buyurtmalar jadvali.',
+        dispatch: 'Dispecher',
+        dispatchDetail: 'Kuryer va marshrut nazorati.',
+        finance: 'Moliya',
+        financeDetail: 'Qarz va maosh korinishi.',
+        configError: 'Server sozlamasi xatosi',
+        invalidCreds: 'Email yoki parol notogri',
+        connectionError: 'Server bilan ulanishda xato',
+        accessBadge: 'Operatsion kirish',
+        headline: 'Yetkazib berish jarayonini boshqarish uchun kiring',
+        description: 'Buyurtma, mijoz, kuryer va moliya vositalariga admin hisob bilan kiring.',
+        cardSubtitle: 'Platformaga kirish',
+        noAccount: 'Hisobingiz yoqmi?',
+        startTrial: 'Bepul sinovni boshlash',
+        policiesSoon: 'Siyosat sahifalari tez orada.',
+        passwordRecoverySoon: 'Parolni tiklash tez orada.',
+        hidePassword: 'Parolni yashirish',
+        showPassword: 'Parolni korsatish',
+        or: 'yoki',
+        continueGoogle: 'Google orqali davom etish',
+      },
+      ru: {
+        autoOrders: 'Авто-заказы',
+        autoOrdersDetail: 'Регулярное создание заказов.',
+        dispatch: 'Диспетчеризация',
+        dispatchDetail: 'Контроль курьеров и маршрутов.',
+        finance: 'Финансы',
+        financeDetail: 'Видимость долгов и зарплат.',
+        configError: 'Ошибка конфигурации сервера',
+        invalidCreds: 'Неверный email или пароль',
+        connectionError: 'Не удалось подключиться к серверу',
+        accessBadge: 'Операционный доступ',
+        headline: 'Войдите для управления доставкой',
+        description: 'Используйте аккаунт админа для заказов, клиентов, курьеров и финансов.',
+        cardSubtitle: 'Вход в платформу',
+        noAccount: 'Нет аккаунта?',
+        startTrial: 'Начать бесплатный период',
+        policiesSoon: 'Страницы политики скоро появятся.',
+        passwordRecoverySoon: 'Восстановление пароля скоро появится.',
+        hidePassword: 'Скрыть пароль',
+        showPassword: 'Показать пароль',
+        or: 'или',
+        continueGoogle: 'Продолжить через Google',
+      },
+    })[language],
+    [language]
+  )
+
   const highlights = useMemo(
     () => [
-      { icon: Zap, label: 'Auto orders', detail: 'Recurring order scheduling.' },
-      { icon: Route, label: 'Dispatch', detail: 'Courier and route control.' },
-      { icon: ChartColumnIncreasing, label: 'Finance', detail: 'Debt and salary visibility.' },
+      { icon: Zap, label: uiText.autoOrders, detail: uiText.autoOrdersDetail },
+      { icon: Route, label: uiText.dispatch, detail: uiText.dispatchDetail },
+      { icon: ChartColumnIncreasing, label: uiText.finance, detail: uiText.financeDetail },
     ],
-    []
+    [uiText]
   )
 
   useEffect(() => {
     const err = new URLSearchParams(window.location.search).get('error')
     if (err) {
       toast.error(t.common.error, {
-        description: err === 'Configuration' ? 'Server configuration error' : err,
+        description: err === 'Configuration' ? uiText.configError : err,
       })
     }
-  }, [t.common.error])
+  }, [t.common.error, uiText.configError])
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -56,7 +131,7 @@ export default function LoginPage() {
 
       if (result?.error) {
         toast.error(t.common.error, {
-          description: result.error === 'CredentialsSignin' ? 'Invalid email or password' : result.error,
+          description: result.error === 'CredentialsSignin' ? uiText.invalidCreds : result.error,
         })
         return
       }
@@ -69,7 +144,7 @@ export default function LoginPage() {
       router.replace(destination)
       router.refresh()
     } catch {
-      toast.error(t.common.error, { description: 'Could not connect to server' })
+      toast.error(t.common.error, { description: uiText.connectionError })
     } finally {
       setIsLoading(false)
     }
@@ -77,26 +152,26 @@ export default function LoginPage() {
 
   return (
     <AuthShell
-      badge="Operations access"
-      headline="Sign in to manage delivery operations"
-      description="Use your admin account to access orders, clients, couriers, and finance tools."
+      badge={uiText.accessBadge}
+      headline={uiText.headline}
+      description={uiText.description}
       highlights={highlights}
       cardTitle={t.auth.loginTitle}
-      cardSubtitle="Enter platform"
+      cardSubtitle={uiText.cardSubtitle}
       footer={
         <div className="space-y-2 text-center text-xs text-muted-foreground">
           <p>
-            No account?{' '}
+            {uiText.noAccount}{' '}
             <Link href="/signup" className="font-medium text-foreground hover:underline">
-              Start free trial
+              {uiText.startTrial}
             </Link>
           </p>
           <p>
-            <button type="button" className="hover:underline" onClick={() => toast.info('Policy pages coming soon.')}>
+            <button type="button" className="hover:underline" onClick={() => toast.info(uiText.policiesSoon)}>
               {t.auth.privacyPolicy}
             </button>
             {' · '}
-            <button type="button" className="hover:underline" onClick={() => toast.info('Policy pages coming soon.')}>
+            <button type="button" className="hover:underline" onClick={() => toast.info(uiText.policiesSoon)}>
               {t.auth.termsOfUse}
             </button>
           </p>
@@ -120,7 +195,7 @@ export default function LoginPage() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">{t.auth.password}</Label>
-            <button type="button" className="text-xs text-muted-foreground hover:underline" onClick={() => toast.info('Password recovery coming soon.')}>
+            <button type="button" className="text-xs text-muted-foreground hover:underline" onClick={() => toast.info(uiText.passwordRecoverySoon)}>
               {t.auth.forgotPassword}
             </button>
           </div>
@@ -138,7 +213,7 @@ export default function LoginPage() {
               type="button"
               className="absolute right-2 top-1 inline-flex h-7 w-7 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground"
               onClick={() => setShowPassword((prev) => !prev)}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-label={showPassword ? uiText.hidePassword : uiText.showPassword}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -165,7 +240,7 @@ export default function LoginPage() {
           <span className="w-full border-t" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-card px-2 text-xs text-muted-foreground">or</span>
+          <span className="bg-card px-2 text-xs text-muted-foreground">{uiText.or}</span>
         </div>
       </div>
 
@@ -176,7 +251,7 @@ export default function LoginPage() {
           <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
           <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
         </svg>
-        Continue with Google
+        {uiText.continueGoogle}
       </Button>
     </AuthShell>
   )

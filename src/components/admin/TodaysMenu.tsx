@@ -58,7 +58,7 @@ export function TodaysMenu({ className }: TodaysMenuProps) {
 
     if (!menu) {
         return (
-            <Card className={`glass-card border-none ${className}`}>
+            <Card className={`glass-card ${className}`}>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Utensils className="w-5 h-5" />
@@ -84,7 +84,7 @@ export function TodaysMenu({ className }: TodaysMenuProps) {
     }, {} as Record<keyof typeof MEAL_TYPES, Dish[]>);
 
     return (
-        <Card className={`glass-card border-none ${className}`}>
+        <Card className={`glass-card ${className}`}>
             <CardHeader className="pb-3 pt-4 px-4">
                 <div className="flex flex-row justify-between items-center gap-2">
                     <div className="flex items-center gap-2">
@@ -156,3 +156,4 @@ export function TodaysMenu({ className }: TodaysMenuProps) {
         </Card>
     );
 }
+

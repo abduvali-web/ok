@@ -115,7 +115,7 @@ export function FeaturesTab() {
 
   return (
     <div className="space-y-6">
-      <Card className="glass-card border-none">
+      <Card className="glass-card">
         <CardHeader className="flex flex-row items-center justify-between gap-4">
           <CardTitle>{t.admin.features}</CardTitle>
           <Button variant="outline" size="sm" onClick={load} disabled={isLoading}>
@@ -179,7 +179,7 @@ export function FeaturesTab() {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-none">
+      <Card className="glass-card">
         <CardHeader>
           <CardTitle>Список</CardTitle>
         </CardHeader>
@@ -236,4 +236,5 @@ export function FeaturesTab() {
     </div>
   )
 }
+
 

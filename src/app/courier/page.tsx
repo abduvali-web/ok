@@ -38,7 +38,7 @@ const CourierMap = dynamic(() => import('@/components/courier/CourierMap'), {
   ssr: false,
   loading: () => (
     <div className="h-64 w-full bg-slate-100 animate-pulse rounded-lg flex items-center justify-center text-slate-400">
-      Loading map...
+      Loading...
     </div>
   ),
 })
@@ -66,7 +66,7 @@ interface Order {
 }
 
 export default function CourierPage() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -83,6 +83,90 @@ export default function CourierPage() {
   const lastSentLocationRef = useRef<{ lat: number; lng: number; at: number } | null>(null)
   const isSendingLocationRef = useRef(false)
   const watchIdRef = useRef<number | null>(null)
+
+  const uiText = useMemo(
+    () => ({
+      en: {
+        notSynced: 'Not synced yet',
+        metersAway: 'm away',
+        kmAway: 'km away',
+        active: 'Active',
+        paused: 'Paused',
+        lastSync: 'Last sync',
+        deliveryMomentum: 'Delivery progress',
+        nextStop: 'Next stop',
+        inRoute: 'In route',
+        pending: 'Pending',
+        noPendingStop: 'No pending stop in queue.',
+        navigate: 'Navigate',
+        review: 'Review',
+        refresh: 'Refresh',
+        all: 'All',
+        noOrdersInStatus: 'No orders in this status',
+        tryAnotherStatus: 'Try another status filter or refresh queue.',
+        delivered: 'Delivered',
+        notes: 'Notes',
+        details: 'Details',
+        new: 'New',
+        note: 'Note',
+        quantityUnit: 'pcs',
+        amountReceived: 'Amount received from client',
+      },
+      uz: {
+        notSynced: 'Sinxronlanmagan',
+        metersAway: 'm qoldi',
+        kmAway: 'km qoldi',
+        active: 'Faol',
+        paused: 'Pauza',
+        lastSync: 'Oxirgi sinxron',
+        deliveryMomentum: 'Yetkazish progressi',
+        nextStop: 'Keyingi nuqta',
+        inRoute: 'Yolda',
+        pending: 'Kutilmoqda',
+        noPendingStop: 'Navbatda keyingi nuqta yoq.',
+        navigate: 'Yonaltirish',
+        review: 'Korib chiqish',
+        refresh: 'Yangilash',
+        all: 'Barchasi',
+        noOrdersInStatus: 'Bu holatda buyurtmalar yoq',
+        tryAnotherStatus: 'Boshqa holatni tanlang yoki yangilang.',
+        delivered: 'Yetkazildi',
+        notes: 'Izohlar',
+        details: 'Batafsil',
+        new: 'Yangi',
+        note: 'Izoh',
+        quantityUnit: 'dona',
+        amountReceived: 'Mijozdan olingan summa',
+      },
+      ru: {
+        notSynced: 'Еще не синхронизировано',
+        metersAway: 'м до точки',
+        kmAway: 'км до точки',
+        active: 'Активные',
+        paused: 'На паузе',
+        lastSync: 'Последняя синхронизация',
+        deliveryMomentum: 'Прогресс доставки',
+        nextStop: 'Следующая точка',
+        inRoute: 'В пути',
+        pending: 'Ожидает',
+        noPendingStop: 'В очереди нет следующей точки.',
+        navigate: 'Маршрут',
+        review: 'Проверить',
+        refresh: 'Обновить',
+        all: 'Все',
+        noOrdersInStatus: 'Нет заказов с этим статусом',
+        tryAnotherStatus: 'Выберите другой статус или обновите список.',
+        delivered: 'Доставлен',
+        notes: 'Комментарий',
+        details: 'Детали',
+        new: 'Новый',
+        note: 'Примечание',
+        quantityUnit: 'шт',
+        amountReceived: 'Получено от клиента',
+      },
+    })[language],
+    [language]
+  )
 
   const activeOrdersCount = useMemo(
     () => orders.filter((order) => order.orderStatus === 'IN_DELIVERY' || order.orderStatus === 'PENDING').length,
@@ -108,8 +192,8 @@ export default function CourierPage() {
     () =>
       lastOrdersSyncAt
         ? lastOrdersSyncAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        : 'Not synced yet',
-    [lastOrdersSyncAt]
+        : uiText.notSynced,
+    [lastOrdersSyncAt, uiText.notSynced]
   )
 
   const visibleOrders = useMemo(() => {
@@ -157,9 +241,9 @@ export default function CourierPage() {
 
     const meters = distanceMeters(currentLocation, { lat: nextStopOrder.latitude, lng: nextStopOrder.longitude })
     if (!Number.isFinite(meters)) return null
-    if (meters < 1000) return `${Math.round(meters)} m away`
-    return `${(meters / 1000).toFixed(1)} km away`
-  }, [currentLocation, nextStopOrder])
+    if (meters < 1000) return `${Math.round(meters)} ${uiText.metersAway}`
+    return `${(meters / 1000).toFixed(1)} ${uiText.kmAway}`
+  }, [currentLocation, nextStopOrder, uiText.kmAway, uiText.metersAway])
 
   const sendLocationUpdate = async (lat: number, lng: number, force = false) => {
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
@@ -525,7 +609,7 @@ export default function CourierPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50 safe-top">
+      <header className="sticky top-0 z-50 border-b border-border bg-background safe-top">
         <div className="max-w-3xl mx-auto px-4 h-16 flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-primary/10 rounded-md flex items-center justify-center text-primary">
@@ -549,7 +633,7 @@ export default function CourierPage() {
 
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-auto gap-2 p-1 bg-muted/50 backdrop-blur-sm rounded-xl">
+          <TabsList className="grid h-auto w-full grid-cols-3 gap-2 p-1">
             <TabsTrigger value="orders" className="flex items-center gap-2">
               <Package className="w-4 h-4" />
               {t.courier.orders}
@@ -565,38 +649,38 @@ export default function CourierPage() {
           </TabsList>
 
           <TabsContent value="orders" className="space-y-4">
-            <Card className="border-border/70 bg-card/90 shadow-sm">
+            <Card>
               <CardContent className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <p className="text-xs text-muted-foreground">Active</p>
+                  <p className="text-xs text-muted-foreground">{uiText.active}</p>
                   <p className="mt-1 text-2xl font-semibold">{activeOrdersCount}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Paused</p>
+                  <p className="text-xs text-muted-foreground">{uiText.paused}</p>
                   <p className="mt-1 text-2xl font-semibold">{pausedOrdersCount}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Last Sync</p>
+                  <p className="text-xs text-muted-foreground">{uiText.lastSync}</p>
                   <p className="mt-1 text-sm font-medium">{lastSyncLabel}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Delivery Momentum</p>
+                  <p className="text-xs text-muted-foreground">{uiText.deliveryMomentum}</p>
                   <p className="mt-1 text-2xl font-semibold">{deliveryMomentum}%</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-none shadow-lg">
+            <Card className="overflow-hidden">
               <CardContent className="p-0 h-[300px] relative z-0">
                 <CourierMap orders={orders} currentLocation={currentLocation} onMarkerClick={handleOpenOrder} />
               </CardContent>
             </Card>
 
-            <Card className="border-border/70 bg-card/90 shadow-sm">
+            <Card>
               <CardContent className="p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs text-muted-foreground">Next stop</p>
+                    <p className="text-xs text-muted-foreground">{uiText.nextStop}</p>
                     {nextStopOrder ? (
                       <>
                         <p className="mt-1 text-base font-semibold">
@@ -611,7 +695,7 @@ export default function CourierPage() {
                                 : 'bg-amber-100 text-amber-700 border-amber-200'
                             }
                           >
-                            {nextStopOrder.orderStatus === 'IN_DELIVERY' ? 'In Route' : 'Pending'}
+                            {nextStopOrder.orderStatus === 'IN_DELIVERY' ? uiText.inRoute : uiText.pending}
                           </Badge>
                           {nextStopDistanceLabel && (
                             <span className="text-xs text-muted-foreground">{nextStopDistanceLabel}</span>
@@ -623,16 +707,16 @@ export default function CourierPage() {
                         </p>
                       </>
                     ) : (
-                      <p className="mt-1 text-sm text-muted-foreground">No pending stop in queue.</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{uiText.noPendingStop}</p>
                     )}
                   </div>
                   {nextStopOrder && (
                     <div className="flex flex-wrap items-center gap-2">
                       <Button variant="outline" size="sm" className="rounded-md" onClick={() => openRouteForOrder(nextStopOrder)}>
-                        Navigate
+                        {uiText.navigate}
                       </Button>
                       <Button variant="outline" size="sm" className="rounded-md" onClick={() => handleOpenOrder(nextStopOrder)}>
-                        Review
+                        {uiText.review}
                       </Button>
                     </div>
                   )}
@@ -649,16 +733,16 @@ export default function CourierPage() {
                 </h2>
                 <Button variant="outline" size="sm" className="rounded-md" onClick={() => fetchOrders(true)} disabled={isRefreshing}>
                   <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  Refresh
+                  {uiText.refresh}
                 </Button>
               </div>
 
               <div className="flex flex-wrap gap-2">
                 {[
-                  { id: 'ALL' as const, label: `All (${orders.length})` },
-                  { id: 'PENDING' as const, label: `Pending (${pendingOrdersCount})` },
-                  { id: 'IN_DELIVERY' as const, label: `In Route (${inDeliveryOrdersCount})` },
-                  { id: 'PAUSED' as const, label: `Paused (${pausedOrdersCount})` },
+                  { id: 'ALL' as const, label: `${uiText.all} (${orders.length})` },
+                  { id: 'PENDING' as const, label: `${uiText.pending} (${pendingOrdersCount})` },
+                  { id: 'IN_DELIVERY' as const, label: `${uiText.inRoute} (${inDeliveryOrdersCount})` },
+                  { id: 'PAUSED' as const, label: `${uiText.paused} (${pausedOrdersCount})` },
                 ].map((option) => (
                   <Button
                     key={option.id}
@@ -695,19 +779,19 @@ export default function CourierPage() {
 
               <AnimatePresence mode="popLayout">
                 {orderedVisibleOrders.length === 0 ? (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 bg-card rounded-2xl shadow-sm">
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-lg border border-border bg-card py-12 text-center">
                     <div className="bg-muted w-16 h-16 rounded-md flex items-center justify-center mx-auto mb-4">
                       <Package className="w-8 h-8 text-slate-400" />
                     </div>
                     <h3 className="text-lg font-medium text-slate-900">
-                      {orderStatusFilter === 'ALL' ? t.courier.noOrders : 'No orders in this status'}
+                      {orderStatusFilter === 'ALL' ? t.courier.noOrders : uiText.noOrdersInStatus}
                     </h3>
                     <p className="text-slate-500">
-                      {orderStatusFilter === 'ALL' ? t.courier.noOrders : 'Try another status filter or refresh queue.'}
+                      {orderStatusFilter === 'ALL' ? t.courier.noOrders : uiText.tryAnotherStatus}
                     </p>
                     <Button onClick={() => fetchOrders()} variant="outline" className="mt-4">
                       <RefreshCw className="w-4 h-4 mr-2" />
-                      Refresh
+                      {uiText.refresh}
                     </Button>
                   </motion.div>
                 ) : (
@@ -720,7 +804,7 @@ export default function CourierPage() {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                     >
                       <Card
-                        className={`overflow-hidden border-none shadow-md transition-all duration-200 active:scale-[0.98] ${
+                        className={`overflow-hidden border transition-colors duration-200 ${
                           order.orderStatus === 'DELIVERED' ? 'bg-muted/50' : 'bg-card'
                         }`}
                         onClick={() => handleOpenOrder(order)}
@@ -733,19 +817,19 @@ export default function CourierPage() {
                                 {order.orderStatus === 'DELIVERED' && (
                                   <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
                                     <CheckCircle className="w-3 h-3 mr-1" />
-                                    Delivered
+                                    {uiText.delivered}
                                   </Badge>
                                 )}
                                 {order.orderStatus === 'IN_DELIVERY' && (
-                                  <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200 animate-pulse">
+                                  <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
                                     <Navigation className="w-3 h-3 mr-1" />
-                                    In Route
+                                    {uiText.inRoute}
                                   </Badge>
                                 )}
                                 {order.orderStatus === 'PAUSED' && (
                                   <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 border-yellow-200">
                                     <Pause className="w-3 h-3 mr-1" />
-                                    Paused
+                                    {uiText.paused}
                                   </Badge>
                                 )}
                               </div>
@@ -765,17 +849,17 @@ export default function CourierPage() {
                             <div className="flex items-center gap-4 text-sm text-slate-600">
                               <div className="flex items-center">
                                 <Utensils className="w-4 h-4 mr-1.5 text-slate-400" />
-                                {order.quantity} pcs
+                                {order.quantity} {uiText.quantityUnit}
                               </div>
                               {order.specialFeatures && order.specialFeatures !== '{}' && (
                                 <div className="flex items-center text-amber-600">
                                   <AlertCircle className="w-4 h-4 mr-1.5" />
-                                  Notes
+                                  {uiText.notes}
                                 </div>
                               )}
                             </div>
                             <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/5 -mr-2">
-                              Details
+                              {uiText.details}
                               <ChevronRight className="w-4 h-4 ml-1" />
                             </Button>
                           </div>
@@ -796,7 +880,7 @@ export default function CourierPage() {
       </main>
 
       <Sheet open={isOrderOpen} onOpenChange={setIsOrderOpen}>
-        <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl p-0">
+        <SheetContent side="bottom" className="h-[90vh] rounded-t-lg p-0">
           {selectedOrder && (
             <div className="h-full flex flex-col">
               <div className="p-6 pb-0">
@@ -822,14 +906,14 @@ export default function CourierPage() {
                               : 'bg-green-100 text-green-700'
                         }`}
                       >
-                        {isOrderPaused ? t.courier.pauseDelivery : selectedOrder.orderStatus === 'IN_DELIVERY' ? t.courier.activeOrder : 'New'}
+                        {isOrderPaused ? t.courier.pauseDelivery : selectedOrder.orderStatus === 'IN_DELIVERY' ? t.courier.activeOrder : uiText.new}
                       </Badge>
                     </div>
                   </div>
                 </SheetHeader>
 
                 <div className="space-y-4">
-                  <div className="flex items-start p-3 bg-muted rounded-xl">
+                  <div className="flex items-start rounded-md bg-muted p-3">
                     <MapPin className="w-5 h-5 text-primary mt-0.5 mr-3 shrink-0" />
                     <div>
                       <p className="text-sm text-slate-500 mb-0.5">{t.courier.deliveryAddress}</p>
@@ -837,7 +921,7 @@ export default function CourierPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center p-3 bg-muted rounded-xl">
+                  <div className="flex items-center rounded-md bg-muted p-3">
                     <Phone className="w-5 h-5 text-primary mr-3 shrink-0" />
                     <div>
                       <p className="text-sm text-slate-500 mb-0.5">{t.common.phone}</p>
@@ -848,14 +932,14 @@ export default function CourierPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-muted rounded-xl">
+                    <div className="rounded-md bg-muted p-3">
                       <div className="flex items-center mb-1">
                         <Package className="w-4 h-4 text-primary mr-2" />
                         <span className="text-xs text-slate-500">{t.common.quantity}</span>
                       </div>
-                      <p className="font-semibold text-slate-900">{selectedOrder.quantity} pcs.</p>
+                      <p className="font-semibold text-slate-900">{selectedOrder.quantity} {uiText.quantityUnit}.</p>
                     </div>
-                    <div className="p-3 bg-muted rounded-xl">
+                    <div className="rounded-md bg-muted p-3">
                       <div className="flex items-center mb-1">
                         <Utensils className="w-4 h-4 text-primary mr-2" />
                         <span className="text-xs text-slate-500">{t.common.calories}</span>
@@ -865,10 +949,10 @@ export default function CourierPage() {
                   </div>
 
                   {selectedOrder.specialFeatures && selectedOrder.specialFeatures !== '{}' && (
-                    <div className="p-3 bg-yellow-50 border border-yellow-100 rounded-xl">
+                    <div className="rounded-md border border-yellow-200 bg-yellow-50 p-3">
                       <div className="flex items-center mb-1 text-yellow-700">
                         <AlertCircle className="w-4 h-4 mr-2" />
-                        <span className="text-xs font-medium">Note</span>
+                        <span className="text-xs font-medium">{uiText.note}</span>
                       </div>
                       <p className="text-sm text-yellow-900">{selectedOrder.specialFeatures}</p>
                     </div>
@@ -878,15 +962,15 @@ export default function CourierPage() {
 
               <div className="mt-auto p-6 bg-muted/50 border-t border-border space-y-3">
                 {(selectedOrder.orderStatus === 'IN_DELIVERY' || selectedOrder.orderStatus === 'PAUSED') && (
-                  <div className="bg-card p-3 rounded-xl border border-border shadow-sm mb-2">
-                    <label className="text-sm font-medium text-slate-700 mb-1 block">Amount received from client</label>
+                  <div className="mb-2 rounded-md border border-border bg-card p-3 shadow-sm">
+                    <label className="mb-1 block text-sm font-medium text-slate-700">{uiText.amountReceived}</label>
                     <div className="relative">
                       <input
                         type="number"
                         value={amountReceived}
                         onChange={(e) => setAmountReceived(e.target.value)}
                         placeholder="0"
-                        className="w-full h-10 px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        className="h-10 w-full rounded-md border border-border bg-background px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                       />
                       <span className="absolute right-3 top-2.5 text-slate-400 text-sm">UZS</span>
                     </div>
@@ -926,7 +1010,7 @@ export default function CourierPage() {
 
                 {(selectedOrder.orderStatus === 'IN_DELIVERY' || selectedOrder.orderStatus === 'PAUSED') && (
                   <Button
-                    className="w-full h-14 text-lg font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-xl"
+                    className="h-12 w-full text-base font-semibold"
                     onClick={handleCompleteDelivery}
                     disabled={isCompleting}
                   >

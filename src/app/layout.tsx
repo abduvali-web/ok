@@ -1,5 +1,5 @@
-﻿import type { Metadata, Viewport } from "next";
-import { Fraunces, Manrope } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { LanguageProvider } from '@/contexts/LanguageContext';
@@ -11,13 +11,6 @@ import { TamboProviderClient } from "@/components/providers/TamboProviderClient"
 const sans = Manrope({
   variable: "--font-geist-sans",
   subsets: ["latin", "cyrillic"],
-  display: "swap",
-});
-
-const display = Fraunces({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
   display: "swap",
 });
 
@@ -82,7 +75,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body
-        className={`${sans.variable} ${display.variable} antialiased bg-background text-foreground `}
+        className={`${sans.variable} antialiased bg-background text-foreground `}
       >
         <LanguageProvider>
           <AdminSettingsProvider>

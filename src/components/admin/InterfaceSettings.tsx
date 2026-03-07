@@ -21,7 +21,7 @@ export function InterfaceSettings() {
 
     return (
         <div className="grid gap-6">
-            <Card className="glass-card border-none">
+            <Card className="glass-card">
                 <CardHeader>
                     <CardTitle>{t.admin.interface}</CardTitle>
                     <CardDescription>
@@ -73,7 +73,7 @@ export function InterfaceSettings() {
                 </CardContent>
             </Card>
 
-            <Card className="glass-card border-none">
+            <Card className="glass-card">
                 <CardHeader>
                     <CardTitle>{t.admin.theme}</CardTitle>
                     <CardDescription>
@@ -119,3 +119,4 @@ export function InterfaceSettings() {
         </div>
     )
 }
+

@@ -5,6 +5,7 @@ import { ChefHat, DollarSign, ShoppingCart, Users } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { MobileHeader } from './MobileHeader';
 import { Sidebar } from './Sidebar';
 
@@ -16,26 +17,26 @@ interface AdminLayoutProps {
   userName?: string;
 }
 
-const TAB_LABELS: Record<string, string> = {
-  statistics: 'Statistics',
-  orders: 'Orders',
-  map: 'Map',
-  warehouse: 'Warehouse',
-  cooking: 'Cooking',
-  sets: 'Sets',
-  finance: 'Finance',
-  clients: 'Clients',
-  couriers: 'Couriers',
-  chat: 'Chat',
-  settings: 'Settings',
-  admins: 'Admins',
-  bin: 'Bin',
-  history: 'History',
-  profile: 'Profile',
-};
-
 export function AdminLayout({ children, activeTab, onTabChange, onLogout, userName }: AdminLayoutProps) {
+  const { t, language } = useLanguage();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const tabLabels = {
+    statistics: t.admin.statistics,
+    orders: t.admin.orders,
+    map: language === 'ru' ? 'Карта' : language === 'uz' ? 'Xarita' : 'Map',
+    warehouse: t.warehouse.title,
+    cooking: t.warehouse.cooking,
+    sets: language === 'ru' ? 'Наборы' : language === 'uz' ? "To'plamlar" : 'Sets',
+    finance: t.finance.title,
+    clients: t.admin.clients,
+    couriers: t.admin.couriers,
+    chat: t.courier.chat,
+    settings: t.admin.settings,
+    admins: t.admin.admins,
+    bin: t.admin.bin,
+    history: t.admin.history,
+    profile: t.common.profile,
+  };
 
   useEffect(() => {
     setIsSidebarOpen(false);
@@ -53,9 +54,7 @@ export function AdminLayout({ children, activeTab, onTabChange, onLogout, userNa
   }, []);
 
   return (
-    <div className="relative flex min-h-screen bg-background">
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-mesh-gradient opacity-35" />
-
+    <div className="flex min-h-screen bg-background">
       <Sidebar
         activeTab={activeTab}
         onTabChange={onTabChange}
@@ -68,7 +67,7 @@ export function AdminLayout({ children, activeTab, onTabChange, onLogout, userNa
         <Button
           variant="outline"
           size="icon"
-          className="fixed left-3 top-3 z-[120] h-10 w-10 rounded-full border-border/70 bg-card/80 shadow-smooth backdrop-blur-sm"
+          className="fixed left-3 top-3 z-[120] h-9 w-9 bg-card lg:hidden"
           onClick={() => setIsSidebarOpen((prev) => !prev)}
         >
           <svg
@@ -91,7 +90,7 @@ export function AdminLayout({ children, activeTab, onTabChange, onLogout, userNa
         <MobileHeader
           onMenuClick={() => setIsSidebarOpen(true)}
           currentTab={activeTab}
-          tabLabels={TAB_LABELS}
+          tabLabels={tabLabels}
           userName={userName}
           onLogout={onLogout}
         />
@@ -100,7 +99,7 @@ export function AdminLayout({ children, activeTab, onTabChange, onLogout, userNa
           <div className="p-4 md:p-6 lg:p-8">{children}</div>
         </main>
 
-        <nav className="safe-area-inset-bottom fixed bottom-0 left-0 right-0 z-40 border-t border-border/70 bg-card/85 px-2 py-2 backdrop-blur-xl lg:hidden">
+        <nav className="safe-area-inset-bottom fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card px-2 py-2 lg:hidden">
           <div className="mx-auto flex max-w-md items-center justify-around">
             <MobileNavItem
               isActive={activeTab === 'orders'}
@@ -150,12 +149,12 @@ function MobileNavItem({
     <button
       onClick={onClick}
       className={cn(
-        'flex min-w-[60px] flex-col items-center justify-center rounded-xl px-3 py-1.5 transition-colors',
-        isActive ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'
+        'flex min-w-[60px] flex-col items-center justify-center rounded-md px-3 py-1.5 transition-colors',
+        isActive ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'
       )}
     >
       <Icon className="h-4 w-4" />
-      <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.08em]">{label}</span>
+      <span className="mt-1 text-[11px] font-medium">{label}</span>
     </button>
   );
 }

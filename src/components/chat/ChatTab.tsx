@@ -259,7 +259,7 @@ export function ChatTab() {
 
   return (
     <div className="grid h-[640px] grid-cols-1 gap-4 xl:grid-cols-[360px_1fr]">
-      <Card className="glass-card border-none overflow-hidden">
+      <Card className="glass-card overflow-hidden">
         <CardHeader className="border-b border-border/60 pb-4">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -348,7 +348,7 @@ export function ChatTab() {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-none overflow-hidden">
+      <Card className="glass-card overflow-hidden">
         {selectedConversation ? (
           <>
             <CardHeader className="border-b border-border/60 pb-4">
@@ -423,4 +423,5 @@ export function ChatTab() {
     </div>
   )
 }
+
 

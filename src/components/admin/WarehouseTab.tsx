@@ -720,7 +720,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
 
     return (
         <div className={`space-y-6 ${className}`}>
-            <Card className="glass-card border-none">
+            <Card className="glass-card">
                 <CardHeader>
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
@@ -922,3 +922,4 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         </div>
     );
 }
+

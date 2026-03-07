@@ -1,90 +1,254 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, CheckCircle2, Globe2, Layers3, Phone, Route, ShieldCheck, Sparkles, WalletCards } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Globe2, Layers3, Phone, Route, ShieldCheck, WalletCards } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useLanguage } from '@/contexts/LanguageContext'
 
-const controlPoints = [
-  {
-    title: 'Dispatch without blind spots',
-    detail: 'Track order stages, courier workload, and delivery bottlenecks from one operational surface.',
-    icon: Route,
+const localized = {
+  en: {
+    platform: 'Operations platform',
+    adminLogin: 'Admin login',
+    openDashboard: 'Open dashboard',
+    heroTag: 'Delivery operations system',
+    heroTitle: 'One system for orders, clients, couriers, finance, and client-facing subdomain sites.',
+    heroDescription:
+      'AutoFood is built for teams that need stable daily execution without switching between disconnected tools.',
+    portalTitle: 'Client portal and subdomain sites are connected to the same data.',
+    portalLabel: 'Client portal',
+    portalDescription:
+      'Customers can check plans, balances, menus, and order history while admins manage the same records in one workspace.',
+    roleTitle: 'Each role sees the right level of complexity.',
+    roleBadge: 'Role-based access',
+    pricingTitle: 'Simple pricing, practical rollout.',
+    pricingDescription:
+      'Start with core operations, then expand into route optimization, AI workflows, and customer web access.',
+    monthly: 'Monthly',
+    quarterly: 'Quarterly',
+    monthlyNote: 'For teams validating workflow.',
+    quarterlyNote: 'For teams with stable operating cadence.',
+    stats: [
+      { label: 'Admin roles', value: '4' },
+      { label: 'Core workspaces', value: 'Orders, clients, couriers' },
+      { label: 'Client access', value: 'Portal + subdomain' },
+      { label: 'Operational rhythm', value: 'Daily' },
+    ],
+    points: [
+      {
+        title: 'Dispatch visibility',
+        detail: 'Track stages, courier workload, and bottlenecks in one place.',
+        icon: Route,
+      },
+      {
+        title: 'Connected client lifecycle',
+        detail: 'Profiles, balances, plans, and history stay in one workflow.',
+        icon: Layers3,
+      },
+      {
+        title: 'Daily finance clarity',
+        detail: 'Debt, balance, and totals stay visible before issues grow.',
+        icon: WalletCards,
+      },
+    ],
+    promises: [
+      'Operational dashboards designed for daily use',
+      'Client subdomain websites connected to admin data',
+      'AI workflow for files, exports, and website edits',
+      'Role-based routing with clearer navigation',
+      'PWA-ready mobile usage for admin and courier',
+      'Unified data workspace for daily operations',
+    ],
+    roles: [
+      {
+        title: 'Super Admin',
+        detail: 'Controls permissions, admin structure, and system governance.',
+      },
+      {
+        title: 'Middle Admin',
+        detail: 'Runs orders, clients, dispatch, history, and finance.',
+      },
+      {
+        title: 'Low Admin',
+        detail: 'Works with a focused toolset under scoped access.',
+      },
+      {
+        title: 'Courier',
+        detail: 'Receives route-ready delivery actions with fast status updates.',
+      },
+    ],
   },
-  {
-    title: 'Client lifecycle in one flow',
-    detail: 'Profiles, balances, plans, menus, and delivery history stay connected instead of scattered.',
-    icon: Layers3,
+  uz: {
+    platform: 'Operatsion platforma',
+    adminLogin: 'Admin kirish',
+    openDashboard: 'Panelni ochish',
+    heroTag: 'Yetkazib berish boshqaruvi tizimi',
+    heroTitle: 'Buyurtma, mijoz, kuryer, moliya va mijoz subdomain saytlari uchun yagona tizim.',
+    heroDescription:
+      'AutoFood kundalik ishni barqaror yuritish uchun yaratilgan, ortiqcha tizimlar orasida almashishga hojat yoq.',
+    portalTitle: 'Mijoz portali va subdomain saytlar bir xil malumotlar bilan ishlaydi.',
+    portalLabel: 'Mijoz portali',
+    portalDescription:
+      'Mijozlar reja, balans, menyu va tarixni koradi, admin esa shu malumotlarni bitta joydan boshqaradi.',
+    roleTitle: 'Har bir rol oziga kerakli darajadagi interfeysni koradi.',
+    roleBadge: 'Rol asosidagi kirish',
+    pricingTitle: 'Oddiy narx, amaliy joriy qilish.',
+    pricingDescription:
+      'Asosiy jarayondan boshlang, keyin marshrut optimizatsiyasi, AI va mijoz web kirishini yoqing.',
+    monthly: 'Oylik',
+    quarterly: 'Choraklik',
+    monthlyNote: 'Jarayonni tekshirayotgan jamoalar uchun.',
+    quarterlyNote: 'Barqaror ishlayotgan jamoalar uchun.',
+    stats: [
+      { label: 'Admin rollari', value: '4' },
+      { label: 'Asosiy bolimlar', value: 'Buyurtma, mijoz, kuryer' },
+      { label: 'Mijoz kirishi', value: 'Portal + subdomain' },
+      { label: 'Ish ritmi', value: 'Har kun' },
+    ],
+    points: [
+      {
+        title: 'Dispecher nazorati',
+        detail: 'Bosqichlar, kuryer yuklamasi va kechikishlar bitta oynada.',
+        icon: Route,
+      },
+      {
+        title: 'Mijoz jarayoni bir joyda',
+        detail: 'Profil, balans, reja va tarix uzilmasdan yuritiladi.',
+        icon: Layers3,
+      },
+      {
+        title: 'Kundalik moliya aniqligi',
+        detail: 'Qarzdorlik va balanslar vaqtida korinib turadi.',
+        icon: WalletCards,
+      },
+    ],
+    promises: [
+      'Kundalik ish uchun qulay boshqaruv oynalari',
+      'Admin malumotlari bilan boglangan mijoz saytlari',
+      'Fayl va sayt ishlari uchun AI ish jarayoni',
+      'Tushunarli rol asosidagi navigatsiya',
+      'Admin va kuryer uchun PWA mobil tayyorlik',
+      'Kundalik boshqaruv uchun yagona malumot maydoni',
+    ],
+    roles: [
+      {
+        title: 'Super Admin',
+        detail: 'Ruxsatlar, admin tuzilmasi va tizim nazoratini boshqaradi.',
+      },
+      {
+        title: 'Middle Admin',
+        detail: 'Buyurtma, mijoz, dispecher, tarix va moliyani yuritadi.',
+      },
+      {
+        title: 'Low Admin',
+        detail: 'Cheklangan kirish bilan kerakli vositalarda ishlaydi.',
+      },
+      {
+        title: 'Kuryer',
+        detail: 'Yetkazish uchun tayyor topshiriqlar va tez holat yangilashni oladi.',
+      },
+    ],
   },
-  {
-    title: 'Financial clarity every day',
-    detail: 'Unpaid orders, balances, and operational totals stay visible before they turn into support issues.',
-    icon: WalletCards,
+  ru: {
+    platform: 'Операционная платформа',
+    adminLogin: 'Вход для админа',
+    openDashboard: 'Открыть панель',
+    heroTag: 'Система управления доставкой',
+    heroTitle: 'Единая система для заказов, клиентов, курьеров, финансов и клиентских subdomain-сайтов.',
+    heroDescription:
+      'AutoFood помогает команде стабильно работать каждый день без переключения между разными инструментами.',
+    portalTitle: 'Клиентский портал и subdomain-сайты работают на тех же данных.',
+    portalLabel: 'Клиентский портал',
+    portalDescription:
+      'Клиенты видят планы, баланс, меню и историю, а админ управляет теми же записями в одном месте.',
+    roleTitle: 'Каждая роль получает нужный уровень сложности интерфейса.',
+    roleBadge: 'Ролевой доступ',
+    pricingTitle: 'Простая цена и поэтапный запуск.',
+    pricingDescription:
+      'Начните с базовых процессов, затем подключайте оптимизацию маршрутов, AI и веб-доступ для клиентов.',
+    monthly: 'Ежемесячно',
+    quarterly: 'Поквартально',
+    monthlyNote: 'Для команд, которые проверяют процесс.',
+    quarterlyNote: 'Для команд со стабильным рабочим циклом.',
+    stats: [
+      { label: 'Ролей админа', value: '4' },
+      { label: 'Основные разделы', value: 'Заказы, клиенты, курьеры' },
+      { label: 'Доступ клиента', value: 'Портал + subdomain' },
+      { label: 'Ритм работы', value: 'Ежедневно' },
+    ],
+    points: [
+      {
+        title: 'Прозрачная диспетчеризация',
+        detail: 'Статусы, загрузка курьеров и узкие места видны в одном месте.',
+        icon: Route,
+      },
+      {
+        title: 'Цикл клиента без разрывов',
+        detail: 'Профили, баланс, планы и история связаны в одном процессе.',
+        icon: Layers3,
+      },
+      {
+        title: 'Финансы под контролем',
+        detail: 'Долги, баланс и суммы видны до появления проблем.',
+        icon: WalletCards,
+      },
+    ],
+    promises: [
+      'Операционные панели для реальной ежедневной работы',
+      'Клиентские сайты с данными из админ-системы',
+      'AI-поток для файлов, экспортов и правок сайта',
+      'Ролевая навигация без лишних экранов',
+      'PWA-режим для админа и курьера на мобильных',
+      'Единое пространство данных для ежедневной работы',
+    ],
+    roles: [
+      {
+        title: 'Супер-админ',
+        detail: 'Управляет правами, структурой админов и общим контролем системы.',
+      },
+      {
+        title: 'Средний админ',
+        detail: 'Ведет заказы, клиентов, маршруты, историю и финансы.',
+      },
+      {
+        title: 'Низкий админ',
+        detail: 'Работает в пределах назначенных прав с нужным набором инструментов.',
+      },
+      {
+        title: 'Курьер',
+        detail: 'Получает готовые задачи по доставке и быстро обновляет статусы.',
+      },
+    ],
   },
-]
-
-const platformStats = [
-  { label: 'Admin roles', value: '4' },
-  { label: 'Core workspaces', value: 'Orders, clients, couriers' },
-  { label: 'Client access', value: 'Portal + subdomain' },
-  { label: 'Operational rhythm', value: 'Daily' },
-]
-
-const roleCards = [
-  {
-    title: 'Super Admin',
-    detail: 'Controls platform permissions, admin structure, interface governance, and system oversight.',
-  },
-  {
-    title: 'Middle Admin',
-    detail: 'Runs the daily business: orders, clients, dispatch, history, finance, and subdomain operations.',
-  },
-  {
-    title: 'Low Admin',
-    detail: 'Works inside assigned limits with focused tools for execution, not unnecessary complexity.',
-  },
-  {
-    title: 'Courier',
-    detail: 'Gets route-ready delivery actions with status updates, address context, and fast completion flow.',
-  },
-]
-
-const promiseList = [
-  'Operational dashboards built for real daily use',
-  'Client subdomain websites connected to actual admin data',
-  'Tambo AI workflow for files, exports, and website edits',
-  'Role-based routing with clearer navigation and fewer dead ends',
-  'PWA-ready usage on mobile for admin and courier scenarios',
-  'Unified database workspace for summed sheet visibility',
-]
+} as const
 
 export default function LandingPage() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
+  const copy = localized[language]
 
   return (
-    <div className="min-h-screen text-foreground">
-      <header className="px-3 pt-3 sm:px-4">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm">
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="border-b border-border bg-card">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
           <Link href="/" className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-primary text-sm font-bold text-primary-foreground">
+            <span className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-primary text-sm font-semibold text-primary-foreground">
               AF
             </span>
             <div>
-              <p className="text-xl font-semibold tracking-tight">AutoFood</p>
-              <p className="text-[11px] tracking-[0.16em] text-muted-foreground">operations platform</p>
+              <p className="text-lg font-semibold">AutoFood</p>
+              <p className="text-xs text-muted-foreground">{copy.platform}</p>
             </div>
           </Link>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2">
             <LanguageSwitcher />
             <Link href="/login">
-              <Button variant="outline" size="sm">Admin login</Button>
+              <Button variant="outline" size="sm">{copy.adminLogin}</Button>
             </Link>
             <Link href="/login">
               <Button size="sm">
-                Open dashboard
+                {copy.openDashboard}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -92,126 +256,106 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 pb-16 pt-6">
+      <main className="mx-auto max-w-7xl space-y-8 px-4 py-8">
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_390px]">
-          <div className="relative overflow-hidden rounded-2xl border border-border bg-card px-6 py-8 shadow-sm sm:px-8 sm:py-10">
-            <div className="relative">
-              <div className="inline-flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-primary">
-                <Sparkles className="h-3.5 w-3.5" />
-                Delivery system for real operations
-              </div>
+          <div className="rounded-lg border border-border bg-card p-6 sm:p-8">
+            <p className="text-sm font-medium text-muted-foreground">{copy.heroTag}</p>
+            <h1 className="mt-3 text-3xl font-semibold leading-tight sm:text-4xl">{copy.heroTitle}</h1>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground">{copy.heroDescription}</p>
 
-              <h1 className="mt-5 max-w-4xl text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-                One system for orders, clients, couriers, finance, and client-facing subdomain sites.
-              </h1>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/login">
+                <Button>
+                  {t.common.login}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="tel:+998977087373">
+                <Button variant="outline">
+                  <Phone className="h-4 w-4" />
+                  +998 97 708 73 73
+                </Button>
+              </Link>
+            </div>
 
-              <p className="mt-5 max-w-2xl text-base leading-8 text-muted-foreground">
-                AutoFood is built for operators who need cleaner execution, clearer accountability, and a better customer portal without juggling disconnected tools.
-              </p>
-
-              <div className="mt-7 flex flex-wrap gap-3">
-                <Link href="/login">
-                  <Button size="lg" className="px-6">
-                    {t.common.login}
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href="tel:+998977087373">
-                  <Button size="lg" variant="outline" className="px-6">
-                    <Phone className="h-4 w-4" />
-                    +998 97 708 73 73
-                  </Button>
-                </Link>
-              </div>
-
-              <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                {platformStats.map((item) => (
-                  <div key={item.label} className="rounded-lg border border-border bg-background p-4">
-                    <p className="text-[11px] font-semibold tracking-[0.16em] text-muted-foreground">{item.label}</p>
-                    <p className="mt-3 text-lg font-semibold tracking-tight">{item.value}</p>
-                  </div>
-                ))}
-              </div>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {copy.stats.map((item) => (
+                <div key={item.label} className="rounded-md border border-border bg-background p-4">
+                  <p className="text-xs text-muted-foreground">{item.label}</p>
+                  <p className="mt-2 text-base font-semibold">{item.value}</p>
+                </div>
+              ))}
             </div>
           </div>
 
-          <aside className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <div className="inline-flex items-center gap-2 rounded-md bg-muted px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-primary">
-              <Globe2 className="h-3.5 w-3.5" />
-              Client-facing experience
+          <aside className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Globe2 className="h-4 w-4" />
+              {copy.portalLabel}
             </div>
+            <h2 className="mt-3 text-xl font-semibold">{copy.portalTitle}</h2>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">{copy.portalDescription}</p>
 
-            <h2 className="mt-4 text-2xl font-semibold tracking-tight">Portal and subdomain websites stay connected to the same operation.</h2>
-            <p className="mt-3 text-sm leading-7 text-muted-foreground">
-              Customers can log in, review balance, follow menus, and check order history while middle admin manages the underlying workflow from the main system.
-            </p>
-
-            <div className="mt-6 space-y-3">
-              {promiseList.map((item) => (
-                <div key={item} className="flex items-start gap-3 rounded-lg border border-border bg-background px-4 py-3">
+            <div className="mt-5 space-y-3">
+              {copy.promises.map((item) => (
+                <div key={item} className="flex items-start gap-2 rounded-md border border-border bg-background p-3">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  <p className="text-sm leading-6">{item}</p>
+                  <p className="text-sm">{item}</p>
                 </div>
               ))}
             </div>
           </aside>
         </section>
 
-        <section className="mt-10 grid gap-4 lg:grid-cols-3">
-          {controlPoints.map((item) => {
+        <section className="grid gap-4 lg:grid-cols-3">
+          {copy.points.map((item) => {
             const Icon = item.icon
             return (
-              <div key={item.title} className="rounded-xl border border-border bg-card p-6 shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-primary">
-                  <Icon className="h-5 w-5" />
+              <div key={item.title} className="rounded-lg border border-border bg-card p-5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-background">
+                  <Icon className="h-5 w-5 text-primary" />
                 </div>
-                <h2 className="mt-5 text-xl font-semibold tracking-tight">{item.title}</h2>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.detail}</p>
+                <h2 className="mt-4 text-lg font-semibold">{item.title}</h2>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.detail}</p>
               </div>
             )
           })}
         </section>
 
-        <section className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+          <div className="rounded-lg border border-border bg-card p-6">
             <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-semibold tracking-[0.16em] text-primary">Role-aware platform</p>
-                <h2 className="mt-3 text-3xl font-semibold tracking-tight">Each role sees the right complexity level.</h2>
-              </div>
+              <h2 className="text-2xl font-semibold">{copy.roleTitle}</h2>
               <div className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1 text-xs text-muted-foreground">
                 <ShieldCheck className="h-4 w-4 text-primary" />
-                Role-based access
+                {copy.roleBadge}
               </div>
             </div>
 
-            <div className="mt-6 grid gap-3 md:grid-cols-2">
-              {roleCards.map((role) => (
-                <div key={role.title} className="rounded-lg border border-border bg-background p-4">
-                  <p className="text-lg font-semibold tracking-tight">{role.title}</p>
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              {copy.roles.map((role) => (
+                <div key={role.title} className="rounded-md border border-border bg-background p-4">
+                  <p className="text-base font-semibold">{role.title}</p>
                   <p className="mt-2 text-sm leading-7 text-muted-foreground">{role.detail}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-primary px-6 py-7 text-primary-foreground shadow-sm">
-            <p className="text-[11px] font-semibold tracking-[0.16em] text-primary-foreground/70">Commercial fit</p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight">Simple pricing, richer operation.</h2>
-            <p className="mt-4 text-sm leading-7 text-primary-foreground/80">
-              Start with a lightweight rollout, then expand into deeper dispatch, database, AI, and client-portal workflows as the team matures.
-            </p>
+          <div className="rounded-lg border border-border bg-card p-6">
+            <h2 className="text-2xl font-semibold">{copy.pricingTitle}</h2>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">{copy.pricingDescription}</p>
 
-            <div className="mt-6 grid gap-3">
-              <div className="rounded-lg border border-white/12 bg-white/8 p-4">
-                <p className="text-sm font-medium text-primary-foreground/80">Monthly</p>
-                <p className="mt-2 text-3xl font-semibold">$100</p>
-                <p className="mt-2 text-sm text-primary-foreground/70">For teams validating the workflow.</p>
+            <div className="mt-5 grid gap-3">
+              <div className="rounded-md border border-border bg-background p-4">
+                <p className="text-sm text-muted-foreground">{copy.monthly}</p>
+                <p className="mt-1 text-2xl font-semibold">$100</p>
+                <p className="mt-2 text-sm text-muted-foreground">{copy.monthlyNote}</p>
               </div>
-              <div className="rounded-lg border border-white/12 bg-white/8 p-4">
-                <p className="text-sm font-medium text-primary-foreground/80">Quarterly</p>
-                <p className="mt-2 text-3xl font-semibold">$200</p>
-                <p className="mt-2 text-sm text-primary-foreground/70">Better fit for stable operational cadence.</p>
+              <div className="rounded-md border border-border bg-background p-4">
+                <p className="text-sm text-muted-foreground">{copy.quarterly}</p>
+                <p className="mt-1 text-2xl font-semibold">$200</p>
+                <p className="mt-2 text-sm text-muted-foreground">{copy.quarterlyNote}</p>
               </div>
             </div>
           </div>

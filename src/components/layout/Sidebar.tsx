@@ -31,7 +31,7 @@ interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, onLogout }: SidebarProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const menuItems = [
     { id: 'statistics', label: t.admin.statistics, icon: BarChart3, badge: null },
@@ -55,24 +55,24 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
 
   return (
     <>
-      {isOpen && <div className="fixed inset-0 z-40 bg-black/35 backdrop-blur-sm lg:hidden" onClick={onClose} />}
+      {isOpen && <div className="fixed inset-0 z-40 bg-black/35 lg:hidden" onClick={onClose} />}
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-72 -translate-x-full border-r border-border bg-sidebar/92 backdrop-blur-xl transition-transform duration-300 ease-out lg:static lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 w-72 -translate-x-full border-r border-border bg-sidebar transition-transform duration-200 ease-out lg:static lg:translate-x-0',
           isOpen && 'translate-x-0',
           className
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b border-border/70 px-4 py-4">
+          <div className="flex items-center justify-between border-b border-border px-4 py-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-elegant">
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
                 <ChefHat className="h-5 w-5" />
               </div>
               <div>
-                <p className="font-display text-lg font-semibold tracking-tight">AutoFood</p>
-                <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Dashboard</p>
+                <p className="text-lg font-semibold">AutoFood</p>
+                <p className="text-xs text-muted-foreground">{language === 'ru' ? 'Панель' : language === 'uz' ? 'Panel' : 'Dashboard'}</p>
               </div>
             </div>
 
@@ -96,9 +96,9 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                     key={item.id}
                     variant="ghost"
                     className={cn(
-                      'h-11 w-full justify-start gap-3 rounded-xl border px-3 text-sm font-medium transition-all',
+                      'h-10 w-full justify-start gap-3 rounded-md border px-3 text-sm font-medium transition-colors',
                       isActive
-                        ? 'border-primary/20 bg-primary/10 text-foreground shadow-smooth'
+                        ? 'border-border bg-accent text-foreground'
                         : 'border-transparent text-muted-foreground hover:border-border hover:bg-accent hover:text-foreground'
                     )}
                     onClick={() => {
@@ -117,8 +117,8 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
             </nav>
           </ScrollArea>
 
-          <div className="border-t border-border/70 p-3">
-            <Button variant="ghost" className="h-11 w-full justify-start gap-3 rounded-xl text-rose-500 hover:bg-rose-500/10 hover:text-rose-500" onClick={onLogout}>
+          <div className="border-t border-border p-3">
+            <Button variant="ghost" className="h-10 w-full justify-start gap-3 rounded-md text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={onLogout}>
               <LogOut className="h-4 w-4" />
               {t.common.logout}
             </Button>

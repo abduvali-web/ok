@@ -2097,7 +2097,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
           {/* Orders Tab */}
           <TabsContent value="orders" className="space-y-4">
-            <Card className="glass-card border-none">
+            <Card className="glass-card">
               <CardHeader>
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
@@ -2464,7 +2464,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
           {/* Clients Tab */}
           <TabsContent value="clients" className="space-y-6">
-            <Card className="glass-card border-none">
+            <Card className="glass-card">
               <CardHeader>
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <div>
@@ -3703,6 +3703,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 }
 
 export default AdminDashboardPage
+
 
 
 

@@ -343,7 +343,7 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
             </div>
           ) : (
             filteredLogs.map((log) => (
-              <Card key={log.id} className="glass-card border-none overflow-hidden">
+              <Card key={log.id} className="glass-card overflow-hidden">
                 <CardHeader className="bg-muted/30 pb-2">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -396,3 +396,4 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
     </Card>
   )
 }
+

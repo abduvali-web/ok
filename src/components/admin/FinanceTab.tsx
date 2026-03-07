@@ -390,7 +390,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
         <div className={`space-y-6 ${className}`}>
             {/* Top Stats Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="glass-card border-none bg-gradient-to-br from-indigo-50 to-blue-50">
+                <Card className="glass-card">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-blue-900">
                             {t.finance.companyBalance}
@@ -430,7 +430,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                     </CardContent>
                 </Card>
 
-                <Card className="glass-card border-none">
+                <Card className="glass-card">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">
                             {t.finance.clientDebt}
@@ -447,7 +447,7 @@ export function FinanceTab({ className }: FinanceTabProps) {
                     </CardContent>
                 </Card>
 
-                <Card className="glass-card border-none">
+                <Card className="glass-card">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">
                             {t.finance.clientPrepaid}
@@ -997,3 +997,4 @@ export function FinanceTab({ className }: FinanceTabProps) {
 
 // Ensure default export if needed, or stick to named export and import accordingly.
 // Existing pages seem to use named imports for components.
+
