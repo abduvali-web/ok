@@ -275,21 +275,19 @@ function createSimplePdfBytes(text: string): ArrayBuffer {
   return encoder.encode(pdf).buffer as ArrayBuffer;
 }
 
-function triggerDownload(blob: Blob, fileName: string): string {
-  if (typeof window === "undefined") return "";
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-
-  window.setTimeout(() => {
-    URL.revokeObjectURL(url);
-  }, 5 * 60 * 1000);
-
-  return url;
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+      reject(new Error("Failed to encode file for download."));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("Failed to read generated file."));
+    reader.readAsDataURL(blob);
+  });
 }
 
 async function fetchApiPayload(options: {
@@ -589,7 +587,7 @@ export const createDatabaseFileTool = registerTamboTool({
       }
 
       const fileName = normalizeFileName(safeInput.fileName, fileExtension);
-      const downloadUrl = triggerDownload(blob, fileName);
+      const downloadUrl = await blobToDataUrl(blob);
 
       return {
         ok: true,
