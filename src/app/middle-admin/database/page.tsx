@@ -47,6 +47,15 @@ type WorkbookLabels = {
   rows: string
   columns: string
   description: string
+  defaultSheetName: string
+  overflowSheetName: string
+  overflowHeaderSheet: string
+  overflowHeaderRow: string
+  overflowHeaderColumn: string
+  overflowHeaderPart: string
+  overflowHeaderValue: string
+  overflowValueMarker: string
+  columnPrefix: string
 }
 
 const EXCEL_CELL_TEXT_LIMIT = 32767
@@ -70,8 +79,8 @@ function downloadBlob(fileName: string, blob: Blob) {
   URL.revokeObjectURL(url)
 }
 
-function sanitizeWorksheetName(name: string, usedNames: Set<string>) {
-  const cleaned = name.replace(/[\\/:?*\[\]]/g, ' ').trim() || 'Sheet'
+function sanitizeWorksheetName(name: string, usedNames: Set<string>, fallbackName = 'Sheet') {
+  const cleaned = name.replace(/[\\/:?*\[\]]/g, ' ').trim() || fallbackName
   const base = cleaned.slice(0, 31)
   let candidate = base
   let counter = 2
@@ -101,6 +110,7 @@ function normalizeExcelCellText(
     sheet: string
     row: number
     column: string
+    overflowValueMarker: string
     overflowRows: WorkbookOverflowRow[]
   }
 ) {
@@ -117,7 +127,7 @@ function normalizeExcelCellText(
     })
   })
 
-  const marker = ' ...[FULL_VALUE_IN_OVERFLOW_SHEET]'
+  const marker = ` ...[${context.overflowValueMarker}]`
   const previewLimit = Math.max(0, Math.min(1200, EXCEL_CELL_TEXT_LIMIT - marker.length))
   return `${value.slice(0, previewLimit)}${marker}`
 }
@@ -131,12 +141,14 @@ function buildWorkbookSheets(snapshot: SnapshotPayload, labels: WorkbookLabels) 
     ...snapshot.summary.map((item) => [item.title, String(item.rowCount), String(item.columnCount), item.description]),
   ]
 
+  const tableSheets: Array<{ name: string; rows: string[][] }> = snapshot.tables.map((table) => ({
+    name: table.title,
+    rows: [table.columns, ...table.rows.map((row) => table.columns.map((column) => row[column] ?? ''))],
+  }))
+
   const workbookSheets: Array<{ name: string; rows: string[][] }> = [
     { name: labels.summary, rows: summaryRows.map((row) => row.map((value) => String(value ?? ''))) },
-    ...snapshot.tables.map((table) => ({
-      name: table.title,
-      rows: [table.columns, ...table.rows.map((row) => table.columns.map((column) => row[column] ?? ''))],
-    })),
+    ...tableSheets,
   ]
 
   return workbookSheets
@@ -150,18 +162,19 @@ async function downloadWorkbookXlsx(fileName: string, snapshot: SnapshotPayload,
   const workbookSheets = buildWorkbookSheets(snapshot, labels)
 
   workbookSheets.forEach((sheet) => {
-    const sheetName = sanitizeWorksheetName(sheet.name, usedSheetNames)
+    const sheetName = sanitizeWorksheetName(sheet.name, usedSheetNames, labels.defaultSheetName)
     const headerRow = sheet.rows[0] ?? []
     const normalizedRows = sheet.rows.map((row, rowIndex) =>
       row.map((cell, columnIndex) => {
         const columnName =
           rowIndex > 0
-            ? (headerRow[columnIndex] ?? `column_${columnIndex + 1}`)
-            : `column_${columnIndex + 1}`
+            ? (headerRow[columnIndex] ?? `${labels.columnPrefix}_${columnIndex + 1}`)
+            : `${labels.columnPrefix}_${columnIndex + 1}`
         return normalizeExcelCellText(String(cell ?? ''), {
           sheet: sheetName,
           row: rowIndex + 1,
           column: String(columnName),
+          overflowValueMarker: labels.overflowValueMarker,
           overflowRows,
         })
       })
@@ -171,9 +184,15 @@ async function downloadWorkbookXlsx(fileName: string, snapshot: SnapshotPayload,
   })
 
   if (overflowRows.length > 0) {
-    const overflowSheetName = sanitizeWorksheetName('Overflow', usedSheetNames)
+    const overflowSheetName = sanitizeWorksheetName(labels.overflowSheetName, usedSheetNames, labels.defaultSheetName)
     const overflowWorksheet = XLSX.utils.aoa_to_sheet([
-      ['Sheet', 'Row', 'Column', 'Part', 'Value'],
+      [
+        labels.overflowHeaderSheet,
+        labels.overflowHeaderRow,
+        labels.overflowHeaderColumn,
+        labels.overflowHeaderPart,
+        labels.overflowHeaderValue,
+      ],
       ...overflowRows.map((item) => [
         item.sheet,
         String(item.row),
@@ -196,11 +215,11 @@ async function downloadWorkbookXlsx(fileName: string, snapshot: SnapshotPayload,
   }
 }
 
-async function downloadSingleTableXlsx(fileName: string, table: DatabaseTable) {
+async function downloadSingleTableXlsx(fileName: string, table: DatabaseTable, labels: WorkbookLabels) {
   const XLSX = await import('xlsx')
   const workbook = XLSX.utils.book_new()
   const overflowRows: WorkbookOverflowRow[] = []
-  const sheetName = sanitizeWorksheetName(table.title, new Set<string>())
+  const sheetName = sanitizeWorksheetName(table.title, new Set<string>(), labels.defaultSheetName)
   const worksheetRows = [table.columns, ...table.rows.map((row) => table.columns.map((column) => row[column] ?? ''))]
   const headerRow = worksheetRows[0] ?? []
   const normalizedRows = worksheetRows.map((row, rowIndex) =>
@@ -208,7 +227,8 @@ async function downloadSingleTableXlsx(fileName: string, table: DatabaseTable) {
       normalizeExcelCellText(String(cell ?? ''), {
         sheet: sheetName,
         row: rowIndex + 1,
-        column: String(headerRow[columnIndex] ?? `column_${columnIndex + 1}`),
+        column: String(headerRow[columnIndex] ?? `${labels.columnPrefix}_${columnIndex + 1}`),
+        overflowValueMarker: labels.overflowValueMarker,
         overflowRows,
       })
     )
@@ -218,7 +238,13 @@ async function downloadSingleTableXlsx(fileName: string, table: DatabaseTable) {
 
   if (overflowRows.length > 0) {
     const overflowWorksheet = XLSX.utils.aoa_to_sheet([
-      ['Sheet', 'Row', 'Column', 'Part', 'Value'],
+      [
+        labels.overflowHeaderSheet,
+        labels.overflowHeaderRow,
+        labels.overflowHeaderColumn,
+        labels.overflowHeaderPart,
+        labels.overflowHeaderValue,
+      ],
       ...overflowRows.map((item) => [
         item.sheet,
         String(item.row),
@@ -227,7 +253,11 @@ async function downloadSingleTableXlsx(fileName: string, table: DatabaseTable) {
         item.value,
       ]),
     ])
-    XLSX.utils.book_append_sheet(workbook, overflowWorksheet, sanitizeWorksheetName('Overflow', new Set([sheetName])))
+    XLSX.utils.book_append_sheet(
+      workbook,
+      overflowWorksheet,
+      sanitizeWorksheetName(labels.overflowSheetName, new Set([sheetName]), labels.defaultSheetName)
+    )
   }
 
   try {
@@ -287,6 +317,17 @@ export default function DatabasePage() {
         rowsCount: 'строк',
         downloadSheet: 'Скачать лист',
         noRowsMatch: 'Нет строк, подходящих под поиск.',
+        defaultSheetName: 'Лист',
+        overflowSheetName: 'Переполнение',
+        overflowHeaderSheet: 'Лист',
+        overflowHeaderRow: 'Строка',
+        overflowHeaderColumn: 'Колонка',
+        overflowHeaderPart: 'Часть',
+        overflowHeaderValue: 'Значение',
+        overflowValueMarker: 'ПОЛНОЕ_ЗНАЧЕНИЕ_В_ЛИСТЕ_ПЕРЕПОЛНЕНИЯ',
+        columnPrefix: 'колонка',
+        tamboPrompt: (targetLabel: string) =>
+          `Проанализируй ${targetLabel} в Neon DB среднего администратора и помоги с выгрузками, сводками или исправлениями.`,
       }
     }
 
@@ -327,6 +368,17 @@ export default function DatabasePage() {
         rowsCount: 'qator',
         downloadSheet: 'Sahifani yuklash',
         noRowsMatch: 'Qidiruvga mos qator topilmadi.',
+        defaultSheetName: 'Sahifa',
+        overflowSheetName: 'Toshib ketgan qiymatlar',
+        overflowHeaderSheet: 'Sahifa',
+        overflowHeaderRow: 'Qator',
+        overflowHeaderColumn: 'Ustun',
+        overflowHeaderPart: 'Qism',
+        overflowHeaderValue: 'Qiymat',
+        overflowValueMarker: 'TOʻLIQ_QIYMAT_TOSHISH_SAHIFASIDA',
+        columnPrefix: 'ustun',
+        tamboPrompt: (targetLabel: string) =>
+          `${targetLabel} jadvalini o‘rta administrator Neon DB ichida tahlil qil va eksport, umumiy xulosa yoki tuzatishlarda yordam ber.`,
       }
     }
 
@@ -366,6 +418,17 @@ export default function DatabasePage() {
       rowsCount: 'rows',
       downloadSheet: 'Download sheet',
       noRowsMatch: 'No rows match this search.',
+      defaultSheetName: 'Sheet',
+      overflowSheetName: 'Overflow',
+      overflowHeaderSheet: 'Sheet',
+      overflowHeaderRow: 'Row',
+      overflowHeaderColumn: 'Column',
+      overflowHeaderPart: 'Part',
+      overflowHeaderValue: 'Value',
+      overflowValueMarker: 'FULL_VALUE_IN_OVERFLOW_SHEET',
+      columnPrefix: 'column',
+      tamboPrompt: (targetLabel: string) =>
+        `Analyze the ${targetLabel} in middle admin Neon DB and help me with exports, summaries, or fixes.`,
     }
   }, [language])
 
@@ -444,6 +507,15 @@ export default function DatabasePage() {
       rows: uiText.rows,
       columns: uiText.columns,
       description: uiText.description,
+      defaultSheetName: uiText.defaultSheetName,
+      overflowSheetName: uiText.overflowSheetName,
+      overflowHeaderSheet: uiText.overflowHeaderSheet,
+      overflowHeaderRow: uiText.overflowHeaderRow,
+      overflowHeaderColumn: uiText.overflowHeaderColumn,
+      overflowHeaderPart: uiText.overflowHeaderPart,
+      overflowHeaderValue: uiText.overflowHeaderValue,
+      overflowValueMarker: uiText.overflowValueMarker,
+      columnPrefix: uiText.columnPrefix,
     })
     toast.success(uiText.workbookDownloaded)
   }
@@ -452,7 +524,24 @@ export default function DatabasePage() {
     if (!currentTable || !snapshot) return
 
     const generatedAt = new Date(snapshot.generatedAt).toISOString().slice(0, 10)
-    await downloadSingleTableXlsx(`neon-${currentTable.id}-${generatedAt}.xlsx`, currentTable)
+    await downloadSingleTableXlsx(`neon-${currentTable.id}-${generatedAt}.xlsx`, currentTable, {
+      scope: uiText.scope,
+      generatedAt: uiText.generatedAt,
+      summary: uiText.summary,
+      sheet: uiText.sheet,
+      rows: uiText.rows,
+      columns: uiText.columns,
+      description: uiText.description,
+      defaultSheetName: uiText.defaultSheetName,
+      overflowSheetName: uiText.overflowSheetName,
+      overflowHeaderSheet: uiText.overflowHeaderSheet,
+      overflowHeaderRow: uiText.overflowHeaderRow,
+      overflowHeaderColumn: uiText.overflowHeaderColumn,
+      overflowHeaderPart: uiText.overflowHeaderPart,
+      overflowHeaderValue: uiText.overflowHeaderValue,
+      overflowValueMarker: uiText.overflowValueMarker,
+      columnPrefix: uiText.columnPrefix,
+    })
     toast.success(`${currentTable.title}: ${uiText.fullSheetDownloaded}`)
   }
 
@@ -473,7 +562,7 @@ export default function DatabasePage() {
     window.dispatchEvent(
       new CustomEvent('tambo:open-chat', {
         detail: {
-          prompt: `Analyze the ${targetLabel} in middle admin Neon DB and help me with exports, summaries, or fixes.`,
+          prompt: uiText.tamboPrompt(targetLabel),
         },
       })
     )

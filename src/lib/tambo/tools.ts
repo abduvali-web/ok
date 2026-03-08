@@ -897,8 +897,6 @@ function buildXlsxWorkbookFromPayload(
       ]);
     }
 
-    appendSheetFromAoa("Summary", summaryRows);
-
     for (const tableRaw of snapshot.tables) {
       if (!tableRaw || typeof tableRaw !== "object") continue;
       const table = tableRaw as {
@@ -926,6 +924,8 @@ function buildXlsxWorkbookFromPayload(
       const tableRows = columns.length > 0 ? [columns, ...dataRows] : dataRows.length > 0 ? dataRows : [[""]];
       appendSheetFromAoa(String(table.title ?? table.id ?? "Sheet"), tableRows);
     }
+
+    appendSheetFromAoa("Summary", summaryRows);
 
     appendOverflowSheetIfNeeded();
     return workbook;

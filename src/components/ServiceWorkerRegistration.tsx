@@ -1,40 +1,80 @@
 'use client'
 
 import { useEffect } from 'react'
+import { toast } from 'sonner'
+
+const UPDATE_CHECK_INTERVAL_MS = 30 * 60 * 1000
 
 export function ServiceWorkerRegistration() {
     useEffect(() => {
-        // Only register service worker in production and when supported
-        if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-            // Register after page load for better performance
-            window.addEventListener('load', () => {
-                navigator.serviceWorker
-                    .register('/sw.js')
-                    .then((registration) => {
-                        console.log('ServiceWorker registered successfully:', registration.scope)
+        if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
 
-                        // Check for updates periodically
-                        setInterval(() => {
-                            registration.update()
-                        }, 60000) // Check every minute
+        let updateInterval: number | null = null
+        let didReloadAfterUpdate = false
+        let addLoadListener = false
 
-                        // Handle updates
-                        registration.addEventListener('updatefound', () => {
-                            const newWorker = registration.installing
-                            if (newWorker) {
-                                newWorker.addEventListener('statechange', () => {
-                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                        // New content available, show refresh prompt if needed
-                                        console.log('New content available, please refresh.')
-                                    }
-                                })
-                            }
-                        })
-                    })
-                    .catch((error) => {
-                        console.error('ServiceWorker registration failed:', error)
-                    })
+        const showUpdateToast = (worker: ServiceWorker) => {
+            toast.info('New app update is ready', {
+                description: 'Reload to apply the latest mobile and offline improvements.',
+                action: {
+                    label: 'Reload',
+                    onClick: () => worker.postMessage({ type: 'SKIP_WAITING' }),
+                },
+                duration: 12000,
             })
+        }
+
+        const handleControllerChange = () => {
+            if (didReloadAfterUpdate) return
+            didReloadAfterUpdate = true
+            window.location.reload()
+        }
+
+        navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange)
+
+        const registerServiceWorker = async () => {
+            try {
+                const registration = await navigator.serviceWorker.register('/sw.js')
+
+                if (registration.waiting) {
+                    showUpdateToast(registration.waiting)
+                }
+
+                registration.addEventListener('updatefound', () => {
+                    const installingWorker = registration.installing
+                    if (!installingWorker) return
+
+                    installingWorker.addEventListener('statechange', () => {
+                        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            showUpdateToast(installingWorker)
+                        }
+                    })
+                })
+
+                updateInterval = window.setInterval(() => {
+                    void registration.update()
+                }, UPDATE_CHECK_INTERVAL_MS)
+            } catch (error) {
+                void error
+            }
+        }
+
+        if (document.readyState === 'complete') {
+            void registerServiceWorker()
+        } else {
+            addLoadListener = true
+            const onLoad = () => void registerServiceWorker()
+            window.addEventListener('load', onLoad, { once: true })
+            return () => {
+                navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange)
+                if (updateInterval) window.clearInterval(updateInterval)
+                if (addLoadListener) window.removeEventListener('load', onLoad)
+            }
+        }
+
+        return () => {
+            navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange)
+            if (updateInterval) window.clearInterval(updateInterval)
         }
     }, [])
 

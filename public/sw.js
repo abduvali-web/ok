@@ -1,8 +1,10 @@
-// AutoFood Service Worker for PWA
-const CACHE_NAME = 'autofood-v1';
+const SW_VERSION = 'autofood-v3';
+const STATIC_CACHE = `${SW_VERSION}-static`;
+const RUNTIME_CACHE = `${SW_VERSION}-runtime`;
+const IMAGE_CACHE = `${SW_VERSION}-images`;
+const OFFLINE_FALLBACK_URL = '/offline';
 
-// Assets to cache immediately on install
-const STATIC_ASSETS = [
+const PRECACHE_URLS = [
     '/',
     '/login',
     '/manifest.json',
@@ -10,95 +12,79 @@ const STATIC_ASSETS = [
     '/favicon.ico',
     '/icon-192.png',
     '/icon-512.png',
+    OFFLINE_FALLBACK_URL,
 ];
 
-// Install event - cache static assets
+const STATIC_DESTINATIONS = new Set(['style', 'script', 'font', 'worker']);
+
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            console.log('Service Worker: Caching static assets');
-            return cache.addAll(STATIC_ASSETS);
-        })
+        (async () => {
+            const cache = await caches.open(STATIC_CACHE);
+            await cache.addAll(PRECACHE_URLS);
+            await self.skipWaiting();
+        })()
     );
-    // Take control immediately
-    self.skipWaiting();
 });
 
-// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
+        (async () => {
+            const cacheNames = await caches.keys();
+            await Promise.all(
                 cacheNames
-                    .filter((name) => name !== CACHE_NAME)
+                    .filter((name) => ![STATIC_CACHE, RUNTIME_CACHE, IMAGE_CACHE].includes(name))
                     .map((name) => caches.delete(name))
             );
-        })
+
+            if (self.registration.navigationPreload) {
+                await self.registration.navigationPreload.enable();
+            }
+
+            await self.clients.claim();
+        })()
     );
-    // Take control of all pages immediately
-    self.clients.claim();
 });
 
-// Fetch event - network first, fallback to cache
-self.addEventListener('fetch', (event) => {
-    // Skip non-GET requests
-    if (event.request.method !== 'GET') return;
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+});
 
-    // Skip API requests - always go to network
-    if (event.request.url.includes('/api/')) {
+self.addEventListener('fetch', (event) => {
+    const { request } = event;
+    if (!shouldHandleRequest(request)) return;
+
+    const url = new URL(request.url);
+    if (url.pathname.startsWith('/api/')) return;
+
+    if (request.mode === 'navigate') {
+        event.respondWith(networkFirstNavigation(event));
         return;
     }
 
-    event.respondWith(
-        // Try network first
-        fetch(event.request)
-            .then((response) => {
-                // Clone the response before caching
-                const responseClone = response.clone();
+    if (url.origin !== self.location.origin) return;
 
-                // Cache successful responses
-                if (response.status === 200) {
-                    caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, responseClone);
-                    });
-                }
+    if (request.destination === 'image') {
+        event.respondWith(cacheFirst(request, IMAGE_CACHE));
+        return;
+    }
 
-                return response;
-            })
-            .catch(() => {
-                // Network failed, try cache
-                return caches.match(event.request).then((cachedResponse) => {
-                    if (cachedResponse) {
-                        return cachedResponse;
-                    }
+    if (STATIC_DESTINATIONS.has(request.destination)) {
+        event.respondWith(staleWhileRevalidate(request, RUNTIME_CACHE));
+        return;
+    }
 
-                    // Return offline page for navigation requests
-                    if (event.request.mode === 'navigate') {
-                        return caches.match('/');
-                    }
-
-                    return new Response('Offline', {
-                        status: 503,
-                        statusText: 'Service Unavailable',
-                    });
-                });
-            })
-    );
+    event.respondWith(networkFirstRuntime(request, RUNTIME_CACHE));
 });
 
-// Background sync for offline actions (future feature)
 self.addEventListener('sync', (event) => {
     if (event.tag === 'sync-orders') {
         event.waitUntil(syncOrders());
     }
 });
 
-async function syncOrders() {
-    // Future: Sync offline orders when connection is restored
-    console.log('Background sync: Syncing orders...');
-}
-
-// Push notifications (future feature)
 self.addEventListener('push', (event) => {
     if (!event.data) return;
 
@@ -122,7 +108,6 @@ self.addEventListener('push', (event) => {
     );
 });
 
-// Handle notification clicks
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
 
@@ -132,3 +117,99 @@ self.addEventListener('notificationclick', (event) => {
         );
     }
 });
+
+function shouldHandleRequest(request) {
+    return request.method === 'GET' && request.url.startsWith('http');
+}
+
+async function networkFirstNavigation(event) {
+    const { request } = event;
+    const runtimeCache = await caches.open(RUNTIME_CACHE);
+
+    try {
+        const preloadResponse = await event.preloadResponse;
+        if (preloadResponse) {
+            runtimeCache.put(request, preloadResponse.clone());
+            return preloadResponse;
+        }
+
+        const networkResponse = await fetch(request);
+        if (networkResponse && networkResponse.ok) {
+            runtimeCache.put(request, networkResponse.clone());
+        }
+        return networkResponse;
+    } catch {
+        const cached = await runtimeCache.match(request);
+        if (cached) return cached;
+
+        const offlinePage = await caches.match(OFFLINE_FALLBACK_URL);
+        if (offlinePage) return offlinePage;
+
+        return new Response('Offline', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        });
+    }
+}
+
+async function networkFirstRuntime(request, cacheName) {
+    const cache = await caches.open(cacheName);
+
+    try {
+        const networkResponse = await fetch(request);
+        if (networkResponse && networkResponse.ok) {
+            cache.put(request, networkResponse.clone());
+        }
+        return networkResponse;
+    } catch {
+        const cached = await cache.match(request);
+        if (cached) return cached;
+        return new Response('Offline', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        });
+    }
+}
+
+async function staleWhileRevalidate(request, cacheName) {
+    const cache = await caches.open(cacheName);
+    const cachedResponse = await cache.match(request);
+
+    const networkPromise = fetch(request)
+        .then((response) => {
+            if (response && response.ok) {
+                cache.put(request, response.clone());
+            }
+            return response;
+        })
+        .catch(() => undefined);
+
+    return cachedResponse || networkPromise || new Response('Offline', {
+        status: 503,
+        statusText: 'Service Unavailable',
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+}
+
+async function cacheFirst(request, cacheName) {
+    const cache = await caches.open(cacheName);
+    const cachedResponse = await cache.match(request);
+    if (cachedResponse) return cachedResponse;
+
+    try {
+        const networkResponse = await fetch(request);
+        if (networkResponse && networkResponse.ok) {
+            cache.put(request, networkResponse.clone());
+        }
+        return networkResponse;
+    } catch {
+        return new Response('', { status: 504, statusText: 'Gateway Timeout' });
+    }
+}
+
+async function syncOrders() {
+    return Promise.resolve();
+}
+

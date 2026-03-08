@@ -1,144 +1,188 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Download, X, Smartphone, Check } from 'lucide-react'
+import { Check, Download, Plus, Share2, Smartphone, X } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { usePWA } from '@/hooks/usePWA'
 
+const PROMPT_DISMISS_KEY = 'pwa-prompt-dismissed-until'
+const PROMPT_COOLDOWN_DAYS = 7
+const PROMPT_DELAY_MS = 2200
+
+const copyByLanguage = {
+    ru: {
+        title: 'Установите AutoFood',
+        subtitle: 'Быстрый запуск и работа как приложение',
+        installCta: 'Установить',
+        laterCta: 'Позже',
+        gotItCta: 'Понятно',
+        installHint: 'Приложение будет открываться быстрее и удобнее на телефоне.',
+        iosHintTitle: 'Установка на iPhone',
+        iosHintStepOne: 'Откройте сайт в Safari.',
+        iosHintStepTwo: 'Нажмите',
+        iosHintStepThree: 'и выберите "На экран Домой".',
+        installedTitle: 'Установлено',
+        installedSubtitle: 'AutoFood готов к работе в режиме приложения.',
+    },
+    uz: {
+        title: 'AutoFood ilovasini o‘rnating',
+        subtitle: 'Tez ochilish va ilova kabi ishlash',
+        installCta: 'O‘rnatish',
+        laterCta: 'Keyinroq',
+        gotItCta: 'Tushunarli',
+        installHint: 'Ilova telefoningizda tezroq ochiladi va ishlash qulayroq bo‘ladi.',
+        iosHintTitle: 'iPhone’da o‘rnatish',
+        iosHintStepOne: 'Saytni Safari’da oching.',
+        iosHintStepTwo: 'Tugmasini bosing',
+        iosHintStepThree: 'va "Add to Home Screen" ni tanlang.',
+        installedTitle: 'O‘rnatildi',
+        installedSubtitle: 'AutoFood endi ilova rejimida ishlashga tayyor.',
+    },
+    en: {
+        title: 'Install AutoFood',
+        subtitle: 'Faster launch and app-like experience',
+        installCta: 'Install',
+        laterCta: 'Later',
+        gotItCta: 'Got it',
+        installHint: 'Install for quicker access and a cleaner mobile workflow.',
+        iosHintTitle: 'Install on iPhone',
+        iosHintStepOne: 'Open this website in Safari.',
+        iosHintStepTwo: 'Tap',
+        iosHintStepThree: 'then choose "Add to Home Screen".',
+        installedTitle: 'Installed',
+        installedSubtitle: 'AutoFood is ready in app mode.',
+    },
+} as const
+
 export function PWAInstallPrompt() {
-    const { isInstallable, isInstalled, installApp } = usePWA()
+    const { language } = useLanguage()
+    const { isInstallable, isInstalled, canShowIOSHint, installApp } = usePWA()
     const [showPrompt, setShowPrompt] = useState(false)
-    const [dismissed, setDismissed] = useState(false)
     const [installing, setInstalling] = useState(false)
     const [justInstalled, setJustInstalled] = useState(false)
 
-    useEffect(() => {
-        // Check if user has dismissed the prompt before
-        const wasDismissed = localStorage.getItem('pwa-prompt-dismissed')
-        if (wasDismissed) {
-            setDismissed(true)
-            return
-        }
-
-        // Show prompt after a delay if installable and not dismissed
-        if (isInstallable && !dismissed) {
-            const timer = setTimeout(() => {
-                setShowPrompt(true)
-            }, 5000) // Show after 5 seconds
-
-            return () => clearTimeout(timer)
-        }
-    }, [isInstallable, dismissed])
+    const copy = copyByLanguage[language]
+    const isPromptEligible = (isInstallable || canShowIOSHint) && !isInstalled
+    const showIOSInstructions = canShowIOSHint && !isInstallable
 
     useEffect(() => {
-        if (isInstalled && showPrompt) {
-            setJustInstalled(true)
-            const timer = setTimeout(() => {
-                setShowPrompt(false)
-            }, 3000)
-            return () => clearTimeout(timer)
-        }
-    }, [isInstalled, showPrompt])
+        const dismissedUntil = Number(localStorage.getItem(PROMPT_DISMISS_KEY) ?? '0')
+        if (dismissedUntil > Date.now()) return
+
+        if (!isPromptEligible) return
+
+        const timer = window.setTimeout(() => setShowPrompt(true), PROMPT_DELAY_MS)
+        return () => window.clearTimeout(timer)
+    }, [isPromptEligible])
+
+    useEffect(() => {
+        if (!isInstalled) return
+        setJustInstalled(true)
+        setShowPrompt(true)
+
+        const timer = window.setTimeout(() => {
+            setShowPrompt(false)
+            setJustInstalled(false)
+        }, 2600)
+
+        return () => window.clearTimeout(timer)
+    }, [isInstalled])
 
     const handleInstall = async () => {
         setInstalling(true)
         const success = await installApp()
         setInstalling(false)
-
-        if (success) {
-            setJustInstalled(true)
-        }
+        if (success) setJustInstalled(true)
     }
 
     const handleDismiss = () => {
+        const dismissUntil = Date.now() + PROMPT_COOLDOWN_DAYS * 24 * 60 * 60 * 1000
+        localStorage.setItem(PROMPT_DISMISS_KEY, String(dismissUntil))
         setShowPrompt(false)
-        setDismissed(true)
-        localStorage.setItem('pwa-prompt-dismissed', 'true')
     }
 
-    // Don't render if installed or not installable
-    if (isInstalled && !justInstalled) return null
+    const cardStyle = useMemo(() => ({ bottom: 'calc(12px + env(safe-area-inset-bottom))' }), [])
+
     if (!showPrompt) return null
 
     return (
         <AnimatePresence>
             <motion.div
-                initial={{ opacity: 0, y: 100, scale: 0.9 }}
+                initial={{ opacity: 0, y: 24, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 100, scale: 0.9 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:w-80 z-50"
+                exit={{ opacity: 0, y: 20, scale: 0.98 }}
+                transition={{ duration: 0.18 }}
+                className="fixed inset-x-3 z-50 md:inset-x-auto md:right-6 md:w-[22rem]"
+                style={cardStyle}
             >
-                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-                    {/* Header with gradient */}
-                    <div className="bg-gradient-to-r from-primary to-purple-600 p-4 text-white">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                                    <Smartphone className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-sm">O'rnatish mavjud!</h3>
-                                    <p className="text-xs text-white/80">AutoFood ilovasini o'rnating</p>
-                                </div>
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
+                    <div className="flex items-start justify-between gap-3 border-b border-border/70 bg-muted/50 p-4">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-background">
+                                {justInstalled ? <Check className="h-5 w-5 text-emerald-600" /> : <Smartphone className="h-5 w-5" />}
                             </div>
-                            <button
-                                onClick={handleDismiss}
-                                className="p-1 hover:bg-white/20 rounded-lg transition-colors"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
+                            <div>
+                                <p className="text-sm font-semibold">{justInstalled ? copy.installedTitle : copy.title}</p>
+                                <p className="text-xs text-muted-foreground">
+                                    {justInstalled ? copy.installedSubtitle : copy.subtitle}
+                                </p>
+                            </div>
                         </div>
+                        <button
+                            type="button"
+                            onClick={handleDismiss}
+                            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                            aria-label="Dismiss PWA prompt"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
                     </div>
 
-                    {/* Content */}
-                    <div className="p-4">
-                        {justInstalled ? (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="flex items-center space-x-3 text-green-600"
-                            >
-                                <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                                    <Check className="w-5 h-5" />
+                    {!justInstalled ? (
+                        <div className="space-y-4 p-4">
+                            {showIOSInstructions ? (
+                                <div className="space-y-2">
+                                    <p className="text-sm font-medium">{copy.iosHintTitle}</p>
+                                    <p className="text-sm text-muted-foreground">{copy.iosHintStepOne}</p>
+                                    <div className="flex items-center gap-2 rounded-lg border border-border/70 bg-background px-3 py-2 text-sm text-muted-foreground">
+                                        <span>{copy.iosHintStepTwo}</span>
+                                        <Share2 className="h-4 w-4" />
+                                        <span>{copy.iosHintStepThree}</span>
+                                        <Plus className="ml-auto h-4 w-4" />
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="font-medium text-sm">Muvaffaqiyatli o'rnatildi!</p>
-                                    <p className="text-xs text-slate-500">Endi ilovani ishlatishingiz mumkin</p>
-                                </div>
-                            </motion.div>
-                        ) : (
-                            <>
-                                <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
-                                    Tezroq kirish va offline ishlash uchun ilovani o'rnating.
-                                </p>
-                                <div className="flex space-x-2">
-                                    <Button
-                                        onClick={handleInstall}
-                                        disabled={installing}
-                                        className="flex-1 bg-primary hover:bg-primary/90"
-                                    >
+                            ) : (
+                                <p className="text-sm text-muted-foreground">{copy.installHint}</p>
+                            )}
+
+                            <div className="flex gap-2">
+                                {!showIOSInstructions ? (
+                                    <Button onClick={handleInstall} disabled={installing} className="flex-1">
                                         {installing ? (
-                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                                            <span className="inline-flex items-center gap-2">
+                                                <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
+                                                {copy.installCta}
+                                            </span>
                                         ) : (
-                                            <Download className="w-4 h-4 mr-2" />
+                                            <span className="inline-flex items-center gap-2">
+                                                <Download className="h-4 w-4" />
+                                                {copy.installCta}
+                                            </span>
                                         )}
-                                        O'rnatish
                                     </Button>
-                                    <Button
-                                        variant="outline"
-                                        onClick={handleDismiss}
-                                        className="px-4"
-                                    >
-                                        Keyin
-                                    </Button>
-                                </div>
-                            </>
-                        )}
-                    </div>
+                                ) : null}
+                                <Button variant="outline" onClick={handleDismiss} className="flex-1">
+                                    {showIOSInstructions ? copy.gotItCta : copy.laterCta}
+                                </Button>
+                            </div>
+                        </div>
+                    ) : null}
                 </div>
             </motion.div>
         </AnimatePresence>
     )
 }
+

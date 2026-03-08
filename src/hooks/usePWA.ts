@@ -2,38 +2,61 @@
 
 import { useEffect, useState } from 'react'
 
+interface BeforeInstallPromptEvent extends Event {
+    prompt: () => Promise<void>
+    userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>
+}
+
+type NavigatorWithStandalone = Navigator & { standalone?: boolean }
+
+function detectStandaloneMode() {
+    return (
+        window.matchMedia('(display-mode: standalone)').matches ||
+        Boolean((window.navigator as NavigatorWithStandalone).standalone)
+    )
+}
+
+function detectIOSDevice() {
+    const userAgent = window.navigator.userAgent.toLowerCase()
+    const touchMac = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1
+    return /iphone|ipad|ipod/.test(userAgent) || touchMac
+}
+
 export function usePWA() {
     const [isInstallable, setIsInstallable] = useState(false)
     const [isInstalled, setIsInstalled] = useState(false)
-    const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+    const [isIOSDevice, setIsIOSDevice] = useState(false)
+    const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
 
     useEffect(() => {
-        // Check if already installed
-        if (window.matchMedia('(display-mode: standalone)').matches) {
-            setIsInstalled(true)
-            return
-        }
+        setIsIOSDevice(detectIOSDevice())
+        setIsInstalled(detectStandaloneMode())
 
-        // Listen for the beforeinstallprompt event
         const handleBeforeInstallPrompt = (e: Event) => {
             e.preventDefault()
-            setDeferredPrompt(e)
+            setDeferredPrompt(e as BeforeInstallPromptEvent)
             setIsInstallable(true)
         }
 
-        // Listen for app installed event
         const handleAppInstalled = () => {
             setIsInstalled(true)
             setIsInstallable(false)
             setDeferredPrompt(null)
         }
 
+        const handleDisplayModeChange = () => {
+            setIsInstalled(detectStandaloneMode())
+        }
+
+        const media = window.matchMedia('(display-mode: standalone)')
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
         window.addEventListener('appinstalled', handleAppInstalled)
+        media.addEventListener?.('change', handleDisplayModeChange)
 
         return () => {
             window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
             window.removeEventListener('appinstalled', handleAppInstalled)
+            media.removeEventListener?.('change', handleDisplayModeChange)
         }
     }, [])
 
@@ -52,7 +75,7 @@ export function usePWA() {
             setDeferredPrompt(null)
             return outcome === 'accepted'
         } catch (error) {
-            console.error('Error installing PWA:', error)
+            void error
             return false
         }
     }
@@ -60,6 +83,8 @@ export function usePWA() {
     return {
         isInstallable,
         isInstalled,
+        isIOSDevice,
+        canShowIOSHint: isIOSDevice && !isInstalled && !isInstallable,
         installApp
     }
 }

@@ -52,8 +52,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#fafaf9' },
     { media: '(prefers-color-scheme: dark)', color: '#0c0a09' },
@@ -70,8 +69,10 @@ export default function RootLayout({
       <head>
         <meta name="application-name" content="AutoFood" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="AutoFood" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="format-detection" content="telephone=no" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body
