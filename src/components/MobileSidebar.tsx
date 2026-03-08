@@ -22,8 +22,11 @@ interface MobileSidebarProps {
 
 export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSidebarProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const labels = getDashboardTabLabels(t)
+  const openLabel = language === 'ru' ? 'Открыть меню' : language === 'uz' ? 'Menyuni ochish' : 'Open menu'
+  const closeLabel = language === 'ru' ? 'Закрыть меню' : language === 'uz' ? 'Menyuni yopish' : 'Close menu'
+  const openedState = language === 'ru' ? 'Открыто' : language === 'uz' ? 'Ochildi' : 'Open'
 
   useEffect(() => {
     const onEsc = (event: KeyboardEvent) => {
@@ -52,13 +55,12 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
 
   return (
     <>
-      {/* â”€â”€â”€ FAB â”€â”€â”€ */}
       <Button
         variant="outline"
         size="icon"
         className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-50 h-11 w-11 rounded-xl border-border bg-card shadow-sm md:hidden"
         onClick={() => setIsOpen((prev) => !prev)}
-        aria-label={isOpen ? 'Close menu' : 'Open menu'}
+        aria-label={isOpen ? closeLabel : openLabel}
       >
         <AnimatePresence mode="wait">
           {isOpen ? (
@@ -85,7 +87,6 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
         </AnimatePresence>
       </Button>
 
-      {/* â”€â”€â”€ Backdrop â”€â”€â”€ */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -99,7 +100,6 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
         )}
       </AnimatePresence>
 
-      {/* â”€â”€â”€ Sidebar Panel â”€â”€â”€ */}
       <AnimatePresence>
         {isOpen && (
           <motion.aside
@@ -109,7 +109,6 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
             transition={{ type: 'spring', damping: 26, stiffness: 300 }}
             className="fixed left-0 top-0 bottom-0 z-50 w-[300px] overflow-y-auto border-r border-border bg-card md:hidden"
           >
-            {/* Header */}
             <div className="sticky top-0 border-b border-border bg-card p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -134,7 +133,6 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
               </div>
             </div>
 
-            {/* Nav Items */}
             <nav className="p-3 space-y-1">
               {effectiveTabs.map((tab, index) => {
                 const config = DASHBOARD_TAB_META[tab.id as CanonicalTabId] || {
@@ -171,13 +169,12 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
                       <Icon className="h-3.5 w-3.5" />
                     </div>
                     <span className="text-sm">{tab.label}</span>
-                    {isActive ? <span className="ml-auto text-[11px] font-medium text-foreground">Open</span> : null}
+                    {isActive ? <span className="ml-auto text-[11px] font-medium text-foreground">{openedState}</span> : null}
                   </motion.button>
                 )
               })}
             </nav>
 
-            {/* Footer */}
             <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-card p-4">
               <p className="text-center text-[10px] text-muted-foreground">
                 (c) {new Date().getFullYear()} AutoFood

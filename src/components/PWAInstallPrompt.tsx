@@ -63,20 +63,29 @@ export function PWAInstallPrompt() {
     const [showPrompt, setShowPrompt] = useState(false)
     const [installing, setInstalling] = useState(false)
     const [justInstalled, setJustInstalled] = useState(false)
+    const [isMobileLike, setIsMobileLike] = useState(false)
 
     const copy = copyByLanguage[language]
     const isPromptEligible = (isInstallable || canShowIOSHint) && !isInstalled
     const showIOSInstructions = canShowIOSHint && !isInstallable
 
     useEffect(() => {
+        const media = window.matchMedia('(max-width: 1024px), (pointer: coarse)')
+        const update = () => setIsMobileLike(media.matches)
+        update()
+        media.addEventListener?.('change', update)
+        return () => media.removeEventListener?.('change', update)
+    }, [])
+
+    useEffect(() => {
         const dismissedUntil = Number(localStorage.getItem(PROMPT_DISMISS_KEY) ?? '0')
         if (dismissedUntil > Date.now()) return
 
-        if (!isPromptEligible) return
+        if (!isPromptEligible || !isMobileLike) return
 
         const timer = window.setTimeout(() => setShowPrompt(true), PROMPT_DELAY_MS)
         return () => window.clearTimeout(timer)
-    }, [isPromptEligible])
+    }, [isPromptEligible, isMobileLike])
 
     useEffect(() => {
         if (!isInstalled) return
@@ -185,4 +194,3 @@ export function PWAInstallPrompt() {
         </AnimatePresence>
     )
 }
-

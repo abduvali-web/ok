@@ -6,6 +6,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext';
 import { AdminSettingsProvider } from '@/contexts/AdminSettingsContext';
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
+import { PWANetworkStatus } from '@/components/PWANetworkStatus';
 import { TamboProviderClient } from "@/components/providers/TamboProviderClient";
 
 const sans = Manrope({
@@ -89,6 +90,7 @@ export default function RootLayout({
                 Skip to content
               </a>
               <div id="main-content">{children}</div>
+              <PWANetworkStatus />
               <PWAInstallPrompt />
               <Toaster />
             </TamboProviderClient>
