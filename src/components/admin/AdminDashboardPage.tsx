@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -58,6 +59,7 @@ import {
   Edit,
   Clock,
   Truck,
+  Database,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
@@ -1843,6 +1845,21 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden" onClick={handleLogout} aria-label={t.common.logout}>
                 <LogOut className="w-4 h-4" />
               </Button>
+              {isMiddleAdminView && (
+                <Button asChild variant="ghost" size="icon" className="h-9 w-9 md:hidden" aria-label="Database">
+                  <Link href="/middle-admin/database">
+                    <Database className="w-4 h-4" />
+                  </Link>
+                </Button>
+              )}
+              {isMiddleAdminView && (
+                <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex gap-1.5 text-xs">
+                  <Link href="/middle-admin/database">
+                    <Database className="w-3.5 h-3.5" />
+                    Database
+                  </Link>
+                </Button>
+              )}
               <Button variant="ghost" size="sm" className="hidden md:inline-flex gap-1.5 text-xs" onClick={handleLogout}>
                 <LogOut className="w-3.5 h-3.5" />
                 {t.common.logout}
@@ -3006,6 +3023,14 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         <User className="h-4 w-4" />
                         Change password
                       </Button>
+                      {isMiddleAdminView && (
+                        <Button asChild variant="outline" className="gap-2">
+                          <Link href="/middle-admin/database">
+                            <Database className="h-4 w-4" />
+                            Database
+                          </Link>
+                        </Button>
+                      )}
                       <Button variant="ghost" onClick={handleLogout} className="gap-2">
                         <LogOut className="h-4 w-4" />
                         {t.common.logout}

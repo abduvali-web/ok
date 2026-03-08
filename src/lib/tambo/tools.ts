@@ -350,6 +350,131 @@ function buildSpreadsheetXml(title: string, data: unknown): string {
 </Workbook>`;
 }
 
+function sanitizeXlsxSheetName(name: string, usedNames: Set<string>) {
+  const cleaned = name.replace(/[\\/:?*\[\]]/g, " ").trim() || "Sheet";
+  const base = cleaned.slice(0, 31);
+  let candidate = base;
+  let counter = 2;
+
+  while (usedNames.has(candidate)) {
+    const suffix = ` ${counter}`;
+    candidate = `${base.slice(0, Math.max(1, 31 - suffix.length))}${suffix}`;
+    counter += 1;
+  }
+
+  usedNames.add(candidate);
+  return candidate;
+}
+
+function normalizeXlsxCell(value: unknown): string | number | boolean {
+  if (value == null) return "";
+  if (typeof value === "number" || typeof value === "boolean" || typeof value === "string") return value;
+  if (value instanceof Date) return value.toISOString();
+  return JSON.stringify(value);
+}
+
+function buildXlsxWorkbookFromPayload(
+  XLSX: typeof import("xlsx"),
+  title: string,
+  payload: unknown
+) {
+  const workbook = XLSX.utils.book_new();
+  const usedSheetNames = new Set<string>();
+  const baseSheetName = title.trim().length > 0 ? title : "Data";
+  const appendSheetFromAoa = (name: string, rows: Array<Array<string | number | boolean>>) => {
+    const safeName = sanitizeXlsxSheetName(name, usedSheetNames);
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(workbook, worksheet, safeName);
+  };
+
+  const snapshotLike =
+    payload &&
+    typeof payload === "object" &&
+    Array.isArray((payload as { tables?: unknown[] }).tables);
+
+  if (snapshotLike) {
+    const snapshot = payload as {
+      scope?: unknown;
+      generatedAt?: unknown;
+      summary?: unknown[];
+      tables: unknown[];
+    };
+
+    const summaryRows: Array<Array<string | number | boolean>> = [
+      ["Scope", normalizeXlsxCell(snapshot.scope)],
+      ["Generated At", normalizeXlsxCell(snapshot.generatedAt)],
+      [],
+      ["Sheet", "Rows", "Columns", "Description"],
+    ];
+
+    for (const item of Array.isArray(snapshot.summary) ? snapshot.summary : []) {
+      if (!item || typeof item !== "object") continue;
+      const row = item as Record<string, unknown>;
+      summaryRows.push([
+        normalizeXlsxCell(row.title),
+        normalizeXlsxCell(row.rowCount),
+        normalizeXlsxCell(row.columnCount),
+        normalizeXlsxCell(row.description),
+      ]);
+    }
+
+    appendSheetFromAoa("Summary", summaryRows);
+
+    for (const tableRaw of snapshot.tables) {
+      if (!tableRaw || typeof tableRaw !== "object") continue;
+      const table = tableRaw as {
+        title?: unknown;
+        id?: unknown;
+        columns?: unknown[];
+        rows?: unknown[];
+      };
+      const columns = Array.isArray(table.columns) ? table.columns.map((column) => String(column)) : [];
+      const dataRows: Array<Array<string | number | boolean>> = Array.isArray(table.rows)
+        ? table.rows.map((entry) => {
+            if (columns.length === 0) return [normalizeXlsxCell(entry)];
+            const record = entry && typeof entry === "object" ? (entry as Record<string, unknown>) : {};
+            return columns.map((column) => normalizeXlsxCell(record[column]));
+          })
+        : [];
+
+      const tableRows = columns.length > 0 ? [columns, ...dataRows] : dataRows.length > 0 ? dataRows : [[""]];
+      appendSheetFromAoa(String(table.title ?? table.id ?? "Sheet"), tableRows);
+    }
+
+    return workbook;
+  }
+
+  if (Array.isArray(payload)) {
+    const objectRows = payload.filter(
+      (item) => item && typeof item === "object" && !Array.isArray(item)
+    ) as Array<Record<string, unknown>>;
+
+    if (objectRows.length === payload.length && objectRows.length > 0) {
+      const normalizedRows = objectRows.map((row) =>
+        Object.fromEntries(Object.entries(row).map(([key, value]) => [key, normalizeXlsxCell(value)]))
+      );
+      const worksheet = XLSX.utils.json_to_sheet(normalizedRows);
+      XLSX.utils.book_append_sheet(workbook, worksheet, sanitizeXlsxSheetName(baseSheetName, usedSheetNames));
+      return workbook;
+    }
+
+    appendSheetFromAoa(baseSheetName, [["value"], ...payload.map((item) => [normalizeXlsxCell(item)])]);
+    return workbook;
+  }
+
+  if (payload && typeof payload === "object") {
+    const entries = Object.entries(payload as Record<string, unknown>).map(([key, value]) => [
+      key,
+      normalizeXlsxCell(value),
+    ]);
+    appendSheetFromAoa(baseSheetName, [["key", "value"], ...entries]);
+    return workbook;
+  }
+
+  appendSheetFromAoa(baseSheetName, [["value"], [normalizeXlsxCell(payload)]]);
+  return workbook;
+}
+
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -655,12 +780,22 @@ export const createDatabaseFileTool = registerTamboTool({
         blob = new Blob([buildHtmlReport(safeInput.fileName, textSnapshot)], { type: "text/html;charset=utf-8;" });
       } else if (requestedFormat === "pdf") {
         blob = new Blob([createSimplePdfBytes(textSnapshot)], { type: "application/pdf" });
-      } else if (requestedFormat === "xml" || requestedFormat === "xlsx") {
-        fileExtension = "xml";
-        note =
-          requestedFormat === "xlsx"
-            ? "XLSX requested. Generated Excel XML workbook because native XLSX generation is not installed."
-            : "";
+      } else if (requestedFormat === "xlsx") {
+        try {
+          const XLSX = await import("xlsx");
+          const workbook = buildXlsxWorkbookFromPayload(XLSX, safeInput.fileName, payload);
+          const fileArrayBuffer = XLSX.write(workbook, { type: "array", bookType: "xlsx", compression: true });
+          blob = new Blob([fileArrayBuffer], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          });
+        } catch (xlsxError) {
+          fileExtension = "xml";
+          note = `XLSX requested but native workbook generation failed. Generated Excel XML instead. Reason: ${xlsxError instanceof Error ? xlsxError.message : "Unknown error"}`;
+          blob = new Blob([buildSpreadsheetXml(safeInput.fileName, payload)], {
+            type: "application/xml;charset=utf-8;",
+          });
+        }
+      } else if (requestedFormat === "xml") {
         blob = new Blob([buildSpreadsheetXml(safeInput.fileName, payload)], {
           type: "application/xml;charset=utf-8;",
         });

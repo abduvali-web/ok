@@ -74,37 +74,6 @@ function buildWorkbookSheets(snapshot: SnapshotPayload) {
   return workbookSheets
 }
 
-function buildSingleTableSnapshot(table: DatabaseTable, snapshot: SnapshotPayload) {
-  const singleSnapshot: SnapshotPayload = {
-    ok: snapshot.ok,
-    generatedAt: snapshot.generatedAt,
-    scope: snapshot.scope,
-    summary: [
-      {
-        id: table.id,
-        title: table.title,
-        description: table.description,
-        rowCount: table.rowCount,
-        columnCount: table.columns.length,
-      },
-    ],
-    tables: [table],
-  }
-
-  return singleSnapshot
-}
-
-function downloadBlob(fileName: string, blob: Blob) {
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = fileName
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  URL.revokeObjectURL(url)
-}
-
 async function downloadWorkbookXlsx(fileName: string, snapshot: SnapshotPayload) {
   const XLSX = await import('xlsx')
   const workbook = XLSX.utils.book_new()
@@ -116,12 +85,17 @@ async function downloadWorkbookXlsx(fileName: string, snapshot: SnapshotPayload)
     const worksheet = XLSX.utils.aoa_to_sheet(sheet.rows)
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName)
   })
+  XLSX.writeFile(workbook, fileName, { bookType: 'xlsx', compression: true })
+}
 
-  const fileArrayBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })
-  const blob = new Blob([fileArrayBuffer], {
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  })
-  downloadBlob(fileName, blob)
+async function downloadSingleTableXlsx(fileName: string, table: DatabaseTable) {
+  const XLSX = await import('xlsx')
+  const workbook = XLSX.utils.book_new()
+  const sheetName = sanitizeWorksheetName(table.title, new Set<string>())
+  const worksheetRows = [table.columns, ...table.rows.map((row) => table.columns.map((column) => row[column] ?? ''))]
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetRows)
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName)
+  XLSX.writeFile(workbook, fileName, { bookType: 'xlsx', compression: true })
 }
 
 export default function DatabasePage() {
@@ -207,14 +181,8 @@ export default function DatabasePage() {
     if (!currentTable || !snapshot) return
 
     const generatedAt = new Date(snapshot.generatedAt).toISOString().slice(0, 10)
-    const exportTable: DatabaseTable = {
-      ...currentTable,
-      rowCount: filteredRows.length,
-      rows: filteredRows,
-    }
-    const singleSnapshot = buildSingleTableSnapshot(exportTable, snapshot)
-    await downloadWorkbookXlsx(`neon-${currentTable.id}-${generatedAt}.xlsx`, singleSnapshot)
-    toast.success(`${currentTable.title} sheet downloaded as Excel`)
+    await downloadSingleTableXlsx(`neon-${currentTable.id}-${generatedAt}.xlsx`, currentTable)
+    toast.success(`${currentTable.title} full sheet downloaded as Excel`)
   }
 
   const handleDownloadUnifiedSnapshotClick = () => {
