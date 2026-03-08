@@ -49,6 +49,16 @@ type WorkbookLabels = {
   description: string
 }
 
+const EXCEL_CELL_TEXT_LIMIT = 32767
+
+type WorkbookOverflowRow = {
+  sheet: string
+  row: number
+  column: string
+  part: number
+  value: string
+}
+
 function downloadBlob(fileName: string, blob: Blob) {
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
@@ -76,6 +86,42 @@ function sanitizeWorksheetName(name: string, usedNames: Set<string>) {
   return candidate
 }
 
+function splitExcelText(value: string, chunkSize = EXCEL_CELL_TEXT_LIMIT) {
+  if (value.length <= chunkSize) return [value]
+  const chunks: string[] = []
+  for (let index = 0; index < value.length; index += chunkSize) {
+    chunks.push(value.slice(index, index + chunkSize))
+  }
+  return chunks
+}
+
+function normalizeExcelCellText(
+  value: string,
+  context: {
+    sheet: string
+    row: number
+    column: string
+    overflowRows: WorkbookOverflowRow[]
+  }
+) {
+  if (value.length <= EXCEL_CELL_TEXT_LIMIT) return value
+
+  const chunks = splitExcelText(value, EXCEL_CELL_TEXT_LIMIT)
+  chunks.forEach((chunk, index) => {
+    context.overflowRows.push({
+      sheet: context.sheet,
+      row: context.row,
+      column: context.column,
+      part: index + 1,
+      value: chunk,
+    })
+  })
+
+  const marker = ' ...[FULL_VALUE_IN_OVERFLOW_SHEET]'
+  const previewLimit = Math.max(0, Math.min(1200, EXCEL_CELL_TEXT_LIMIT - marker.length))
+  return `${value.slice(0, previewLimit)}${marker}`
+}
+
 function buildWorkbookSheets(snapshot: SnapshotPayload, labels: WorkbookLabels) {
   const summaryRows = [
     [labels.scope, snapshot.scope],
@@ -100,13 +146,45 @@ async function downloadWorkbookXlsx(fileName: string, snapshot: SnapshotPayload,
   const XLSX = await import('xlsx')
   const workbook = XLSX.utils.book_new()
   const usedSheetNames = new Set<string>()
+  const overflowRows: WorkbookOverflowRow[] = []
   const workbookSheets = buildWorkbookSheets(snapshot, labels)
 
   workbookSheets.forEach((sheet) => {
     const sheetName = sanitizeWorksheetName(sheet.name, usedSheetNames)
-    const worksheet = XLSX.utils.aoa_to_sheet(sheet.rows)
+    const headerRow = sheet.rows[0] ?? []
+    const normalizedRows = sheet.rows.map((row, rowIndex) =>
+      row.map((cell, columnIndex) => {
+        const columnName =
+          rowIndex > 0
+            ? (headerRow[columnIndex] ?? `column_${columnIndex + 1}`)
+            : `column_${columnIndex + 1}`
+        return normalizeExcelCellText(String(cell ?? ''), {
+          sheet: sheetName,
+          row: rowIndex + 1,
+          column: String(columnName),
+          overflowRows,
+        })
+      })
+    )
+    const worksheet = XLSX.utils.aoa_to_sheet(normalizedRows)
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName)
   })
+
+  if (overflowRows.length > 0) {
+    const overflowSheetName = sanitizeWorksheetName('Overflow', usedSheetNames)
+    const overflowWorksheet = XLSX.utils.aoa_to_sheet([
+      ['Sheet', 'Row', 'Column', 'Part', 'Value'],
+      ...overflowRows.map((item) => [
+        item.sheet,
+        String(item.row),
+        item.column,
+        String(item.part),
+        item.value,
+      ]),
+    ])
+    XLSX.utils.book_append_sheet(workbook, overflowWorksheet, overflowSheetName)
+  }
+
   try {
     const fileArrayBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx', compression: true })
     downloadBlob(
@@ -121,10 +199,37 @@ async function downloadWorkbookXlsx(fileName: string, snapshot: SnapshotPayload,
 async function downloadSingleTableXlsx(fileName: string, table: DatabaseTable) {
   const XLSX = await import('xlsx')
   const workbook = XLSX.utils.book_new()
+  const overflowRows: WorkbookOverflowRow[] = []
   const sheetName = sanitizeWorksheetName(table.title, new Set<string>())
   const worksheetRows = [table.columns, ...table.rows.map((row) => table.columns.map((column) => row[column] ?? ''))]
-  const worksheet = XLSX.utils.aoa_to_sheet(worksheetRows)
+  const headerRow = worksheetRows[0] ?? []
+  const normalizedRows = worksheetRows.map((row, rowIndex) =>
+    row.map((cell, columnIndex) =>
+      normalizeExcelCellText(String(cell ?? ''), {
+        sheet: sheetName,
+        row: rowIndex + 1,
+        column: String(headerRow[columnIndex] ?? `column_${columnIndex + 1}`),
+        overflowRows,
+      })
+    )
+  )
+  const worksheet = XLSX.utils.aoa_to_sheet(normalizedRows)
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName)
+
+  if (overflowRows.length > 0) {
+    const overflowWorksheet = XLSX.utils.aoa_to_sheet([
+      ['Sheet', 'Row', 'Column', 'Part', 'Value'],
+      ...overflowRows.map((item) => [
+        item.sheet,
+        String(item.row),
+        item.column,
+        String(item.part),
+        item.value,
+      ]),
+    ])
+    XLSX.utils.book_append_sheet(workbook, overflowWorksheet, sanitizeWorksheetName('Overflow', new Set([sheetName])))
+  }
+
   try {
     const fileArrayBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx', compression: true })
     downloadBlob(
