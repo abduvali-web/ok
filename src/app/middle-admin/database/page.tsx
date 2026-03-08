@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 type DatabaseTable = {
   id: string
@@ -38,6 +39,27 @@ type SnapshotPayload = {
   summary: DatabaseSummaryRow[]
 }
 
+type WorkbookLabels = {
+  scope: string
+  generatedAt: string
+  summary: string
+  sheet: string
+  rows: string
+  columns: string
+  description: string
+}
+
+function downloadBlob(fileName: string, blob: Blob) {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = fileName
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  URL.revokeObjectURL(url)
+}
+
 function sanitizeWorksheetName(name: string, usedNames: Set<string>) {
   const cleaned = name.replace(/[\\/:?*\[\]]/g, ' ').trim() || 'Sheet'
   const base = cleaned.slice(0, 31)
@@ -54,17 +76,17 @@ function sanitizeWorksheetName(name: string, usedNames: Set<string>) {
   return candidate
 }
 
-function buildWorkbookSheets(snapshot: SnapshotPayload) {
+function buildWorkbookSheets(snapshot: SnapshotPayload, labels: WorkbookLabels) {
   const summaryRows = [
-    ['Scope', snapshot.scope],
-    ['Generated At', snapshot.generatedAt],
+    [labels.scope, snapshot.scope],
+    [labels.generatedAt, snapshot.generatedAt],
     [],
-    ['Sheet', 'Rows', 'Columns', 'Description'],
+    [labels.sheet, labels.rows, labels.columns, labels.description],
     ...snapshot.summary.map((item) => [item.title, String(item.rowCount), String(item.columnCount), item.description]),
   ]
 
   const workbookSheets: Array<{ name: string; rows: string[][] }> = [
-    { name: 'Summary', rows: summaryRows.map((row) => row.map((value) => String(value ?? ''))) },
+    { name: labels.summary, rows: summaryRows.map((row) => row.map((value) => String(value ?? ''))) },
     ...snapshot.tables.map((table) => ({
       name: table.title,
       rows: [table.columns, ...table.rows.map((row) => table.columns.map((column) => row[column] ?? ''))],
@@ -74,18 +96,26 @@ function buildWorkbookSheets(snapshot: SnapshotPayload) {
   return workbookSheets
 }
 
-async function downloadWorkbookXlsx(fileName: string, snapshot: SnapshotPayload) {
+async function downloadWorkbookXlsx(fileName: string, snapshot: SnapshotPayload, labels: WorkbookLabels) {
   const XLSX = await import('xlsx')
   const workbook = XLSX.utils.book_new()
   const usedSheetNames = new Set<string>()
-  const workbookSheets = buildWorkbookSheets(snapshot)
+  const workbookSheets = buildWorkbookSheets(snapshot, labels)
 
   workbookSheets.forEach((sheet) => {
     const sheetName = sanitizeWorksheetName(sheet.name, usedSheetNames)
     const worksheet = XLSX.utils.aoa_to_sheet(sheet.rows)
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName)
   })
-  XLSX.writeFile(workbook, fileName, { bookType: 'xlsx', compression: true })
+  try {
+    const fileArrayBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx', compression: true })
+    downloadBlob(
+      fileName,
+      new Blob([fileArrayBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    )
+  } catch {
+    XLSX.writeFile(workbook, fileName, { bookType: 'xlsx', compression: true })
+  }
 }
 
 async function downloadSingleTableXlsx(fileName: string, table: DatabaseTable) {
@@ -95,16 +125,144 @@ async function downloadSingleTableXlsx(fileName: string, table: DatabaseTable) {
   const worksheetRows = [table.columns, ...table.rows.map((row) => table.columns.map((column) => row[column] ?? ''))]
   const worksheet = XLSX.utils.aoa_to_sheet(worksheetRows)
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName)
-  XLSX.writeFile(workbook, fileName, { bookType: 'xlsx', compression: true })
+  try {
+    const fileArrayBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx', compression: true })
+    downloadBlob(
+      fileName,
+      new Blob([fileArrayBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    )
+  } catch {
+    XLSX.writeFile(workbook, fileName, { bookType: 'xlsx', compression: true })
+  }
 }
 
 export default function DatabasePage() {
+  const { language } = useLanguage()
   const router = useRouter()
   const [snapshot, setSnapshot] = useState<SnapshotPayload | null>(null)
   const [activeTab, setActiveTab] = useState('summary')
   const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const uiText = useMemo(() => {
+    if (language === 'ru') {
+      return {
+        accessDeniedWorkspace: 'Доступ к рабочей области базы данных Neon запрещен',
+        failedLoadSnapshot: 'Не удалось загрузить снимок базы данных Neon',
+        unableLoadSnapshot: 'Не удалось загрузить базу данных Neon',
+        notSyncedYet: 'Еще не синхронизировано',
+        workbookDownloaded: 'Excel-файл со всеми листами скачан',
+        fullSheetDownloaded: 'Полный лист выгружен в Excel',
+        failedDownloadWorkbook: 'Не удалось скачать книгу',
+        failedDownloadSheet: 'Не удалось скачать лист',
+        workspaceTitle: 'Рабочая область Neon DB',
+        unknownScope: 'Неизвестно',
+        workspaceDescription: (scope: string, lastSync: string) =>
+          `Реальные таблицы Prisma из Neon. Область: ${scope}. Последняя синхронизация: ${lastSync}.`,
+        loadingWorkspace: 'Загрузка рабочей области базы данных Neon...',
+        backToMiddleAdmin: 'Назад к среднему администратору',
+        sheetsCount: 'листов',
+        refresh: 'Обновить',
+        downloadAllSheets: 'Скачать все листы',
+        askTambo: 'Спросить Tambo',
+        visibleSheets: 'Видимые листы',
+        totalRows: 'Всего строк',
+        totalColumns: 'Всего колонок',
+        database: 'База данных',
+        scope: 'Область',
+        generatedAt: 'Сформировано',
+        summary: 'Сводка',
+        allNeonSheets: 'Все листы Neon',
+        allNeonSheetsDescription: 'Фактические таблицы базы данных, доступные в вашей области доступа.',
+        sheet: 'Лист',
+        rows: 'Строки',
+        columns: 'Колонки',
+        description: 'Описание',
+        searchInTable: (title: string) => `Поиск в ${title}`,
+        rowsCount: 'строк',
+        downloadSheet: 'Скачать лист',
+        noRowsMatch: 'Нет строк, подходящих под поиск.',
+      }
+    }
+
+    if (language === 'uz') {
+      return {
+        accessDeniedWorkspace: 'Neon maʼlumotlar bazasi ish maydoniga kirish taqiqlangan',
+        failedLoadSnapshot: 'Neon maʼlumotlar bazasi snapshotini yuklab bo‘lmadi',
+        unableLoadSnapshot: 'Neon maʼlumotlar bazasini yuklab bo‘lmadi',
+        notSyncedYet: 'Hali sinxronlanmagan',
+        workbookDownloaded: 'Barcha sahifalar bilan Excel fayl yuklab olindi',
+        fullSheetDownloaded: 'To‘liq sahifa Excelga yuklab olindi',
+        failedDownloadWorkbook: 'Excel kitobini yuklab bo‘lmadi',
+        failedDownloadSheet: 'Sahifani yuklab bo‘lmadi',
+        workspaceTitle: 'Neon DB ish maydoni',
+        unknownScope: 'Nomaʼlum',
+        workspaceDescription: (scope: string, lastSync: string) =>
+          `Neon’dagi haqiqiy Prisma jadvallari. Qamrov: ${scope}. Oxirgi sinxronlash: ${lastSync}.`,
+        loadingWorkspace: 'Neon maʼlumotlar bazasi ish maydoni yuklanmoqda...',
+        backToMiddleAdmin: 'O‘rta administratorga qaytish',
+        sheetsCount: 'sahifa',
+        refresh: 'Yangilash',
+        downloadAllSheets: 'Barcha sahifalarni yuklash',
+        askTambo: 'Tambo’dan so‘rash',
+        visibleSheets: 'Ko‘rinadigan sahifalar',
+        totalRows: 'Jami qatorlar',
+        totalColumns: 'Jami ustunlar',
+      database: 'Maʼlumotlar bazasi',
+      scope: 'Qamrov',
+      generatedAt: 'Yaratilgan vaqti',
+      summary: 'Umumiy',
+        allNeonSheets: 'Barcha Neon sahifalari',
+        allNeonSheetsDescription: 'Sizga ruxsat etilgan qamrovdagi haqiqiy maʼlumotlar bazasi jadvallari.',
+        sheet: 'Sahifa',
+        rows: 'Qatorlar',
+        columns: 'Ustunlar',
+        description: 'Tavsif',
+        searchInTable: (title: string) => `${title} ichida qidirish`,
+        rowsCount: 'qator',
+        downloadSheet: 'Sahifani yuklash',
+        noRowsMatch: 'Qidiruvga mos qator topilmadi.',
+      }
+    }
+
+    return {
+      accessDeniedWorkspace: 'Access denied for Neon database workspace',
+      failedLoadSnapshot: 'Failed to load Neon database snapshot',
+      unableLoadSnapshot: 'Unable to load Neon database',
+      notSyncedYet: 'Not synced yet',
+      workbookDownloaded: 'Excel workbook downloaded with separate sheets',
+      fullSheetDownloaded: 'Full sheet downloaded as Excel',
+      failedDownloadWorkbook: 'Failed to download workbook',
+      failedDownloadSheet: 'Failed to download sheet',
+      workspaceTitle: 'Neon DB workspace',
+      unknownScope: 'Unknown',
+      workspaceDescription: (scope: string, lastSync: string) =>
+        `Real Prisma tables from Neon. Scope: ${scope}. Last sync: ${lastSync}.`,
+      loadingWorkspace: 'Loading Neon database workspace...',
+      backToMiddleAdmin: 'Back to middle admin',
+      sheetsCount: 'sheets',
+      refresh: 'Refresh',
+      downloadAllSheets: 'Download all sheets',
+      askTambo: 'Ask Tambo',
+      visibleSheets: 'Visible sheets',
+      totalRows: 'Total rows',
+      totalColumns: 'Total columns',
+      database: 'Database',
+      scope: 'Scope',
+      generatedAt: 'Generated At',
+      summary: 'Summary',
+      allNeonSheets: 'All Neon sheets',
+      allNeonSheetsDescription: 'Actual database tables available in your current access scope.',
+      sheet: 'Sheet',
+      rows: 'Rows',
+      columns: 'Columns',
+      description: 'Description',
+      searchInTable: (title: string) => `Search ${title}`,
+      rowsCount: 'rows',
+      downloadSheet: 'Download sheet',
+      noRowsMatch: 'No rows match this search.',
+    }
+  }, [language])
 
   const loadSnapshot = useCallback(async (background = false) => {
     if (background) setIsRefreshing(true)
@@ -119,13 +277,13 @@ export default function DatabasePage() {
       }
 
       if (response.status === 403) {
-        toast.error('Access denied for Neon database workspace')
+        toast.error(uiText.accessDeniedWorkspace)
         return
       }
 
       const data = (await response.json().catch(() => null)) as SnapshotPayload | null
       if (!response.ok || !data) {
-        throw new Error('Failed to load Neon database snapshot')
+        throw new Error(uiText.failedLoadSnapshot)
       }
 
       setSnapshot(data)
@@ -135,12 +293,12 @@ export default function DatabasePage() {
           : 'summary'
       )
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to load Neon database')
+      toast.error(error instanceof Error ? error.message : uiText.unableLoadSnapshot)
     } finally {
       setIsLoading(false)
       setIsRefreshing(false)
     }
-  }, [router])
+  }, [router, uiText.accessDeniedWorkspace, uiText.failedLoadSnapshot, uiText.unableLoadSnapshot])
 
   useEffect(() => {
     void loadSnapshot()
@@ -151,9 +309,9 @@ export default function DatabasePage() {
   const totalRows = useMemo(() => summary.reduce((sum, item) => sum + item.rowCount, 0), [summary])
   const totalColumns = useMemo(() => summary.reduce((sum, item) => sum + item.columnCount, 0), [summary])
   const lastSyncedLabel = useMemo(() => {
-    if (!snapshot?.generatedAt) return 'Not synced yet'
+    if (!snapshot?.generatedAt) return uiText.notSyncedYet
     return new Date(snapshot.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }, [snapshot?.generatedAt])
+  }, [snapshot?.generatedAt, uiText.notSyncedYet])
 
   const currentTable = useMemo(
     () => tables.find((table) => table.id === activeTab) ?? null,
@@ -173,8 +331,16 @@ export default function DatabasePage() {
     if (!snapshot) return
 
     const generatedAt = new Date(snapshot.generatedAt).toISOString().slice(0, 10)
-    await downloadWorkbookXlsx(`neon-database-full-${generatedAt}.xlsx`, snapshot)
-    toast.success('Excel workbook downloaded with separate sheets')
+    await downloadWorkbookXlsx(`neon-database-full-${generatedAt}.xlsx`, snapshot, {
+      scope: uiText.scope,
+      generatedAt: uiText.generatedAt,
+      summary: uiText.summary,
+      sheet: uiText.sheet,
+      rows: uiText.rows,
+      columns: uiText.columns,
+      description: uiText.description,
+    })
+    toast.success(uiText.workbookDownloaded)
   }
 
   const handleDownloadCurrentTable = async () => {
@@ -182,23 +348,23 @@ export default function DatabasePage() {
 
     const generatedAt = new Date(snapshot.generatedAt).toISOString().slice(0, 10)
     await downloadSingleTableXlsx(`neon-${currentTable.id}-${generatedAt}.xlsx`, currentTable)
-    toast.success(`${currentTable.title} full sheet downloaded as Excel`)
+    toast.success(`${currentTable.title}: ${uiText.fullSheetDownloaded}`)
   }
 
   const handleDownloadUnifiedSnapshotClick = () => {
     void handleDownloadUnifiedSnapshot().catch((error) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to download workbook')
+      toast.error(error instanceof Error ? error.message : uiText.failedDownloadWorkbook)
     })
   }
 
   const handleDownloadCurrentTableClick = () => {
     void handleDownloadCurrentTable().catch((error) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to download sheet')
+      toast.error(error instanceof Error ? error.message : uiText.failedDownloadSheet)
     })
   }
 
   const handleOpenTambo = () => {
-    const targetLabel = currentTable?.title ?? 'Neon database workspace'
+    const targetLabel = currentTable?.title ?? uiText.workspaceTitle
     window.dispatchEvent(
       new CustomEvent('tambo:open-chat', {
         detail: {
@@ -213,7 +379,7 @@ export default function DatabasePage() {
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-          <p className="mt-3 text-sm text-muted-foreground">Loading Neon database workspace...</p>
+          <p className="mt-3 text-sm text-muted-foreground">{uiText.loadingWorkspace}</p>
         </div>
       </div>
     )
@@ -227,10 +393,10 @@ export default function DatabasePage() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Database className="h-4 w-4" />
-                Neon DB workspace
+                {uiText.workspaceTitle}
               </CardTitle>
               <CardDescription>
-                Real Prisma tables from Neon. Scope: {snapshot?.scope ?? 'Unknown'}. Last sync: {lastSyncedLabel}.
+                {uiText.workspaceDescription(snapshot?.scope ?? uiText.unknownScope, lastSyncedLabel)}
               </CardDescription>
             </div>
 
@@ -238,23 +404,23 @@ export default function DatabasePage() {
               <Button asChild variant="outline">
                 <Link href="/middle-admin">
                   <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to middle admin
+                  {uiText.backToMiddleAdmin}
                 </Link>
               </Button>
               <Badge variant="secondary" className="h-8 rounded-full px-3">
-                {tables.length} sheets
+                {tables.length} {uiText.sheetsCount}
               </Badge>
               <Button variant="outline" onClick={() => void loadSnapshot(true)} disabled={isRefreshing}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                Refresh
+                {uiText.refresh}
               </Button>
               <Button variant="outline" onClick={handleDownloadUnifiedSnapshotClick}>
                 <Download className="mr-2 h-4 w-4" />
-                Download all sheets
+                {uiText.downloadAllSheets}
               </Button>
               <Button onClick={handleOpenTambo}>
                 <Bot className="mr-2 h-4 w-4" />
-                Ask Tambo
+                {uiText.askTambo}
               </Button>
             </div>
           </div>
@@ -263,19 +429,19 @@ export default function DatabasePage() {
         <CardContent className="space-y-4 p-4">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl border bg-background/75 p-4">
-              <p className="text-xs text-muted-foreground">Visible sheets</p>
+              <p className="text-xs text-muted-foreground">{uiText.visibleSheets}</p>
               <p className="mt-2 text-3xl font-semibold">{tables.length}</p>
             </div>
             <div className="rounded-2xl border bg-background/75 p-4">
-              <p className="text-xs text-muted-foreground">Total rows</p>
+              <p className="text-xs text-muted-foreground">{uiText.totalRows}</p>
               <p className="mt-2 text-3xl font-semibold">{totalRows}</p>
             </div>
             <div className="rounded-2xl border bg-background/75 p-4">
-              <p className="text-xs text-muted-foreground">Total columns</p>
+              <p className="text-xs text-muted-foreground">{uiText.totalColumns}</p>
               <p className="mt-2 text-3xl font-semibold">{totalColumns}</p>
             </div>
             <div className="rounded-2xl border bg-background/75 p-4">
-              <p className="text-xs text-muted-foreground">Database</p>
+              <p className="text-xs text-muted-foreground">{uiText.database}</p>
               <p className="mt-2 text-3xl font-semibold">Neon</p>
             </div>
           </div>
@@ -284,7 +450,7 @@ export default function DatabasePage() {
             <TabsList className="w-full justify-start overflow-x-auto">
               <TabsTrigger value="summary" className="gap-1.5">
                 <Table2 className="h-4 w-4" />
-                Summary
+                {uiText.summary}
               </TabsTrigger>
               {tables.map((table) => (
                 <TabsTrigger key={table.id} value={table.id}>
@@ -296,16 +462,16 @@ export default function DatabasePage() {
             <TabsContent value="summary" className="space-y-4">
               <div className="rounded-2xl border">
                 <div className="border-b p-4">
-                  <p className="text-sm font-semibold">All Neon sheets</p>
-                  <p className="text-xs text-muted-foreground">Actual database tables available in your current access scope.</p>
+                  <p className="text-sm font-semibold">{uiText.allNeonSheets}</p>
+                  <p className="text-xs text-muted-foreground">{uiText.allNeonSheetsDescription}</p>
                 </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Sheet</TableHead>
-                      <TableHead>Rows</TableHead>
-                      <TableHead>Columns</TableHead>
-                      <TableHead>Description</TableHead>
+                      <TableHead>{uiText.sheet}</TableHead>
+                      <TableHead>{uiText.rows}</TableHead>
+                      <TableHead>{uiText.columns}</TableHead>
+                      <TableHead>{uiText.description}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -336,16 +502,16 @@ export default function DatabasePage() {
                       <Input
                         value={activeTab === table.id ? searchTerm : ''}
                         onChange={(event) => setSearchTerm(event.target.value)}
-                        placeholder={`Search ${table.title}`}
+                        placeholder={uiText.searchInTable(table.title)}
                         className="pl-9"
                       />
                     </div>
                     <Badge variant="outline" className="h-9 rounded-full px-3">
-                      {filteredRows.length} / {table.rowCount} rows
+                      {filteredRows.length} / {table.rowCount} {uiText.rowsCount}
                     </Badge>
                     <Button variant="outline" onClick={handleDownloadCurrentTableClick}>
                       <Download className="mr-2 h-4 w-4" />
-                      Download sheet
+                      {uiText.downloadSheet}
                     </Button>
                   </div>
                 </div>
@@ -378,7 +544,7 @@ export default function DatabasePage() {
                         ) : (
                           <TableRow>
                             <TableCell colSpan={table.columns.length} className="py-10 text-center text-sm text-muted-foreground">
-                              No rows match this search.
+                              {uiText.noRowsMatch}
                             </TableCell>
                           </TableRow>
                         )}

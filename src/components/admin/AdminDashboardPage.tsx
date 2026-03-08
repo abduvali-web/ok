@@ -354,6 +354,203 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   }, [isSelectedDateToday, orders, selectedDate])
 
   const dateLocale = language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'
+  const profileUiText = useMemo(() => {
+    if (language === 'ru') {
+      return {
+        database: 'База данных',
+        noDateSelected: 'Дата не выбрана',
+        allOrders: 'Все заказы',
+        profileCenter: 'Профиль',
+        profileCenterDescription: 'Безопасность, контекст аккаунта и быстрая навигация в одном месте',
+        role: 'Роль',
+        visibleTabs: 'Видимые вкладки',
+        dispatchDate: 'Дата распределения',
+        security: 'Безопасность',
+        securityDescription: 'Защитите доступ к аккаунту и быстро завершайте сессии.',
+        changePassword: 'Сменить пароль',
+        quickNavigation: 'Быстрая навигация',
+        warehouseStartPoint: 'Стартовая точка склада',
+        warehouseStartPointDescription: 'Используется для построения и сортировки маршрутов всех курьеров.',
+        warehouseInputLabel: 'Ссылка Google Maps или координаты (lat,lng)',
+        readOnly: '(только чтение)',
+        warehousePlaceholder: 'Пример: 41.311081,69.240562',
+        current: 'Текущая',
+        notConfigured: 'не настроено',
+        preview: 'Предпросмотр',
+        refresh: 'Обновить',
+        saving: 'Сохранение...',
+        saveLocation: 'Сохранить точку',
+        messages: 'Сообщения',
+        messagesDescription: 'Командные диалоги и быстрая координация.',
+        ordersBin: 'Корзина заказов',
+        clientsBin: 'Корзина клиентов',
+        autoSet: 'Авто (активный глобальный набор)',
+        active: '(Активный)',
+        enableAutoOrderCreation: 'Включить автоматическое создание заказов',
+        searchClientPlaceholder: 'Поиск клиента...',
+        searchClientsAria: 'Поиск клиентов',
+        clear: 'Очистить',
+        calendar: 'Календарь',
+        today: 'Сегодня',
+        clearDate: 'Очистить дату',
+        next: 'Далее',
+        yesterday: 'Вчера',
+        tomorrow: 'Завтра',
+        searchOrdersPlaceholder: 'Поиск по имени, адресу или номеру заказа...',
+        searchOrdersAria: 'Поиск заказов',
+        rows: 'строк',
+        filters: 'фильтров',
+        resetFilters: 'Сбросить фильтры',
+        noOrdersFound: 'Заказы не найдены',
+        noOrdersFoundDescription: 'Измените фильтры или поисковый запрос.',
+        showing: 'Показано',
+        of: 'из',
+        statusFilter: 'Фильтр статуса',
+        allClients: 'Все клиенты',
+        activeOnly: 'Только активные',
+        pausedOnly: 'Только приостановленные',
+        bin: 'Корзина',
+        createClient: 'Создать клиента',
+        editClient: 'Редактировать клиента',
+        updateClientDetails: 'Обновите данные клиента.',
+        createClientDescription: 'Создайте нового клиента в системе.',
+        nickname: 'Псевдоним',
+        nicknamePlaceholder: 'Пример: Офис, Дом... (необязательно)',
+        mapLink: 'Ссылка на карту',
+        phoneFormat: 'Формат: +998 XX XXX XX XX',
+      }
+    }
+
+    if (language === 'uz') {
+      return {
+        database: 'Maʼlumotlar bazasi',
+        noDateSelected: 'Sana tanlanmagan',
+        allOrders: 'Barcha buyurtmalar',
+        profileCenter: 'Profil markazi',
+        profileCenterDescription: 'Xavfsizlik, akkaunt holati va tezkor navigatsiya bir joyda',
+        role: 'Rol',
+        visibleTabs: 'Ko‘rinadigan tablar',
+        dispatchDate: 'Jo‘natish sanasi',
+        security: 'Xavfsizlik',
+        securityDescription: 'Akkauntga kirishni himoya qiling va sessiyalarni tez yakunlang.',
+        changePassword: 'Parolni o‘zgartirish',
+        quickNavigation: 'Tezkor navigatsiya',
+        warehouseStartPoint: 'Ombor boshlang‘ich nuqtasi',
+        warehouseStartPointDescription: 'Barcha kuryerlar uchun marshrut qurish va saralashda ishlatiladi.',
+        warehouseInputLabel: 'Google Maps havolasi yoki koordinatalar (lat,lng)',
+        readOnly: '(faqat o‘qish)',
+        warehousePlaceholder: 'Misol: 41.311081,69.240562',
+        current: 'Joriy',
+        notConfigured: 'sozlanmagan',
+        preview: 'Ko‘rib chiqish',
+        refresh: 'Yangilash',
+        saving: 'Saqlanmoqda...',
+        saveLocation: 'Joylashuvni saqlash',
+        messages: 'Xabarlar',
+        messagesDescription: 'Jamoa suhbatlari va tezkor muvofiqlashtirish.',
+        ordersBin: 'Buyurtmalar savati',
+        clientsBin: 'Mijozlar savati',
+        autoSet: 'Avto (faol global to‘plam)',
+        active: '(Faol)',
+        enableAutoOrderCreation: 'Buyurtmalarni avtomatik yaratishni yoqish',
+        searchClientPlaceholder: 'Mijozni qidirish...',
+        searchClientsAria: 'Mijozlarni qidirish',
+        clear: 'Tozalash',
+        calendar: 'Kalendar',
+        today: 'Bugun',
+        clearDate: 'Sanani tozalash',
+        next: 'Keyingi',
+        yesterday: 'Kecha',
+        tomorrow: 'Ertaga',
+        searchOrdersPlaceholder: 'Ism, manzil yoki buyurtma raqami bo‘yicha qidirish...',
+        searchOrdersAria: 'Buyurtmalarni qidirish',
+        rows: 'qator',
+        filters: 'filtr',
+        resetFilters: 'Filtrlarni tozalash',
+        noOrdersFound: 'Buyurtmalar topilmadi',
+        noOrdersFoundDescription: 'Filtrlar yoki qidiruv so‘rovini o‘zgartiring.',
+        showing: 'Ko‘rsatilmoqda',
+        of: 'dan',
+        statusFilter: 'Holat filtri',
+        allClients: 'Barcha mijozlar',
+        activeOnly: 'Faqat faol',
+        pausedOnly: 'Faqat to‘xtatilgan',
+        bin: 'Savat',
+        createClient: 'Mijoz yaratish',
+        editClient: 'Mijozni tahrirlash',
+        updateClientDetails: 'Mijoz maʼlumotlarini yangilang.',
+        createClientDescription: 'Tizimda yangi mijoz yarating.',
+        nickname: 'Laqab',
+        nicknamePlaceholder: 'Misol: Ofis, Uy... (ixtiyoriy)',
+        mapLink: 'Xarita havolasi',
+        phoneFormat: 'Format: +998 XX XXX XX XX',
+      }
+    }
+
+    return {
+      database: 'Database',
+      noDateSelected: 'No date selected',
+      allOrders: 'All orders',
+      profileCenter: 'Profile center',
+      profileCenterDescription: 'Security, account context, and quick navigation from one place',
+      role: 'Role',
+      visibleTabs: 'Visible tabs',
+      dispatchDate: 'Dispatch date',
+      security: 'Security',
+      securityDescription: 'Protect account access and end sessions quickly.',
+      changePassword: 'Change password',
+      quickNavigation: 'Quick navigation',
+      warehouseStartPoint: 'Warehouse start point',
+      warehouseStartPointDescription: 'Used for route generation and sorting for all couriers.',
+      warehouseInputLabel: 'Google Maps URL or coordinates (lat,lng)',
+      readOnly: '(read only)',
+      warehousePlaceholder: 'Example: 41.311081,69.240562',
+      current: 'Current',
+      notConfigured: 'not configured',
+      preview: 'Preview',
+      refresh: 'Refresh',
+      saving: 'Saving...',
+      saveLocation: 'Save location',
+      messages: 'Messages',
+      messagesDescription: 'Team conversations and quick coordination.',
+      ordersBin: 'Orders bin',
+      clientsBin: 'Clients bin',
+      autoSet: 'Auto (active global set)',
+      active: '(Active)',
+      enableAutoOrderCreation: 'Enable automatic order creation',
+      searchClientPlaceholder: 'Search client...',
+      searchClientsAria: 'Search clients',
+      clear: 'Clear',
+      calendar: 'Calendar',
+      today: 'Today',
+      clearDate: 'Clear date',
+      next: 'Next',
+      yesterday: 'Yesterday',
+      tomorrow: 'Tomorrow',
+      searchOrdersPlaceholder: 'Search by name, address, or order number...',
+      searchOrdersAria: 'Search orders',
+      rows: 'rows',
+      filters: 'filters',
+      resetFilters: 'Reset filters',
+      noOrdersFound: 'No orders found',
+      noOrdersFoundDescription: 'Adjust the filters or search query.',
+      showing: 'Showing',
+      of: 'of',
+      statusFilter: 'Status filter',
+      allClients: 'All clients',
+      activeOnly: 'Active only',
+      pausedOnly: 'Paused only',
+      bin: 'Bin',
+      createClient: 'Create client',
+      editClient: 'Edit client',
+      updateClientDetails: 'Update the client details.',
+      createClientDescription: 'Create a new client in the system.',
+      nickname: 'Nickname',
+      nicknamePlaceholder: 'Example: Office, Home... (optional)',
+      mapLink: 'Map link',
+      phoneFormat: 'Format: +998 XX XXX XX XX',
+    }
+  }, [language])
   const selectedDateISO = selectedDate ? selectedDate.toISOString().split('T')[0] : ''
   const selectedDateLabel = selectedDate
     ? selectedDate.toLocaleDateString(dateLocale, {
@@ -362,7 +559,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       month: 'long',
       year: 'numeric',
     })
-    : 'No date selected'
+    : profileUiText.noDateSelected
 
   const applySelectedDate = useCallback((nextDate: Date | null) => {
     if (!nextDate) {
@@ -1846,7 +2043,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 <LogOut className="w-4 h-4" />
               </Button>
               {isMiddleAdminView && (
-                <Button asChild variant="ghost" size="icon" className="h-9 w-9 md:hidden" aria-label="Database">
+                <Button asChild variant="ghost" size="icon" className="h-9 w-9 md:hidden" aria-label={profileUiText.database}>
                   <Link href="/middle-admin/database">
                     <Database className="w-4 h-4" />
                   </Link>
@@ -1856,7 +2053,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex gap-1.5 text-xs">
                   <Link href="/middle-admin/database">
                     <Database className="w-3.5 h-3.5" />
-                    Database
+                    {profileUiText.database}
                   </Link>
                 </Button>
               )}
@@ -2059,7 +2256,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 <span className="truncate text-sm font-medium">{selectedDateLabel}</span>
                               </span>
                               <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                                calendar
+                                {profileUiText.calendar}
                               </span>
                             </Button>
                           </PopoverTrigger>
@@ -2072,11 +2269,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             />
                             <div className="flex items-center justify-between border-t px-3 py-2">
                               <Button type="button" size="sm" variant="outline" className="h-8" onClick={() => applySelectedDate(new Date())}>
-                                Today
+                                {profileUiText.today}
                               </Button>
                               {selectedDate ? (
                                 <Button type="button" size="sm" variant="ghost" className="h-8" onClick={() => applySelectedDate(null)}>
-                                  Clear date
+                                  {profileUiText.clearDate}
                                 </Button>
                               ) : null}
                             </div>
@@ -2084,20 +2281,20 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         </Popover>
 
                         <Button variant="outline" className="h-9 gap-1.5" onClick={() => shiftSelectedDate(1)}>
-                          Next
+                          {profileUiText.next}
                           <ChevronRight className="h-4 w-4" />
                         </Button>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
                         <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => shiftSelectedDate(-1)}>
-                          Yesterday
+                          {profileUiText.yesterday}
                         </Button>
                         <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => applySelectedDate(new Date())}>
-                          Today
+                          {profileUiText.today}
                         </Button>
                         <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => shiftSelectedDate(1)}>
-                          Tomorrow
+                          {profileUiText.tomorrow}
                         </Button>
                         <div className="flex items-center gap-2 rounded-md border border-dashed border-border/60 px-2.5 py-1.5 text-xs text-muted-foreground">
                           <Clock className="h-3.5 w-3.5" />
@@ -2316,16 +2513,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     inputRef={searchInputRef}
                     searchValue={searchTerm}
                     onSearchChange={setSearchTerm}
-                    searchPlaceholder="Search by name, address, or order number..."
-                    searchAriaLabel="Search orders"
+                    searchPlaceholder={profileUiText.searchOrdersPlaceholder}
+                    searchAriaLabel={profileUiText.searchOrdersAria}
                   >
                     <Badge variant="secondary" className="h-9 rounded-md px-3">
-                      {filteredOrders.length} rows
+                      {filteredOrders.length} {profileUiText.rows}
                     </Badge>
                     {activeFiltersCount > 0 && (
                       <Badge variant="outline" className="h-9 rounded-md px-3">
                         <Filter className="mr-1 h-3.5 w-3.5" />
-                        {activeFiltersCount} filters
+                        {activeFiltersCount} {profileUiText.filters}
                       </Badge>
                     )}
                     {searchTerm && (
@@ -2335,7 +2532,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     )}
                     {activeFiltersCount > 0 && (
                       <Button variant="outline" size="sm" onClick={clearOrderFilters} className="h-9 px-3">
-                        Reset filters
+                        {profileUiText.resetFilters}
                       </Button>
                     )}
                   </FilterToolbar>
@@ -2343,8 +2540,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
                 {filteredOrders.length === 0 ? (
                   <TabEmptyState
-                    title="No orders found"
-                    description="Adjust the filters or search query."
+                    title={profileUiText.noOrdersFound}
+                    description={profileUiText.noOrdersFoundDescription}
                   />
                 ) : (
                   <div className="rounded-md border">
@@ -2377,7 +2574,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       {t.admin.manageClientsDesc}
                       {clientStatusFilter !== 'all' && (
                         <span className="ml-2 text-sm">
-                          (Showing: {filteredClients.length} of {clients.length})
+                          ({profileUiText.showing}: {filteredClients.length} {profileUiText.of} {clients.length})
                         </span>
                       )}
                     </CardDescription>
@@ -2385,16 +2582,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   <div className="grid w-full gap-2 lg:w-auto lg:grid-cols-[190px_auto]">
                     <Select value={clientStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setClientStatusFilter(value)}>
                       <SelectTrigger className="h-9 w-full">
-                        <SelectValue placeholder="Status filter" />
+                        <SelectValue placeholder={profileUiText.statusFilter} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All clients</SelectItem>
-                        <SelectItem value="active">Active only</SelectItem>
-                        <SelectItem value="inactive">Paused only</SelectItem>
+                        <SelectItem value="all">{profileUiText.allClients}</SelectItem>
+                        <SelectItem value="active">{profileUiText.activeOnly}</SelectItem>
+                        <SelectItem value="inactive">{profileUiText.pausedOnly}</SelectItem>
                       </SelectContent>
                     </Select>
                     <Button variant="outline" className="h-9" onClick={() => setActiveTab('bin')}>
-                      Bin
+                      {profileUiText.bin}
                     </Button>
                   </div>
                 </div>
@@ -2402,21 +2599,21 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       <DialogTrigger asChild>
                         <Button>
                           <Plus className="w-4 h-4 mr-2" />
-                          Create client
+                          {profileUiText.createClient}
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
-                          <DialogTitle>{editingClientId ? 'Edit client' : 'Create client'}</DialogTitle>
+                          <DialogTitle>{editingClientId ? profileUiText.editClient : profileUiText.createClient}</DialogTitle>
                           <DialogDescription>
-                            {editingClientId ? 'Update the client details.' : 'Create a new client in the system.'}
+                            {editingClientId ? profileUiText.updateClientDetails : profileUiText.createClientDescription}
                           </DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleCreateClient}>
                           <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientName" className="text-right">
-                                Name
+                                {t.common.name}
                               </Label>
                               <Input
                                 id="clientName"
@@ -2428,19 +2625,19 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientNickName" className="text-right">
-                                Nickname
+                                {profileUiText.nickname}
                               </Label>
                               <Input
                                 id="clientNickName"
                                 value={clientFormData.nickName || ''}
                                 onChange={(e) => setClientFormData(prev => ({ ...prev, nickName: e.target.value }))}
                                 className="col-span-3"
-                                placeholder="Example: Office, Home... (optional)"
+                                placeholder={profileUiText.nicknamePlaceholder}
                               />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientPhone" className="text-right">
-                                Phone
+                                {t.common.phone}
                               </Label>
                               <div className="col-span-3">
                                 <Input
@@ -2451,12 +2648,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                   onChange={(e) => setClientFormData(prev => ({ ...prev, phone: e.target.value }))}
                                   required
                                 />
-                                <p className="text-xs text-muted-foreground mt-1">Format: +998 XX XXX XX XX</p>
+                                <p className="text-xs text-muted-foreground mt-1">{profileUiText.phoneFormat}</p>
                               </div>
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientAddress" className="text-right">
-                                Address
+                                {t.common.address}
                               </Label>
                               <Input
                                 id="clientAddress"
@@ -2468,7 +2665,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="googleMapsLink" className="text-right">
-                                Map link
+                                {profileUiText.mapLink}
                               </Label>
 
                               <Input
@@ -2657,10 +2854,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                       onChange={(e) => setClientFormData(prev => ({ ...prev, assignedSetId: e.target.value }))}
                                       className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                      <option value="">Auto (active global set)</option>
+                                      <option value="">{profileUiText.autoSet}</option>
                                       {availableSets.map((set) => (
                                         <option key={set.id} value={set.id}>
-                                          {set.name} {set.isActive ? '(Active)' : ''}
+                                          {set.name} {set.isActive ? profileUiText.active : ''}
                                         </option>
                                       ))}
                                     </select>
@@ -2673,7 +2870,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                     onCheckedChange={(checked) => setClientFormData(prev => ({ ...prev, autoOrdersEnabled: checked === true }))}
                                   />
                                   <Label htmlFor="autoOrdersEnabled" className="text-sm">
-                                    Enable automatic order creation
+                                    {profileUiText.enableAutoOrderCreation}
                                   </Label>
                                 </div>
                               </div>
@@ -2686,10 +2883,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           )}
                           <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setIsCreateClientModalOpen(false)}>
-                              Cancel
+                              {t.common.cancel}
                             </Button>
                             <Button type="submit" disabled={isCreatingClient}>
-                              {isCreatingClient ? 'Saving...' : (editingClientId ? 'Save' : 'Create')}
+                              {isCreatingClient ? profileUiText.saving : (editingClientId ? t.common.save : t.admin.create)}
                             </Button>
                           </DialogFooter>
                         </form>
@@ -2702,12 +2899,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   <FilterToolbar
                     searchValue={clientSearchTerm}
                     onSearchChange={setClientSearchTerm}
-                    searchPlaceholder="Search client..."
-                    searchAriaLabel="Search clients"
+                    searchPlaceholder={profileUiText.searchClientPlaceholder}
+                    searchAriaLabel={profileUiText.searchClientsAria}
                   >
                     {clientSearchTerm && (
                       <Button variant="outline" size="sm" className="h-9" onClick={() => setClientSearchTerm('')}>
-                        Clear
+                        {profileUiText.clear}
                       </Button>
                     )}
                     <Badge variant="secondary" className="h-9 rounded-md px-3">
@@ -2965,7 +3162,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               onOpenChange={setIsDispatchOpen}
               orders={orders}
               couriers={couriers}
-              selectedDateLabel={selectedDate ? selectedDateLabel : 'All orders'}
+              selectedDateLabel={selectedDate ? selectedDateLabel : profileUiText.allOrders}
               selectedDateISO={selectedDateISO || undefined}
               warehousePoint={warehousePoint}
               onSaved={fetchData}
@@ -2996,38 +3193,38 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
               <Card className="border-border/70">
                 <CardHeader>
-                  <CardTitle>Profile center</CardTitle>
-                  <CardDescription>Security, account context, and quick navigation from one place</CardDescription>
+                  <CardTitle>{profileUiText.profileCenter}</CardTitle>
+                  <CardDescription>{profileUiText.profileCenterDescription}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid gap-2 sm:grid-cols-3">
                     <div className="rounded-md border bg-background p-3">
-                      <p className="text-xs text-muted-foreground">Role</p>
+                      <p className="text-xs text-muted-foreground">{profileUiText.role}</p>
                       <p className="mt-1 text-sm font-semibold">{meRole || 'MIDDLE_ADMIN'}</p>
                     </div>
                     <div className="rounded-md border bg-background p-3">
-                      <p className="text-xs text-muted-foreground">Visible tabs</p>
+                      <p className="text-xs text-muted-foreground">{profileUiText.visibleTabs}</p>
                       <p className="mt-1 text-sm font-semibold">{visibleTabs.length}</p>
                     </div>
                     <div className="rounded-md border bg-background p-3">
-                      <p className="text-xs text-muted-foreground">Dispatch date</p>
+                      <p className="text-xs text-muted-foreground">{profileUiText.dispatchDate}</p>
                       <p className="mt-1 truncate text-sm font-semibold">{selectedDateLabel}</p>
                     </div>
                   </div>
 
                   <div className="rounded-md border bg-muted/20 p-3">
-                    <p className="text-sm font-semibold">Security</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Protect account access and end sessions quickly.</p>
+                    <p className="text-sm font-semibold">{profileUiText.security}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{profileUiText.securityDescription}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <Button variant="outline" onClick={() => setIsChangePasswordOpen(true)} className="gap-2">
                         <User className="h-4 w-4" />
-                        Change password
+                        {profileUiText.changePassword}
                       </Button>
                       {isMiddleAdminView && (
                         <Button asChild variant="outline" className="gap-2">
                           <Link href="/middle-admin/database">
                             <Database className="h-4 w-4" />
-                            Database
+                            {profileUiText.database}
                           </Link>
                         </Button>
                       )}
@@ -3039,13 +3236,13 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   </div>
 
                   <div className="rounded-md border bg-muted/20 p-3">
-                    <p className="text-sm font-semibold">Quick navigation</p>
+                    <p className="text-sm font-semibold">{profileUiText.quickNavigation}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setActiveTab('orders')}>Orders</Button>
-                      <Button variant="outline" size="sm" onClick={() => setActiveTab('clients')}>Clients</Button>
-                      <Button variant="outline" size="sm" onClick={() => setActiveTab('history')}>History</Button>
+                      <Button variant="outline" size="sm" onClick={() => setActiveTab('orders')}>{t.admin.orders}</Button>
+                      <Button variant="outline" size="sm" onClick={() => setActiveTab('clients')}>{t.admin.clients}</Button>
+                      <Button variant="outline" size="sm" onClick={() => setActiveTab('history')}>{t.admin.history}</Button>
                       {visibleTabs.includes('interface') && (
-                        <Button variant="outline" size="sm" onClick={() => setActiveTab('interface')}>Interface</Button>
+                        <Button variant="outline" size="sm" onClick={() => setActiveTab('interface')}>{t.admin.interface}</Button>
                       )}
                     </div>
                   </div>
@@ -3054,30 +3251,30 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
               <Card className="border-border/70">
                 <CardHeader>
-                  <CardTitle>Warehouse start point</CardTitle>
-                  <CardDescription>Used for route generation and sorting for all couriers.</CardDescription>
+                  <CardTitle>{profileUiText.warehouseStartPoint}</CardTitle>
+                  <CardDescription>{profileUiText.warehouseStartPointDescription}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="grid gap-2">
                     <Label htmlFor="warehousePoint">
-                      Google Maps URL or coordinates (lat,lng)
-                      {isWarehouseReadOnly && <span className="ml-2 text-xs text-muted-foreground">(read only)</span>}
+                      {profileUiText.warehouseInputLabel}
+                      {isWarehouseReadOnly && <span className="ml-2 text-xs text-muted-foreground">{profileUiText.readOnly}</span>}
                     </Label>
                     <Input
                       id="warehousePoint"
                       value={warehouseInput}
                       onChange={(event) => handleWarehouseInputChange(event.target.value)}
                       onBlur={() => void handleWarehouseInputBlur()}
-                      placeholder="Example: 41.311081,69.240562"
+                      placeholder={profileUiText.warehousePlaceholder}
                       disabled={isWarehouseReadOnly || isWarehouseLoading || isWarehouseSaving}
                     />
                     <div className="text-xs text-muted-foreground">
                       {warehousePoint
-                        ? `Current: ${warehousePoint.lat.toFixed(6)}, ${warehousePoint.lng.toFixed(6)}`
-                        : 'Current: not configured'}
+                        ? `${profileUiText.current}: ${warehousePoint.lat.toFixed(6)}, ${warehousePoint.lng.toFixed(6)}`
+                        : `${profileUiText.current}: ${profileUiText.notConfigured}`}
                       {warehousePreview && (
                         <span className="ml-2 text-muted-foreground/80">
-                          Preview: {warehousePreview.lat.toFixed(6)}, {warehousePreview.lng.toFixed(6)}
+                          {profileUiText.preview}: {warehousePreview.lat.toFixed(6)}, {warehousePreview.lng.toFixed(6)}
                         </span>
                       )}
                     </div>
@@ -3089,13 +3286,13 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       onClick={() => void refreshWarehousePoint()}
                       disabled={isWarehouseLoading || isWarehouseSaving}
                     >
-                      Refresh
+                      {profileUiText.refresh}
                     </Button>
                     <Button
                       onClick={() => void handleSaveWarehousePoint()}
                       disabled={isWarehouseReadOnly || isWarehouseSaving || isWarehouseLoading || !warehouseInput.trim()}
                     >
-                      {isWarehouseSaving ? 'Saving...' : 'Save location'}
+                      {isWarehouseSaving ? profileUiText.saving : profileUiText.saveLocation}
                     </Button>
                   </div>
                 </CardContent>
@@ -3106,8 +3303,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
             <Card className="border-border/70">
               <CardHeader>
-                <CardTitle>Messages</CardTitle>
-                <CardDescription>Team conversations and quick coordination.</CardDescription>
+                <CardTitle>{profileUiText.messages}</CardTitle>
+                <CardDescription>{profileUiText.messagesDescription}</CardDescription>
               </CardHeader>
               <CardContent>
                 <ChatTab />
@@ -3123,7 +3320,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
               <TabsContent value="orders" className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="text-2xl font-bold tracking-tight">Orders bin</h2>
+                  <h2 className="text-2xl font-bold tracking-tight">{profileUiText.ordersBin}</h2>
                   <div className="flex flex-wrap gap-2">
                     <Button
                       onClick={handleRestoreSelectedOrders}
@@ -3143,7 +3340,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     </Button>
                     <Button onClick={fetchBinOrders} variant="outline">
                       <RefreshCw className="mr-2 h-4 w-4" />
-                      Refresh
+                      {profileUiText.refresh}
                     </Button>
                   </div>
                 </div>
@@ -3165,7 +3362,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
               <TabsContent value="clients" className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="text-2xl font-bold tracking-tight">Clients bin</h2>
+                  <h2 className="text-2xl font-bold tracking-tight">{profileUiText.clientsBin}</h2>
                   <div className="flex flex-wrap gap-2">
                     <Button
                       onClick={handleRestoreSelectedClients}
