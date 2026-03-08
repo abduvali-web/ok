@@ -784,11 +784,64 @@ function sanitizeXlsxSheetName(name: string, usedNames: Set<string>) {
   return candidate;
 }
 
-function normalizeXlsxCell(value: unknown): string | number | boolean {
+const EXCEL_CELL_TEXT_LIMIT = 32767;
+
+type XlsxOverflowCell = {
+  sheet: string;
+  row: number;
+  column: string;
+  part: number;
+  value: string;
+};
+
+function splitExcelText(value: string, chunkSize = EXCEL_CELL_TEXT_LIMIT): string[] {
+  if (value.length <= chunkSize) return [value];
+  const chunks: string[] = [];
+  for (let index = 0; index < value.length; index += chunkSize) {
+    chunks.push(value.slice(index, index + chunkSize));
+  }
+  return chunks;
+}
+
+function normalizeXlsxCell(
+  value: unknown,
+  options?: {
+    sheet: string;
+    row: number;
+    column: string;
+    overflowRows: XlsxOverflowCell[];
+  }
+): string | number | boolean {
   if (value == null) return "";
-  if (typeof value === "number" || typeof value === "boolean" || typeof value === "string") return value;
-  if (value instanceof Date) return value.toISOString();
-  return JSON.stringify(value);
+  if (typeof value === "number" || typeof value === "boolean") return value;
+
+  let text: string;
+  if (typeof value === "string") {
+    text = value;
+  } else if (value instanceof Date) {
+    text = value.toISOString();
+  } else {
+    text = JSON.stringify(value);
+  }
+
+  if (text.length <= EXCEL_CELL_TEXT_LIMIT) return text;
+
+  const chunks = splitExcelText(text, EXCEL_CELL_TEXT_LIMIT);
+  if (options) {
+    chunks.forEach((chunk, idx) => {
+      options.overflowRows.push({
+        sheet: options.sheet,
+        row: options.row,
+        column: options.column,
+        part: idx + 1,
+        value: chunk,
+      });
+    });
+  }
+
+  const marker = " ...[FULL_VALUE_IN_OVERFLOW_SHEET]";
+  const previewLimit = Math.max(0, Math.min(1200, EXCEL_CELL_TEXT_LIMIT - marker.length));
+  return `${text.slice(0, previewLimit)}${marker}`;
 }
 
 function buildXlsxWorkbookFromPayload(
@@ -798,11 +851,19 @@ function buildXlsxWorkbookFromPayload(
 ) {
   const workbook = XLSX.utils.book_new();
   const usedSheetNames = new Set<string>();
+  const overflowRows: XlsxOverflowCell[] = [];
   const baseSheetName = title.trim().length > 0 ? title : "Data";
   const appendSheetFromAoa = (name: string, rows: Array<Array<string | number | boolean>>) => {
     const safeName = sanitizeXlsxSheetName(name, usedSheetNames);
     const worksheet = XLSX.utils.aoa_to_sheet(rows);
     XLSX.utils.book_append_sheet(workbook, worksheet, safeName);
+  };
+  const appendOverflowSheetIfNeeded = () => {
+    if (overflowRows.length === 0) return;
+    appendSheetFromAoa("Overflow", [
+      ["Sheet", "Row", "Column", "Part", "Value"],
+      ...overflowRows.map((entry) => [entry.sheet, entry.row, entry.column, entry.part, entry.value]),
+    ]);
   };
 
   const snapshotLike =
@@ -848,10 +909,17 @@ function buildXlsxWorkbookFromPayload(
       };
       const columns = Array.isArray(table.columns) ? table.columns.map((column) => String(column)) : [];
       const dataRows: Array<Array<string | number | boolean>> = Array.isArray(table.rows)
-        ? table.rows.map((entry) => {
+        ? table.rows.map((entry, entryIndex) => {
             if (columns.length === 0) return [normalizeXlsxCell(entry)];
             const record = entry && typeof entry === "object" ? (entry as Record<string, unknown>) : {};
-            return columns.map((column) => normalizeXlsxCell(record[column]));
+            return columns.map((column) =>
+              normalizeXlsxCell(record[column], {
+                sheet: String(table.title ?? table.id ?? "Sheet"),
+                row: entryIndex + 2,
+                column,
+                overflowRows,
+              })
+            );
           })
         : [];
 
@@ -859,6 +927,7 @@ function buildXlsxWorkbookFromPayload(
       appendSheetFromAoa(String(table.title ?? table.id ?? "Sheet"), tableRows);
     }
 
+    appendOverflowSheetIfNeeded();
     return workbook;
   }
 
@@ -868,28 +937,77 @@ function buildXlsxWorkbookFromPayload(
     ) as Array<Record<string, unknown>>;
 
     if (objectRows.length === payload.length && objectRows.length > 0) {
-      const normalizedRows = objectRows.map((row) =>
-        Object.fromEntries(Object.entries(row).map(([key, value]) => [key, normalizeXlsxCell(value)]))
+      const headers = Array.from(
+        objectRows.reduce((set, row) => {
+          Object.keys(row).forEach((key) => set.add(key));
+          return set;
+        }, new Set<string>())
       );
-      const worksheet = XLSX.utils.json_to_sheet(normalizedRows);
-      XLSX.utils.book_append_sheet(workbook, worksheet, sanitizeXlsxSheetName(baseSheetName, usedSheetNames));
+      const rows: Array<Array<string | number | boolean>> = [
+        headers,
+        ...objectRows.map((row, rowIndex) =>
+          headers.map((header) =>
+            normalizeXlsxCell(row[header], {
+              sheet: baseSheetName,
+              row: rowIndex + 2,
+              column: header,
+              overflowRows,
+            })
+          )
+        ),
+      ];
+      appendSheetFromAoa(baseSheetName, rows);
+      appendOverflowSheetIfNeeded();
       return workbook;
     }
 
-    appendSheetFromAoa(baseSheetName, [["value"], ...payload.map((item) => [normalizeXlsxCell(item)])]);
+    appendSheetFromAoa(
+      baseSheetName,
+      [
+        ["value"],
+        ...payload.map((item, rowIndex) => [
+          normalizeXlsxCell(item, {
+            sheet: baseSheetName,
+            row: rowIndex + 2,
+            column: "value",
+            overflowRows,
+          }),
+        ]),
+      ]
+    );
+    appendOverflowSheetIfNeeded();
     return workbook;
   }
 
   if (payload && typeof payload === "object") {
     const entries = Object.entries(payload as Record<string, unknown>).map(([key, value]) => [
       key,
-      normalizeXlsxCell(value),
+      normalizeXlsxCell(value, {
+        sheet: baseSheetName,
+        row: 2,
+        column: key,
+        overflowRows,
+      }),
     ]);
     appendSheetFromAoa(baseSheetName, [["key", "value"], ...entries]);
+    appendOverflowSheetIfNeeded();
     return workbook;
   }
 
-  appendSheetFromAoa(baseSheetName, [["value"], [normalizeXlsxCell(payload)]]);
+  appendSheetFromAoa(
+    baseSheetName,
+    [[
+      "value",
+    ], [
+      normalizeXlsxCell(payload, {
+        sheet: baseSheetName,
+        row: 2,
+        column: "value",
+        overflowRows,
+      }),
+    ]]
+  );
+  appendOverflowSheetIfNeeded();
   return workbook;
 }
 
