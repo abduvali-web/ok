@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type ChangeEvent,
   type KeyboardEvent,
   useCallback,
   useEffect,
@@ -9,6 +10,7 @@ import {
   useState,
 } from "react";
 import { useTambo, useTamboThreadInput } from "@tambo-ai/react";
+import { flushSync } from "react-dom";
 import {
   Bot,
   Loader2,
@@ -30,6 +32,9 @@ import styles from "./TamboAgentWidget.module.css";
 
 const PLACEHOLDER_THREAD_ID = "placeholder";
 const MAX_TEXTAREA_HEIGHT = 156;
+const MAX_TEXT_ATTACHMENT_SIZE = 512 * 1024;
+const MAX_TEXT_ATTACHMENT_CHARS = 12000;
+const MAX_TEXT_ATTACHMENTS = 5;
 
 type WebsiteArtifact = {
   id: string;
@@ -57,6 +62,52 @@ type FileArtifact = {
 };
 
 type TamboArtifact = WebsiteArtifact | FileArtifact;
+
+type StagedTextAttachment = {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  content: string;
+  truncated: boolean;
+};
+
+function formatFileSize(size: number): string {
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function isTextAttachment(file: File): boolean {
+  if (file.type.startsWith("text/")) return true;
+  if (
+    [
+      "application/json",
+      "application/xml",
+      "application/javascript",
+      "application/x-javascript",
+    ].includes(file.type)
+  ) {
+    return true;
+  }
+
+  const lower = file.name.toLowerCase();
+  return /\.(txt|md|csv|json|xml|html|js|jsx|ts|tsx|yml|yaml|log|sql)$/i.test(lower);
+}
+
+function createTextAttachmentBlock(attachments: StagedTextAttachment[]) {
+  if (attachments.length === 0) return "";
+
+  const blocks = attachments.map((attachment, index) => {
+    const meta = `File ${index + 1}: ${attachment.name} (${formatFileSize(attachment.size)})`;
+    const truncatedNote = attachment.truncated
+      ? "\n[File content truncated for chat context]"
+      : "";
+    return `${meta}\n\`\`\`\n${attachment.content}\n\`\`\`${truncatedNote}`;
+  });
+
+  return `Attached text files for context:\n\n${blocks.join("\n\n")}`;
+}
 
 function formatMessageTime(value?: string): string | null {
   if (!value) return null;
@@ -230,8 +281,11 @@ export function TamboAgentWidget() {
   const apiKey = process.env.NEXT_PUBLIC_TAMBO_API_KEY;
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [textAttachments, setTextAttachments] = useState<StagedTextAttachment[]>([]);
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const renderedBlockCountRef = useRef(0);
 
   const {
@@ -241,7 +295,17 @@ export function TamboAgentWidget() {
     initThread,
     startNewThread,
   } = useTambo();
-  const { value, setValue, submit, isPending, isDisabled } =
+  const {
+    value,
+    setValue,
+    submit,
+    isPending,
+    isDisabled,
+    images,
+    addImages,
+    removeImage,
+    clearImages,
+  } =
     useTamboThreadInput();
 
   useEffect(() => {
@@ -317,22 +381,140 @@ export function TamboAgentWidget() {
     syncTextareaHeight();
   }, [value, syncTextareaHeight, isOpen]);
 
+  const openFilePicker = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const removeTextAttachment = useCallback((id: string) => {
+    setTextAttachments((current) => current.filter((item) => item.id !== id));
+  }, []);
+
+  const handleFileSelection = useCallback(
+    async (event: ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(event.target.files ?? []);
+      if (files.length === 0) return;
+
+      setAttachmentError(null);
+      const imageFiles: File[] = [];
+      const nextTextAttachments: StagedTextAttachment[] = [];
+      const skipped: string[] = [];
+
+      for (const file of files) {
+        if (file.type.startsWith("image/")) {
+          imageFiles.push(file);
+          continue;
+        }
+
+        if (!isTextAttachment(file)) {
+          skipped.push(`${file.name} (unsupported type)`);
+          continue;
+        }
+
+        if (file.size > MAX_TEXT_ATTACHMENT_SIZE) {
+          skipped.push(`${file.name} (max 512 KB)`);
+          continue;
+        }
+
+        try {
+          const raw = await file.text();
+          const normalized = raw.replace(/\u0000/g, "");
+          const truncated = normalized.length > MAX_TEXT_ATTACHMENT_CHARS;
+          nextTextAttachments.push({
+            id: globalThis.crypto?.randomUUID
+              ? globalThis.crypto.randomUUID()
+              : `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+            name: file.name,
+            size: file.size,
+            type: file.type || "text/plain",
+            content: truncated
+              ? `${normalized.slice(0, MAX_TEXT_ATTACHMENT_CHARS)}\n...[truncated]`
+              : normalized,
+            truncated,
+          });
+        } catch {
+          skipped.push(`${file.name} (read failed)`);
+        }
+      }
+
+      if (imageFiles.length > 0) {
+        try {
+          await addImages(imageFiles);
+        } catch {
+          skipped.push(...imageFiles.map((file) => `${file.name} (image upload failed)`));
+        }
+      }
+
+      if (nextTextAttachments.length > 0) {
+        setTextAttachments((current) =>
+          [...current, ...nextTextAttachments].slice(0, MAX_TEXT_ATTACHMENTS)
+        );
+      }
+
+      if (skipped.length > 0) {
+        setAttachmentError(`Skipped: ${skipped.slice(0, 4).join(", ")}`);
+      }
+
+      event.target.value = "";
+    },
+    [addImages]
+  );
+
   const hasRealThread = currentThreadId !== PLACEHOLDER_THREAD_ID;
   const hasInput = value.trim().length > 0;
+  const hasAttachments = images.length > 0 || textAttachments.length > 0;
+  const canSend = hasInput || hasAttachments;
 
   const handleSend = useCallback(async () => {
-    if (!hasInput || isDisabled || isPending) return;
+    if (!canSend || isDisabled || isPending) return;
+
+    const baseInput = value.trim();
+    const attachmentContext = createTextAttachmentBlock(textAttachments);
+    const messageText = [baseInput, attachmentContext]
+      .filter((part) => part.length > 0)
+      .join("\n\n")
+      .trim();
+
+    if (!messageText && images.length > 0) {
+      flushSync(() => {
+        setValue("Analyze the attached images and summarize key details.");
+      });
+    } else if (messageText && messageText !== value) {
+      flushSync(() => {
+        setValue(messageText);
+      });
+    }
+
+    if (textAttachments.length > 0) {
+      setTextAttachments([]);
+    }
+    setAttachmentError(null);
+
     const result = await submit();
     if (result.threadId && result.threadId !== currentThreadId) {
       initThread(result.threadId);
     }
-  }, [currentThreadId, hasInput, initThread, isDisabled, isPending, submit]);
+  }, [
+    canSend,
+    currentThreadId,
+    images.length,
+    initThread,
+    isDisabled,
+    isPending,
+    setValue,
+    submit,
+    textAttachments,
+    value,
+  ]);
 
   const handleNewThread = useCallback(() => {
     startNewThread();
     setValue("");
+    clearImages();
+    setTextAttachments([]);
+    setAttachmentError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     requestAnimationFrame(() => textareaRef.current?.focus());
-  }, [setValue, startNewThread]);
+  }, [clearImages, setValue, startNewThread]);
 
   const handleComposerKeyDown = useCallback(
     (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -853,7 +1035,63 @@ export function TamboAgentWidget() {
                 </ScrollArea>
 
                 <div className={styles.footer}>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    onChange={handleFileSelection}
+                    className="hidden"
+                    aria-hidden
+                  />
+
+                  {images.length > 0 || textAttachments.length > 0 || attachmentError ? (
+                    <div className={styles.attachmentList}>
+                      {images.map((image) => (
+                        <button
+                          key={image.id}
+                          type="button"
+                          className={styles.attachmentChip}
+                          onClick={() => removeImage(image.id)}
+                          title="Remove image attachment"
+                        >
+                          {image.name}
+                          <span className={styles.attachmentChipMeta}>
+                            {formatFileSize(image.size)}
+                          </span>
+                        </button>
+                      ))}
+                      {textAttachments.map((attachment) => (
+                        <button
+                          key={attachment.id}
+                          type="button"
+                          className={styles.attachmentChip}
+                          onClick={() => removeTextAttachment(attachment.id)}
+                          title="Remove text attachment"
+                        >
+                          {attachment.name}
+                          <span className={styles.attachmentChipMeta}>
+                            {formatFileSize(attachment.size)}
+                          </span>
+                        </button>
+                      ))}
+                      {attachmentError ? (
+                        <p className={styles.attachmentError}>{attachmentError}</p>
+                      ) : null}
+                    </div>
+                  ) : null}
+
                   <div className={styles.composer}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={openFilePicker}
+                      disabled={isDisabled || isPending}
+                      aria-label="Attach file"
+                      className={styles.attachButton}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
                     <Textarea
                       ref={textareaRef}
                       value={value}
@@ -868,7 +1106,7 @@ export function TamboAgentWidget() {
                     <Button
                       type="button"
                       onClick={() => void handleSend()}
-                      disabled={isDisabled || isPending || !hasInput}
+                      disabled={isDisabled || isPending || !canSend}
                       aria-label="Send"
                       className={styles.sendButton}
                     >
@@ -880,6 +1118,7 @@ export function TamboAgentWidget() {
                     </Button>
                   </div>
                   <div className={styles.footerMeta}>
+                    <span>Plus icon to attach files</span>
                     <span>Enter to send</span>
                     <span>Shift + Enter for a new line</span>
                   </div>

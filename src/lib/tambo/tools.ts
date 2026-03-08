@@ -15,9 +15,16 @@ const queryParamSchema = z.object({
 
 const apiMethodSchema = z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]);
 
-const fileFormatSchema = z.enum(["csv", "json", "txt", "html", "pdf", "xlsx", "xml"]);
+const fileFormatSchema = z.enum(["csv", "json", "txt", "html", "pdf", "xlsx", "xml", "md"]);
 const websiteEditModeSchema = z.enum(["full_rebuild", "merge_existing", "section_patch"]);
 const websiteSectionSchema = z.enum(["hero", "features", "pricing", "about"]);
+const uiLayoutSchema = z.enum([
+  "auto",
+  "table_first",
+  "overview",
+  "cards_first",
+  "chart_focus",
+]);
 const uiComponentNameSchema = z.enum([
   "AdminStatsGrid",
   "SiteMetricGrid",
@@ -53,9 +60,12 @@ const fileExportInputSchema = z
     fileName: z.string().min(1).max(100),
     format: fileFormatSchema,
     sourcePath: z.string().optional(),
+    inlineDataJson: z.string().max(300000).optional(),
     method: apiMethodSchema.optional(),
     queryParams: z.array(queryParamSchema).max(50).optional(),
     jsonBody: z.string().optional(),
+    flattenNested: z.boolean().optional(),
+    rowLimit: z.number().int().min(1).max(20000).optional(),
     instructions: z.string().max(4000).optional(),
   })
   .strict();
@@ -65,6 +75,7 @@ const fileExportOutputSchema = z.object({
   fileName: z.string(),
   format: fileFormatSchema,
   downloadUrl: z.string().optional(),
+  sizeBytes: z.number().optional(),
   note: z.string().optional(),
   error: z.string().optional(),
 });
@@ -78,6 +89,8 @@ const websiteEditInputSchema = z
     siteName: z.string().min(2).max(80).optional(),
     styleVariant: z.string().min(2).max(60).optional(),
     subdomain: z.string().min(3).max(40).optional(),
+    autoResolveSubdomain: z.boolean().optional(),
+    dryRun: z.boolean().optional(),
     includeContentPreview: z.boolean().optional(),
     targetAdminId: z.string().optional(),
     // Explicitly allow known execution metadata keys.
@@ -91,6 +104,8 @@ const websiteEditOutputSchema = z.object({
   applied: z.boolean(),
   mode: websiteEditModeSchema.optional(),
   updatedSections: z.array(websiteSectionSchema).optional(),
+  requestedSubdomain: z.string().optional(),
+  subdomainAdjusted: z.boolean().optional(),
   subdomain: z.string().optional(),
   pathUrl: z.string().optional(),
   hostUrl: z.string().optional(),
@@ -115,6 +130,9 @@ const interactiveUiInputSchema = z
     jsonBody: z.string().optional(),
     preferredComponents: z.array(uiComponentNameSchema).max(7).optional(),
     maxRows: z.number().int().min(5).max(200).optional(),
+    maxComponents: z.number().int().min(1).max(7).optional(),
+    includeRawJson: z.boolean().optional(),
+    layout: uiLayoutSchema.optional(),
     title: z.string().min(2).max(120).optional(),
   })
   .strict();
@@ -123,6 +141,7 @@ const interactiveUiOutputSchema = z.object({
   ok: z.boolean(),
   title: z.string(),
   summary: z.string(),
+  strategy: z.string().optional(),
   sourcePath: z.string().optional(),
   components: z.array(
     z.object({
@@ -211,21 +230,166 @@ function csvEscape(value: unknown): string {
   return `"${raw.replace(/"/g, '""')}"`;
 }
 
-function jsonToCsv(data: unknown): string {
-  if (!Array.isArray(data)) {
-    if (data && typeof data === "object") {
-      return "key,value\n" + Object.entries(data as Record<string, unknown>)
-        .map(([key, value]) => `${csvEscape(key)},${csvEscape(value)}`)
-        .join("\n");
+function valueForStructuredExport(value: unknown): string | number | boolean {
+  if (value == null) return "";
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return value;
+  }
+  if (value instanceof Date) return value.toISOString();
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function flattenRecord(
+  input: Record<string, unknown>,
+  options?: { maxDepth?: number }
+): Record<string, unknown> {
+  const maxDepth = options?.maxDepth ?? 4;
+  const output: Record<string, unknown> = {};
+
+  const visit = (value: unknown, keyPath: string, depth: number) => {
+    if (!keyPath) return;
+
+    if (value == null) {
+      output[keyPath] = "";
+      return;
     }
-    return `value\n${csvEscape(data)}`;
+
+    if (depth >= maxDepth) {
+      output[keyPath] = valueForStructuredExport(value);
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      if (value.length === 0) {
+        output[keyPath] = "";
+        return;
+      }
+
+      const allPrimitive = value.every(
+        (item) =>
+          item == null ||
+          typeof item === "string" ||
+          typeof item === "number" ||
+          typeof item === "boolean"
+      );
+
+      if (allPrimitive) {
+        output[keyPath] = value.map((item) => valueForStructuredExport(item)).join(" | ");
+        return;
+      }
+
+      value.forEach((item, index) => {
+        visit(item, `${keyPath}[${index}]`, depth + 1);
+      });
+      return;
+    }
+
+    if (typeof value === "object") {
+      const entries = Object.entries(value as Record<string, unknown>);
+      if (entries.length === 0) {
+        output[keyPath] = "";
+        return;
+      }
+
+      entries.forEach(([childKey, childValue]) => {
+        visit(childValue, `${keyPath}.${childKey}`, depth + 1);
+      });
+      return;
+    }
+
+    output[keyPath] = valueForStructuredExport(value);
+  };
+
+  Object.entries(input).forEach(([key, value]) => {
+    visit(value, key, 0);
+  });
+
+  return output;
+}
+
+function applyExportRowLimit(payload: unknown, rowLimit?: number): unknown {
+  if (!rowLimit || rowLimit < 1) return payload;
+
+  if (Array.isArray(payload)) {
+    return payload.slice(0, rowLimit);
   }
 
-  if (data.length === 0) return "empty\n";
+  if (!isRecord(payload)) return payload;
 
-  const objectRows = data.filter((item) => item && typeof item === "object" && !Array.isArray(item)) as Array<Record<string, unknown>>;
-  if (objectRows.length !== data.length) {
-    return "value\n" + data.map((item) => csvEscape(item)).join("\n");
+  const next: Record<string, unknown> = { ...payload };
+  const listKeys = ["items", "rows", "data", "results", "orders", "customers", "couriers", "list"];
+  for (const key of listKeys) {
+    const value = next[key];
+    if (Array.isArray(value)) {
+      next[key] = value.slice(0, rowLimit);
+      break;
+    }
+  }
+  return next;
+}
+
+function applyExportFlattening(payload: unknown, flattenNested?: boolean): unknown {
+  if (!flattenNested) return payload;
+
+  if (Array.isArray(payload)) {
+    const rows = payload.filter((item) => isRecord(item)) as Array<Record<string, unknown>>;
+    if (rows.length === payload.length) {
+      return rows.map((row) => flattenRecord(row));
+    }
+    return payload.map((item) => valueForStructuredExport(item));
+  }
+
+  if (!isRecord(payload)) return payload;
+
+  const primaryArray = getNestedByKey(payload, [
+    "items",
+    "rows",
+    "data",
+    "results",
+    "orders",
+    "customers",
+    "couriers",
+    "records",
+    "list",
+  ]);
+
+  if (Array.isArray(primaryArray)) {
+    const rows = primaryArray.filter((item) => isRecord(item)) as Array<Record<string, unknown>>;
+    if (rows.length === primaryArray.length && rows.length > 0) {
+      return rows.map((row) => flattenRecord(row));
+    }
+  }
+
+  return flattenRecord(payload);
+}
+
+function jsonToCsv(
+  data: unknown,
+  options?: {
+    flattenNested?: boolean;
+    rowLimit?: number;
+  }
+): string {
+  const prepared = applyExportFlattening(applyExportRowLimit(data, options?.rowLimit), options?.flattenNested);
+
+  if (!Array.isArray(prepared)) {
+    if (prepared && typeof prepared === "object") {
+      return "key,value\n" + Object.entries(prepared as Record<string, unknown>)
+        .map(([key, value]) => `${csvEscape(key)},${csvEscape(valueForStructuredExport(value))}`)
+        .join("\n");
+    }
+    return `value\n${csvEscape(valueForStructuredExport(prepared))}`;
+  }
+
+  if (prepared.length === 0) return "empty\n";
+
+  const objectRows = prepared.filter((item) => item && typeof item === "object" && !Array.isArray(item)) as Array<Record<string, unknown>>;
+  if (objectRows.length !== prepared.length) {
+    return "value\n" + prepared.map((item) => csvEscape(valueForStructuredExport(item))).join("\n");
   }
 
   const headerSet = new Set<string>();
@@ -236,7 +400,7 @@ function jsonToCsv(data: unknown): string {
 
   const lines = [headers.map((header) => csvEscape(header)).join(",")];
   objectRows.forEach((row) => {
-    lines.push(headers.map((header) => csvEscape(row[header])).join(","));
+    lines.push(headers.map((header) => csvEscape(valueForStructuredExport(row[header]))).join(","));
   });
 
   return lines.join("\n");
@@ -260,6 +424,7 @@ function toTextSnapshot(payload: unknown, instructions?: string): string {
 }
 
 type UiComponentName = z.infer<typeof uiComponentNameSchema>;
+type UiLayout = z.infer<typeof uiLayoutSchema>;
 type UiTone = "neutral" | "success" | "warning" | "danger";
 type UiEntityStatus = "active" | "paused" | "pending" | "failed";
 type InteractiveComponent = z.infer<typeof interactiveUiOutputSchema>["components"][number];
@@ -315,6 +480,81 @@ function entityStatusFromText(input: unknown): UiEntityStatus | undefined {
   return undefined;
 }
 
+function inferUiLayout(goal: string, explicit?: UiLayout): UiLayout {
+  if (explicit && explicit !== "auto") return explicit;
+  const normalized = goal.toLowerCase();
+  if (/(chart|compare|distribution|trend|analytics|graph)/.test(normalized)) {
+    return "chart_focus";
+  }
+  if (/(table|list|rows|records|audit|logs|export)/.test(normalized)) {
+    return "table_first";
+  }
+  if (/(card|tile|profile|catalog|directory)/.test(normalized)) {
+    return "cards_first";
+  }
+  return "overview";
+}
+
+function componentPriorityFromLayout(layout: UiLayout): UiComponentName[] {
+  if (layout === "table_first") {
+    return [
+      "SiteDataTable",
+      "SiteMetricGrid",
+      "SiteBarChart",
+      "SiteEntityCards",
+      "QuickLinks",
+      "SiteJsonPanel",
+    ];
+  }
+  if (layout === "cards_first") {
+    return [
+      "SiteEntityCards",
+      "SiteMetricGrid",
+      "SiteDataTable",
+      "SiteBarChart",
+      "QuickLinks",
+      "SiteJsonPanel",
+    ];
+  }
+  if (layout === "chart_focus") {
+    return [
+      "SiteBarChart",
+      "SiteMetricGrid",
+      "SiteDataTable",
+      "SiteEntityCards",
+      "QuickLinks",
+      "SiteJsonPanel",
+    ];
+  }
+  return [
+    "SiteMetricGrid",
+    "SiteDataTable",
+    "SiteEntityCards",
+    "SiteBarChart",
+    "QuickLinks",
+    "SiteJsonPanel",
+  ];
+}
+
+function componentHintsFromGoal(goal: string): UiComponentName[] {
+  const normalized = goal.toLowerCase();
+  const hints = new Set<UiComponentName>();
+  if (/(stat|kpi|summary|performance|total)/.test(normalized)) hints.add("SiteMetricGrid");
+  if (/(table|rows|record|list|filter|search|audit|history)/.test(normalized)) {
+    hints.add("SiteDataTable");
+  }
+  if (/(card|entity|profile|directory|client list|customer list)/.test(normalized)) {
+    hints.add("SiteEntityCards");
+  }
+  if (/(chart|graph|compare|distribution|trend)/.test(normalized)) {
+    hints.add("SiteBarChart");
+  }
+  if (/(debug|raw|json|payload|inspect)/.test(normalized)) {
+    hints.add("SiteJsonPanel");
+  }
+  return Array.from(hints);
+}
+
 function stringifyJson(value: unknown, max = 10000): string {
   try {
     return truncateForModel(JSON.stringify(value ?? {}, null, 2), max);
@@ -332,10 +572,33 @@ function getNestedByKey(payload: unknown, keys: string[]): unknown {
 }
 
 function pickPrimaryCollection(payload: unknown): Array<Record<string, unknown>> | null {
+  const findRecordArrayDeep = (
+    value: unknown,
+    depth = 0
+  ): Array<Record<string, unknown>> | null => {
+    if (depth > 4 || value == null) return null;
+    if (Array.isArray(value)) {
+      const rows = value.filter((item) => isRecord(item)) as Array<Record<string, unknown>>;
+      if (rows.length > 0) return rows;
+      for (const item of value) {
+        const nested = findRecordArrayDeep(item, depth + 1);
+        if (nested) return nested;
+      }
+      return null;
+    }
+
+    if (!isRecord(value)) return null;
+    for (const nestedValue of Object.values(value)) {
+      const nested = findRecordArrayDeep(nestedValue, depth + 1);
+      if (nested) return nested;
+    }
+    return null;
+  };
+
   if (Array.isArray(payload)) {
     const rows = payload.filter((item) => isRecord(item)) as Array<Record<string, unknown>>;
     if (rows.length > 0) return rows;
-    return null;
+    return findRecordArrayDeep(payload, 1);
   }
 
   if (!isRecord(payload)) return null;
@@ -371,13 +634,7 @@ function pickPrimaryCollection(payload: unknown): Array<Record<string, unknown>>
     if (tableRows.length > 0) return tableRows;
   }
 
-  for (const value of Object.values(payload)) {
-    if (!Array.isArray(value)) continue;
-    const rows = value.filter((item) => isRecord(item)) as Array<Record<string, unknown>>;
-    if (rows.length > 0) return rows;
-  }
-
-  return null;
+  return findRecordArrayDeep(payload, 1);
 }
 
 function extractNumericMetrics(payload: unknown): Array<{ key: string; value: number }> {
@@ -558,6 +815,68 @@ function buildStatusBarsFromRows(rows: Array<Record<string, unknown>>) {
     }));
 }
 
+function normalizeDateBucket(value: unknown): string | null {
+  if (typeof value !== "string" && !(value instanceof Date)) return null;
+  const input = value instanceof Date ? value.toISOString() : value;
+  const date = new Date(input);
+  if (Number.isNaN(date.getTime())) {
+    const shortMatch = String(input).match(/\b\d{4}-\d{2}-\d{2}\b/);
+    return shortMatch ? shortMatch[0] : null;
+  }
+  return date.toISOString().slice(0, 10);
+}
+
+function buildDateBarsFromRows(rows: Array<Record<string, unknown>>) {
+  const candidateDateKeys = [
+    "createdAt",
+    "updatedAt",
+    "deliveryDate",
+    "deliveryTime",
+    "date",
+    "day",
+  ];
+  const buckets = new Map<string, number>();
+
+  for (const row of rows) {
+    let bucket: string | null = null;
+    for (const key of candidateDateKeys) {
+      bucket = normalizeDateBucket(row[key]);
+      if (bucket) break;
+    }
+    if (!bucket) continue;
+    buckets.set(bucket, (buckets.get(bucket) ?? 0) + 1);
+  }
+
+  return Array.from(buckets.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-10)
+    .map(([label, value]) => ({
+      label,
+      value,
+      tone: "neutral" as const,
+    }));
+}
+
+function buildNumericBarsFromRows(rows: Array<Record<string, unknown>>) {
+  const totals = new Map<string, number>();
+
+  for (const row of rows) {
+    for (const [key, rawValue] of Object.entries(row)) {
+      if (typeof rawValue !== "number" || !Number.isFinite(rawValue)) continue;
+      if (/(id|phone|zip|postal)/i.test(key)) continue;
+      totals.set(key, (totals.get(key) ?? 0) + rawValue);
+    }
+  }
+
+  return Array.from(totals.entries())
+    .slice(0, 10)
+    .map(([key, value]) => ({
+      label: toLabelFromKey(key),
+      value: Number(value.toFixed(2)),
+      tone: toneFromText(key) ?? "neutral",
+    }));
+}
+
 function buildChartComponent(
   payload: unknown,
   rows: Array<Record<string, unknown>> | null,
@@ -572,6 +891,32 @@ function buildChartComponent(
         title,
         subtitle: "Grouped by status",
         bars: barsFromRows,
+      },
+    };
+  }
+
+  const dateBars = rows ? buildDateBarsFromRows(rows) : [];
+  if (dateBars.length > 0) {
+    return {
+      name: "SiteBarChart",
+      reason: "Rows were grouped by date to show volume trend.",
+      props: {
+        title,
+        subtitle: "Grouped by day",
+        bars: dateBars,
+      },
+    };
+  }
+
+  const numericRowBars = rows ? buildNumericBarsFromRows(rows) : [];
+  if (numericRowBars.length > 0) {
+    return {
+      name: "SiteBarChart",
+      reason: "Numeric fields from rows were aggregated for comparison.",
+      props: {
+        title,
+        subtitle: "Aggregated numeric totals",
+        bars: numericRowBars,
       },
     };
   }
@@ -616,6 +961,57 @@ function buildQuickLinksComponent(sourcePath: string): InteractiveComponent {
       ],
     },
   };
+}
+
+function buildMarkdownReport(
+  title: string,
+  payload: unknown,
+  instructions?: string,
+  options?: { flattenNested?: boolean; rowLimit?: number }
+): string {
+  const lines: string[] = [`# ${title}`];
+
+  if (instructions && instructions.trim().length > 0) {
+    lines.push("", "## Instructions", "", instructions.trim());
+  }
+
+  const prepared = applyExportFlattening(
+    applyExportRowLimit(payload, options?.rowLimit),
+    options?.flattenNested
+  );
+
+  if (Array.isArray(prepared)) {
+    const objectRows = prepared.filter((item) => isRecord(item)) as Array<Record<string, unknown>>;
+    if (objectRows.length === prepared.length && objectRows.length > 0) {
+      const headers = Array.from(
+        objectRows.reduce((set, row) => {
+          Object.keys(row).forEach((key) => set.add(key));
+          return set;
+        }, new Set<string>())
+      );
+      lines.push("", "## Data");
+      lines.push("", `| ${headers.join(" | ")} |`);
+      lines.push(`| ${headers.map(() => "---").join(" | ")} |`);
+      objectRows.forEach((row) => {
+        const values = headers.map((header) =>
+          String(valueForStructuredExport(row[header])).replace(/\|/g, "\\|").replace(/\n/g, " ")
+        );
+        lines.push(`| ${values.join(" | ")} |`);
+      });
+      return lines.join("\n");
+    }
+
+    lines.push("", "## Data", "", "```json", truncateForModel(JSON.stringify(prepared, null, 2), 20000), "```");
+    return lines.join("\n");
+  }
+
+  if (isRecord(prepared)) {
+    lines.push("", "## Data", "", "```json", truncateForModel(JSON.stringify(prepared, null, 2), 20000), "```");
+    return lines.join("\n");
+  }
+
+  lines.push("", "## Data", "", String(valueForStructuredExport(prepared)));
+  return lines.join("\n");
 }
 
 function buildHtmlReport(title: string, textContent: string): string {
@@ -707,16 +1103,24 @@ function detectSpreadsheetCellType(value: string) {
   return "String";
 }
 
-function buildSpreadsheetXml(title: string, data: unknown): string {
+function buildSpreadsheetXml(
+  title: string,
+  data: unknown,
+  options?: { flattenNested?: boolean; rowLimit?: number }
+): string {
+  const prepared = applyExportFlattening(
+    applyExportRowLimit(data, options?.rowLimit),
+    options?.flattenNested
+  );
   const safeTitle = title.replace(/[\\/:?*\[\]]/g, " ").trim().slice(0, 31) || "Sheet1";
 
   const rows: string[][] = [];
-  if (Array.isArray(data)) {
-    const objectRows = data.filter(
+  if (Array.isArray(prepared)) {
+    const objectRows = prepared.filter(
       (item) => item && typeof item === "object" && !Array.isArray(item)
     ) as Array<Record<string, unknown>>;
 
-    if (objectRows.length === data.length && objectRows.length > 0) {
+    if (objectRows.length === prepared.length && objectRows.length > 0) {
       const headers = Array.from(
         objectRows.reduce((set, row) => {
           Object.keys(row).forEach((key) => set.add(key));
@@ -725,19 +1129,19 @@ function buildSpreadsheetXml(title: string, data: unknown): string {
       );
       rows.push(headers);
       objectRows.forEach((row) => {
-        rows.push(headers.map((header) => String(row[header] ?? "")));
+        rows.push(headers.map((header) => String(valueForStructuredExport(row[header]))));
       });
     } else {
       rows.push(["value"]);
-      data.forEach((item) => rows.push([String(item ?? "")]));
+      prepared.forEach((item) => rows.push([String(valueForStructuredExport(item))]));
     }
-  } else if (data && typeof data === "object") {
+  } else if (prepared && typeof prepared === "object") {
     rows.push(["key", "value"]);
-    Object.entries(data as Record<string, unknown>).forEach(([key, value]) => {
-      rows.push([key, String(value ?? "")]);
+    Object.entries(prepared as Record<string, unknown>).forEach(([key, value]) => {
+      rows.push([key, String(valueForStructuredExport(value))]);
     });
   } else {
-    rows.push(["value"], [String(data ?? "")]);
+    rows.push(["value"], [String(valueForStructuredExport(prepared))]);
   }
 
   const rowsXml = rows
@@ -847,8 +1251,13 @@ function normalizeXlsxCell(
 function buildXlsxWorkbookFromPayload(
   XLSX: typeof import("xlsx"),
   title: string,
-  payload: unknown
+  payload: unknown,
+  options?: { flattenNested?: boolean; rowLimit?: number }
 ) {
+  const preparedPayload = applyExportFlattening(
+    applyExportRowLimit(payload, options?.rowLimit),
+    options?.flattenNested
+  );
   const workbook = XLSX.utils.book_new();
   const usedSheetNames = new Set<string>();
   const overflowRows: XlsxOverflowCell[] = [];
@@ -867,12 +1276,12 @@ function buildXlsxWorkbookFromPayload(
   };
 
   const snapshotLike =
-    payload &&
-    typeof payload === "object" &&
-    Array.isArray((payload as { tables?: unknown[] }).tables);
+    preparedPayload &&
+    typeof preparedPayload === "object" &&
+    Array.isArray((preparedPayload as { tables?: unknown[] }).tables);
 
   if (snapshotLike) {
-    const snapshot = payload as {
+    const snapshot = preparedPayload as {
       scope?: unknown;
       generatedAt?: unknown;
       summary?: unknown[];
@@ -931,12 +1340,12 @@ function buildXlsxWorkbookFromPayload(
     return workbook;
   }
 
-  if (Array.isArray(payload)) {
-    const objectRows = payload.filter(
+  if (Array.isArray(preparedPayload)) {
+    const objectRows = preparedPayload.filter(
       (item) => item && typeof item === "object" && !Array.isArray(item)
     ) as Array<Record<string, unknown>>;
 
-    if (objectRows.length === payload.length && objectRows.length > 0) {
+    if (objectRows.length === preparedPayload.length && objectRows.length > 0) {
       const headers = Array.from(
         objectRows.reduce((set, row) => {
           Object.keys(row).forEach((key) => set.add(key));
@@ -965,7 +1374,7 @@ function buildXlsxWorkbookFromPayload(
       baseSheetName,
       [
         ["value"],
-        ...payload.map((item, rowIndex) => [
+        ...preparedPayload.map((item, rowIndex) => [
           normalizeXlsxCell(item, {
             sheet: baseSheetName,
             row: rowIndex + 2,
@@ -979,8 +1388,8 @@ function buildXlsxWorkbookFromPayload(
     return workbook;
   }
 
-  if (payload && typeof payload === "object") {
-    const entries = Object.entries(payload as Record<string, unknown>).map(([key, value]) => [
+  if (preparedPayload && typeof preparedPayload === "object") {
+    const entries = Object.entries(preparedPayload as Record<string, unknown>).map(([key, value]) => [
       key,
       normalizeXlsxCell(value, {
         sheet: baseSheetName,
@@ -999,7 +1408,7 @@ function buildXlsxWorkbookFromPayload(
     [[
       "value",
     ], [
-      normalizeXlsxCell(payload, {
+      normalizeXlsxCell(preparedPayload, {
         sheet: baseSheetName,
         row: 2,
         column: "value",
@@ -1064,6 +1473,28 @@ async function fetchApiPayload(options: {
   }
 
   return raw;
+}
+
+function parseUnknownJson(raw: string, label: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    throw new Error(
+      `${label} must be valid JSON. ${error instanceof Error ? error.message : ""}`.trim()
+    );
+  }
+}
+
+function inferSourcePathFromGoal(goal: string): string {
+  const normalized = goal.toLowerCase();
+  if (/(courier|delivery driver|map|route)/.test(normalized)) return "/api/admin/couriers";
+  if (/(client|customer|lead|subscriber)/.test(normalized)) return "/api/admin/clients";
+  if (/(finance|salary|transaction|revenue|money|cash|payment)/.test(normalized)) {
+    return "/api/admin/finance/company";
+  }
+  if (/(order|kitchen|dispatch)/.test(normalized)) return "/api/admin/orders";
+  if (/(feature|flag|toggle)/.test(normalized)) return "/api/admin/features";
+  return "/api/admin/statistics";
 }
 
 export const getAdminStatisticsTool = registerTamboTool({
@@ -1283,7 +1714,7 @@ export const createDatabaseFileTool = registerTamboTool({
   name: "create_database_file",
   title: "Create database file",
   description:
-    "Create downloadable files (CSV, JSON, TXT, HTML, PDF, XLSX, XML spreadsheet) from live API data and user instructions.",
+    "Create downloadable files (CSV, JSON, TXT, Markdown, HTML, PDF, XLSX, XML spreadsheet) from API data, inline JSON, and instructions.",
   annotations: {},
   inputSchema: fileExportInputSchema,
   outputSchema: fileExportOutputSchema,
@@ -1293,33 +1724,60 @@ export const createDatabaseFileTool = registerTamboTool({
       const safeInput = fileExportInputSchema.parse(input);
       const sourcePath = safeInput.sourcePath?.trim();
       const apiMethod = safeInput.method ?? "GET";
+      const inlineDataJson = safeInput.inlineDataJson?.trim();
+      const noteParts: string[] = [];
 
-      let payload: unknown = {
-        note: "No sourcePath provided. File generated from instructions only.",
-      };
+      let payload: unknown;
 
-      if (sourcePath) {
+      if (inlineDataJson) {
+        payload = parseUnknownJson(inlineDataJson, "inlineDataJson");
+        if (sourcePath) {
+          noteParts.push("inlineDataJson was used; sourcePath was ignored.");
+        }
+      } else if (sourcePath) {
         payload = await fetchApiPayload({
           path: sourcePath,
           method: apiMethod,
           queryParams: safeInput.queryParams,
           jsonBody: safeInput.jsonBody,
         });
+      } else if (safeInput.jsonBody && safeInput.jsonBody.trim().length > 0) {
+        payload = parseUnknownJson(safeInput.jsonBody, "jsonBody");
+        noteParts.push("Generated file from jsonBody because sourcePath was not provided.");
+      } else {
+        payload = {
+          note: "No sourcePath or inlineDataJson provided. File generated from instructions only.",
+        };
       }
 
-      const textSnapshot = toTextSnapshot(payload, safeInput.instructions);
+      const transformedPayload = applyExportFlattening(
+        applyExportRowLimit(payload, safeInput.rowLimit),
+        safeInput.flattenNested
+      );
+      const textSnapshot = toTextSnapshot(transformedPayload, safeInput.instructions);
       const requestedFormat = safeInput.format;
 
       let blob: Blob;
       let fileExtension = requestedFormat;
-      let note = "";
+      let note = noteParts.join(" ");
 
       if (requestedFormat === "json") {
-        blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8;" });
+        blob = new Blob([JSON.stringify(transformedPayload, null, 2)], { type: "application/json;charset=utf-8;" });
       } else if (requestedFormat === "csv") {
-        blob = new Blob([jsonToCsv(payload)], { type: "text/csv;charset=utf-8;" });
+        blob = new Blob(
+          [jsonToCsv(payload, { flattenNested: safeInput.flattenNested, rowLimit: safeInput.rowLimit })],
+          { type: "text/csv;charset=utf-8;" }
+        );
       } else if (requestedFormat === "txt") {
         blob = new Blob([textSnapshot], { type: "text/plain;charset=utf-8;" });
+      } else if (requestedFormat === "md") {
+        blob = new Blob(
+          [buildMarkdownReport(safeInput.fileName, payload, safeInput.instructions, {
+            flattenNested: safeInput.flattenNested,
+            rowLimit: safeInput.rowLimit,
+          })],
+          { type: "text/markdown;charset=utf-8;" }
+        );
       } else if (requestedFormat === "html") {
         blob = new Blob([buildHtmlReport(safeInput.fileName, textSnapshot)], { type: "text/html;charset=utf-8;" });
       } else if (requestedFormat === "pdf") {
@@ -1327,25 +1785,34 @@ export const createDatabaseFileTool = registerTamboTool({
       } else if (requestedFormat === "xlsx") {
         try {
           const XLSX = await import("xlsx");
-          const workbook = buildXlsxWorkbookFromPayload(XLSX, safeInput.fileName, payload);
+          const workbook = buildXlsxWorkbookFromPayload(XLSX, safeInput.fileName, payload, {
+            flattenNested: safeInput.flattenNested,
+            rowLimit: safeInput.rowLimit,
+          });
           const fileArrayBuffer = XLSX.write(workbook, { type: "array", bookType: "xlsx", compression: true });
           blob = new Blob([fileArrayBuffer], {
             type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           });
         } catch (xlsxError) {
           fileExtension = "xml";
-          note = `XLSX requested but native workbook generation failed. Generated Excel XML instead. Reason: ${xlsxError instanceof Error ? xlsxError.message : "Unknown error"}`;
-          blob = new Blob([buildSpreadsheetXml(safeInput.fileName, payload)], {
+          note = `${note ? `${note} ` : ""}XLSX requested but native workbook generation failed. Generated Excel XML instead. Reason: ${xlsxError instanceof Error ? xlsxError.message : "Unknown error"}`.trim();
+          blob = new Blob([buildSpreadsheetXml(safeInput.fileName, payload, {
+            flattenNested: safeInput.flattenNested,
+            rowLimit: safeInput.rowLimit,
+          })], {
             type: "application/xml;charset=utf-8;",
           });
         }
       } else if (requestedFormat === "xml") {
-        blob = new Blob([buildSpreadsheetXml(safeInput.fileName, payload)], {
+        blob = new Blob([buildSpreadsheetXml(safeInput.fileName, payload, {
+          flattenNested: safeInput.flattenNested,
+          rowLimit: safeInput.rowLimit,
+        })], {
           type: "application/xml;charset=utf-8;",
         });
       } else {
         fileExtension = "txt";
-        note = "Unknown format requested. Generated TXT fallback.";
+        note = `${note ? `${note} ` : ""}Unknown format requested. Generated TXT fallback.`.trim();
         blob = new Blob([textSnapshot], { type: "text/plain;charset=utf-8;" });
       }
 
@@ -1357,6 +1824,7 @@ export const createDatabaseFileTool = registerTamboTool({
         fileName,
         format: fileExtension as z.infer<typeof fileFormatSchema>,
         downloadUrl,
+        sizeBytes: blob.size,
         ...(note ? { note } : {}),
       };
     } catch (error) {
@@ -1420,7 +1888,7 @@ export const buildInteractiveUiTool = registerTamboTool({
   name: "build_interactive_ui",
   title: "Build interactive UI",
   description:
-    "Convert live API payloads into ready-to-render Tambo component props for interactive admin UI.",
+    "Convert live API payloads into ready-to-render Tambo component props using goal-aware layout heuristics.",
   annotations: {},
   inputSchema: interactiveUiInputSchema,
   outputSchema: interactiveUiOutputSchema,
@@ -1428,11 +1896,28 @@ export const buildInteractiveUiTool = registerTamboTool({
   tool: async (input) => {
     try {
       const safeInput = interactiveUiInputSchema.parse(input);
-      const sourcePath = safeInput.sourcePath?.trim() || "/api/admin/statistics";
+      const goal = safeInput.goal.trim();
+      const sourcePath = safeInput.sourcePath?.trim() || inferSourcePathFromGoal(goal);
       const method = safeInput.method ?? "GET";
       const maxRows = safeInput.maxRows ?? 40;
+      const maxComponents = safeInput.maxComponents ?? 6;
+      const includeRawJson = safeInput.includeRawJson !== false;
       const baseTitle = safeInput.title?.trim() || "Interactive data view";
-      const preferred = new Set<UiComponentName>(safeInput.preferredComponents ?? []);
+      const explicitPreferred = new Set<UiComponentName>(safeInput.preferredComponents ?? []);
+      const layout = inferUiLayout(goal, safeInput.layout);
+      const hintedPreferred = componentHintsFromGoal(goal);
+      const rankOrder = Array.from(
+        new Set<UiComponentName>([
+          ...(safeInput.preferredComponents ?? []),
+          ...hintedPreferred,
+          ...componentPriorityFromLayout(layout),
+          "QuickLinks",
+          ...(includeRawJson ? ["SiteJsonPanel" as const] : []),
+        ])
+      );
+      const rankMap = new Map<UiComponentName, number>(
+        rankOrder.map((name, index) => [name, index])
+      );
 
       const payload = await fetchApiPayload({
         path: sourcePath,
@@ -1446,7 +1931,7 @@ export const buildInteractiveUiTool = registerTamboTool({
 
       const push = (component: InteractiveComponent | null) => {
         if (!component) return;
-        if (preferred.size > 0 && !preferred.has(component.name)) return;
+        if (explicitPreferred.size > 0 && !explicitPreferred.has(component.name)) return;
         if (components.some((existing) => existing.name === component.name)) return;
         components.push(component);
       };
@@ -1459,26 +1944,45 @@ export const buildInteractiveUiTool = registerTamboTool({
       }
       push(buildChartComponent(payload, rows, `${baseTitle} chart`));
       push(buildQuickLinksComponent(sourcePath));
-      push({
-        name: "SiteJsonPanel",
-        reason: "Raw payload panel for debug details and edge cases.",
-        props: {
-          title: `${baseTitle} JSON`,
-          json: stringifyJson(payload, 12000),
-        },
-      });
+      if (includeRawJson) {
+        push({
+          name: "SiteJsonPanel",
+          reason: "Raw payload panel for debug details and edge cases.",
+          props: {
+            title: `${baseTitle} JSON`,
+            json: stringifyJson(payload, 12000),
+          },
+        });
+      }
 
       if (components.length === 0) {
-        const fallbackName = preferred.size > 0 ? Array.from(preferred)[0] : "SiteJsonPanel";
+        const fallbackName =
+          explicitPreferred.size > 0 ? Array.from(explicitPreferred)[0] : "SiteJsonPanel";
         components.push(emptyComponentByName(fallbackName, sourcePath));
       }
+
+      const sortedComponents = components
+        .slice()
+        .sort(
+          (a, b) =>
+            (rankMap.get(a.name) ?? Number.MAX_SAFE_INTEGER) -
+            (rankMap.get(b.name) ?? Number.MAX_SAFE_INTEGER)
+        )
+        .slice(0, maxComponents);
+
+      const strategyParts = [
+        `layout=${layout}`,
+        safeInput.sourcePath ? `source=explicit:${sourcePath}` : `source=inferred:${sourcePath}`,
+        `goal=${goal.slice(0, 80)}`,
+      ];
 
       return {
         ok: true,
         title: baseTitle,
-        summary: `Generated ${components.length} component payload(s) from ${sourcePath}.`,
+        summary: `Generated ${sortedComponents.length} component payload(s) from ${sourcePath}.`,
+        strategy: strategyParts.join(" | "),
         sourcePath,
-        components,
+        components: sortedComponents,
         dataSample: stringifyJson(payload, 4500),
       };
     } catch (error) {
@@ -1508,20 +2012,66 @@ export const editSubdomainWebsiteTool = registerTamboTool({
   name: "edit_subdomain_website",
   title: "Edit subdomain website",
   description:
-    "Generate and apply full or section-level subdomain website content updates from a natural-language prompt.",
+    "Generate and apply full or section-level subdomain website updates with dry-run preview and optional auto subdomain conflict resolution.",
   annotations: {},
   inputSchema: websiteEditInputSchema,
   outputSchema: websiteEditOutputSchema,
   defaultMessage: "Failed to update subdomain website.",
   tool: async (input) => {
-    const payload = websiteEditInputSchema.parse(input);
+    const parsed = websiteEditInputSchema.safeParse(input);
+    const payload: Partial<z.infer<typeof websiteEditInputSchema>> = parsed.success
+      ? parsed.data
+      : {};
     const rawInput =
       input && typeof input === "object"
         ? (input as Record<string, unknown>)
         : ({} as Record<string, unknown>);
 
+    const modeAlias: Record<string, z.infer<typeof websiteEditModeSchema>> = {
+      full: "full_rebuild",
+      rebuild: "full_rebuild",
+      "full-rebuild": "full_rebuild",
+      merge: "merge_existing",
+      patch: "section_patch",
+      section: "section_patch",
+      "section-patch": "section_patch",
+    };
+
+    const rawMode =
+      (typeof payload.mode === "string" ? payload.mode : undefined) ??
+      (typeof rawInput.mode === "string" ? rawInput.mode : undefined) ??
+      (typeof rawInput.editMode === "string" ? rawInput.editMode : undefined);
+    const normalizedMode = (() => {
+      if (!rawMode) return undefined;
+      const lower = rawMode.trim().toLowerCase();
+      if (websiteEditModeSchema.safeParse(lower).success) {
+        return lower as z.infer<typeof websiteEditModeSchema>;
+      }
+      return modeAlias[lower];
+    })();
+
+    const normalizeSectionsInput = (value: unknown): Array<z.infer<typeof websiteSectionSchema>> | undefined => {
+      if (Array.isArray(value)) {
+        const sections = value
+          .map((item) => websiteSectionSchema.safeParse(item))
+          .filter((item) => item.success)
+          .map((item) => item.data);
+        return sections.length > 0 ? Array.from(new Set(sections)) : undefined;
+      }
+      if (typeof value === "string") {
+        const sections = value
+          .split(/[,\s]+/)
+          .map((item) => item.trim().toLowerCase())
+          .map((item) => websiteSectionSchema.safeParse(item))
+          .filter((item) => item.success)
+          .map((item) => item.data);
+        return sections.length > 0 ? Array.from(new Set(sections)) : undefined;
+      }
+      return undefined;
+    };
+
     const promptCandidates = [
-      payload.prompt,
+      typeof payload.prompt === "string" ? payload.prompt : undefined,
       typeof rawInput.prompt === "string" ? rawInput.prompt : undefined,
       typeof rawInput.request === "string" ? rawInput.request : undefined,
       typeof rawInput.instruction === "string" ? rawInput.instruction : undefined,
@@ -1541,6 +2091,38 @@ export const editSubdomainWebsiteTool = registerTamboTool({
       };
     }
 
+    const inferredSections = normalizeSectionsInput([
+      ...(Array.isArray(payload.sections) ? payload.sections : []),
+      ...(normalizeSectionsInput(rawInput.sections) ?? []),
+      ...(normalizeSectionsInput(rawInput.section) ?? []),
+    ]);
+
+    const sectionsForPatch =
+      normalizedMode === "section_patch" && (!inferredSections || inferredSections.length === 0)
+        ? (["hero", "features", "pricing", "about"] as Array<z.infer<typeof websiteSectionSchema>>)
+        : inferredSections;
+
+    const rawApply =
+      typeof payload.apply === "boolean"
+        ? payload.apply
+        : typeof rawInput.apply === "boolean"
+          ? rawInput.apply
+          : undefined;
+    const dryRun =
+      (typeof payload.dryRun === "boolean" ? payload.dryRun : undefined) ??
+      (typeof rawInput.dryRun === "boolean" ? rawInput.dryRun : undefined) ??
+      (typeof rawInput.previewOnly === "boolean" ? rawInput.previewOnly : undefined);
+    const resolvedApply = dryRun === true ? false : rawApply ?? true;
+
+    const autoResolveSubdomain =
+      (typeof payload.autoResolveSubdomain === "boolean"
+        ? payload.autoResolveSubdomain
+        : undefined) ??
+      (typeof rawInput.autoResolveSubdomain === "boolean"
+        ? rawInput.autoResolveSubdomain
+        : undefined) ??
+      true;
+
     const token = getOptionalBearerToken();
 
     const response = await fetch("/api/admin/website/ai-edit", {
@@ -1552,13 +2134,22 @@ export const editSubdomainWebsiteTool = registerTamboTool({
       },
       body: JSON.stringify({
         prompt,
-        apply: payload.apply ?? true,
-        ...(payload.mode ? { mode: payload.mode } : {}),
-        ...(payload.sections ? { sections: payload.sections } : {}),
-        ...(payload.siteName ? { siteName: payload.siteName } : {}),
-        ...(payload.styleVariant ? { styleVariant: payload.styleVariant } : {}),
-        ...(payload.subdomain ? { subdomain: payload.subdomain } : {}),
-        ...(payload.targetAdminId ? { targetAdminId: payload.targetAdminId } : {}),
+        apply: resolvedApply,
+        ...(normalizedMode ? { mode: normalizedMode } : {}),
+        ...(sectionsForPatch ? { sections: sectionsForPatch } : {}),
+        ...(typeof payload.siteName === "string" && payload.siteName.trim().length > 0
+          ? { siteName: payload.siteName }
+          : {}),
+        ...(typeof payload.styleVariant === "string" && payload.styleVariant.trim().length > 0
+          ? { styleVariant: payload.styleVariant }
+          : {}),
+        ...(typeof payload.subdomain === "string" && payload.subdomain.trim().length > 0
+          ? { subdomain: payload.subdomain }
+          : {}),
+        ...(typeof payload.targetAdminId === "string" && payload.targetAdminId.trim().length > 0
+          ? { targetAdminId: payload.targetAdminId }
+          : {}),
+        autoResolveSubdomain,
         ...(typeof payload.includeContentPreview === "boolean"
           ? { includeContentPreview: payload.includeContentPreview }
           : {}),
@@ -1588,6 +2179,14 @@ export const editSubdomainWebsiteTool = registerTamboTool({
             .filter((section) => section.success)
             .map((section) => section.data)
         : undefined,
+      requestedSubdomain:
+        typeof data?.website?.requestedSubdomain === "string"
+          ? data.website.requestedSubdomain
+          : undefined,
+      subdomainAdjusted:
+        typeof data?.website?.subdomainAdjusted === "boolean"
+          ? data.website.subdomainAdjusted
+          : undefined,
       subdomain: typeof data?.website?.subdomain === "string" ? data.website.subdomain : undefined,
       pathUrl: typeof data?.urls?.pathUrl === "string" ? data.urls.pathUrl : undefined,
       hostUrl: typeof data?.urls?.hostUrl === "string" ? data.urls.hostUrl : undefined,
@@ -1630,7 +2229,8 @@ export const siteUiCatalogTool = registerTamboTool({
         "Do not embed or mirror full site pages.",
         "Build UI only from these components and live data from site_api_request.",
         "Use build_interactive_ui to transform API payloads into component-ready props.",
-        "Prefer dense, table-first layouts and minimal action controls.",
+        "For build_interactive_ui, set layout to auto/table_first/overview/cards_first/chart_focus based on user goal.",
+        "Prefer dense, table-first layouts and minimal action controls unless a chart/cards goal is explicit.",
       ],
       components: [
         { name: "AdminStatsGrid", purpose: "Order and customer stats cards" },

@@ -76,6 +76,94 @@ function parseSections(value: unknown): ContentSection[] {
   return Array.from(seen)
 }
 
+function inferSectionsFromPrompt(prompt: string): ContentSection[] {
+  const normalized = prompt.toLowerCase()
+  const sections: ContentSection[] = []
+
+  if (/(hero|headline|banner|first screen|above the fold)/.test(normalized)) {
+    sections.push('hero')
+  }
+  if (/(feature|benefit|value prop|advantage)/.test(normalized)) {
+    sections.push('features')
+  }
+  if (/(price|pricing|plan|tariff|cost|payment)/.test(normalized)) {
+    sections.push('pricing')
+  }
+  if (/(about|company|story|mission|team)/.test(normalized)) {
+    sections.push('about')
+  }
+
+  return Array.from(new Set(sections))
+}
+
+function withSubdomainSuffix(base: string, index: number) {
+  const suffix = `-${index}`
+  const maxBaseLength = Math.max(3, 32 - suffix.length)
+  const trimmedBase = base.slice(0, maxBaseLength).replace(/-+$/g, '')
+  return normalizeSubdomain(`${trimmedBase}${suffix}`)
+}
+
+async function resolveAvailableSubdomain(
+  candidate: string,
+  adminId: string,
+  options: { autoResolve: boolean }
+) {
+  const normalizedCandidate = normalizeSubdomain(candidate)
+
+  const isAllowed = (value: string) => isValidSubdomain(value) && !RESERVED_SUBDOMAINS.has(value)
+  if (!isAllowed(normalizedCandidate)) {
+    return {
+      ok: false as const,
+      error: 'Cannot apply update because the current subdomain is invalid or reserved.',
+    }
+  }
+
+  const isTakenByAnotherAdmin = async (value: string) => {
+    const conflict = await db.website.findFirst({
+      where: {
+        subdomain: value,
+        NOT: { adminId },
+      },
+      select: { id: true },
+    })
+    return Boolean(conflict)
+  }
+
+  const initiallyTaken = await isTakenByAnotherAdmin(normalizedCandidate)
+  if (!initiallyTaken) {
+    return {
+      ok: true as const,
+      subdomain: normalizedCandidate,
+      subdomainAdjusted: false,
+    }
+  }
+
+  if (!options.autoResolve) {
+    return {
+      ok: false as const,
+      error: 'Subdomain is already used by another middle-admin.',
+    }
+  }
+
+  for (let index = 2; index <= 150; index += 1) {
+    const candidateWithSuffix = withSubdomainSuffix(normalizedCandidate, index)
+    if (!isAllowed(candidateWithSuffix)) continue
+    const taken = await isTakenByAnotherAdmin(candidateWithSuffix)
+    if (!taken) {
+      return {
+        ok: true as const,
+        subdomain: candidateWithSuffix,
+        subdomainAdjusted: true,
+      }
+    }
+  }
+
+  return {
+    ok: false as const,
+    error: 'Unable to find an available subdomain variant. Try another base subdomain.',
+  }
+}
+
 function mergeSections(
   current: GeneratedSiteContent,
   generated: GeneratedSiteContent,
@@ -112,12 +200,15 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => ({}))
     const prompt = typeof body?.prompt === 'string' ? body.prompt.trim() : ''
-    const apply = body?.apply !== false
+    const explicitApply = typeof body?.apply === 'boolean' ? body.apply : undefined
+    const dryRun = body?.dryRun === true || body?.previewOnly === true
+    const apply = dryRun ? false : explicitApply !== false
     const mode = parseEditMode(body?.mode)
-    const requestedSections = parseSections(body?.sections)
+    let requestedSections = parseSections(body?.sections)
     const requestedSiteName = typeof body?.siteName === 'string' ? body.siteName.trim().slice(0, 80) : ''
     const requestedSubdomainRaw = typeof body?.subdomain === 'string' ? body.subdomain : ''
     const requestedSubdomain = normalizeSubdomain(requestedSubdomainRaw)
+    const autoResolveSubdomain = body?.autoResolveSubdomain !== false
     const requestedStyleVariant = typeof body?.styleVariant === 'string' ? body.styleVariant : ''
     const includeContentPreview = body?.includeContentPreview !== false
     const targetAdminId = typeof body?.targetAdminId === 'string' ? body.targetAdminId : ''
@@ -132,10 +223,7 @@ export async function POST(request: NextRequest) {
     const editableAdminId = user.role === 'SUPER_ADMIN' && targetAdminId ? targetAdminId : user.id
 
     if (mode === 'section_patch' && requestedSections.length === 0) {
-      return NextResponse.json(
-        { error: 'For section_patch mode, provide at least one section: hero, features, pricing, about.' },
-        { status: 400 }
-      )
+      requestedSections = inferSectionsFromPrompt(prompt)
     }
 
     const admin = await db.admin.findUnique({
@@ -186,7 +274,13 @@ export async function POST(request: NextRequest) {
     updatedContent = updateSiteName(updatedContent, nextSiteName)
 
     if (!apply) {
-      const previewSubdomain = existing?.subdomain || buildFallbackSubdomain(fallbackName, editableAdminId)
+      const previewFallback = existing?.subdomain || buildFallbackSubdomain(fallbackName, editableAdminId)
+      const previewRequestedValid =
+        requestedSubdomain.length > 0 &&
+        isValidSubdomain(requestedSubdomain) &&
+        !RESERVED_SUBDOMAINS.has(requestedSubdomain)
+      const previewSubdomain = previewRequestedValid ? requestedSubdomain : previewFallback
+
       return NextResponse.json({
         success: true,
         applied: false,
@@ -195,6 +289,8 @@ export async function POST(request: NextRequest) {
         message: 'Generated website content preview only. Re-run with apply=true to persist changes.',
         website: {
           subdomain: previewSubdomain,
+          requestedSubdomain: requestedSubdomain || undefined,
+          subdomainAdjusted: Boolean(requestedSubdomain && requestedSubdomain !== previewSubdomain),
           siteName: nextSiteName,
           styleVariant: themedVariant,
         },
@@ -207,14 +303,17 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const subdomain = requestedSubdomain || existing?.subdomain || buildFallbackSubdomain(fallbackName, editableAdminId)
+    const subdomainCandidate =
+      requestedSubdomain || existing?.subdomain || buildFallbackSubdomain(fallbackName, editableAdminId)
+    const resolvedSubdomain = await resolveAvailableSubdomain(subdomainCandidate, editableAdminId, {
+      autoResolve: autoResolveSubdomain,
+    })
 
-    if (!isValidSubdomain(subdomain) || RESERVED_SUBDOMAINS.has(subdomain)) {
-      return NextResponse.json(
-        { error: 'Cannot apply update because the current subdomain is invalid or reserved.' },
-        { status: 400 }
-      )
+    if (!resolvedSubdomain.ok) {
+      const status = /already used/i.test(resolvedSubdomain.error) ? 409 : 400
+      return NextResponse.json({ error: resolvedSubdomain.error }, { status })
     }
+    const subdomain = resolvedSubdomain.subdomain
 
     const updatedTheme = buildThemePayload(themedVariant)
 
@@ -248,6 +347,8 @@ export async function POST(request: NextRequest) {
       website: {
         id: website.id,
         subdomain: website.subdomain,
+        requestedSubdomain: requestedSubdomain || undefined,
+        subdomainAdjusted: resolvedSubdomain.subdomainAdjusted,
         siteName: nextSiteName,
         styleVariant: themedVariant,
       },
