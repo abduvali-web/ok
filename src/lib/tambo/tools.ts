@@ -16,12 +16,25 @@ const queryParamSchema = z.object({
 const apiMethodSchema = z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]);
 
 const fileFormatSchema = z.enum(["csv", "json", "txt", "html", "pdf", "xlsx", "xml"]);
+const websiteEditModeSchema = z.enum(["full_rebuild", "merge_existing", "section_patch"]);
+const websiteSectionSchema = z.enum(["hero", "features", "pricing", "about"]);
+const uiComponentNameSchema = z.enum([
+  "AdminStatsGrid",
+  "SiteMetricGrid",
+  "SiteDataTable",
+  "SiteEntityCards",
+  "SiteBarChart",
+  "QuickLinks",
+  "SiteJsonPanel",
+]);
 
 const siteApiResponseSchema = z.object({
   ok: z.boolean(),
   method: apiMethodSchema,
   path: z.string(),
   status: z.number(),
+  contentType: z.string().optional(),
+  json: z.unknown().optional(),
   body: z.string().optional(),
   error: z.string().optional(),
 });
@@ -60,6 +73,13 @@ const websiteEditInputSchema = z
   .object({
     prompt: z.string().min(10).max(4000).optional(),
     apply: z.boolean().optional(),
+    mode: websiteEditModeSchema.optional(),
+    sections: z.array(websiteSectionSchema).max(4).optional(),
+    siteName: z.string().min(2).max(80).optional(),
+    styleVariant: z.string().min(2).max(60).optional(),
+    subdomain: z.string().min(3).max(40).optional(),
+    includeContentPreview: z.boolean().optional(),
+    targetAdminId: z.string().optional(),
     // Explicitly allow known execution metadata keys.
     status: z.string().optional(),
     completion: z.union([z.string(), z.number(), z.boolean()]).optional(),
@@ -69,10 +89,49 @@ const websiteEditInputSchema = z
 const websiteEditOutputSchema = z.object({
   ok: z.boolean(),
   applied: z.boolean(),
+  mode: websiteEditModeSchema.optional(),
+  updatedSections: z.array(websiteSectionSchema).optional(),
   subdomain: z.string().optional(),
   pathUrl: z.string().optional(),
   hostUrl: z.string().optional(),
+  renderPages: z
+    .array(
+      z.object({
+        id: z.string(),
+        label: z.string(),
+      })
+    )
+    .optional(),
   message: z.string(),
+  error: z.string().optional(),
+});
+
+const interactiveUiInputSchema = z
+  .object({
+    goal: z.string().min(10).max(4000),
+    sourcePath: z.string().optional(),
+    method: apiMethodSchema.optional(),
+    queryParams: z.array(queryParamSchema).max(50).optional(),
+    jsonBody: z.string().optional(),
+    preferredComponents: z.array(uiComponentNameSchema).max(7).optional(),
+    maxRows: z.number().int().min(5).max(200).optional(),
+    title: z.string().min(2).max(120).optional(),
+  })
+  .strict();
+
+const interactiveUiOutputSchema = z.object({
+  ok: z.boolean(),
+  title: z.string(),
+  summary: z.string(),
+  sourcePath: z.string().optional(),
+  components: z.array(
+    z.object({
+      name: uiComponentNameSchema,
+      reason: z.string(),
+      props: z.record(z.string(), z.unknown()),
+    })
+  ),
+  dataSample: z.string().optional(),
   error: z.string().optional(),
 });
 
@@ -198,6 +257,365 @@ function toTextSnapshot(payload: unknown, instructions?: string): string {
   }
 
   return blocks.join("\n");
+}
+
+type UiComponentName = z.infer<typeof uiComponentNameSchema>;
+type UiTone = "neutral" | "success" | "warning" | "danger";
+type UiEntityStatus = "active" | "paused" | "pending" | "failed";
+type InteractiveComponent = z.infer<typeof interactiveUiOutputSchema>["components"][number];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function toDisplayString(value: unknown, max = 180): string {
+  if (value == null) return "-";
+  if (typeof value === "string") {
+    const normalized = value.trim();
+    if (normalized.length <= max) return normalized;
+    return `${normalized.slice(0, max)}...`;
+  }
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (value instanceof Date) return value.toISOString();
+  try {
+    const text = JSON.stringify(value);
+    if (!text) return "-";
+    if (text.length <= max) return text;
+    return `${text.slice(0, max)}...`;
+  } catch {
+    return String(value);
+  }
+}
+
+function toLabelFromKey(key: string): string {
+  return key
+    .replace(/[_-]+/g, " ")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/^\w/, (c) => c.toUpperCase());
+}
+
+function toneFromText(input: unknown): UiTone | undefined {
+  if (typeof input !== "string") return undefined;
+  const value = input.toLowerCase();
+  if (/(delivered|success|active|paid|confirmed|done|online)/.test(value)) return "success";
+  if (/(pending|cooking|processing|on[_\s-]?way|queued|draft)/.test(value)) return "warning";
+  if (/(failed|cancelled|canceled|error|blocked|rejected|offline|unpaid)/.test(value)) return "danger";
+  return undefined;
+}
+
+function entityStatusFromText(input: unknown): UiEntityStatus | undefined {
+  if (typeof input !== "string") return undefined;
+  const value = input.toLowerCase();
+  if (/(active|available|delivered|success|online)/.test(value)) return "active";
+  if (/(pending|cooking|processing|on[_\s-]?way|queued)/.test(value)) return "pending";
+  if (/(paused|hold|inactive)/.test(value)) return "paused";
+  if (/(failed|cancelled|canceled|error|offline|rejected)/.test(value)) return "failed";
+  return undefined;
+}
+
+function stringifyJson(value: unknown, max = 10000): string {
+  try {
+    return truncateForModel(JSON.stringify(value ?? {}, null, 2), max);
+  } catch {
+    return truncateForModel(String(value ?? ""), max);
+  }
+}
+
+function getNestedByKey(payload: unknown, keys: string[]): unknown {
+  if (!isRecord(payload)) return undefined;
+  for (const key of keys) {
+    if (key in payload) return payload[key];
+  }
+  return undefined;
+}
+
+function pickPrimaryCollection(payload: unknown): Array<Record<string, unknown>> | null {
+  if (Array.isArray(payload)) {
+    const rows = payload.filter((item) => isRecord(item)) as Array<Record<string, unknown>>;
+    if (rows.length > 0) return rows;
+    return null;
+  }
+
+  if (!isRecord(payload)) return null;
+
+  const preferredCollection = getNestedByKey(payload, [
+    "items",
+    "rows",
+    "data",
+    "results",
+    "orders",
+    "customers",
+    "admins",
+    "couriers",
+    "records",
+    "list",
+  ]);
+
+  if (Array.isArray(preferredCollection)) {
+    const rows = preferredCollection.filter((item) => isRecord(item)) as Array<Record<string, unknown>>;
+    if (rows.length > 0) return rows;
+  }
+
+  if (Array.isArray(payload["tables"])) {
+    const tableRows: Array<Record<string, unknown>> = [];
+    for (const table of payload["tables"]) {
+      if (!isRecord(table)) continue;
+      const title = typeof table.title === "string" ? table.title : typeof table.id === "string" ? table.id : "Sheet";
+      const rowCount = typeof table.rowCount === "number" ? table.rowCount : Array.isArray(table.rows) ? table.rows.length : 0;
+      const columnCount =
+        typeof table.columnCount === "number" ? table.columnCount : Array.isArray(table.columns) ? table.columns.length : 0;
+      tableRows.push({ title, rowCount, columnCount });
+    }
+    if (tableRows.length > 0) return tableRows;
+  }
+
+  for (const value of Object.values(payload)) {
+    if (!Array.isArray(value)) continue;
+    const rows = value.filter((item) => isRecord(item)) as Array<Record<string, unknown>>;
+    if (rows.length > 0) return rows;
+  }
+
+  return null;
+}
+
+function extractNumericMetrics(payload: unknown): Array<{ key: string; value: number }> {
+  const entries: Array<{ key: string; value: number }> = [];
+  if (!isRecord(payload)) return entries;
+
+  const statsCandidate = getNestedByKey(payload, ["stats", "statistics", "summary", "metrics", "totals"]);
+  const record = isRecord(statsCandidate) ? statsCandidate : payload;
+
+  for (const [key, raw] of Object.entries(record)) {
+    if (typeof raw === "number" && Number.isFinite(raw)) {
+      entries.push({ key, value: raw });
+    }
+  }
+
+  return entries;
+}
+
+function buildAdminStatsComponent(
+  payload: unknown,
+  title: string
+): InteractiveComponent | null {
+  if (!isRecord(payload)) return null;
+  const candidate = isRecord(payload["stats"]) ? payload["stats"] : payload;
+  const parsed = adminStatsSchema.partial().safeParse(candidate);
+  if (!parsed.success) return null;
+
+  const hasValue = Object.values(parsed.data).some((value) => typeof value === "number");
+  if (!hasValue) return null;
+
+  return {
+    name: "AdminStatsGrid",
+    reason: "Payload includes admin order/customer statistics.",
+    props: {
+      title,
+      stats: parsed.data,
+    },
+  };
+}
+
+function buildMetricGridComponent(
+  payload: unknown,
+  title: string
+): InteractiveComponent | null {
+  const metrics = extractNumericMetrics(payload)
+    .slice(0, 12)
+    .map((item) => ({
+      label: toLabelFromKey(item.key),
+      value: String(item.value),
+      tone: toneFromText(item.key) ?? "neutral",
+    }));
+
+  if (metrics.length === 0) return null;
+
+  return {
+    name: "SiteMetricGrid",
+    reason: "Numeric fields were converted into KPI cards.",
+    props: {
+      title,
+      metrics,
+    },
+  };
+}
+
+function buildTableComponent(
+  rows: Array<Record<string, unknown>>,
+  title: string,
+  maxRows: number
+): InteractiveComponent | null {
+  if (rows.length === 0) return null;
+
+  const sample = rows.slice(0, maxRows);
+  const keySet = new Set<string>();
+  for (const row of sample) {
+    Object.keys(row).forEach((key) => keySet.add(key));
+  }
+  const keys = Array.from(keySet).slice(0, 12);
+  if (keys.length === 0) return null;
+
+  const columns = keys.map((key) => ({
+    key,
+    label: toLabelFromKey(key),
+  }));
+
+  const tableRows = sample.map((row, index) => {
+    const rowIdRaw = row.id;
+    const rowId =
+      typeof rowIdRaw === "string" && rowIdRaw.trim().length > 0
+        ? rowIdRaw
+        : `row-${index + 1}`;
+
+    return {
+      id: rowId,
+      cells: keys.map((key) => {
+        const value = row[key];
+        const tone = /status|state|result|payment/i.test(key)
+          ? toneFromText(value)
+          : undefined;
+        return {
+          key,
+          value: toDisplayString(value),
+          ...(tone ? { tone } : {}),
+        };
+      }),
+    };
+  });
+
+  return {
+    name: "SiteDataTable",
+    reason: "Primary collection was mapped to searchable table rows.",
+    props: {
+      title,
+      columns,
+      rows: tableRows,
+      emptyText: "No data available.",
+    },
+  };
+}
+
+function buildEntityCardsComponent(
+  rows: Array<Record<string, unknown>>,
+  title: string,
+  maxRows: number
+): InteractiveComponent | null {
+  if (rows.length === 0) return null;
+
+  const items = rows.slice(0, Math.min(maxRows, 24)).map((row, index) => {
+    const titleValue =
+      row.name ??
+      row.title ??
+      row.fullName ??
+      row.phone ??
+      row.email ??
+      row.id ??
+      `Entity ${index + 1}`;
+    const subtitleValue = row.subtitle ?? row.description ?? row.address ?? row.phone ?? row.email;
+    const metaParts = [
+      row.status ? `status: ${toDisplayString(row.status, 60)}` : "",
+      row.createdAt ? `created: ${toDisplayString(row.createdAt, 60)}` : "",
+      row.updatedAt ? `updated: ${toDisplayString(row.updatedAt, 60)}` : "",
+    ].filter(Boolean);
+
+    const status = entityStatusFromText(row.status ?? row.orderStatus ?? row.state);
+    return {
+      title: toDisplayString(titleValue, 100),
+      ...(subtitleValue ? { subtitle: toDisplayString(subtitleValue, 100) } : {}),
+      ...(metaParts.length > 0 ? { meta: metaParts.join(" | ") } : {}),
+      ...(status ? { status } : {}),
+    };
+  });
+
+  return {
+    name: "SiteEntityCards",
+    reason: "Collection items were condensed into card-friendly entities.",
+    props: {
+      title,
+      items,
+    },
+  };
+}
+
+function buildStatusBarsFromRows(rows: Array<Record<string, unknown>>) {
+  const statusBuckets = new Map<string, number>();
+  for (const row of rows) {
+    const raw = row.status ?? row.orderStatus ?? row.state;
+    if (raw == null) continue;
+    const label = toDisplayString(raw, 40);
+    if (!label || label === "-") continue;
+    statusBuckets.set(label, (statusBuckets.get(label) ?? 0) + 1);
+  }
+
+  return Array.from(statusBuckets.entries())
+    .slice(0, 10)
+    .map(([label, value]) => ({
+      label,
+      value,
+      tone: toneFromText(label) ?? "neutral",
+    }));
+}
+
+function buildChartComponent(
+  payload: unknown,
+  rows: Array<Record<string, unknown>> | null,
+  title: string
+): InteractiveComponent | null {
+  const barsFromRows = rows ? buildStatusBarsFromRows(rows) : [];
+  if (barsFromRows.length > 0) {
+    return {
+      name: "SiteBarChart",
+      reason: "Status distribution from the primary collection.",
+      props: {
+        title,
+        subtitle: "Grouped by status",
+        bars: barsFromRows,
+      },
+    };
+  }
+
+  const numericBars = extractNumericMetrics(payload)
+    .slice(0, 10)
+    .map((item) => ({
+      label: toLabelFromKey(item.key),
+      value: item.value,
+      tone: toneFromText(item.key) ?? "neutral",
+    }));
+
+  if (numericBars.length === 0) return null;
+
+  return {
+    name: "SiteBarChart",
+    reason: "Numeric payload fields were visualized as bars.",
+    props: {
+      title,
+      bars: numericBars,
+    },
+  };
+}
+
+function buildQuickLinksComponent(sourcePath: string): InteractiveComponent {
+  return {
+    name: "QuickLinks",
+    reason: "Provides fast navigation back to relevant admin areas.",
+    props: {
+      title: "Quick links",
+      links: [
+        {
+          label: "Database",
+          href: "/middle-admin/database",
+          description: "Open full database tables and exports.",
+        },
+        {
+          label: "API source",
+          href: sourcePath,
+          description: "Inspect the data endpoint used for this view.",
+        },
+      ],
+    },
+  };
 }
 
 function buildHtmlReport(title: string, textContent: string): string {
@@ -712,23 +1130,31 @@ export const siteApiRequestTool = registerTamboTool({
       };
     }
 
+    const contentType = response.headers.get("content-type") ?? undefined;
     const rawText = await response.text().catch(() => "");
-    let normalized = rawText;
+
+    let parsedJson: unknown | undefined;
     if (rawText) {
       try {
-        normalized = JSON.stringify(JSON.parse(rawText), null, 2);
+        parsedJson = JSON.parse(rawText) as unknown;
       } catch {
-        normalized = rawText;
+        parsedJson = undefined;
       }
     }
 
-    const safeBody = normalized ? truncateForModel(normalized) : undefined;
+    const normalizedBody =
+      parsedJson !== undefined
+        ? JSON.stringify(parsedJson, null, 2)
+        : rawText;
+    const safeBody = normalizedBody ? truncateForModel(normalizedBody) : undefined;
 
     return {
       ok: response.ok,
       method: safeMethod,
       path: normalizedPath,
       status: response.status,
+      ...(contentType ? { contentType } : {}),
+      ...(parsedJson !== undefined ? { json: parsedJson } : {}),
       ...(safeBody ? { body: safeBody } : {}),
       ...(!response.ok ? { error: `Request failed with status ${response.status}` } : {}),
     };
@@ -739,7 +1165,7 @@ export const createDatabaseFileTool = registerTamboTool({
   name: "create_database_file",
   title: "Create database file",
   description:
-    "Create downloadable files (CSV, JSON, TXT, HTML, PDF, XML spreadsheet) from live API data and user instructions.",
+    "Create downloadable files (CSV, JSON, TXT, HTML, PDF, XLSX, XML spreadsheet) from live API data and user instructions.",
   annotations: {},
   inputSchema: fileExportInputSchema,
   outputSchema: fileExportOutputSchema,
@@ -826,11 +1252,145 @@ export const createDatabaseFileTool = registerTamboTool({
   },
 });
 
+function emptyComponentByName(name: UiComponentName, sourcePath: string): InteractiveComponent {
+  if (name === "AdminStatsGrid") {
+    return {
+      name,
+      reason: "Fallback component when source payload is empty.",
+      props: { title: "Admin statistics", stats: {} },
+    };
+  }
+  if (name === "SiteMetricGrid") {
+    return {
+      name,
+      reason: "Fallback component when numeric metrics are unavailable.",
+      props: { title: "Metrics", metrics: [] },
+    };
+  }
+  if (name === "SiteDataTable") {
+    return {
+      name,
+      reason: "Fallback component when no table rows were detected.",
+      props: { title: "Data table", columns: [], rows: [], emptyText: "No data available." },
+    };
+  }
+  if (name === "SiteEntityCards") {
+    return {
+      name,
+      reason: "Fallback component when no entities were detected.",
+      props: { title: "Entities", items: [] },
+    };
+  }
+  if (name === "SiteBarChart") {
+    return {
+      name,
+      reason: "Fallback component when chart values are unavailable.",
+      props: { title: "Chart", bars: [] },
+    };
+  }
+  if (name === "QuickLinks") {
+    return buildQuickLinksComponent(sourcePath);
+  }
+  return {
+    name: "SiteJsonPanel",
+    reason: "Fallback raw JSON view.",
+    props: { title: "Raw payload", json: "{}" },
+  };
+}
+
+export const buildInteractiveUiTool = registerTamboTool({
+  name: "build_interactive_ui",
+  title: "Build interactive UI",
+  description:
+    "Convert live API payloads into ready-to-render Tambo component props for interactive admin UI.",
+  annotations: {},
+  inputSchema: interactiveUiInputSchema,
+  outputSchema: interactiveUiOutputSchema,
+  defaultMessage: "Failed to build interactive UI payload.",
+  tool: async (input) => {
+    try {
+      const safeInput = interactiveUiInputSchema.parse(input);
+      const sourcePath = safeInput.sourcePath?.trim() || "/api/admin/statistics";
+      const method = safeInput.method ?? "GET";
+      const maxRows = safeInput.maxRows ?? 40;
+      const baseTitle = safeInput.title?.trim() || "Interactive data view";
+      const preferred = new Set<UiComponentName>(safeInput.preferredComponents ?? []);
+
+      const payload = await fetchApiPayload({
+        path: sourcePath,
+        method,
+        queryParams: safeInput.queryParams,
+        jsonBody: safeInput.jsonBody,
+      });
+
+      const rows = pickPrimaryCollection(payload);
+      const components: InteractiveComponent[] = [];
+
+      const push = (component: InteractiveComponent | null) => {
+        if (!component) return;
+        if (preferred.size > 0 && !preferred.has(component.name)) return;
+        if (components.some((existing) => existing.name === component.name)) return;
+        components.push(component);
+      };
+
+      push(buildAdminStatsComponent(payload, baseTitle));
+      push(buildMetricGridComponent(payload, baseTitle));
+      if (rows) {
+        push(buildTableComponent(rows, `${baseTitle} table`, maxRows));
+        push(buildEntityCardsComponent(rows, `${baseTitle} entities`, maxRows));
+      }
+      push(buildChartComponent(payload, rows, `${baseTitle} chart`));
+      push(buildQuickLinksComponent(sourcePath));
+      push({
+        name: "SiteJsonPanel",
+        reason: "Raw payload panel for debug details and edge cases.",
+        props: {
+          title: `${baseTitle} JSON`,
+          json: stringifyJson(payload, 12000),
+        },
+      });
+
+      if (components.length === 0) {
+        const fallbackName = preferred.size > 0 ? Array.from(preferred)[0] : "SiteJsonPanel";
+        components.push(emptyComponentByName(fallbackName, sourcePath));
+      }
+
+      return {
+        ok: true,
+        title: baseTitle,
+        summary: `Generated ${components.length} component payload(s) from ${sourcePath}.`,
+        sourcePath,
+        components,
+        dataSample: stringifyJson(payload, 4500),
+      };
+    } catch (error) {
+      const safeInput = interactiveUiInputSchema.safeParse(input);
+      return {
+        ok: false,
+        title:
+          safeInput.success && safeInput.data.title
+            ? safeInput.data.title
+            : "Interactive data view",
+        summary: "Interactive UI build failed.",
+        sourcePath:
+          safeInput.success && safeInput.data.sourcePath
+            ? safeInput.data.sourcePath
+            : undefined,
+        components: [],
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown error while preparing interactive UI payload.",
+      };
+    }
+  },
+});
+
 export const editSubdomainWebsiteTool = registerTamboTool({
   name: "edit_subdomain_website",
   title: "Edit subdomain website",
   description:
-    "Generate and apply subdomain website content from a natural-language prompt.",
+    "Generate and apply full or section-level subdomain website content updates from a natural-language prompt.",
   annotations: {},
   inputSchema: websiteEditInputSchema,
   outputSchema: websiteEditOutputSchema,
@@ -875,6 +1435,15 @@ export const editSubdomainWebsiteTool = registerTamboTool({
       body: JSON.stringify({
         prompt,
         apply: payload.apply ?? true,
+        ...(payload.mode ? { mode: payload.mode } : {}),
+        ...(payload.sections ? { sections: payload.sections } : {}),
+        ...(payload.siteName ? { siteName: payload.siteName } : {}),
+        ...(payload.styleVariant ? { styleVariant: payload.styleVariant } : {}),
+        ...(payload.subdomain ? { subdomain: payload.subdomain } : {}),
+        ...(payload.targetAdminId ? { targetAdminId: payload.targetAdminId } : {}),
+        ...(typeof payload.includeContentPreview === "boolean"
+          ? { includeContentPreview: payload.includeContentPreview }
+          : {}),
       }),
     });
 
@@ -892,9 +1461,31 @@ export const editSubdomainWebsiteTool = registerTamboTool({
     return {
       ok: true,
       applied: Boolean(data?.applied),
+      mode: websiteEditModeSchema.safeParse(data?.mode).success
+        ? (data.mode as z.infer<typeof websiteEditModeSchema>)
+        : undefined,
+      updatedSections: Array.isArray(data?.updatedSections)
+        ? data.updatedSections
+            .map((section: unknown) => websiteSectionSchema.safeParse(section))
+            .filter((section) => section.success)
+            .map((section) => section.data)
+        : undefined,
       subdomain: typeof data?.website?.subdomain === "string" ? data.website.subdomain : undefined,
       pathUrl: typeof data?.urls?.pathUrl === "string" ? data.urls.pathUrl : undefined,
       hostUrl: typeof data?.urls?.hostUrl === "string" ? data.urls.hostUrl : undefined,
+      renderPages: Array.isArray(data?.renderPages)
+        ? data.renderPages
+            .filter(
+              (item: unknown) =>
+                isRecord(item) &&
+                typeof item.id === "string" &&
+                typeof item.label === "string"
+            )
+            .map((item) => ({
+              id: String(item.id),
+              label: String(item.label),
+            }))
+        : undefined,
       message:
         typeof data?.message === "string"
           ? data.message
@@ -920,6 +1511,7 @@ export const siteUiCatalogTool = registerTamboTool({
       notes: [
         "Do not embed or mirror full site pages.",
         "Build UI only from these components and live data from site_api_request.",
+        "Use build_interactive_ui to transform API payloads into component-ready props.",
         "Prefer dense, table-first layouts and minimal action controls.",
       ],
       components: [

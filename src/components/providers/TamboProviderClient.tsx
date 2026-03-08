@@ -10,6 +10,7 @@ import { MessageSquare } from "lucide-react";
 
 import { tamboComponents } from "@/lib/tambo/components";
 import {
+  buildInteractiveUiTool,
   createDatabaseFileTool,
   editSubdomainWebsiteTool,
   getAdminStatisticsTool,
@@ -53,6 +54,7 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
       siteApiCatalogTool,
       siteUiCatalogTool,
       siteApiRequestTool,
+      buildInteractiveUiTool,
       createDatabaseFileTool,
       editSubdomainWebsiteTool,
     ],
@@ -94,7 +96,7 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
           content: [
             {
               type: "text",
-              text: "You are AutoFood admin AI in strict generative UI mode. Use site_api_catalog and site_ui_catalog, then call site_api_request for live data (GET/POST/PUT/PATCH/DELETE). When users ask for downloadable outputs, use create_database_file and always return the generated downloadUrl. When users ask to improve a subdomain website, use edit_subdomain_website with an actionable prompt and report resulting pathUrl/hostUrl. Build responses only with AdminStatsGrid, SiteMetricGrid, SiteDataTable, SiteEntityCards, SiteBarChart, QuickLinks, and SiteJsonPanel. Never embed, mirror, or copy full site pages; compose original interactive UI from data and components. Prefer dense table-first layouts, concise summaries, and minimal action controls.",
+              text: "You are AutoFood admin AI in strict generative UI mode. Workflow: use site_api_catalog and site_ui_catalog first, call site_api_request for live data, then call build_interactive_ui to transform payloads into component-ready props before rendering. Build responses only with AdminStatsGrid, SiteMetricGrid, SiteDataTable, SiteEntityCards, SiteBarChart, QuickLinks, and SiteJsonPanel. Never embed, mirror, or copy full site pages; compose original interactive UI from data and components. For downloadable outputs, call create_database_file and always return downloadUrl with fileName/format. For subdomain work, call edit_subdomain_website with explicit mode (full_rebuild, merge_existing, or section_patch), include sections/siteName/styleVariant/subdomain when relevant, and report resulting pathUrl and hostUrl. Prefer dense table-first layouts, concise summaries, and minimal action controls.",
             },
           ],
         },
