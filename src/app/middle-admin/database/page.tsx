@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Bot, Database, Download, Loader2, RefreshCw, Search, Table2, CalendarIcon, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
+import { ArrowLeft, Bot, Database, Download, Loader2, RefreshCw, Search, Table2, CalendarIcon, ChevronLeft, ChevronRight, Plus, Edit } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
@@ -17,6 +17,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { format, addDays } from 'date-fns'
 import { DateRange } from 'react-day-picker'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 type DatabaseTable = {
   id: string
@@ -287,6 +288,9 @@ export default function DatabasePage() {
   const [draftRow, setDraftRow] = useState<Record<string, string> | null>(null)
   const [draftRowTableId, setDraftRowTableId] = useState<string | null>(null)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
+
+  const [editingRowId, setEditingRowId] = useState<string | null>(null)
+  const [editingRowData, setEditingRowData] = useState<Record<string, string> | null>(null)
   
   const uiText = useMemo(() => {
     if (language === 'ru') {
@@ -338,12 +342,14 @@ export default function DatabasePage() {
         columnPrefix: 'колонка',
         tamboPrompt: (targetLabel: string) =>
           `Проанализируй ${targetLabel} в Neon DB среднего администратора и помоги с выгрузками, сводками или исправлениями.`,
+        addRow: 'Добавить строку',
         saveRow: 'Сохранить',
         cancelRow: 'Отмена',
         rowSaved: 'Строка сохранена',
         rowSaveFailed: 'Ошибка сохранения строки',
-        startDate: 'От',
-        endDate: 'До',
+        editRow: 'Редактировать',
+        saveEdit: 'Сохранить изменения',
+        cancelEdit: 'Отмена',
       }
     }
 
@@ -396,12 +402,14 @@ export default function DatabasePage() {
         columnPrefix: 'ustun',
         tamboPrompt: (targetLabel: string) =>
           `O'rta administrator Neon DB'sida ${targetLabel} tahlil qiling va yuklab olish, sarhisob qilish yoki tuzatishlarda yordam bering.`,
+        addRow: 'Qator qo\'shish',
         saveRow: 'Saqlash',
         cancelRow: 'Bekor qilish',
         rowSaved: 'Qator saqlandi',
         rowSaveFailed: 'Qatorni saqlashda xatolik',
-        startDate: 'Dan',
-        endDate: 'Gacha',
+        editRow: 'Tahrirlash',
+        saveEdit: 'O\'zgarishlarni saqlash',
+        cancelEdit: 'Bekor qilish',
       }
     }
 
@@ -458,8 +466,9 @@ export default function DatabasePage() {
       cancelRow: 'Cancel',
       rowSaved: 'Row saved',
       rowSaveFailed: 'Failed to save row',
-      startDate: 'Start',
-      endDate: 'End',
+      editRow: 'Edit',
+      saveEdit: 'Save changes',
+      cancelEdit: 'Cancel',
     }
   }, [language])
 
@@ -547,6 +556,57 @@ export default function DatabasePage() {
       }
     }
     return dbDict[language as string]?.[key] || key
+  }, [language])
+
+  const tDbValue = useCallback((value: string) => {
+    if (value === 'null' || value === '' || value === '""' || value === '{}' || value === '[]') return '-'
+    if (value === 'true') return language === 'ru' ? 'да' : 'ha'
+    if (value === 'false') return language === 'ru' ? 'нет' : 'yoq'
+    
+    // Statuses
+    const statusDict: Record<string, Record<string, string>> = {
+      ru: {
+        'ACTIVE': 'АКТИВЕН',
+        'INACTIVE': 'НЕАКТИВЕН',
+        'PAUSED': 'ПРИОСТАНОВЛЕН',
+        'PENDING': 'В ОЖИДАНИИ',
+        'DELIVERED': 'ДОСТАВЛЕН',
+        'CANCELLED': 'ОТМЕНЕН',
+        'COMPLETED': 'ЗАВЕРШЕН',
+        'SUPER_ADMIN': 'СУПЕР АДМИН',
+        'MIDDLE_ADMIN': 'СРЕДНИЙ АДМИН',
+        'LOW_ADMIN': 'МЛАДШИЙ АДМИН',
+        'COURIER': 'КУРЬЕР',
+        'WORKER': 'РАБОТНИК',
+      },
+      uz: {
+        'ACTIVE': 'FAOL',
+        'INACTIVE': 'NOFAOL',
+        'PAUSED': 'TO\'XTATILGAN',
+        'PENDING': 'KUTILMOQDA',
+        'DELIVERED': 'YETKAZILGAN',
+        'CANCELLED': 'BEKOR QILINGAN',
+        'COMPLETED': 'YAKUNLANGAN',
+        'SUPER_ADMIN': 'SUPER ADMIN',
+        'MIDDLE_ADMIN': 'O\'RTA ADMIN',
+        'LOW_ADMIN': 'KICHIK ADMIN',
+        'COURIER': 'KURYER',
+        'WORKER': 'ISHCHI',
+      }
+    }
+
+    // Attempt to parse JSON objects to make them readable
+    if (value.startsWith('{') || value.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(value)
+        if (Object.keys(parsed).length === 0) return '-'
+        return JSON.stringify(parsed, null, 2).replace(/[{}[\]"]/g, '').split('\n').map(line => line.trim()).filter(Boolean).join(', ')
+      } catch (e) {
+        return value
+      }
+    }
+
+    return statusDict[language as string]?.[value] || value
   }, [language])
 
   const loadSnapshot = useCallback(async (background = false) => {
@@ -643,6 +703,34 @@ export default function DatabasePage() {
       toast.success(uiText.rowSaved)
       setDraftRow(null)
       setDraftRowTableId(null)
+      void loadSnapshot(true)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : uiText.rowSaveFailed)
+    } finally {
+      setIsSavingDraft(false)
+    }
+  }
+
+  const handleUpdateRow = async () => {
+    if (!currentTable || !editingRowData || !editingRowId) return
+    setIsSavingDraft(true)
+    try {
+      const response = await fetch('/api/admin/database-row', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tableId: currentTable.id,
+          id: editingRowId,
+          data: editingRowData,
+        }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || uiText.rowSaveFailed)
+
+      toast.success(uiText.rowSaved)
+      setEditingRowId(null)
+      setEditingRowData(null)
       void loadSnapshot(true)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : uiText.rowSaveFailed)
@@ -761,38 +849,43 @@ export default function DatabasePage() {
                 {tables.length} {uiText.sheetsCount}
               </Badge>
               
-              <div className="flex items-center space-x-2">
-                <div className="grid gap-1">
-                  <span className="text-[10px] text-muted-foreground uppercase leading-none">{uiText.startDate ?? 'Start'}</span>
-                  <Input
-                    type="date"
-                    className="h-9 w-32 px-2"
-                    value={date?.from ? format(date.from, 'yyyy-MM-dd') : ''}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      setDate(prev => ({ ...prev, from: val ? new Date(val) : undefined } as DateRange))
-                    }}
-                  />
-                </div>
-                <div className="flex items-center text-muted-foreground pt-4">-</div>
-                <div className="grid gap-1">
-                  <span className="text-[10px] text-muted-foreground uppercase leading-none">{uiText.endDate ?? 'End'}</span>
-                  <Input
-                    type="date"
-                    className="h-9 w-32 px-2"
-                    value={date?.to ? format(date.to, 'yyyy-MM-dd') : ''}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      setDate(prev => ({ ...prev, to: val ? new Date(val) : undefined } as DateRange))
-                    }}
-                  />
-                </div>
-                {(date?.from || date?.to) && (
-                  <Button variant="ghost" size="icon" className="h-9 w-9 mt-4" onClick={() => setDate(undefined)}>
-                    <X className="h-4 w-4 text-muted-foreground" />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-[260px] justify-start bg-background dark:bg-black/50 overflow-hidden text-zinc-900 dark:text-white border-black/10 dark:border-white/[0.08]">
+                    <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                    {date?.from ? (
+                      date.to ? (
+                        <>
+                          {format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}
+                        </>
+                      ) : (
+                        format(date.from, "LLL dd, y")
+                      )
+                    ) : (
+                      <span>{uiText.allTime}</span>
+                    )}
                   </Button>
-                )}
-              </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={date?.from}
+                    selected={date}
+                    onSelect={setDate}
+                    numberOfMonths={typeof window !== 'undefined' && window.innerWidth >= 768 ? 2 : 1}
+                  />
+                  <div className="p-3 border-t border-black/5 dark:border-white/10">
+                    <Button 
+                      variant="ghost" 
+                      className="w-full h-8 text-xs font-semibold justify-center hover:bg-black/5 dark:hover:bg-white/10"
+                      onClick={() => setDate(undefined)}
+                    >
+                      {uiText.allTime}
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
 
               <Button variant="outline" onClick={() => void loadSnapshot(true)} disabled={isRefreshing}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -806,6 +899,7 @@ export default function DatabasePage() {
                 <Bot className="mr-2 h-4 w-4" />
                 {uiText.askTambo}
               </Button>
+              <LanguageSwitcher />
             </div>
           </div>
         </CardHeader>
@@ -910,24 +1004,62 @@ export default function DatabasePage() {
                               {tDb(column)}
                             </TableHead>
                           ))}
+                          <TableHead className="w-[100px] text-right"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredRows.length > 0 ? (
                           filteredRows.map((row, index) => (
-                            <TableRow key={`${table.id}-${index}`}>
-                              {table.columns.map((column) => (
-                                <TableCell key={`${table.id}-${index}-${column}`} className="max-w-[320px] align-top">
-                                  <div className="line-clamp-4 whitespace-pre-wrap break-words text-sm">
-                                    {row[column] || '-'}
+                            editingRowId === row.id && row.id ? (
+                              <TableRow key={`${table.id}-editing-${index}`} className="bg-muted/30">
+                                {table.columns.map((column) => (
+                                  <TableCell key={`editing-${column}`}>
+                                    {column === 'id' || column === 'createdAt' || column === 'updatedAt' ? (
+                                      <div className="text-xs text-muted-foreground whitespace-nowrap">{row[column] || '-'}</div>
+                                    ) : (
+                                      <Input
+                                        value={editingRowData?.[column] || ''}
+                                        onChange={(e) => setEditingRowData(prev => ({ ...(prev || {}), [column]: e.target.value }))}
+                                        className="min-w-[120px] h-8 text-sm"
+                                        disabled={isSavingDraft}
+                                      />
+                                    )}
+                                  </TableCell>
+                                ))}
+                                <TableCell className="text-right">
+                                  <div className="flex flex-col gap-2 justify-end">
+                                    <Button size="sm" onClick={handleUpdateRow} disabled={isSavingDraft}>
+                                      {isSavingDraft ? <Loader2 className="h-4 w-4 animate-spin" /> : uiText.saveEdit}
+                                    </Button>
+                                    <Button variant="ghost" size="sm" onClick={() => { setEditingRowId(null); setEditingRowData(null) }}>
+                                      {uiText.cancelEdit}
+                                    </Button>
                                   </div>
                                 </TableCell>
-                              ))}
-                            </TableRow>
+                              </TableRow>
+                            ) : (
+                              <TableRow key={`${table.id}-${index}`}>
+                                {table.columns.map((column) => (
+                                  <TableCell key={`${table.id}-${index}-${column}`} className="max-w-[320px] align-top">
+                                    <div className="line-clamp-4 whitespace-pre-wrap break-words text-sm">
+                                      {tDbValue(row[column] || '-')}
+                                    </div>
+                                  </TableCell>
+                                ))}
+                                <TableCell className="text-right align-top">
+                                  {row.id ? (
+                                    <Button variant="ghost" size="sm" onClick={() => { setEditingRowId(row.id as string); setEditingRowData(row as Record<string, string>) }}>
+                                      <Edit className="h-4 w-4 mr-1" />
+                                      {uiText.editRow}
+                                    </Button>
+                                  ) : null}
+                                </TableCell>
+                              </TableRow>
+                            )
                           ))
                         ) : draftRowTableId !== table.id ? (
                           <TableRow>
-                            <TableCell colSpan={table.columns.length} className="py-10 text-center text-sm text-muted-foreground">
+                            <TableCell colSpan={table.columns.length + 1} className="py-10 text-center text-sm text-muted-foreground">
                               {uiText.noRowsMatch}
                             </TableCell>
                           </TableRow>
@@ -952,6 +1084,7 @@ export default function DatabasePage() {
                                 )}
                               </TableCell>
                             ))}
+                            <TableCell></TableCell>
                           </TableRow>
                         )}
                       </TableBody>
