@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Bot, Database, Download, Loader2, RefreshCw, Search, Table2, CalendarIcon, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { ArrowLeft, Bot, Database, Download, Loader2, RefreshCw, Search, Table2, CalendarIcon, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
@@ -338,11 +338,12 @@ export default function DatabasePage() {
         columnPrefix: 'колонка',
         tamboPrompt: (targetLabel: string) =>
           `Проанализируй ${targetLabel} в Neon DB среднего администратора и помоги с выгрузками, сводками или исправлениями.`,
-        addRow: 'Добавить строку',
         saveRow: 'Сохранить',
         cancelRow: 'Отмена',
         rowSaved: 'Строка сохранена',
         rowSaveFailed: 'Ошибка сохранения строки',
+        startDate: 'От',
+        endDate: 'До',
       }
     }
 
@@ -395,11 +396,12 @@ export default function DatabasePage() {
         columnPrefix: 'ustun',
         tamboPrompt: (targetLabel: string) =>
           `O'rta administrator Neon DB'sida ${targetLabel} tahlil qiling va yuklab olish, sarhisob qilish yoki tuzatishlarda yordam bering.`,
-        addRow: 'Qator qo\'shish',
         saveRow: 'Saqlash',
         cancelRow: 'Bekor qilish',
         rowSaved: 'Qator saqlandi',
         rowSaveFailed: 'Qatorni saqlashda xatolik',
+        startDate: 'Dan',
+        endDate: 'Gacha',
       }
     }
 
@@ -456,6 +458,8 @@ export default function DatabasePage() {
       cancelRow: 'Cancel',
       rowSaved: 'Row saved',
       rowSaveFailed: 'Failed to save row',
+      startDate: 'Start',
+      endDate: 'End',
     }
   }, [language])
 
@@ -757,43 +761,38 @@ export default function DatabasePage() {
                 {tables.length} {uiText.sheetsCount}
               </Badge>
               
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-[260px] justify-start bg-background dark:bg-black/50 overflow-hidden text-zinc-900 dark:text-white border-black/10 dark:border-white/[0.08]">
-                    <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
-                    {date?.from ? (
-                      date.to ? (
-                        <>
-                          {format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}
-                        </>
-                      ) : (
-                        format(date.from, "LLL dd, y")
-                      )
-                    ) : (
-                      <span>{uiText.allTime}</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={date?.from}
-                    selected={date}
-                    onSelect={setDate}
-                    numberOfMonths={typeof window !== 'undefined' && window.innerWidth >= 768 ? 2 : 1}
+              <div className="flex items-center space-x-2">
+                <div className="grid gap-1">
+                  <span className="text-[10px] text-muted-foreground uppercase leading-none">{uiText.startDate ?? 'Start'}</span>
+                  <Input
+                    type="date"
+                    className="h-9 w-32 px-2"
+                    value={date?.from ? format(date.from, 'yyyy-MM-dd') : ''}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setDate(prev => ({ ...prev, from: val ? new Date(val) : undefined } as DateRange))
+                    }}
                   />
-                  <div className="p-3 border-t border-black/5 dark:border-white/10">
-                    <Button 
-                      variant="ghost" 
-                      className="w-full h-8 text-xs font-semibold justify-center hover:bg-black/5 dark:hover:bg-white/10"
-                      onClick={() => setDate(undefined)}
-                    >
-                      {uiText.allTime}
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                </div>
+                <div className="flex items-center text-muted-foreground pt-4">-</div>
+                <div className="grid gap-1">
+                  <span className="text-[10px] text-muted-foreground uppercase leading-none">{uiText.endDate ?? 'End'}</span>
+                  <Input
+                    type="date"
+                    className="h-9 w-32 px-2"
+                    value={date?.to ? format(date.to, 'yyyy-MM-dd') : ''}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setDate(prev => ({ ...prev, to: val ? new Date(val) : undefined } as DateRange))
+                    }}
+                  />
+                </div>
+                {(date?.from || date?.to) && (
+                  <Button variant="ghost" size="icon" className="h-9 w-9 mt-4" onClick={() => setDate(undefined)}>
+                    <X className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                )}
+              </div>
 
               <Button variant="outline" onClick={() => void loadSnapshot(true)} disabled={isRefreshing}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
