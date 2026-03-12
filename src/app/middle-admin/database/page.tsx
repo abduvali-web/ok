@@ -3,16 +3,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Bot, Database, Download, Loader2, RefreshCw, Search, Table2 } from 'lucide-react'
+import { ArrowLeft, Bot, Database, Download, Loader2, RefreshCw, Search, Table2, CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 type DatabaseTable = {
@@ -279,6 +278,8 @@ export default function DatabasePage() {
   const [activeTab, setActiveTab] = useState('summary')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedMonth, setSelectedMonth] = useState('all')
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false)
+  const [monthPickerYear, setMonthPickerYear] = useState(new Date().getFullYear())
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const uiText = useMemo(() => {
@@ -480,18 +481,20 @@ export default function DatabasePage() {
     void loadSnapshot()
   }, [loadSnapshot])
 
-  const monthOptions = useMemo(() => {
-    const options = [{ value: 'all', label: uiText.allTime }]
-    const now = new Date()
-    for (let i = 0; i < 24; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const monthStr = (d.getMonth() + 1).toString().padStart(2, '0')
-      const value = `${d.getFullYear()}-${monthStr}`
-      const label = d.toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US', { month: 'long', year: 'numeric' })
-      options.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) })
-    }
-    return options
-  }, [uiText.allTime, language])
+  const monthNames = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(2000, i, 1)
+      const label = d.toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US', { month: 'short' })
+      return label.charAt(0).toUpperCase() + label.slice(1)
+    })
+  }, [language])
+
+  const formatSelectedMonth = (val: string) => {
+    if (val === 'all') return uiText.allTime
+    const [year, month] = val.split('-')
+    const d = new Date(parseInt(year, 10), parseInt(month, 10) - 1, 1)
+    return d.toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US', { month: 'long', year: 'numeric' })
+  }
 
   const tables = useMemo(() => snapshot?.tables ?? [], [snapshot?.tables])
   const summary = useMemo(() => snapshot?.summary ?? [], [snapshot?.summary])
@@ -626,18 +629,57 @@ export default function DatabasePage() {
                 {tables.length} {uiText.sheetsCount}
               </Badge>
               
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-[180px] bg-background">
-                  <SelectValue placeholder={uiText.allTime} />
-                </SelectTrigger>
-                <SelectContent>
-                  {monthOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={isMonthPickerOpen} onOpenChange={setIsMonthPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-[180px] justify-start bg-background dark:bg-black/50 overflow-hidden text-zinc-900 dark:text-white border-black/10 dark:border-white/[0.08]">
+                    <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                    <span className="truncate">{formatSelectedMonth(selectedMonth)}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-3" align="start">
+                  <div className="flex items-center gap-2 justify-between pb-3 border-b border-black/5 dark:border-white/10 mb-2">
+                    <Button variant="outline" size="icon" className="h-7 w-7 bg-transparent" onClick={() => setMonthPickerYear((y) => y - 1)}>
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <div className="text-sm font-semibold">{monthPickerYear}</div>
+                    <Button variant="outline" size="icon" className="h-7 w-7 bg-transparent" onClick={() => setMonthPickerYear((y) => y + 1)}>
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mb-2">
+                    {monthNames.map((monthName, index) => {
+                      const monthVal = `${monthPickerYear}-${(index + 1).toString().padStart(2, '0')}`
+                      const isSelected = selectedMonth === monthVal
+                      return (
+                        <Button
+                          key={monthName}
+                          variant={isSelected ? "default" : "ghost"}
+                          className={`h-9 w-14 text-xs ${isSelected ? 'bg-primary text-primary-foreground' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
+                          onClick={() => {
+                            setSelectedMonth(monthVal)
+                            setIsMonthPickerOpen(false)
+                          }}
+                        >
+                          {monthName}
+                        </Button>
+                      )
+                    })}
+                  </div>
+                  <div className="pt-2 border-t border-black/5 dark:border-white/10 mt-1">
+                    <Button 
+                      variant="ghost" 
+                      className="w-full h-8 text-xs font-semibold justify-center hover:bg-black/5 dark:hover:bg-white/10"
+                      onClick={() => {
+                        setSelectedMonth('all')
+                        setIsMonthPickerOpen(false)
+                        setMonthPickerYear(new Date().getFullYear())
+                      }}
+                    >
+                      {uiText.allTime}
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
 
               <Button variant="outline" onClick={() => void loadSnapshot(true)} disabled={isRefreshing}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
