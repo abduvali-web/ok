@@ -973,6 +973,11 @@ export function TamboAgentWidget() {
                             message.role === "user" ? styles.userRow : styles.assistantRow
                           )}
                         >
+                          {message.role !== "user" ? (
+                            <div className={styles.messageAvatar}>
+                              <Bot className="h-4 w-4" />
+                            </div>
+                          ) : null}
                           <div
                             className={cn(
                               styles.messageBubble,
@@ -980,7 +985,7 @@ export function TamboAgentWidget() {
                             )}
                           >
                             <div className={styles.messageMeta}>
-                              <span>{message.role === "user" ? "You" : "Tambo"}</span>
+                              <span className="font-semibold">{message.role === "user" ? "You" : "Tambo"}</span>
                               {formatMessageTime(message.createdAt) ? (
                                 <span>{formatMessageTime(message.createdAt)}</span>
                               ) : null}
@@ -1035,92 +1040,92 @@ export function TamboAgentWidget() {
                 </ScrollArea>
 
                 <div className={styles.footer}>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    onChange={handleFileSelection}
-                    className="hidden"
-                    aria-hidden
-                  />
-
-                  {images.length > 0 || textAttachments.length > 0 || attachmentError ? (
-                    <div className={styles.attachmentList}>
-                      {images.map((image) => (
-                        <button
-                          key={image.id}
-                          type="button"
-                          className={styles.attachmentChip}
-                          onClick={() => removeImage(image.id)}
-                          title="Remove image attachment"
-                        >
-                          {image.name}
-                          <span className={styles.attachmentChipMeta}>
-                            {formatFileSize(image.size)}
-                          </span>
-                        </button>
-                      ))}
-                      {textAttachments.map((attachment) => (
-                        <button
-                          key={attachment.id}
-                          type="button"
-                          className={styles.attachmentChip}
-                          onClick={() => removeTextAttachment(attachment.id)}
-                          title="Remove text attachment"
-                        >
-                          {attachment.name}
-                          <span className={styles.attachmentChipMeta}>
-                            {formatFileSize(attachment.size)}
-                          </span>
-                        </button>
-                      ))}
-                      {attachmentError ? (
-                        <p className={styles.attachmentError}>{attachmentError}</p>
-                      ) : null}
-                    </div>
-                  ) : null}
-
-                  <div className={styles.composer}>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={openFilePicker}
-                      disabled={isDisabled || isPending}
-                      aria-label="Attach file"
-                      className={styles.attachButton}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                    <Textarea
-                      ref={textareaRef}
-                      value={value}
-                      onChange={(event) => setValue(event.target.value)}
-                      onKeyDown={handleComposerKeyDown}
-                      onInput={syncTextareaHeight}
-                      rows={1}
-                      placeholder="Ask a question or request a file..."
-                      disabled={isDisabled || isPending}
-                      className={styles.composerInput}
+                  <div className={styles.footerInner}>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      onChange={handleFileSelection}
+                      className="hidden"
+                      aria-hidden
                     />
-                    <Button
-                      type="button"
-                      onClick={() => void handleSend()}
-                      disabled={isDisabled || isPending || !canSend}
-                      aria-label="Send"
-                      className={styles.sendButton}
-                    >
-                      {isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <div className={styles.footerMeta}>
-                    <span>Plus icon to attach files</span>
-                    <span>Enter to send</span>
-                    <span>Shift + Enter for a new line</span>
+
+                    {images.length > 0 || textAttachments.length > 0 || attachmentError ? (
+                      <div className={styles.attachmentList}>
+                        {images.map((image) => (
+                          <button
+                            key={image.id}
+                            type="button"
+                            className={styles.attachmentChip}
+                            onClick={() => removeImage(image.id)}
+                            title="Remove image attachment"
+                          >
+                            {image.name}
+                            <span className={styles.attachmentChipMeta}>
+                              {formatFileSize(image.size)}
+                            </span>
+                          </button>
+                        ))}
+                        {textAttachments.map((attachment) => (
+                          <button
+                            key={attachment.id}
+                            type="button"
+                            className={styles.attachmentChip}
+                            onClick={() => removeTextAttachment(attachment.id)}
+                            title="Remove text attachment"
+                          >
+                            {attachment.name}
+                            <span className={styles.attachmentChipMeta}>
+                              {formatFileSize(attachment.size)}
+                            </span>
+                          </button>
+                        ))}
+                        {attachmentError ? (
+                          <p className={styles.attachmentError}>{attachmentError}</p>
+                        ) : null}
+                      </div>
+                    ) : null}
+
+                    <div className={styles.composer}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={openFilePicker}
+                        disabled={isDisabled || isPending}
+                        aria-label="Attach file"
+                        className={styles.attachButton}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <Textarea
+                        ref={textareaRef}
+                        value={value}
+                        onChange={(event) => setValue(event.target.value)}
+                        onKeyDown={handleComposerKeyDown}
+                        onInput={syncTextareaHeight}
+                        rows={1}
+                        placeholder="Message Tambo..."
+                        disabled={isDisabled || isPending}
+                        className={styles.composerInput}
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => void handleSend()}
+                        disabled={isDisabled || isPending || !canSend}
+                        aria-label="Send"
+                        className={styles.sendButton}
+                      >
+                        {isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <div className={styles.footerMeta}>
+                      <span>Tambo can make mistakes. Check important info.</span>
+                    </div>
                   </div>
                 </div>
               </div>
