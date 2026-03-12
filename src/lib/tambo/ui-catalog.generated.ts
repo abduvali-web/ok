@@ -323,6 +323,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "source": "components/PWAInstallPrompt.tsx"
   },
   {
+    "name": "PWANetworkStatus",
+    "purpose": "UI component from components PWANetworkStatus",
+    "source": "components/PWANetworkStatus.tsx"
+  },
+  {
     "name": "radio-group",
     "purpose": "UI component from components ui radio group",
     "source": "components/ui/radio-group.tsx"
@@ -577,6 +582,10 @@ export const SITE_UI_PAGE_CATALOG = [
   {
     "path": "/middle-admin/database",
     "purpose": "Interactive page at /middle-admin/database"
+  },
+  {
+    "path": "/offline",
+    "purpose": "Interactive page at /offline"
   },
   {
     "path": "/signup",

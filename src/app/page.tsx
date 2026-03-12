@@ -231,19 +231,25 @@ export default function LandingPage() {
 
   const fadeUp = {
     hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8 } }
   }
 
   const staggerContainer = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+    visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } }
   }
 
   return (
-    <div className="dark min-h-screen bg-background text-foreground selection:bg-primary/30">
-      {/* Dynamic Background */}
-      <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-900 via-background to-background pointer-events-none" />
-      <div className="fixed top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-primary/10 to-transparent blur-[100px] pointer-events-none" />
+    <div className="dark min-h-screen bg-background text-foreground selection:bg-primary/30 relative overflow-hidden">
+      {/* Premium Multi-layer Background */}
+      <div className="fixed inset-0 z-0 bg-black pointer-events-none" />
+      <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-900/[0.8] via-background to-background pointer-events-none" />
+      <div className="fixed top-0 left-0 right-0 h-[800px] bg-gradient-to-b from-blue-500/[0.04] via-transparent to-transparent pointer-events-none" />
+      
+      {/* Animated Hero Mesh */}
+      <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-[100%] bg-blue-600/[0.05] blur-[120px] pointer-events-none animate-pulse-glow" />
+      <div className="fixed top-[10%] right-[-10%] w-[40%] h-[60%] rounded-[100%] bg-violet-600/[0.06] blur-[140px] pointer-events-none animate-pulse-glow" style={{ animationDelay: '1s', animationDuration: '8s' }} />
+      <div className="fixed bottom-[-10%] left-[20%] w-[60%] h-[40%] rounded-[100%] bg-emerald-600/[0.03] blur-[120px] pointer-events-none animate-pulse-glow" style={{ animationDelay: '2s', animationDuration: '10s' }} />
 
       {/* Floating Modern Header */}
       <motion.header 
@@ -252,9 +258,9 @@ export default function LandingPage() {
         transition={{ duration: 0.8 }}
         className="fixed left-0 right-0 top-0 z-50 flex justify-center pt-6 px-4 pointer-events-none"
       >
-        <div className="pointer-events-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-white/10 bg-black/40 px-6 py-3 backdrop-blur-xl shadow-2xl">
+        <div className="pointer-events-auto flex w-full max-w-5xl items-center justify-between rounded-[2rem] border border-white/[0.08] bg-[#0c0c0c]/80 px-6 py-3 backdrop-blur-2xl shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)]">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-black text-xs font-bold transition-transform group-hover:scale-110">
+            <div className="flex h-9 w-9 items-center justify-center rounded-[14px] bg-gradient-to-br from-white to-white/80 text-black text-xs font-bold transition-all duration-300 group-hover:scale-110 shadow-[0_0_15px_rgba(255,255,255,0.15)] group-hover:shadow-[0_0_25px_rgba(255,255,255,0.25)]">
               AF
             </div>
             <span className="font-semibold tracking-tight text-white/90 group-hover:text-white transition-colors">AutoFood</span>
@@ -262,18 +268,18 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
             <Link href="/login" className="hidden sm:block">
-              <span className="text-sm font-medium text-white/60 hover:text-white transition-colors">{copy.adminLogin}</span>
+              <span className="text-[13px] font-medium text-white/50 hover:text-white transition-colors px-2 relative after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full">{copy.adminLogin}</span>
             </Link>
             <Link href="/login">
-              <Button className="rounded-full bg-white text-black hover:bg-neutral-200 shadow-lg transition-transform hover:scale-105 active:scale-95">
-                {copy.openDashboard} <ChevronRight className="ml-1 h-4 w-4" />
+              <Button className="rounded-2xl h-10 bg-white text-black hover:bg-neutral-200 shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 hover:scale-105 active:scale-95 group border-none">
+                {copy.openDashboard} <ChevronRight className="ml-1 h-3.5 w-3.5 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
               </Button>
             </Link>
           </div>
         </div>
       </motion.header>
 
-      <main className="relative z-10 mx-auto max-w-7xl px-4 pt-40 pb-24 space-y-24">
+      <main className="relative z-10 mx-auto max-w-6xl px-4 pt-44 pb-32 space-y-32">
         {/* HERO SECTION */}
         <motion.section 
           variants={staggerContainer}
@@ -281,32 +287,33 @@ export default function LandingPage() {
           animate="visible"
           className="flex flex-col items-center text-center max-w-4xl mx-auto"
         >
-          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm text-xs font-medium text-white/70 mb-8">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            {copy.heroTag}
+          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] backdrop-blur-md text-[13px] font-medium text-white/70 mb-10 shadow-sm relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-violet-500/10 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <Sparkles className="h-3.5 w-3.5 text-blue-400 relative z-10" />
+            <span className="relative z-10 tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white/90 to-white/70">{copy.heroTag}</span>
           </motion.div>
           <motion.h1 
             variants={fadeUp}
-            className="text-5xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 drop-shadow-sm mb-6 leading-tight"
+            className="text-[3rem] sm:text-6xl md:text-[5rem] font-bold tracking-[-0.03em] text-transparent bg-clip-text bg-gradient-to-b from-white via-white/90 to-white/40 drop-shadow-sm mb-8 leading-[1.05]"
           >
             {copy.heroTitle}
           </motion.h1>
           <motion.p 
             variants={fadeUp}
-            className="text-lg md:text-xl text-white/50 max-w-2xl font-light leading-relaxed mb-10"
+            className="text-lg md:text-xl text-white/40 max-w-2xl font-light leading-relaxed mb-12"
           >
             {copy.heroDescription}
           </motion.p>
           <motion.div variants={fadeUp} className="flex flex-wrap justify-center gap-4">
             <Link href="/login">
-              <Button className="h-12 px-8 rounded-full bg-white text-black text-base hover:bg-neutral-200 hover:scale-105 transition-all active:scale-95">
-                {(t.common as any)?.login || copy.adminLogin} <ArrowRight className="ml-2 h-4 w-4" />
+              <Button className="h-14 px-8 rounded-2xl bg-white text-black text-[15px] font-semibold hover:bg-neutral-100 hover:scale-[1.03] transition-all duration-300 active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] group border-none">
+                {(t.common as any)?.login || copy.adminLogin} <ArrowRight className="ml-2 h-4 w-4 opacity-70 group-hover:translate-x-1 group-hover:opacity-100 transition-all duration-300" />
               </Button>
             </Link>
             <Link href="tel:+998977087373">
-              <Button variant="outline" className="h-12 px-8 rounded-full border-white/10 bg-white/5 text-white hover:bg-white/10 text-base backdrop-blur-md transition-all">
-                <Phone className="mr-2 h-4 w-4 text-white/50" />
-                +998 97 708 73 73
+              <Button variant="outline" className="h-14 px-8 rounded-2xl border-white/[0.12] bg-white/[0.03] text-white hover:bg-white/[0.08] text-[15px] backdrop-blur-md transition-all duration-300 hover:border-white/20">
+                <Phone className="mr-2.5 h-4 w-4 text-white/40" />
+                <span className="tracking-wide">+998 97 708 73 73</span>
               </Button>
             </Link>
           </motion.div>
@@ -322,19 +329,23 @@ export default function LandingPage() {
         >
           {copy.points.map((item, i) => {
             const Icon = item.icon
+            // Assign different subtle glow colors to cards
+            const glows = ['bg-blue-500/10', 'bg-violet-500/10', 'bg-emerald-500/10']
+            const iconGlows = ['text-blue-400', 'text-violet-400', 'text-emerald-400']
+            
             return (
               <motion.div 
                 key={item.title} 
                 variants={fadeUp}
-                className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] p-8 hover:bg-white/[0.04] transition-colors"
+                className="group relative overflow-hidden rounded-[2rem] border border-white/[0.06] bg-[#0c0c0c]/80 p-8 hover:bg-white/[0.03] transition-all duration-500 hover:border-white/[0.1] shadow-[0_8px_32px_-8px_rgba(0,0,0,0.3)] backdrop-blur-xl"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className={`absolute inset-0 ${glows[i % 3]} opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-3xl rounded-[2rem] transform scale-150 pointer-events-none`} />
                 <div className="relative z-10">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white mb-6 backdrop-blur-md border border-white/10 group-hover:scale-110 transition-transform duration-500">
-                    <Icon className="h-6 w-6" />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.06] border border-white/[0.08] mb-8 backdrop-blur-md group-hover:scale-110 group-hover:bg-white/[0.1] transition-all duration-500 shadow-sm">
+                    <Icon className={`h-6 w-6 ${iconGlows[i % 3]} opacity-80 group-hover:opacity-100 transition-opacity`} />
                   </div>
-                  <h3 className="text-xl font-semibold text-white/90 mb-3">{item.title}</h3>
-                  <p className="text-white/50 leading-relaxed font-light">{item.detail}</p>
+                  <h3 className="text-xl font-bold text-white/95 mb-3 tracking-tight">{item.title}</h3>
+                  <p className="text-white/40 leading-relaxed font-light text-[15px]">{item.detail}</p>
                 </div>
               </motion.div>
             )
@@ -349,21 +360,23 @@ export default function LandingPage() {
           variants={staggerContainer}
           className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
         >
-          <motion.div variants={fadeUp} className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] p-8 md:p-12">
-            <div className="absolute top-0 right-0 -mr-20 -mt-20 h-[300px] w-[300px] rounded-full bg-primary/20 blur-[80px] opacity-50" />
+          <motion.div variants={fadeUp} className="relative overflow-hidden rounded-[2rem] border border-white/[0.06] bg-[#0c0c0c]/80 p-8 md:p-12 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.3)] backdrop-blur-xl group hover:border-white/[0.1] transition-colors duration-500">
+            <div className="absolute top-0 right-0 -mr-20 -mt-20 h-[400px] w-[400px] rounded-full bg-blue-500/10 blur-[100px] opacity-40 group-hover:opacity-60 transition-opacity duration-700 pointer-events-none" />
             <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-xs font-medium text-white/70 mb-6">
-                <Globe2 className="h-3.5 w-3.5" />
-                {copy.portalLabel}
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] text-xs font-medium text-white/60 mb-8 backdrop-blur-md">
+                <Globe2 className="h-3.5 w-3.5 text-blue-400" />
+                <span className="tracking-wide text-[12px]">{copy.portalLabel}</span>
               </div>
-              <h2 className="text-3xl font-semibold text-white/90 mb-4 tracking-tight">{copy.portalTitle}</h2>
-              <p className="text-lg text-white/50 leading-relaxed font-light max-w-md mb-8">{copy.portalDescription}</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-white/95 mb-5 tracking-tight leading-[1.1] max-w-[90%]">{copy.portalTitle}</h2>
+              <p className="text-[17px] text-white/40 leading-relaxed font-light max-w-md mb-10">{copy.portalDescription}</p>
               
               <div className="space-y-4">
                 {copy.promises.slice(0, 3).map((item) => (
-                  <div key={item} className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
-                    <span className="text-white/70 font-light">{item}</span>
+                  <div key={item} className="flex items-center gap-4 group/item">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/[0.06] border border-white/[0.08] group-hover/item:bg-white/[0.1] transition-colors">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-white/60 group-hover/item:text-white group-hover/item:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] transition-all" />
+                    </div>
+                    <span className="text-white/60 font-light text-[15px] group-hover/item:text-white/80 transition-colors">{item}</span>
                   </div>
                 ))}
               </div>
@@ -372,9 +385,10 @@ export default function LandingPage() {
 
           <motion.div variants={fadeUp} className="grid grid-cols-2 gap-4">
             {copy.stats.map((stat, i) => (
-              <div key={stat.label} className="flex flex-col justify-center rounded-3xl border border-white/10 bg-white/[0.02] p-6 hover:bg-white/[0.04] transition-colors">
-                <p className="text-3xl font-bold tracking-tight text-white/90 mb-2">{stat.value}</p>
-                <p className="text-sm text-white/50 font-light">{stat.label}</p>
+              <div key={stat.label} className="flex flex-col justify-center rounded-[2rem] border border-white/[0.06] bg-[#0c0c0c]/80 p-8 hover:bg-white/[0.03] hover:border-white/[0.1] transition-all duration-500 shadow-sm relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-t from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <p className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-2 font-display">{stat.value}</p>
+                <p className="text-[13px] text-white/40 font-medium tracking-wide">{stat.label}</p>
               </div>
             ))}
           </motion.div>
@@ -388,45 +402,53 @@ export default function LandingPage() {
           variants={staggerContainer}
           className="grid gap-6 lg:grid-cols-[1fr_1fr]"
         >
-          <motion.div variants={fadeUp} className="rounded-3xl border border-white/10 bg-white/[0.02] p-8 md:p-10 flex flex-col">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-semibold text-white/90">{copy.roleTitle}</h2>
-              <ShieldCheck className="h-6 w-6 text-primary" />
-            </div>
-            <div className="grid gap-4 flex-1">
-              {copy.roles.map((role) => (
-                <div key={role.title} className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 hover:bg-white/[0.05] transition-colors">
-                  <h4 className="text-lg font-medium text-white/90 mb-1">{role.title}</h4>
-                  <p className="text-sm text-white/50 font-light">{role.detail}</p>
+          {/* Roles Card */}
+          <motion.div variants={fadeUp} className="rounded-[2rem] border border-white/[0.06] bg-[#0c0c0c]/80 p-8 md:p-12 flex flex-col shadow-[0_8px_32px_-8px_rgba(0,0,0,0.3)] backdrop-blur-xl relative overflow-hidden group">
+            <div className="absolute top-[-100px] left-[-100px] h-[300px] w-[300px] rounded-full bg-emerald-500/10 blur-[100px] opacity-40 group-hover:opacity-60 transition-opacity duration-700 pointer-events-none" />
+            <div className="relative z-10 flex flex-col h-full">
+              <div className="flex items-center justify-between mb-10">
+                <h2 className="text-3xl font-bold text-white/95 tracking-tight">{copy.roleTitle}</h2>
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                  <ShieldCheck className="h-6 w-6 text-emerald-400" />
                 </div>
-              ))}
+              </div>
+              <div className="grid gap-4 flex-1">
+                {copy.roles.map((role) => (
+                  <div key={role.title} className="rounded-2xl border border-white/[0.04] bg-white/[0.015] p-5 hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-400">
+                    <h4 className="text-base font-bold text-white/90 mb-1 tracking-tight">{role.title}</h4>
+                    <p className="text-[14px] text-white/40 font-light leading-relaxed">{role.detail}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </motion.div>
 
-          <motion.div variants={fadeUp} className="rounded-3xl border border-white/10 bg-white/[0.02] p-8 md:p-10 flex flex-col justify-between">
-            <div>
-              <h2 className="text-2xl font-semibold text-white/90 mb-4">{copy.pricingTitle}</h2>
-              <p className="text-white/50 font-light leading-relaxed mb-8">{copy.pricingDescription}</p>
+          {/* Pricing Card */}
+          <motion.div variants={fadeUp} className="rounded-[2rem] border border-white/[0.06] bg-[#0c0c0c]/80 p-8 md:p-12 flex flex-col justify-between shadow-[0_8px_32px_-8px_rgba(0,0,0,0.3)] backdrop-blur-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 h-[300px] w-[300px] rounded-full bg-violet-500/10 blur-[100px] opacity-40 pointer-events-none" />
+            <div className="relative z-10">
+              <h2 className="text-3xl font-bold text-white/95 mb-5 tracking-tight max-w-[80%] leading-[1.1]">{copy.pricingTitle}</h2>
+              <p className="text-[16px] text-white/40 font-light leading-relaxed mb-10 max-w-sm">{copy.pricingDescription}</p>
             </div>
             
-            <div className="space-y-4">
-              <div className="group rounded-2xl border border-white/10 bg-white/[0.03] p-6 flex justify-between items-center hover:bg-white/[0.06] transition-all cursor-pointer">
-                <div>
-                  <h4 className="text-lg font-medium text-white/90">{copy.monthly}</h4>
-                  <p className="text-sm text-white/50 font-light">{copy.monthlyNote}</p>
+            <div className="space-y-4 relative z-10 block w-full self-stretch">
+              <div className="group rounded-[1.5rem] border border-white/[0.06] bg-white/[0.02] p-6 sm:p-8 flex items-center justify-between hover:bg-white/[0.04] hover:border-white/[0.1] transition-all duration-400 hover:shadow-lg w-[100%] max-w-full">
+                <div className="min-w-0 pr-4 shrink-1">
+                  <h4 className="text-lg font-bold text-white/90 tracking-tight">{copy.monthly}</h4>
+                  <p className="text-[13px] text-white/40 font-light mt-1 flex-wrap break-words">{copy.monthlyNote}</p>
                 </div>
-                <div className="text-3xl font-bold tracking-tight text-white">$100</div>
+                <div className="text-3xl font-bold tracking-tight text-white shrink-0 ml-auto">$100</div>
               </div>
-              <div className="group rounded-2xl border border-primary/30 bg-primary/5 p-6 flex justify-between items-center hover:bg-primary/10 transition-all cursor-pointer relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="relative z-10">
-                  <h4 className="text-lg font-medium text-white/90 flex items-center gap-2">
+              <div className="group rounded-[1.5rem] border border-blue-500/30 bg-blue-500/[0.08] p-6 sm:p-8 flex items-center justify-between hover:bg-blue-500/[0.12] transition-all duration-400 relative overflow-hidden hover:shadow-[0_0_30px_-5px_rgba(59,130,246,0.3)] w-[100%] max-w-full">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10 min-w-0 pr-4 shrink-1">
+                  <h4 className="text-lg font-bold text-white/95 tracking-tight flex items-center gap-3">
                     {copy.quarterly}
-                    <span className="px-2 py-0.5 rounded-full bg-primary/20 text-[10px] text-primary font-bold uppercase tracking-wider">Popular</span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-[10px] text-blue-300 font-bold uppercase tracking-widest border border-blue-500/30">Popular</span>
                   </h4>
-                  <p className="text-sm text-white/50 font-light">{copy.quarterlyNote}</p>
+                  <p className="text-[13px] text-white/40 font-light mt-1 flex-wrap break-words">{copy.quarterlyNote}</p>
                 </div>
-                <div className="text-3xl font-bold tracking-tight relative z-10 text-white">$200</div>
+                <div className="text-3xl font-bold tracking-tight relative z-10 text-white shrink-0 ml-auto">$200</div>
               </div>
             </div>
           </motion.div>

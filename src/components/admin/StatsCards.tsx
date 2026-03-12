@@ -1,4 +1,7 @@
+'use client'
+
 import { Users, TrendingUp, Clock, Truck } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 interface Stats {
     successfulOrders: number
@@ -12,65 +15,107 @@ interface StatsCardsProps {
     stats: Stats | null
 }
 
-export function StatsCards({ stats }: StatsCardsProps) {
-    const cards = [
-        {
-            title: 'Успешные заказы',
-            value: stats?.successfulOrders ?? 0,
-            description: 'Доставлено',
-            Icon: TrendingUp,
-            accent: 'text-emerald-600',
-            bg: 'bg-emerald-50',
-            iconBg: 'bg-emerald-100',
-        },
-        {
-            title: 'В доставке',
-            value: stats?.inDeliveryOrders ?? 0,
-            description: 'Активные сейчас',
-            Icon: Truck,
-            accent: 'text-blue-600',
-            bg: 'bg-blue-50',
-            iconBg: 'bg-blue-100',
-        },
-        {
-            title: 'Клиенты',
-            value: stats?.dailyCustomers ?? 0,
-            description: 'Ежедневные подписки',
-            Icon: Users,
-            accent: 'text-violet-600',
-            bg: 'bg-violet-50',
-            iconBg: 'bg-violet-100',
-        },
-        {
-            title: 'Ожидают',
-            value: stats?.pendingOrders ?? 0,
-            description: 'В очереди',
-            Icon: Clock,
-            accent: 'text-amber-600',
-            bg: 'bg-amber-50',
-            iconBg: 'bg-amber-100',
-        },
-    ] as const
+const cardMeta = [
+    {
+        title: 'Успешные заказы',
+        key: 'successfulOrders' as const,
+        description: 'Доставлено',
+        Icon: TrendingUp,
+        gradient: 'from-emerald-500/20 to-emerald-500/5',
+        iconGradient: 'from-emerald-400 to-emerald-600',
+        accentColor: 'text-emerald-400',
+        glowColor: 'rgba(52, 211, 153, 0.15)',
+        ring: 'ring-emerald-500/20',
+    },
+    {
+        title: 'В доставке',
+        key: 'inDeliveryOrders' as const,
+        description: 'Активные сейчас',
+        Icon: Truck,
+        gradient: 'from-blue-500/20 to-blue-500/5',
+        iconGradient: 'from-blue-400 to-blue-600',
+        accentColor: 'text-blue-400',
+        glowColor: 'rgba(96, 165, 250, 0.15)',
+        ring: 'ring-blue-500/20',
+    },
+    {
+        title: 'Клиенты',
+        key: 'dailyCustomers' as const,
+        description: 'Ежедневные подписки',
+        Icon: Users,
+        gradient: 'from-violet-500/20 to-violet-500/5',
+        iconGradient: 'from-violet-400 to-violet-600',
+        accentColor: 'text-violet-400',
+        glowColor: 'rgba(167, 139, 250, 0.15)',
+        ring: 'ring-violet-500/20',
+    },
+    {
+        title: 'Ожидают',
+        key: 'pendingOrders' as const,
+        description: 'В очереди',
+        Icon: Clock,
+        gradient: 'from-amber-500/20 to-amber-500/5',
+        iconGradient: 'from-amber-400 to-amber-600',
+        accentColor: 'text-amber-400',
+        glowColor: 'rgba(251, 191, 36, 0.15)',
+        ring: 'ring-amber-500/20',
+    },
+] as const
 
+const container = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: { staggerChildren: 0.08, delayChildren: 0.1 }
+    }
+}
+
+const item = {
+    hidden: { opacity: 0, y: 16, scale: 0.95 },
+    show: { 
+        opacity: 1, y: 0, scale: 1,
+        transition: { type: 'spring', stiffness: 300, damping: 24 }
+    }
+}
+
+export function StatsCards({ stats }: StatsCardsProps) {
     return (
-        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-            {cards.map(({ title, value, description, Icon, accent, iconBg }, i) => (
-                <div
+        <motion.div 
+            className="grid gap-4 grid-cols-2 lg:grid-cols-4"
+            variants={container}
+            initial="hidden"
+            animate="show"
+        >
+            {cardMeta.map(({ title, key, description, Icon, gradient, iconGradient, accentColor, glowColor, ring }) => (
+                <motion.div
                     key={title}
-                    className={`animate-fade-in-up stagger-${i + 1} group rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:border-muted-foreground/30 hover:shadow-elegant`}
+                    variants={item}
+                    className="group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 backdrop-blur-xl transition-all duration-500 hover:border-white/[0.12] hover:bg-white/[0.04] hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.4)]"
                 >
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-muted-foreground">{title}</span>
-                        <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconBg} transition-transform duration-300 group-hover:scale-110`}>
-                            <Icon className={`h-4 w-4 ${accent}`} aria-hidden="true" />
+                    {/* Gradient glow on hover */}
+                    <div 
+                        className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700`} 
+                    />
+                    {/* Subtle glow orb */}
+                    <div 
+                        className="absolute -top-8 -right-8 h-24 w-24 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-2xl"
+                        style={{ background: glowColor }}
+                    />
+                    
+                    <div className="relative z-10">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-white/45 tracking-wide">{title}</span>
+                            <div className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${iconGradient} shadow-lg transition-all duration-500 group-hover:scale-110 group-hover:shadow-xl`}>
+                                <Icon className="h-4 w-4 text-white" aria-hidden="true" />
+                            </div>
                         </div>
+                        <div className={`mt-4 text-3xl font-bold ${accentColor} tracking-tight`}>
+                            {stats?.[key] ?? 0}
+                        </div>
+                        <p className="mt-1 text-[11px] text-white/35 font-light">{description}</p>
                     </div>
-                    <div className={`mt-3 text-2xl font-bold ${accent} animate-count-up`}>
-                        {value}
-                    </div>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">{description}</p>
-                </div>
+                </motion.div>
             ))}
-        </div>
+        </motion.div>
     )
 }

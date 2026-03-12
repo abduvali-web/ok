@@ -55,77 +55,97 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
 
   return (
     <>
-      {isOpen && <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden" onClick={onClose} />}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-md lg:hidden transition-opacity duration-300" 
+          onClick={onClose} 
+        />
+      )}
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-72 -translate-x-full border-r border-white/10 bg-black/40 backdrop-blur-2xl transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:bg-transparent lg:border-none lg:w-64 lg:m-4 lg:rounded-[2rem] lg:bg-white/[0.02]',
+          'fixed inset-y-0 left-0 z-50 w-72 -translate-x-full transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]',
+          // Mobile: full glassy panel
+          'border-r border-white/[0.06] bg-[#060606]/95 backdrop-blur-2xl',
+          // Desktop: floating card
+          'lg:static lg:translate-x-0 lg:border-none lg:w-[260px] lg:m-4 lg:rounded-[1.5rem] lg:bg-white/[0.02] lg:border lg:border-white/[0.06] lg:backdrop-blur-xl',
           isOpen && 'translate-x-0',
           className
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b border-white/10 px-6 py-6 lg:border-none lg:pb-2">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-6 lg:pb-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.15)]">
-                <ChefHat className="h-6 w-6" />
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-white to-white/80 text-black shadow-[0_0_20px_rgba(255,255,255,0.12)]">
+                <ChefHat className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xl font-bold tracking-tight text-white/90">AutoFood</p>
-                <p className="text-xs font-medium text-white/50">{language === 'ru' ? 'Панель' : language === 'uz' ? 'Panel' : 'Dashboard'}</p>
+                <p className="text-lg font-bold tracking-tight text-white/95">AutoFood</p>
+                <p className="text-[11px] font-medium text-white/40 tracking-wide">
+                  {language === 'ru' ? 'Панель' : language === 'uz' ? 'Panel' : 'Dashboard'}
+                </p>
               </div>
             </div>
 
-            <Button variant="ghost" size="icon" className="lg:hidden text-white/70 hover:text-white hover:bg-white/10" onClick={onClose}>
+            <Button variant="ghost" size="icon" className="lg:hidden text-white/50 hover:text-white hover:bg-white/[0.06] rounded-xl" onClick={onClose}>
               <X className="h-5 w-5" />
             </Button>
           </div>
 
-          <ScrollArea className="flex-1 py-3">
-            <nav className="space-y-1 px-4 lg:px-2">
+          {/* Divider */}
+          <div className="mx-5 h-[1px] bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
+          {/* Navigation */}
+          <ScrollArea className="flex-1 py-4">
+            <nav className="space-y-0.5 px-3 lg:px-2">
               {menuItems.map((item) => {
                 if ('type' in item && item.type === 'divider') {
-                  return <div key={item.id} className="mx-4 my-3 h-[1px] bg-white/5" />;
+                  return <div key={item.id} className="mx-3 my-3 h-[1px] bg-gradient-to-r from-transparent via-white/[0.04] to-transparent" />;
                 }
 
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
 
                 return (
-                  <Button
+                  <button
                     key={item.id}
-                    variant="ghost"
                     className={cn(
-                      'h-11 w-full justify-start gap-4 rounded-xl border px-4 text-sm font-medium transition-all duration-300',
+                      'flex h-10 w-full items-center gap-3.5 rounded-xl px-3.5 text-sm font-medium transition-all duration-300 relative overflow-hidden',
                       isActive
-                        ? 'border-white/10 bg-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.05)]'
-                        : 'border-transparent text-white/60 hover:border-white/5 hover:bg-white/5 hover:text-white'
+                        ? 'bg-white/[0.08] text-white shadow-[0_2px_12px_-4px_rgba(255,255,255,0.08)]'
+                        : 'text-white/50 hover:bg-white/[0.04] hover:text-white/80'
                     )}
                     onClick={() => {
                       onTabChange(item.id);
                       onClose();
                     }}
                   >
-                    <Icon className={cn('h-5 w-5', isActive && 'text-white')} />
-                    <span className="flex-1 text-left tracking-wide">{item.label}</span>
-                    {item.badge !== null && item.badge > 0 && (
-                      <Badge className="h-5 min-w-5 bg-white/20 text-white border-transparent px-1.5 text-[10px] shadow-none">{item.badge}</Badge>
+                    {/* Active indicator dot */}
+                    {isActive && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.3)]" />
                     )}
-                  </Button>
+                    <Icon className={cn('h-[18px] w-[18px] shrink-0', isActive ? 'text-white' : 'text-white/40')} />
+                    <span className="flex-1 text-left tracking-wide truncate">{item.label}</span>
+                    {item.badge !== null && item.badge > 0 && (
+                      <Badge className="h-5 min-w-5 bg-white/10 text-white border-transparent px-1.5 text-[10px] shadow-none">{item.badge}</Badge>
+                    )}
+                  </button>
                 );
               })}
             </nav>
           </ScrollArea>
 
-          <div className="p-4 border-t border-white/10 lg:border-none">
-            <Button 
-              variant="ghost" 
-              className="h-11 w-full justify-start gap-4 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors" 
+          {/* Footer - Logout */}
+          <div className="mx-5 h-[1px] bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+          <div className="p-3">
+            <button 
+              className="flex h-10 w-full items-center gap-3.5 rounded-xl px-3.5 text-sm font-medium text-red-400/80 hover:bg-red-500/[0.08] hover:text-red-400 transition-all duration-300" 
               onClick={onLogout}
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-[18px] w-[18px]" />
               {t.common.logout}
-            </Button>
+            </button>
           </div>
         </div>
       </aside>

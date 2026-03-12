@@ -16,9 +16,10 @@ export const SITE_ENDPOINT_CATALOG = [
   {
     "path": "/api/admin/[adminId]",
     "methods": [
+      "PATCH",
       "DELETE"
     ],
-    "description": "dynamic route endpoint (DELETE)."
+    "description": "dynamic route endpoint (PATCH/DELETE)."
   },
   {
     "path": "/api/admin/[adminId]/[adminId2]/delete",
@@ -152,6 +153,13 @@ export const SITE_ENDPOINT_CATALOG = [
       "PATCH"
     ],
     "description": "Couriers list/create/update (PATCH requires courierId, supports name/location/salary)."
+  },
+  {
+    "path": "/api/admin/database-snapshot",
+    "methods": [
+      "GET"
+    ],
+    "description": "database snapshot endpoint (GET)."
   },
   {
     "path": "/api/admin/dispatch/normalize-drafts",
