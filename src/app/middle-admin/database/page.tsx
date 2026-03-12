@@ -13,6 +13,9 @@ import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
+import { format, addDays } from 'date-fns'
+import { DateRange } from 'react-day-picker'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 type DatabaseTable = {
@@ -278,9 +281,7 @@ export default function DatabasePage() {
   const [snapshot, setSnapshot] = useState<SnapshotPayload | null>(null)
   const [activeTab, setActiveTab] = useState('summary')
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedMonth, setSelectedMonth] = useState('all')
-  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false)
-  const [monthPickerYear, setMonthPickerYear] = useState(new Date().getFullYear())
+  const [date, setDate] = useState<DateRange | undefined>()
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const uiText = useMemo(() => {
@@ -444,9 +445,12 @@ export default function DatabasePage() {
     else setIsLoading(true)
 
     try {
-      const url = selectedMonth && selectedMonth !== 'all' 
-        ? `/api/admin/database-snapshot?month=${selectedMonth}` 
-        : '/api/admin/database-snapshot'
+      let url = '/api/admin/database-snapshot'
+      if (date?.from && date?.to) {
+        url += `?start=${date.from.toISOString()}&end=${addDays(date.to, 1).toISOString()}`
+      } else if (date?.from) {
+        url += `?start=${date.from.toISOString()}&end=${addDays(date.from, 1).toISOString()}`
+      }
       const response = await fetch(url, { cache: 'no-store' })
 
       if (response.status === 401) {
@@ -476,26 +480,13 @@ export default function DatabasePage() {
       setIsLoading(false)
       setIsRefreshing(false)
     }
-  }, [router, uiText.accessDeniedWorkspace, uiText.failedLoadSnapshot, uiText.unableLoadSnapshot, selectedMonth])
+  }, [router, uiText.accessDeniedWorkspace, uiText.failedLoadSnapshot, uiText.unableLoadSnapshot, date])
 
   useEffect(() => {
     void loadSnapshot()
   }, [loadSnapshot])
 
-  const monthNames = useMemo(() => {
-    return Array.from({ length: 12 }, (_, i) => {
-      const d = new Date(2000, i, 1)
-      const label = d.toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US', { month: 'short' })
-      return label.charAt(0).toUpperCase() + label.slice(1)
-    })
-  }, [language])
 
-  const formatSelectedMonth = (val: string) => {
-    if (val === 'all') return uiText.allTime
-    const [year, month] = val.split('-')
-    const d = new Date(parseInt(year, 10), parseInt(month, 10) - 1, 1)
-    return d.toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US', { month: 'long', year: 'numeric' })
-  }
 
   const tables = useMemo(() => snapshot?.tables ?? [], [snapshot?.tables])
   const summary = useMemo(() => snapshot?.summary ?? [], [snapshot?.summary])
@@ -630,51 +621,37 @@ export default function DatabasePage() {
                 {tables.length} {uiText.sheetsCount}
               </Badge>
               
-              <Popover open={isMonthPickerOpen} onOpenChange={setIsMonthPickerOpen}>
+              <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-[180px] justify-start bg-background dark:bg-black/50 overflow-hidden text-zinc-900 dark:text-white border-black/10 dark:border-white/[0.08]">
+                  <Button variant="outline" className="w-[260px] justify-start bg-background dark:bg-black/50 overflow-hidden text-zinc-900 dark:text-white border-black/10 dark:border-white/[0.08]">
                     <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
-                    <span className="truncate">{formatSelectedMonth(selectedMonth)}</span>
+                    {date?.from ? (
+                      date.to ? (
+                        <>
+                          {format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}
+                        </>
+                      ) : (
+                        format(date.from, "LLL dd, y")
+                      )
+                    ) : (
+                      <span>{uiText.allTime}</span>
+                    )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-3" align="start">
-                  <div className="flex items-center gap-2 justify-between pb-3 border-b border-black/5 dark:border-white/10 mb-2">
-                    <Button variant="outline" size="icon" className="h-7 w-7 bg-transparent" onClick={() => setMonthPickerYear((y) => y - 1)}>
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <div className="text-sm font-semibold">{monthPickerYear}</div>
-                    <Button variant="outline" size="icon" className="h-7 w-7 bg-transparent" onClick={() => setMonthPickerYear((y) => y + 1)}>
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 mb-2">
-                    {monthNames.map((monthName, index) => {
-                      const monthVal = `${monthPickerYear}-${(index + 1).toString().padStart(2, '0')}`
-                      const isSelected = selectedMonth === monthVal
-                      return (
-                        <Button
-                          key={monthName}
-                          variant={isSelected ? "default" : "ghost"}
-                          className={`h-9 w-14 text-xs ${isSelected ? 'bg-primary text-primary-foreground' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
-                          onClick={() => {
-                            setSelectedMonth(monthVal)
-                            setIsMonthPickerOpen(false)
-                          }}
-                        >
-                          {monthName}
-                        </Button>
-                      )
-                    })}
-                  </div>
-                  <div className="pt-2 border-t border-black/5 dark:border-white/10 mt-1">
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={date?.from}
+                    selected={date}
+                    onSelect={setDate}
+                    numberOfMonths={2}
+                  />
+                  <div className="p-3 border-t border-black/5 dark:border-white/10">
                     <Button 
                       variant="ghost" 
                       className="w-full h-8 text-xs font-semibold justify-center hover:bg-black/5 dark:hover:bg-white/10"
-                      onClick={() => {
-                        setSelectedMonth('all')
-                        setIsMonthPickerOpen(false)
-                        setMonthPickerYear(new Date().getFullYear())
-                      }}
+                      onClick={() => setDate(undefined)}
                     >
                       {uiText.allTime}
                     </Button>

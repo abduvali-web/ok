@@ -70,26 +70,22 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const monthParam = searchParams.get('month')
+    const startParam = searchParams.get('start')
+    const endParam = searchParams.get('end')
 
     let createdAtFilter = {}
     let updatedAtFilter = {}
     let dateFilter = {}
     let occurredAtFilter = {}
 
-    if (monthParam) {
-      const [yearStr, monthStr] = monthParam.split('-')
-      if (yearStr && monthStr) {
-        const year = parseInt(yearStr, 10)
-        const month = parseInt(monthStr, 10)
-        const startDate = new Date(year, month - 1, 1)
-        const endDate = new Date(year, month, 1)
+    if (startParam && endParam) {
+      const startDate = new Date(startParam)
+      const endDate = new Date(endParam)
 
-        createdAtFilter = { createdAt: { gte: startDate, lt: endDate } }
-        updatedAtFilter = { updatedAt: { gte: startDate, lt: endDate } }
-        dateFilter = { date: { gte: startDate, lt: endDate } }
-        occurredAtFilter = { occurredAt: { gte: startDate, lt: endDate } }
-      }
+      createdAtFilter = { createdAt: { gte: startDate, lt: endDate } }
+      updatedAtFilter = { updatedAt: { gte: startDate, lt: endDate } }
+      dateFilter = { date: { gte: startDate, lt: endDate } }
+      occurredAtFilter = { occurredAt: { gte: startDate, lt: endDate } }
     }
 
     const groupAdminIds = await getGroupAdminIds(user)
