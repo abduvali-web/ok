@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 type DatabaseTable = {
@@ -277,6 +278,7 @@ export default function DatabasePage() {
   const [snapshot, setSnapshot] = useState<SnapshotPayload | null>(null)
   const [activeTab, setActiveTab] = useState('summary')
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedMonth, setSelectedMonth] = useState('all')
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const uiText = useMemo(() => {
@@ -303,6 +305,7 @@ export default function DatabasePage() {
         visibleSheets: 'Видимые листы',
         totalRows: 'Всего строк',
         totalColumns: 'Всего колонок',
+        allTime: 'За все время',
         database: 'База данных',
         scope: 'Область',
         generatedAt: 'Сформировано',
@@ -354,6 +357,7 @@ export default function DatabasePage() {
         visibleSheets: 'Ko‘rinadigan sahifalar',
         totalRows: 'Jami qatorlar',
         totalColumns: 'Jami ustunlar',
+        allTime: 'Barcha vaqt',
       database: 'Maʼlumotlar bazasi',
       scope: 'Qamrov',
       generatedAt: 'Yaratilgan vaqti',
@@ -404,6 +408,7 @@ export default function DatabasePage() {
       visibleSheets: 'Visible sheets',
       totalRows: 'Total rows',
       totalColumns: 'Total columns',
+      allTime: 'All time',
       database: 'Database',
       scope: 'Scope',
       generatedAt: 'Generated At',
@@ -437,7 +442,10 @@ export default function DatabasePage() {
     else setIsLoading(true)
 
     try {
-      const response = await fetch('/api/admin/database-snapshot', { cache: 'no-store' })
+      const url = selectedMonth && selectedMonth !== 'all' 
+        ? `/api/admin/database-snapshot?month=${selectedMonth}` 
+        : '/api/admin/database-snapshot'
+      const response = await fetch(url, { cache: 'no-store' })
 
       if (response.status === 401) {
         router.replace('/login')
@@ -466,11 +474,24 @@ export default function DatabasePage() {
       setIsLoading(false)
       setIsRefreshing(false)
     }
-  }, [router, uiText.accessDeniedWorkspace, uiText.failedLoadSnapshot, uiText.unableLoadSnapshot])
+  }, [router, uiText.accessDeniedWorkspace, uiText.failedLoadSnapshot, uiText.unableLoadSnapshot, selectedMonth])
 
   useEffect(() => {
     void loadSnapshot()
   }, [loadSnapshot])
+
+  const monthOptions = useMemo(() => {
+    const options = [{ value: 'all', label: uiText.allTime }]
+    const now = new Date()
+    for (let i = 0; i < 24; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const monthStr = (d.getMonth() + 1).toString().padStart(2, '0')
+      const value = `${d.getFullYear()}-${monthStr}`
+      const label = d.toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US', { month: 'long', year: 'numeric' })
+      options.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) })
+    }
+    return options
+  }, [uiText.allTime, language])
 
   const tables = useMemo(() => snapshot?.tables ?? [], [snapshot?.tables])
   const summary = useMemo(() => snapshot?.summary ?? [], [snapshot?.summary])
@@ -601,9 +622,23 @@ export default function DatabasePage() {
                   {uiText.backToMiddleAdmin}
                 </Link>
               </Button>
-              <Badge variant="secondary" className="h-8 rounded-full px-3">
+              <Badge variant="secondary" className="h-8 rounded-full px-3 hidden sm:inline-flex">
                 {tables.length} {uiText.sheetsCount}
               </Badge>
+              
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-[180px] bg-background">
+                  <SelectValue placeholder={uiText.allTime} />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               <Button variant="outline" onClick={() => void loadSnapshot(true)} disabled={isRefreshing}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 {uiText.refresh}

@@ -69,6 +69,29 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    const { searchParams } = new URL(request.url)
+    const monthParam = searchParams.get('month')
+
+    let createdAtFilter = {}
+    let updatedAtFilter = {}
+    let dateFilter = {}
+    let occurredAtFilter = {}
+
+    if (monthParam) {
+      const [yearStr, monthStr] = monthParam.split('-')
+      if (yearStr && monthStr) {
+        const year = parseInt(yearStr, 10)
+        const month = parseInt(monthStr, 10)
+        const startDate = new Date(year, month - 1, 1)
+        const endDate = new Date(year, month, 1)
+
+        createdAtFilter = { createdAt: { gte: startDate, lt: endDate } }
+        updatedAtFilter = { updatedAt: { gte: startDate, lt: endDate } }
+        dateFilter = { date: { gte: startDate, lt: endDate } }
+        occurredAtFilter = { occurredAt: { gte: startDate, lt: endDate } }
+      }
+    }
+
     const groupAdminIds = await getGroupAdminIds(user)
     const ownerAdminId = await getOwnerAdminId(user)
 
@@ -95,58 +118,65 @@ export async function GET(request: NextRequest) {
     const [admins, customers, orders, transactions, websites, menuSets, menus, dishes, warehouseItems, dailyCookingPlans, actionLogs, orderAuditEvents] =
       await Promise.all([
         db.admin.findMany({
-          where: adminWhere,
+          where: { ...adminWhere, ...createdAtFilter },
           orderBy: { createdAt: 'desc' },
         }),
         db.customer.findMany({
-          where: customerWhere,
+          where: { ...customerWhere, ...createdAtFilter },
           orderBy: { createdAt: 'desc' },
         }),
         db.order.findMany({
-          where: orderWhere,
+          where: { ...orderWhere, ...createdAtFilter },
           orderBy: { createdAt: 'desc' },
         }),
         db.transaction.findMany({
-          where:
-            user.role === 'SUPER_ADMIN'
+          where: {
+            ...(user.role === 'SUPER_ADMIN'
               ? {}
               : {
                   OR: [
                     { adminId: { in: groupAdminIds ?? [user.id] } },
                     { customer: { createdBy: { in: groupAdminIds ?? [user.id] } } },
                   ],
-                },
+                }),
+            ...createdAtFilter,
+          },
           orderBy: { createdAt: 'desc' },
         }),
         db.website.findMany({
-          where: user.role === 'SUPER_ADMIN' ? {} : { adminId: ownerAdminId ?? user.id },
+          where: { ...(user.role === 'SUPER_ADMIN' ? {} : { adminId: ownerAdminId ?? user.id }), ...updatedAtFilter },
           orderBy: { updatedAt: 'desc' },
         }),
         db.menuSet.findMany({
-          where: user.role === 'SUPER_ADMIN' ? {} : { adminId: ownerAdminId ?? user.id },
+          where: { ...(user.role === 'SUPER_ADMIN' ? {} : { adminId: ownerAdminId ?? user.id }), ...updatedAtFilter },
           orderBy: { updatedAt: 'desc' },
         }),
         db.menu.findMany({
           orderBy: { number: 'asc' },
         }),
         db.dish.findMany({
+          where: { ...updatedAtFilter },
           orderBy: { updatedAt: 'desc' },
         }),
         db.warehouseItem.findMany({
+          where: { ...updatedAtFilter },
           orderBy: { updatedAt: 'desc' },
         }),
         db.dailyCookingPlan.findMany({
+          where: { ...dateFilter },
           orderBy: { date: 'desc' },
         }),
         db.actionLog.findMany({
-          where: user.role === 'SUPER_ADMIN' ? {} : { adminId: { in: groupAdminIds ?? [user.id] } },
+          where: { ...(user.role === 'SUPER_ADMIN' ? {} : { adminId: { in: groupAdminIds ?? [user.id] } }), ...createdAtFilter },
           orderBy: { createdAt: 'desc' },
         }),
         db.orderAuditEvent.findMany({
-          where:
-            user.role === 'SUPER_ADMIN'
+          where: {
+            ...(user.role === 'SUPER_ADMIN'
               ? {}
-              : { order: { adminId: { in: groupAdminIds ?? [user.id] } } },
+              : { order: { adminId: { in: groupAdminIds ?? [user.id] } } }),
+            ...occurredAtFilter,
+          },
           orderBy: { occurredAt: 'desc' },
         }),
       ])
