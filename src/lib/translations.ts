@@ -116,6 +116,13 @@ export const translations = {
             totalRecords: 'Всего записей',
             allUsers: 'Все пользователи',
             emptyHistory: 'История пуста',
+            allActions: 'Все действия',
+            actionCreate: 'СОЗДАНИЕ',
+            actionUpdate: 'ОБНОВЛЕНИЕ',
+            actionDelete: 'УДАЛЕНИЕ',
+            actionOther: 'ДРУГОЕ',
+            actionFilter: 'Фильтр действий',
+            noMatches: 'Нет совпадений',
 
             // Descriptions & Guides
             createOrderDesc: "Нажмите кнопку '+ Создать заказ' чтобы добавить новый заказ...",
@@ -461,6 +468,13 @@ export const translations = {
             totalRecords: 'Jami yozuvlar',
             allUsers: 'Barcha foydalanuvchilar',
             emptyHistory: 'Tarix bo\'sh',
+            allActions: 'Barcha harakatlar',
+            actionCreate: 'YARATISH',
+            actionUpdate: 'YANGILASH',
+            actionDelete: 'O\'CHIRISH',
+            actionOther: 'BOSHQA',
+            actionFilter: 'Harakatlar filtri',
+            noMatches: 'Mos natijalar topilmadi',
 
             // Descriptions & Guides
             createOrderDesc: "\"+ Buyurtma yaratish\" tugmasini bosing...",
@@ -806,6 +820,13 @@ export const translations = {
             totalRecords: 'Total Records',
             allUsers: 'All Users',
             emptyHistory: 'History is empty',
+            allActions: 'All Actions',
+            actionCreate: 'CREATE',
+            actionUpdate: 'UPDATE',
+            actionDelete: 'DELETE',
+            actionOther: 'OTHER',
+            actionFilter: 'Action Filter',
+            noMatches: 'No matches for current filters',
 
             // Descriptions & Guides
             createOrderDesc: "Click '+ Create Order' to add a new order...",

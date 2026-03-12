@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { format } from 'date-fns'
@@ -148,6 +148,8 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
         return t.admin.lowAdmin
       case 'COURIER':
         return t.courier.title
+      case 'WORKER':
+        return t.admin.worker
       default:
         return role
     }
@@ -231,14 +233,14 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
 
           <Select value={actionFilter} onValueChange={(value) => setActionFilter(value as ActionFilter)}>
             <SelectTrigger className="border-border bg-background">
-              <SelectValue placeholder="Action filter" />
+              <SelectValue placeholder={t.admin.actionFilter} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All actions</SelectItem>
-              <SelectItem value="create">CREATE</SelectItem>
-              <SelectItem value="update">UPDATE</SelectItem>
-              <SelectItem value="delete">DELETE</SelectItem>
-              <SelectItem value="other">OTHER</SelectItem>
+              <SelectItem value="all">{t.admin.allActions}</SelectItem>
+              <SelectItem value="create">{t.admin.actionCreate}</SelectItem>
+              <SelectItem value="update">{t.admin.actionUpdate}</SelectItem>
+              <SelectItem value="delete">{t.admin.actionDelete}</SelectItem>
+              <SelectItem value="other">{t.admin.actionOther}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -257,23 +259,23 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
       <CardContent className="space-y-4">
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
           <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
-            <p className="text-xs text-muted-foreground">Visible</p>
+            <p className="text-xs text-muted-foreground">{t.admin.all}</p>
             <p className="mt-1 text-xl font-semibold">{filteredLogs.length}</p>
           </div>
           <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
-            <p className="text-xs text-muted-foreground">Create</p>
+            <p className="text-xs text-muted-foreground">{t.admin.actionCreate}</p>
             <p className="mt-1 text-xl font-semibold text-emerald-600">{summary.create}</p>
           </div>
           <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
-            <p className="text-xs text-muted-foreground">Update</p>
+            <p className="text-xs text-muted-foreground">{t.admin.actionUpdate}</p>
             <p className="mt-1 text-xl font-semibold text-sky-600">{summary.update}</p>
           </div>
           <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
-            <p className="text-xs text-muted-foreground">Delete</p>
+            <p className="text-xs text-muted-foreground">{t.admin.actionDelete}</p>
             <p className="mt-1 text-xl font-semibold text-rose-600">{summary.delete}</p>
           </div>
           <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
-            <p className="text-xs text-muted-foreground">Other</p>
+            <p className="text-xs text-muted-foreground">{t.admin.actionOther}</p>
             <p className="mt-1 text-xl font-semibold">{summary.other}</p>
           </div>
         </div>
@@ -299,7 +301,7 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
               ) : filteredLogs.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                    {searchTerm || actionFilter !== 'all' ? 'No matches for current filters' : t.admin.emptyHistory}
+                    {searchTerm || actionFilter !== 'all' ? t.admin.noMatches : t.admin.emptyHistory}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -339,7 +341,7 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
             </div>
           ) : filteredLogs.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
-              {searchTerm || actionFilter !== 'all' ? 'No matches for current filters' : t.admin.emptyHistory}
+              {searchTerm || actionFilter !== 'all' ? t.admin.noMatches : t.admin.emptyHistory}
             </div>
           ) : (
             filteredLogs.map((log) => (

@@ -24,12 +24,12 @@ export async function getGroupAdminIds(user: ScopedUser): Promise<string[] | nul
   const ownerAdminId = await getOwnerAdminId(user)
   if (!ownerAdminId) return null
 
-  const lowAdmins = await db.admin.findMany({
-    where: { createdBy: ownerAdminId, role: 'LOW_ADMIN' },
+  const groupMembers = await db.admin.findMany({
+    where: { createdBy: ownerAdminId },
     select: { id: true }
   })
 
-  return [ownerAdminId, ...lowAdmins.map(a => a.id)]
+  return [ownerAdminId, ...groupMembers.map(a => a.id)]
 }
 
 export async function filterCustomerIdsInGroup(

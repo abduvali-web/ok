@@ -155,6 +155,13 @@ export const SITE_ENDPOINT_CATALOG = [
     "description": "Couriers list/create/update (PATCH requires courierId, supports name/location/salary)."
   },
   {
+    "path": "/api/admin/database-row",
+    "methods": [
+      "POST"
+    ],
+    "description": "database row endpoint (POST)."
+  },
+  {
     "path": "/api/admin/database-snapshot",
     "methods": [
       "GET"

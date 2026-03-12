@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Bot, Database, Download, Loader2, RefreshCw, Search, Table2, CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Bot, Database, Download, Loader2, RefreshCw, Search, Table2, CalendarIcon, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
@@ -284,6 +284,10 @@ export default function DatabasePage() {
   const [date, setDate] = useState<DateRange | undefined>()
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [draftRow, setDraftRow] = useState<Record<string, string> | null>(null)
+  const [draftRowTableId, setDraftRowTableId] = useState<string | null>(null)
+  const [isSavingDraft, setIsSavingDraft] = useState(false)
+  
   const uiText = useMemo(() => {
     if (language === 'ru') {
       return {
@@ -334,6 +338,11 @@ export default function DatabasePage() {
         columnPrefix: 'колонка',
         tamboPrompt: (targetLabel: string) =>
           `Проанализируй ${targetLabel} в Neon DB среднего администратора и помоги с выгрузками, сводками или исправлениями.`,
+        addRow: 'Добавить строку',
+        saveRow: 'Сохранить',
+        cancelRow: 'Отмена',
+        rowSaved: 'Строка сохранена',
+        rowSaveFailed: 'Ошибка сохранения строки',
       }
     }
 
@@ -385,7 +394,12 @@ export default function DatabasePage() {
         overflowValueMarker: 'TOʻLIQ_QIYMAT_TOSHISH_SAHIFASIDA',
         columnPrefix: 'ustun',
         tamboPrompt: (targetLabel: string) =>
-          `${targetLabel} jadvalini o‘rta administrator Neon DB ichida tahlil qil va eksport, umumiy xulosa yoki tuzatishlarda yordam ber.`,
+          `O'rta administrator Neon DB'sida ${targetLabel} tahlil qiling va yuklab olish, sarhisob qilish yoki tuzatishlarda yordam bering.`,
+        addRow: 'Qator qo\'shish',
+        saveRow: 'Saqlash',
+        cancelRow: 'Bekor qilish',
+        rowSaved: 'Qator saqlandi',
+        rowSaveFailed: 'Qatorni saqlashda xatolik',
       }
     }
 
@@ -436,8 +450,99 @@ export default function DatabasePage() {
       overflowValueMarker: 'FULL_VALUE_IN_OVERFLOW_SHEET',
       columnPrefix: 'column',
       tamboPrompt: (targetLabel: string) =>
-        `Analyze the ${targetLabel} in middle admin Neon DB and help me with exports, summaries, or fixes.`,
+        `Analyze the ${targetLabel} in the middle admin Neon DB space and help with data extracts, summaries, or fixes.`,
+      addRow: 'Add Row',
+      saveRow: 'Save',
+      cancelRow: 'Cancel',
+      rowSaved: 'Row saved',
+      rowSaveFailed: 'Failed to save row',
     }
+  }, [language])
+
+  const tDb = useCallback((key: string) => {
+    const dbDict: Record<string, Record<string, string>> = {
+      ru: {
+        'Admins': 'Админы',
+        'Customers': 'Клиенты',
+        'Orders': 'Заказы',
+        'Transactions': 'Транзакции',
+        'Websites': 'Сайты',
+        'Menu Sets': 'Сеты Меню',
+        'Menus': 'Меню',
+        'Dishes': 'Блюда',
+        'Warehouse': 'Склад',
+        'Cooking Plans': 'Планы Готовки',
+        'Action Logs': 'Логи',
+        'Order Audit': 'Аудит',
+        'name': 'имя',
+        'createdAt': 'создано',
+        'updatedAt': 'обновлено',
+        'status': 'статус',
+        'role': 'роль',
+        'price': 'цена',
+        'email': 'email',
+        'salary': 'зарплата',
+        'isActive': 'активен',
+        'phone': 'телефон',
+        'address': 'адрес',
+        'calories': 'калории',
+        'nickName': 'никнейм',
+        'specialFeatures': 'особые пожелания',
+        'paymentType': 'тип оплаты',
+        'dailyPrice': 'цена за день',
+        'amount': 'количество',
+        'description': 'описание',
+        'type': 'тип',
+        'quantity': 'количество',
+        'date': 'дата',
+        'dayOfWeek': 'день недели',
+        'mealType': 'прием пищи',
+        'deliveryDate': 'дата доставки',
+        'expectedCalories': 'ожидаемые калории',
+        'totalPrice': 'общая сумма',
+      },
+      uz: {
+        'Admins': 'Adminlar',
+        'Customers': 'Mijozlar',
+        'Orders': 'Buyurtmalar',
+        'Transactions': 'Tranzaksiyalar',
+        'Websites': 'Saytlar',
+        'Menu Sets': 'Menyu Setlary',
+        'Menus': 'Menyular',
+        'Dishes': 'Taomlar',
+        'Warehouse': 'Ombor',
+        'Cooking Plans': 'Pishirish Rejalari',
+        'Action Logs': 'Loglar',
+        'Order Audit': 'Audit',
+        'name': 'ism',
+        'createdAt': 'yaratilgan',
+        'updatedAt': 'yangilangan',
+        'status': 'holat',
+        'role': 'rol',
+        'price': 'narxi',
+        'email': 'email',
+        'salary': 'maosh',
+        'isActive': 'faol',
+        'phone': 'telefon',
+        'address': 'manzil',
+        'calories': 'kaloriya',
+        'nickName': 'laqab',
+        'specialFeatures': 'maxsus isstak',
+        'paymentType': 'to\'lov turi',
+        'dailyPrice': 'kunlik narx',
+        'amount': 'miqdor',
+        'description': 'tavsif',
+        'type': 'tur',
+        'quantity': 'miqdor',
+        'date': 'sana',
+        'dayOfWeek': 'hafta kuni',
+        'mealType': 'ovqatlanish turi',
+        'deliveryDate': 'yetkazib berish sanasi',
+        'expectedCalories': 'kutilayotgan kaloriyalar',
+        'totalPrice': 'umumiy narx',
+      }
+    }
+    return dbDict[language as string]?.[key] || key
   }, [language])
 
   const loadSnapshot = useCallback(async (background = false) => {
@@ -510,6 +615,37 @@ export default function DatabasePage() {
       currentTable.columns.some((column) => String(row[column] ?? '').toLowerCase().includes(query))
     )
   }, [currentTable, searchTerm])
+
+  const handleSaveDraftRow = async () => {
+    if (!currentTable || !draftRow || !draftRowTableId) return
+    setIsSavingDraft(true)
+    try {
+      const response = await fetch('/api/admin/database-row', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tableId: draftRowTableId,
+          data: draftRow,
+        }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || uiText.rowSaveFailed)
+      }
+
+      toast.success(uiText.rowSaved)
+      setDraftRow(null)
+      setDraftRowTableId(null)
+      void loadSnapshot(true)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : uiText.rowSaveFailed)
+    } finally {
+      setIsSavingDraft(false)
+    }
+  }
 
   const handleDownloadUnifiedSnapshot = async () => {
     if (!snapshot) return
@@ -645,7 +781,7 @@ export default function DatabasePage() {
                     defaultMonth={date?.from}
                     selected={date}
                     onSelect={setDate}
-                    numberOfMonths={2}
+                    numberOfMonths={typeof window !== 'undefined' && window.innerWidth >= 768 ? 2 : 1}
                   />
                   <div className="p-3 border-t border-black/5 dark:border-white/10">
                     <Button 
@@ -741,7 +877,7 @@ export default function DatabasePage() {
               <TabsContent key={table.id} value={table.id} className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-background/60 p-4">
                   <div>
-                    <p className="text-lg font-semibold">{table.title}</p>
+                    <p className="text-lg font-semibold">{tDb(table.title)}</p>
                     <p className="text-sm text-muted-foreground">{table.description}</p>
                   </div>
 
@@ -772,7 +908,7 @@ export default function DatabasePage() {
                         <TableRow>
                           {table.columns.map((column) => (
                             <TableHead key={column} className="min-w-[160px] whitespace-nowrap">
-                              {column}
+                              {tDb(column)}
                             </TableHead>
                           ))}
                         </TableRow>
@@ -790,16 +926,57 @@ export default function DatabasePage() {
                               ))}
                             </TableRow>
                           ))
-                        ) : (
+                        ) : draftRowTableId !== table.id ? (
                           <TableRow>
                             <TableCell colSpan={table.columns.length} className="py-10 text-center text-sm text-muted-foreground">
                               {uiText.noRowsMatch}
                             </TableCell>
                           </TableRow>
+                        ) : null}
+                        
+                        {draftRowTableId === table.id && draftRow !== null && (
+                          <TableRow className="bg-muted/30">
+                            {table.columns.map((column) => (
+                              <TableCell key={`draft-${column}`}>
+                                {column === 'id' ? (
+                                  <div className="text-xs text-muted-foreground whitespace-nowrap">Auto-generated</div>
+                                ) : column === 'createdAt' || column === 'updatedAt' ? (
+                                  <div className="text-xs text-muted-foreground whitespace-nowrap">Auto-timed</div>
+                                ) : (
+                                  <Input
+                                    value={draftRow[column] || ''}
+                                    onChange={(e) => setDraftRow(prev => ({ ...(prev || {}), [column]: e.target.value }))}
+                                    placeholder={`Enter ${column}...`}
+                                    className="min-w-[120px] h-8 text-sm"
+                                    disabled={isSavingDraft}
+                                  />
+                                )}
+                              </TableCell>
+                            ))}
+                          </TableRow>
                         )}
                       </TableBody>
                     </Table>
                   </div>
+                  
+                  {draftRowTableId === table.id && draftRow !== null ? (
+                    <div className="p-4 border-t flex justify-end gap-2 bg-muted/10">
+                      <Button variant="ghost" onClick={() => { setDraftRow(null); setDraftRowTableId(null) }} disabled={isSavingDraft}>
+                        {uiText.cancelRow}
+                      </Button>
+                      <Button onClick={() => void handleSaveDraftRow()} disabled={isSavingDraft}>
+                        {isSavingDraft ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        {uiText.saveRow}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="p-4 border-t flex justify-center bg-muted/10">
+                      <Button variant="outline" onClick={() => { setDraftRow({}); setDraftRowTableId(table.id) }}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        {uiText.addRow}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
             ))}
