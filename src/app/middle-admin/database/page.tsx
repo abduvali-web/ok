@@ -1,9 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Bot, Database, Download, Loader2, RefreshCw, Search, Table2, CalendarIcon, ChevronLeft, ChevronRight, Plus, Edit } from 'lucide-react'
+import { ArrowLeft, Bot, Database, Download, Loader2, RefreshCw, Search, Table2, CalendarIcon, ChevronLeft, ChevronRight, Plus, Edit, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
@@ -288,6 +288,9 @@ export default function DatabasePage() {
   const [draftRow, setDraftRow] = useState<Record<string, string> | null>(null)
   const [draftRowTableId, setDraftRowTableId] = useState<string | null>(null)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [importTargetTableId, setImportTargetTableId] = useState<string | null>(null)
+  const [isImportingSheet, setIsImportingSheet] = useState(false)
 
   const [editingRowId, setEditingRowId] = useState<string | null>(null)
   const [editingRowData, setEditingRowData] = useState<Record<string, string> | null>(null)
@@ -350,6 +353,11 @@ export default function DatabasePage() {
         editRow: 'Редактировать',
         saveEdit: 'Сохранить изменения',
         cancelEdit: 'Отмена',
+        importSheet: 'Импорт / Обновить XLSX',
+        importingSheet: 'Импорт...',
+        importSheetSuccess: (created: number, updated: number, skipped: number, failed: number) =>
+          `Импорт завершен. Создано: ${created}, обновлено: ${updated}, пропущено: ${skipped}, ошибок: ${failed}.`,
+        importSheetFailed: 'Не удалось импортировать XLSX',
       }
     }
 
@@ -410,6 +418,11 @@ export default function DatabasePage() {
         editRow: 'Tahrirlash',
         saveEdit: 'O\'zgarishlarni saqlash',
         cancelEdit: 'Bekor qilish',
+        importSheet: 'XLSX import / yangilash',
+        importingSheet: 'Import...',
+        importSheetSuccess: (created: number, updated: number, skipped: number, failed: number) =>
+          `Import tugadi. Yaratildi: ${created}, yangilandi: ${updated}, o‘tkazildi: ${skipped}, xatolar: ${failed}.`,
+        importSheetFailed: 'XLSX import qilib bo‘lmadi',
       }
     }
 
@@ -469,8 +482,24 @@ export default function DatabasePage() {
       editRow: 'Edit',
       saveEdit: 'Save changes',
       cancelEdit: 'Cancel',
+      importSheet: 'Import / Update XLSX',
+      importingSheet: 'Importing...',
+      importSheetSuccess: (created: number, updated: number, skipped: number, failed: number) =>
+        `Import complete. Created: ${created}, updated: ${updated}, skipped: ${skipped}, failed: ${failed}.`,
+      importSheetFailed: 'Failed to import XLSX',
     }
   }, [language])
+
+  const humanizeKey = useCallback((input: string) => {
+    const trimmed = input.trim()
+    if (!trimmed) return input
+    const spaced = trimmed
+      .replace(/_/g, ' ')
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .replace(/\s+/g, ' ')
+      .trim()
+    return spaced.charAt(0).toUpperCase() + spaced.slice(1)
+  }, [])
 
   const tDb = useCallback((key: string) => {
     const dbDict: Record<string, Record<string, string>> = {
@@ -487,10 +516,17 @@ export default function DatabasePage() {
         'Cooking Plans': 'Планы Готовки',
         'Action Logs': 'Логи',
         'Order Audit': 'Аудит',
+        'id': 'ID',
         'name': 'имя',
+        'title': 'название',
+        'subtitle': 'подзаголовок',
         'createdAt': 'создано',
         'updatedAt': 'обновлено',
+        'createdBy': 'создал',
+        'adminId': 'админ ID',
+        'ownerAdminId': 'владелец ID',
         'status': 'статус',
+        'isOnShift': 'на смене',
         'role': 'роль',
         'price': 'цена',
         'email': 'email',
@@ -498,19 +534,53 @@ export default function DatabasePage() {
         'isActive': 'активен',
         'phone': 'телефон',
         'address': 'адрес',
+        'subdomain': 'субдомен',
+        'theme': 'тема',
+        'content': 'контент',
+        'chatEnabled': 'чат включен',
         'calories': 'калории',
         'nickName': 'никнейм',
         'specialFeatures': 'особые пожелания',
-        'paymentType': 'тип оплаты',
+        'paymentStatus': 'статус оплаты',
+        'paymentMethod': 'способ оплаты',
+        'isPrepaid': 'предоплата',
         'dailyPrice': 'цена за день',
         'amount': 'количество',
         'description': 'описание',
         'type': 'тип',
         'quantity': 'количество',
         'date': 'дата',
+        'deliveryAddress': 'адрес доставки',
+        'deliveryTime': 'время доставки',
+        'deliveryDate': 'дата доставки',
+        'orderNumber': 'номер заказа',
+        'orderStatus': 'статус заказа',
+        'customerId': 'клиент ID',
+        'courierId': 'курьер ID',
+        'notes': 'примечания',
+        'deletedAt': 'удалено',
+        'menuNumber': 'номер меню',
+        'calorieGroups': 'группы калорий',
+        'ingredients': 'ингредиенты',
+        'imageUrl': 'изображение',
+        'calorieMappings': 'сопоставления калорий',
+        'amountReceived': 'получено',
+        'category': 'категория',
+        'entityType': 'тип сущности',
+        'entityId': 'сущность ID',
+        'oldValues': 'старые значения',
+        'newValues': 'новые значения',
+        'details': 'детали',
+        'eventType': 'тип события',
+        'actorName': 'исполнитель',
+        'actorRole': 'роль исполнителя',
+        'previousStatus': 'предыдущий статус',
+        'nextStatus': 'следующий статус',
+        'payload': 'данные',
+        'message': 'сообщение',
+        'occurredAt': 'время',
         'dayOfWeek': 'день недели',
         'mealType': 'прием пищи',
-        'deliveryDate': 'дата доставки',
         'expectedCalories': 'ожидаемые калории',
         'totalPrice': 'общая сумма',
       },
@@ -520,17 +590,24 @@ export default function DatabasePage() {
         'Orders': 'Buyurtmalar',
         'Transactions': 'Tranzaksiyalar',
         'Websites': 'Saytlar',
-        'Menu Sets': 'Menyu Setlary',
+        'Menu Sets': 'Menyu setlari',
         'Menus': 'Menyular',
         'Dishes': 'Taomlar',
         'Warehouse': 'Ombor',
         'Cooking Plans': 'Pishirish Rejalari',
         'Action Logs': 'Loglar',
         'Order Audit': 'Audit',
+        'id': 'ID',
         'name': 'ism',
+        'title': 'nomi',
+        'subtitle': 'taglavha',
         'createdAt': 'yaratilgan',
         'updatedAt': 'yangilangan',
+        'createdBy': 'yaratgan',
+        'adminId': 'admin ID',
+        'ownerAdminId': 'egasi ID',
         'status': 'holat',
+        'isOnShift': 'smenada',
         'role': 'rol',
         'price': 'narxi',
         'email': 'email',
@@ -540,23 +617,57 @@ export default function DatabasePage() {
         'address': 'manzil',
         'calories': 'kaloriya',
         'nickName': 'laqab',
-        'specialFeatures': 'maxsus isstak',
-        'paymentType': 'to\'lov turi',
+        'specialFeatures': 'maxsus istak',
+        'paymentStatus': 'to\'lov holati',
+        'paymentMethod': 'to\'lov usuli',
+        'isPrepaid': 'oldindan to\'lov',
         'dailyPrice': 'kunlik narx',
         'amount': 'miqdor',
         'description': 'tavsif',
         'type': 'tur',
         'quantity': 'miqdor',
         'date': 'sana',
+        'deliveryAddress': 'yetkazish manzili',
+        'deliveryTime': 'yetkazish vaqti',
+        'deliveryDate': 'yetkazish sanasi',
+        'orderNumber': 'buyurtma raqami',
+        'orderStatus': 'buyurtma holati',
+        'customerId': 'mijoz ID',
+        'courierId': 'kuryer ID',
+        'notes': 'izohlar',
+        'deletedAt': 'o\'chirilgan',
+        'subdomain': 'subdomen',
+        'theme': 'mavzu',
+        'content': 'kontent',
+        'chatEnabled': 'chat yoqilgan',
+        'menuNumber': 'menyu raqami',
+        'calorieGroups': 'kaloriya guruhlari',
+        'ingredients': 'ingredientlar',
+        'imageUrl': 'rasm',
+        'calorieMappings': 'kaloriya moslash',
+        'amountReceived': 'qabul qilingan',
+        'category': 'kategoriya',
+        'entityType': 'obyekt turi',
+        'entityId': 'obyekt ID',
+        'oldValues': 'eski qiymatlar',
+        'newValues': 'yangi qiymatlar',
+        'details': 'detallar',
+        'eventType': 'hodisa turi',
+        'actorName': 'bajaruvchi',
+        'actorRole': 'bajaruvchi roli',
+        'previousStatus': 'oldingi holat',
+        'nextStatus': 'keyingi holat',
+        'payload': 'ma\'lumotlar',
+        'message': 'xabar',
+        'occurredAt': 'vaqt',
         'dayOfWeek': 'hafta kuni',
         'mealType': 'ovqatlanish turi',
-        'deliveryDate': 'yetkazib berish sanasi',
         'expectedCalories': 'kutilayotgan kaloriyalar',
         'totalPrice': 'umumiy narx',
       }
     }
-    return dbDict[language as string]?.[key] || key
-  }, [language])
+    return dbDict[language as string]?.[key] || humanizeKey(key)
+  }, [humanizeKey, language])
 
   const tDbValue = useCallback((value: string) => {
     if (value === 'null' || value === '' || value === '""' || value === '{}' || value === '[]') return '-'
@@ -669,6 +780,53 @@ export default function DatabasePage() {
   const currentTable = useMemo(
     () => tables.find((table) => table.id === activeTab) ?? null,
     [activeTab, tables]
+  )
+
+  const handleImportSheetClick = useCallback((tableId: string) => {
+    setImportTargetTableId(tableId)
+    fileInputRef.current?.click()
+  }, [])
+
+  const handleImportFileChosen = useCallback(
+    async (file: File | null) => {
+      if (!file || !importTargetTableId) return
+
+      setIsImportingSheet(true)
+      try {
+        const table = tables.find((item) => item.id === importTargetTableId) ?? null
+        const formData = new FormData()
+        formData.append('tableId', importTargetTableId)
+        if (table?.title) formData.append('sheetName', table.title)
+        formData.append('file', file)
+
+        const response = await fetch('/api/admin/database-import-xlsx', {
+          method: 'POST',
+          body: formData,
+        })
+        const data = (await response.json().catch(() => null)) as any
+
+        if (!response.ok) {
+          throw new Error(data?.error || uiText.importSheetFailed)
+        }
+
+        toast.success(
+          uiText.importSheetSuccess(
+            Number(data?.created ?? 0),
+            Number(data?.updated ?? 0),
+            Number(data?.skipped ?? 0),
+            Number(data?.failed ?? 0)
+          )
+        )
+        void loadSnapshot(true)
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : uiText.importSheetFailed)
+      } finally {
+        setIsImportingSheet(false)
+        setImportTargetTableId(null)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+      }
+    },
+    [importTargetTableId, loadSnapshot, tables, uiText.importSheetFailed, uiText.importSheetSuccess]
   )
 
   const filteredRows = useMemo(() => {
@@ -825,6 +983,14 @@ export default function DatabasePage() {
 
   return (
     <div className="space-y-4">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        className="hidden"
+        onChange={(event) => void handleImportFileChosen(event.target.files?.[0] ?? null)}
+        aria-hidden
+      />
       <Card className="overflow-hidden">
         <CardHeader className="border-b bg-gradient-to-r from-card via-card to-muted/30">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -990,6 +1156,18 @@ export default function DatabasePage() {
                     <Button variant="outline" onClick={handleDownloadCurrentTableClick}>
                       <Download className="mr-2 h-4 w-4" />
                       {uiText.downloadSheet}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleImportSheetClick(table.id)}
+                      disabled={isImportingSheet}
+                    >
+                      {isImportingSheet ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="mr-2 h-4 w-4" />
+                      )}
+                      {isImportingSheet ? uiText.importingSheet : uiText.importSheet}
                     </Button>
                   </div>
                 </div>

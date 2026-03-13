@@ -29,6 +29,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import styles from "./TamboAgentWidget.module.css";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const PLACEHOLDER_THREAD_ID = "placeholder";
 const MAX_TEXTAREA_HEIGHT = 156;
@@ -263,15 +264,12 @@ function extractToolResultPayload(content: unknown): Record<string, unknown> | n
   return null;
 }
 
-function TamboEmptyState() {
+function TamboEmptyState({ title, copy }: { title: string; copy: string }) {
   return (
     <div className={styles.emptyState}>
       <div className="space-y-1">
-        <p className={styles.emptyTitle}>Ask about orders, clients, couriers, or files</p>
-        <p className={styles.emptyCopy}>
-          Replies stay in plain chat format. Generated files appear as cards under the
-          assistant message.
-        </p>
+        <p className={styles.emptyTitle}>{title}</p>
+        <p className={styles.emptyCopy}>{copy}</p>
       </div>
     </div>
   );
@@ -279,6 +277,8 @@ function TamboEmptyState() {
 
 export function TamboAgentWidget() {
   const apiKey = process.env.NEXT_PUBLIC_TAMBO_API_KEY;
+  const { t } = useLanguage();
+  const tamboT = t.tambo;
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [textAttachments, setTextAttachments] = useState<StagedTextAttachment[]>([]);
@@ -295,6 +295,10 @@ export function TamboAgentWidget() {
     initThread,
     startNewThread,
   } = useTambo();
+  const userFacingMessages = useMemo(
+    () => messages.filter((message) => message.role !== "system"),
+    [messages]
+  );
   const {
     value,
     setValue,
@@ -315,11 +319,11 @@ export function TamboAgentWidget() {
 
   useEffect(() => {
     if (!isOpen) return;
-    const renderedBlockCount = messages.length + (isStreaming ? 1 : 0);
+    const renderedBlockCount = userFacingMessages.length + (isStreaming ? 1 : 0);
     const shouldAnimate = renderedBlockCount > renderedBlockCountRef.current;
     bottomRef.current?.scrollIntoView({ behavior: shouldAnimate ? "smooth" : "auto" });
     renderedBlockCountRef.current = renderedBlockCount;
-  }, [messages.length, isStreaming, isOpen]);
+  }, [userFacingMessages.length, isStreaming, isOpen]);
 
   useEffect(() => {
     if (!isOpen || !isFullscreen) return;
@@ -406,12 +410,12 @@ export function TamboAgentWidget() {
         }
 
         if (!isTextAttachment(file)) {
-          skipped.push(`${file.name} (unsupported type)`);
+          skipped.push(tamboT.attachmentUnsupported.replace("{file}", file.name));
           continue;
         }
 
         if (file.size > MAX_TEXT_ATTACHMENT_SIZE) {
-          skipped.push(`${file.name} (max 512 KB)`);
+          skipped.push(tamboT.attachmentMaxSize.replace("{file}", file.name));
           continue;
         }
 
@@ -432,7 +436,7 @@ export function TamboAgentWidget() {
             truncated,
           });
         } catch {
-          skipped.push(`${file.name} (read failed)`);
+          skipped.push(tamboT.attachmentReadFailed.replace("{file}", file.name));
         }
       }
 
@@ -440,7 +444,11 @@ export function TamboAgentWidget() {
         try {
           await addImages(imageFiles);
         } catch {
-          skipped.push(...imageFiles.map((file) => `${file.name} (image upload failed)`));
+          skipped.push(
+            ...imageFiles.map((file) =>
+              tamboT.attachmentImageUploadFailed.replace("{file}", file.name)
+            )
+          );
         }
       }
 
@@ -451,12 +459,14 @@ export function TamboAgentWidget() {
       }
 
       if (skipped.length > 0) {
-        setAttachmentError(`Skipped: ${skipped.slice(0, 4).join(", ")}`);
+        setAttachmentError(
+          tamboT.skipped.replace("{items}", skipped.slice(0, 4).join(", "))
+        );
       }
 
       event.target.value = "";
     },
-    [addImages]
+    [addImages, tamboT]
   );
 
   const hasRealThread = currentThreadId !== PLACEHOLDER_THREAD_ID;
@@ -476,7 +486,7 @@ export function TamboAgentWidget() {
 
     if (!messageText && images.length > 0) {
       flushSync(() => {
-        setValue("Analyze the attached images and summarize key details.");
+        setValue(tamboT.analyzeImagesFallback);
       });
     } else if (messageText && messageText !== value) {
       flushSync(() => {
@@ -502,6 +512,7 @@ export function TamboAgentWidget() {
     isPending,
     setValue,
     submit,
+    tamboT,
     textAttachments,
     value,
   ]);
@@ -528,8 +539,8 @@ export function TamboAgentWidget() {
   );
 
   const widgetLabel = useMemo(
-    () => (isFullscreen ? "Tambo AI fullscreen chat" : "Tambo AI chat"),
-    [isFullscreen]
+    () => (isFullscreen ? tamboT.ariaFullscreen : tamboT.ariaDocked),
+    [isFullscreen, tamboT.ariaDocked, tamboT.ariaFullscreen]
   );
 
   type ThreadMessage = (typeof messages)[number];
@@ -650,13 +661,13 @@ export function TamboAgentWidget() {
 
   const visibleMessages = useMemo(
     () =>
-      messages
+      userFacingMessages
         .map((message) => ({
           message,
           visibleContent: message.content.filter((content) => content.type === "text"),
         }))
         .filter(({ visibleContent }) => visibleContent.length > 0),
-    [messages]
+    [userFacingMessages]
   );
 
   const artifactsByMessage = useMemo(() => {
@@ -691,12 +702,14 @@ export function TamboAgentWidget() {
         return {
           id: message.id,
           role: message.role,
-          preview: summarizeMessageText(preview || (message.role === "user" ? "New request" : "Reply")),
+          preview: summarizeMessageText(
+            preview || (message.role === "user" ? tamboT.historyNewRequest : tamboT.historyReply)
+          ),
           timeLabel: formatMessageTime(message.createdAt),
           fileCount: artifactsByMessage.get(message.id)?.length ?? 0,
         };
       }),
-    [artifactsByMessage, visibleMessages]
+    [artifactsByMessage, visibleMessages, tamboT]
   );
 
   const scrollToMessage = useCallback((messageId: string) => {
@@ -730,7 +743,7 @@ export function TamboAgentWidget() {
             <div className="min-w-0">
               <p className={styles.fileCardTitle}>{artifact.fileName}</p>
               <p className={styles.fileCardMeta}>
-                {artifact.ok ? "Generated file" : "File generation failed"}
+                {artifact.ok ? tamboT.fileGenerated : tamboT.fileGenerationFailed}
                 {artifact.note ? ` - ${artifact.note}` : ""}
               </p>
             </div>
@@ -746,7 +759,7 @@ export function TamboAgentWidget() {
                   download={artifact.fileName}
                   className={styles.fileAction}
                 >
-                  Download
+                  {tamboT.download}
                 </a>
                 <a
                   href={artifact.downloadUrl}
@@ -754,11 +767,11 @@ export function TamboAgentWidget() {
                   rel="noreferrer"
                   className={styles.fileAction}
                 >
-                  Open
+                  {tamboT.open}
                 </a>
               </>
             ) : (
-              <p className={styles.fileCardMeta}>Download link unavailable for this result.</p>
+              <p className={styles.fileCardMeta}>{tamboT.downloadLinkUnavailable}</p>
             )}
           </div>
         </div>
@@ -770,14 +783,16 @@ export function TamboAgentWidget() {
         <div className={styles.fileCardHeader}>
           <div className="min-w-0">
             <p className={styles.fileCardTitle}>
-              {artifact.subdomain ? `${artifact.subdomain} website` : "Edited website"}
+              {artifact.subdomain
+                ? tamboT.websiteTitleWithSubdomain.replace("{subdomain}", artifact.subdomain)
+                : tamboT.websiteEditedTitle}
             </p>
             <p className={styles.fileCardMeta}>
-              {artifact.message ?? (artifact.applied ? "Update applied" : "Preview generated")}
+              {artifact.message ?? (artifact.applied ? tamboT.updateApplied : tamboT.previewGenerated)}
             </p>
           </div>
           <Badge variant={artifact.ok ? "secondary" : "destructive"} className={styles.fileBadge}>
-            {artifact.ok ? "ok" : "error"}
+            {artifact.ok ? tamboT.badgeOk : tamboT.badgeError}
           </Badge>
         </div>
         <div className={styles.fileActions}>
@@ -788,7 +803,7 @@ export function TamboAgentWidget() {
               rel="noreferrer"
               className={styles.fileAction}
             >
-              Preview
+              {tamboT.preview}
             </a>
           ) : null}
           {artifact.hostUrl ? (
@@ -798,14 +813,14 @@ export function TamboAgentWidget() {
               rel="noreferrer"
               className={styles.fileAction}
             >
-              Open site
+              {tamboT.openSite}
             </a>
           ) : null}
         </div>
         {artifact.pathUrl ? (
           <div className={styles.previewFrame}>
             <iframe
-              title={artifact.subdomain ? `Site preview ${artifact.subdomain}` : "Site preview"}
+              title={artifact.subdomain ? `${tamboT.preview} ${artifact.subdomain}` : tamboT.preview}
               src={artifact.pathUrl}
               loading="lazy"
               className="h-44 w-full bg-white"
@@ -814,7 +829,7 @@ export function TamboAgentWidget() {
         ) : null}
       </div>
     );
-  }, []);
+  }, [tamboT]);
 
   if (!apiKey) return null;
 
@@ -828,7 +843,7 @@ export function TamboAgentWidget() {
             setIsOpen(true);
             setIsFullscreen(false);
           }}
-          aria-label="Open AI agent"
+          aria-label={tamboT.ariaOpenAgent}
         >
           <MessageSquare className="h-5 w-5" />
           <span aria-hidden className={styles.launcherPulse} />
@@ -843,7 +858,7 @@ export function TamboAgentWidget() {
           className={
             isFullscreen
               ? "fixed inset-0 z-50 p-0 sm:p-2"
-              : "fixed bottom-4 right-4 z-50 h-[min(760px,calc(100vh-1.5rem))] w-[min(980px,calc(100vw-1.5rem))] max-sm:inset-x-3 max-sm:bottom-3 max-sm:top-[4.5rem] max-sm:h-auto max-sm:w-auto"
+              : "fixed bottom-3 right-3 z-50 h-[min(640px,calc(100vh-1.5rem))] w-[min(520px,calc(100vw-1.5rem))] max-sm:inset-x-3 max-sm:bottom-3 max-sm:top-[4.5rem] max-sm:h-auto max-sm:w-auto"
           }
         >
           <div
@@ -866,10 +881,10 @@ export function TamboAgentWidget() {
                   <Bot className="h-4 w-4" />
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold tracking-tight">Tambo Agent</p>
+                  <p className="truncate text-sm font-semibold tracking-tight">{tamboT.headerTitle}</p>
                   <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                     <span aria-hidden className={styles.statusDot} />
-                    <span>{isStreaming ? "Streaming response" : "Ready"}</span>
+                    <span>{isStreaming ? tamboT.statusStreaming : tamboT.statusReady}</span>
                     {hasRealThread ? (
                       <span className={styles.threadChip}>#{currentThreadId.slice(0, 8)}</span>
                     ) : null}
@@ -883,7 +898,7 @@ export function TamboAgentWidget() {
                   variant="ghost"
                   size="icon"
                   onClick={handleNewThread}
-                  aria-label="New chat"
+                  aria-label={tamboT.ariaNewChat}
                   className="h-9 w-9 rounded-xl"
                 >
                   <Plus className="h-4 w-4" />
@@ -893,7 +908,9 @@ export function TamboAgentWidget() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsFullscreen((current) => !current)}
-                  aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                  aria-label={
+                    isFullscreen ? tamboT.ariaExitFullscreen : tamboT.ariaEnterFullscreen
+                  }
                   className="h-9 w-9 rounded-xl"
                 >
                   {isFullscreen ? (
@@ -907,7 +924,7 @@ export function TamboAgentWidget() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsOpen(false)}
-                  aria-label="Close"
+                  aria-label={tamboT.ariaClose}
                   className="h-9 w-9 rounded-xl"
                 >
                   <X className="h-4 w-4" />
@@ -919,15 +936,15 @@ export function TamboAgentWidget() {
               <aside className={styles.historyPanel}>
                 <div className={styles.panelHeader}>
                   <div>
-                    <p className={styles.panelEyebrow}>History</p>
-                    <p className={styles.panelTitle}>Current session</p>
+                    <p className={styles.panelEyebrow}>{tamboT.historyLabel}</p>
+                    <p className={styles.panelTitle}>{tamboT.currentSessionLabel}</p>
                   </div>
                   <span className={styles.panelCount}>{historyItems.length}</span>
                 </div>
                 <ScrollArea className="min-h-[160px] flex-1">
                   <div className={styles.historyList}>
                     {historyItems.length === 0 ? (
-                      <div className={styles.historyEmpty}>Your prompts and replies will appear here.</div>
+                      <div className={styles.historyEmpty}>{tamboT.historyEmpty}</div>
                     ) : null}
                     {historyItems.map((item) => (
                       <button
@@ -938,12 +955,12 @@ export function TamboAgentWidget() {
                       >
                         <div className={styles.historyItemHeader}>
                           <span className={styles.historyRole}>
-                            {item.role === "user" ? "You" : "Tambo"}
+                            {item.role === "user" ? tamboT.roleYou : tamboT.roleTambo}
                           </span>
                           <div className={styles.historyMeta}>
                             {item.fileCount > 0 ? (
                               <span className={styles.historyFileCount}>
-                                {item.fileCount} file{item.fileCount > 1 ? "s" : ""}
+                                {tamboT.fileCountLabel.replace("{count}", item.fileCount.toString())}
                               </span>
                             ) : null}
                             {item.timeLabel ? <span>{item.timeLabel}</span> : null}
@@ -959,7 +976,9 @@ export function TamboAgentWidget() {
               <div className={styles.chatColumn}>
                 <ScrollArea className="min-h-0 flex-1">
                   <div className={styles.transcript} aria-live="polite">
-                    {messages.length === 0 ? <TamboEmptyState /> : null}
+                    {userFacingMessages.length === 0 ? (
+                      <TamboEmptyState title={tamboT.emptyTitle} copy={tamboT.emptyCopy} />
+                    ) : null}
 
                     {visibleMessages.map(({ message, visibleContent }) => {
                       const messageArtifacts = artifactsByMessage.get(message.id) ?? [];
@@ -985,7 +1004,9 @@ export function TamboAgentWidget() {
                             )}
                           >
                             <div className={styles.messageMeta}>
-                              <span className="font-semibold">{message.role === "user" ? "You" : "Tambo"}</span>
+                              <span className="font-semibold">
+                                {message.role === "user" ? tamboT.roleYou : tamboT.roleTambo}
+                              </span>
                               {formatMessageTime(message.createdAt) ? (
                                 <span>{formatMessageTime(message.createdAt)}</span>
                               ) : null}
@@ -1007,7 +1028,7 @@ export function TamboAgentWidget() {
 
                     {orphanArtifacts.length > 0 ? (
                       <section className={styles.orphanSection}>
-                        <p className={styles.orphanTitle}>Latest files</p>
+                        <p className={styles.orphanTitle}>{tamboT.latestFiles}</p>
                         <div className={styles.messageFiles}>
                           {orphanArtifacts.map((artifact) => renderArtifactCard(artifact))}
                         </div>
@@ -1017,11 +1038,11 @@ export function TamboAgentWidget() {
                     {toolProgress.active ? (
                       <div className={styles.progressCard}>
                         <div className={styles.progressHeader}>
-                          <span>Tambo is working</span>
+                          <span>{tamboT.workingTitle}</span>
                           <span>
                             {toolProgress.total > 0
                               ? `${toolProgress.completed}/${toolProgress.total}`
-                              : "in progress"}
+                              : tamboT.inProgress}
                           </span>
                         </div>
                         <Progress value={toolProgress.value} className="h-1.5" />
@@ -1031,7 +1052,7 @@ export function TamboAgentWidget() {
                     {isStreaming ? (
                       <div className={styles.streaming}>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Generating answer</span>
+                        <span>{tamboT.generatingAnswer}</span>
                       </div>
                     ) : null}
 
@@ -1058,7 +1079,7 @@ export function TamboAgentWidget() {
                             type="button"
                             className={styles.attachmentChip}
                             onClick={() => removeImage(image.id)}
-                            title="Remove image attachment"
+                            title={tamboT.removeImageAttachment}
                           >
                             {image.name}
                             <span className={styles.attachmentChipMeta}>
@@ -1072,7 +1093,7 @@ export function TamboAgentWidget() {
                             type="button"
                             className={styles.attachmentChip}
                             onClick={() => removeTextAttachment(attachment.id)}
-                            title="Remove text attachment"
+                            title={tamboT.removeTextAttachment}
                           >
                             {attachment.name}
                             <span className={styles.attachmentChipMeta}>
@@ -1093,7 +1114,7 @@ export function TamboAgentWidget() {
                         size="icon"
                         onClick={openFilePicker}
                         disabled={isDisabled || isPending}
-                        aria-label="Attach file"
+                        aria-label={tamboT.ariaAttachFile}
                         className={styles.attachButton}
                       >
                         <Plus className="h-4 w-4" />
@@ -1105,7 +1126,7 @@ export function TamboAgentWidget() {
                         onKeyDown={handleComposerKeyDown}
                         onInput={syncTextareaHeight}
                         rows={1}
-                        placeholder="Message Tambo..."
+                        placeholder={tamboT.messagePlaceholder}
                         disabled={isDisabled || isPending}
                         className={styles.composerInput}
                       />
@@ -1113,7 +1134,7 @@ export function TamboAgentWidget() {
                         type="button"
                         onClick={() => void handleSend()}
                         disabled={isDisabled || isPending || !canSend}
-                        aria-label="Send"
+                        aria-label={tamboT.ariaSend}
                         className={styles.sendButton}
                       >
                         {isPending ? (
@@ -1124,7 +1145,7 @@ export function TamboAgentWidget() {
                       </Button>
                     </div>
                     <div className={styles.footerMeta}>
-                      <span>Tambo can make mistakes. Check important info.</span>
+                      <span>{tamboT.disclaimer}</span>
                     </div>
                   </div>
                 </div>

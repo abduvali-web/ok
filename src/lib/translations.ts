@@ -30,6 +30,72 @@ export const translations = {
             user: 'Пользователь',
             action: 'Действие',
         },
+        tambo: {
+            headerTitle: 'Tambo Agent',
+            ariaDocked: 'Tambo AI chat',
+            ariaFullscreen: 'Tambo AI fullscreen chat',
+            ariaOpenAgent: 'Открыть AI чат',
+            ariaNewChat: 'Новый чат',
+            ariaAttachFile: 'Прикрепить файл',
+            ariaSend: 'Отправить',
+            ariaClose: 'Закрыть',
+            ariaEnterFullscreen: 'На весь экран',
+            ariaExitFullscreen: 'Выйти из полного экрана',
+
+            emptyTitle: 'Спросите про заказы, клиентов, курьеров или файлы',
+            emptyCopy:
+                'Ответы остаются в обычном чате. Сгенерированные файлы появляются карточками под сообщением ассистента.',
+
+            statusStreaming: 'Формирует ответ',
+            statusReady: 'Готово',
+
+            historyLabel: 'История',
+            currentSessionLabel: 'Текущая сессия',
+            historyEmpty: 'Ваши запросы и ответы будут отображаться здесь.',
+            roleYou: 'Вы',
+            roleTambo: 'Tambo',
+            historyNewRequest: 'Новый запрос',
+            historyReply: 'Ответ',
+
+            latestFiles: 'Последние файлы',
+            fileCountLabel: '{count} файл(ов)',
+
+            fileGenerated: 'Файл создан',
+            fileGenerationFailed: 'Не удалось создать файл',
+            download: 'Скачать',
+            open: 'Открыть',
+            downloadLinkUnavailable: 'Ссылка на скачивание недоступна для этого результата.',
+
+            websiteTitleWithSubdomain: 'Сайт {subdomain}',
+            websiteEditedTitle: 'Измененный сайт',
+            updateApplied: 'Изменения применены',
+            previewGenerated: 'Превью создано',
+            badgeOk: 'ок',
+            badgeError: 'ошибка',
+            preview: 'Превью',
+            openSite: 'Открыть сайт',
+
+            workingTitle: 'Tambo работает',
+            inProgress: 'в процессе',
+            generatingAnswer: 'Генерирует ответ',
+
+            messagePlaceholder: 'Сообщение для Tambo...',
+            removeImageAttachment: 'Убрать изображение',
+            removeTextAttachment: 'Убрать вложение',
+
+            skipped: 'Пропущено: {items}',
+            attachmentUnsupported: '{file} (неподдерживаемый тип)',
+            attachmentMaxSize: '{file} (макс. 512 KB)',
+            attachmentReadFailed: '{file} (не удалось прочитать)',
+            attachmentImageUploadFailed: '{file} (не удалось загрузить изображение)',
+
+            disclaimer: 'Tambo может ошибаться. Проверяйте важную информацию.',
+            analyzeImagesFallback: 'Проанализируй прикрепленные изображения и кратко опиши ключевые детали.',
+
+            setupHintAria: 'Открыть подсказку по настройке AI',
+            setupHintAlert:
+                'Укажите NEXT_PUBLIC_TAMBO_API_KEY и перезапустите/переразверните приложение, чтобы включить чат.',
+        },
         auth: {
             welcome: 'Добро пожаловать',
             loginTitle: 'Вход в систему',
@@ -382,6 +448,72 @@ export const translations = {
             user: 'Foydalanuvchi',
             action: 'Amal',
         },
+        tambo: {
+            headerTitle: 'Tambo Agent',
+            ariaDocked: 'Tambo AI chat',
+            ariaFullscreen: 'Tambo AI fullscreen chat',
+            ariaOpenAgent: 'AI chatni ochish',
+            ariaNewChat: 'Yangi chat',
+            ariaAttachFile: 'Fayl biriktirish',
+            ariaSend: 'Yuborish',
+            ariaClose: 'Yopish',
+            ariaEnterFullscreen: 'To\'liq ekranga o\'tish',
+            ariaExitFullscreen: 'To\'liq ekrandan chiqish',
+
+            emptyTitle: 'Buyurtmalar, mijozlar, kuryerlar yoki fayllar haqida so\'rang',
+            emptyCopy:
+                'Javoblar oddiy chat ko\'rinishida qoladi. Yaratilgan fayllar assistent xabari ostida kartochka sifatida chiqadi.',
+
+            statusStreaming: 'Javob tayyorlanmoqda',
+            statusReady: 'Tayyor',
+
+            historyLabel: 'Tarix',
+            currentSessionLabel: 'Joriy sessiya',
+            historyEmpty: 'So\'rovlaringiz va javoblar shu yerda ko\'rinadi.',
+            roleYou: 'Siz',
+            roleTambo: 'Tambo',
+            historyNewRequest: 'Yangi so\'rov',
+            historyReply: 'Javob',
+
+            latestFiles: 'So\'nggi fayllar',
+            fileCountLabel: '{count} ta fayl',
+
+            fileGenerated: 'Fayl yaratildi',
+            fileGenerationFailed: 'Fayl yaratib bo\'lmadi',
+            download: 'Yuklab olish',
+            open: 'Ochish',
+            downloadLinkUnavailable: 'Bu natija uchun yuklab olish havolasi mavjud emas.',
+
+            websiteTitleWithSubdomain: '{subdomain} sayti',
+            websiteEditedTitle: 'Tahrirlangan sayt',
+            updateApplied: 'O\'zgarishlar qo\'llandi',
+            previewGenerated: 'Ko\'rib chiqish tayyor',
+            badgeOk: 'ok',
+            badgeError: 'xato',
+            preview: 'Ko\'rib chiqish',
+            openSite: 'Saytni ochish',
+
+            workingTitle: 'Tambo ishlayapti',
+            inProgress: 'jarayonda',
+            generatingAnswer: 'Javob yaratilmoqda',
+
+            messagePlaceholder: 'Tambo\'ga xabar...',
+            removeImageAttachment: 'Rasmni olib tashlash',
+            removeTextAttachment: 'Biriktirmani olib tashlash',
+
+            skipped: 'O\'tkazib yuborildi: {items}',
+            attachmentUnsupported: '{file} (qo\'llab-quvvatlanmaydi)',
+            attachmentMaxSize: '{file} (maks. 512 KB)',
+            attachmentReadFailed: '{file} (o\'qib bo\'lmadi)',
+            attachmentImageUploadFailed: '{file} (rasm yuklanmadi)',
+
+            disclaimer: 'Tambo xato qilishi mumkin. Muhim ma\'lumotni tekshiring.',
+            analyzeImagesFallback: 'Biriktirilgan rasmlarni tahlil qiling va asosiy jihatlarni qisqacha bayon qiling.',
+
+            setupHintAria: 'AI sozlash bo\'yicha eslatma',
+            setupHintAlert:
+                'Chatni yoqish uchun NEXT_PUBLIC_TAMBO_API_KEY ni sozlang va ilovani qayta ishga tushiring/yoying.',
+        },
         auth: {
             welcome: 'Xush kelibsiz',
             loginTitle: 'Tizimga kirish',
@@ -733,6 +865,70 @@ export const translations = {
             page: 'Page',
             user: 'User',
             action: 'Action',
+        },
+        tambo: {
+            headerTitle: 'Tambo Agent',
+            ariaDocked: 'Tambo AI chat',
+            ariaFullscreen: 'Tambo AI fullscreen chat',
+            ariaOpenAgent: 'Open AI agent',
+            ariaNewChat: 'New chat',
+            ariaAttachFile: 'Attach file',
+            ariaSend: 'Send',
+            ariaClose: 'Close',
+            ariaEnterFullscreen: 'Enter fullscreen',
+            ariaExitFullscreen: 'Exit fullscreen',
+
+            emptyTitle: 'Ask about orders, clients, couriers, or files',
+            emptyCopy: 'Replies stay in plain chat format. Generated files appear as cards under the assistant message.',
+
+            statusStreaming: 'Streaming response',
+            statusReady: 'Ready',
+
+            historyLabel: 'History',
+            currentSessionLabel: 'Current session',
+            historyEmpty: 'Your prompts and replies will appear here.',
+            roleYou: 'You',
+            roleTambo: 'Tambo',
+            historyNewRequest: 'New request',
+            historyReply: 'Reply',
+
+            latestFiles: 'Latest files',
+            fileCountLabel: '{count} files',
+
+            fileGenerated: 'Generated file',
+            fileGenerationFailed: 'File generation failed',
+            download: 'Download',
+            open: 'Open',
+            downloadLinkUnavailable: 'Download link unavailable for this result.',
+
+            websiteTitleWithSubdomain: '{subdomain} website',
+            websiteEditedTitle: 'Edited website',
+            updateApplied: 'Update applied',
+            previewGenerated: 'Preview generated',
+            badgeOk: 'ok',
+            badgeError: 'error',
+            preview: 'Preview',
+            openSite: 'Open site',
+
+            workingTitle: 'Tambo is working',
+            inProgress: 'in progress',
+            generatingAnswer: 'Generating answer',
+
+            messagePlaceholder: 'Message Tambo...',
+            removeImageAttachment: 'Remove image attachment',
+            removeTextAttachment: 'Remove text attachment',
+
+            skipped: 'Skipped: {items}',
+            attachmentUnsupported: '{file} (unsupported type)',
+            attachmentMaxSize: '{file} (max 512 KB)',
+            attachmentReadFailed: '{file} (read failed)',
+            attachmentImageUploadFailed: '{file} (image upload failed)',
+
+            disclaimer: 'Tambo can make mistakes. Check important info.',
+            analyzeImagesFallback: 'Analyze the attached images and summarize key details.',
+
+            setupHintAria: 'Open AI agent setup hint',
+            setupHintAlert: 'Set NEXT_PUBLIC_TAMBO_API_KEY and restart/redeploy to enable chat.',
         },
         auth: {
             welcome: 'Welcome',

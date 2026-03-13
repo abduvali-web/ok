@@ -21,6 +21,7 @@ import {
 import { TamboAgentWidget } from "@/components/tambo/TamboAgentWidget";
 import { Button } from "@/components/ui/button";
 import { getJsonFromLocalStorage } from "@/lib/browser-storage";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function getStableAnonKey(): string {
   if (typeof window === "undefined") return "anonymous";
@@ -42,6 +43,8 @@ function getUserKeyFromStorage(): string {
 
 export function TamboProviderClient({ children }: { children: React.ReactNode }) {
   const apiKey = process.env.NEXT_PUBLIC_TAMBO_API_KEY;
+  const { t } = useLanguage();
+  const tamboT = t.tambo;
   const [userKey, setUserKey] = useState("anonymous");
 
   useEffect(() => {
@@ -69,11 +72,9 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
           type="button"
           className="fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full shadow-lg"
           onClick={() => {
-            window.alert(
-              "Set NEXT_PUBLIC_TAMBO_API_KEY and restart/redeploy to enable chat."
-            );
+            window.alert(tamboT.setupHintAlert);
           }}
-          aria-label="Open AI agent setup hint"
+          aria-label={tamboT.setupHintAria}
         >
           <MessageSquare className="h-5 w-5" />
         </Button>
@@ -92,7 +93,7 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
       }}
       initialMessages={[
         {
-          role: "assistant",
+          role: "system",
           content: [
             {
               type: "text",
