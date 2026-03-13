@@ -2,20 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, hasRole } from '@/lib/auth-utils'
 import { getGroupAdminIds, getOwnerAdminId } from '@/lib/admin-scope'
-
-type TableId =
-  | 'admins'
-  | 'customers'
-  | 'orders'
-  | 'transactions'
-  | 'websites'
-  | 'menuSets'
-  | 'menus'
-  | 'dishes'
-  | 'warehouse'
-  | 'cookingPlans'
-  | 'actionLogs'
-  | 'orderAudit'
+import { isTableId, mapHeaderRow, TableId } from '@/lib/admin/database-xlsx-mapping'
 
 type ImportResult = {
   ok: boolean
@@ -75,23 +62,6 @@ function toStringCell(value: unknown): string {
   } catch {
     return String(value)
   }
-}
-
-function isTableId(value: string): value is TableId {
-  return (
-    value === 'admins' ||
-    value === 'customers' ||
-    value === 'orders' ||
-    value === 'transactions' ||
-    value === 'websites' ||
-    value === 'menuSets' ||
-    value === 'menus' ||
-    value === 'dishes' ||
-    value === 'warehouse' ||
-    value === 'cookingPlans' ||
-    value === 'actionLogs' ||
-    value === 'orderAudit'
-  )
 }
 
 async function canUpdateRow(user: { id: string; role: string }, tableId: TableId, id: string) {
@@ -206,7 +176,8 @@ export async function POST(request: NextRequest) {
     }
 
     const aoa = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: '' }) as unknown[][]
-    const headerRow = (aoa[0] ?? []).map((cell) => toStringCell(cell).trim())
+    const rawHeaderRow = (aoa[0] ?? []).map((cell) => toStringCell(cell).trim())
+    const headerRow = mapHeaderRow(tableIdRaw, rawHeaderRow)
     const header = headerRow.filter((cell) => cell.length > 0)
 
     if (header.length === 0) {
@@ -378,4 +349,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-

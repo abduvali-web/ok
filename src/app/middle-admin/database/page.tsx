@@ -137,7 +137,11 @@ function normalizeExcelCellText(
   return `${value.slice(0, previewLimit)}${marker}`
 }
 
-function buildWorkbookSheets(snapshot: SnapshotPayload, labels: WorkbookLabels) {
+function buildWorkbookSheets(
+  snapshot: SnapshotPayload,
+  labels: WorkbookLabels,
+  columnLabeler: (column: string) => string = (value) => value
+) {
   const summaryRows = [
     [labels.scope, snapshot.scope],
     [labels.generatedAt, snapshot.generatedAt],
@@ -148,7 +152,10 @@ function buildWorkbookSheets(snapshot: SnapshotPayload, labels: WorkbookLabels) 
 
   const tableSheets: Array<{ name: string; rows: string[][] }> = snapshot.tables.map((table) => ({
     name: table.title,
-    rows: [table.columns, ...table.rows.map((row) => table.columns.map((column) => row[column] ?? ''))],
+    rows: [
+      table.columns.map((column) => columnLabeler(column)),
+      ...table.rows.map((row) => table.columns.map((column) => row[column] ?? '')),
+    ],
   }))
 
   const workbookSheets: Array<{ name: string; rows: string[][] }> = [
@@ -159,12 +166,17 @@ function buildWorkbookSheets(snapshot: SnapshotPayload, labels: WorkbookLabels) 
   return workbookSheets
 }
 
-async function downloadWorkbookXlsx(fileName: string, snapshot: SnapshotPayload, labels: WorkbookLabels) {
+async function downloadWorkbookXlsx(
+  fileName: string,
+  snapshot: SnapshotPayload,
+  labels: WorkbookLabels,
+  columnLabeler: (column: string) => string = (value) => value
+) {
   const XLSX = await import('xlsx')
   const workbook = XLSX.utils.book_new()
   const usedSheetNames = new Set<string>()
   const overflowRows: WorkbookOverflowRow[] = []
-  const workbookSheets = buildWorkbookSheets(snapshot, labels)
+  const workbookSheets = buildWorkbookSheets(snapshot, labels, columnLabeler)
 
   workbookSheets.forEach((sheet) => {
     const sheetName = sanitizeWorksheetName(sheet.name, usedSheetNames, labels.defaultSheetName)
@@ -220,12 +232,20 @@ async function downloadWorkbookXlsx(fileName: string, snapshot: SnapshotPayload,
   }
 }
 
-async function downloadSingleTableXlsx(fileName: string, table: DatabaseTable, labels: WorkbookLabels) {
+async function downloadSingleTableXlsx(
+  fileName: string,
+  table: DatabaseTable,
+  labels: WorkbookLabels,
+  columnLabeler: (column: string) => string = (value) => value
+) {
   const XLSX = await import('xlsx')
   const workbook = XLSX.utils.book_new()
   const overflowRows: WorkbookOverflowRow[] = []
   const sheetName = sanitizeWorksheetName(table.title, new Set<string>(), labels.defaultSheetName)
-  const worksheetRows = [table.columns, ...table.rows.map((row) => table.columns.map((column) => row[column] ?? ''))]
+  const worksheetRows = [
+    table.columns.map((column) => columnLabeler(column)),
+    ...table.rows.map((row) => table.columns.map((column) => row[column] ?? '')),
+  ]
   const headerRow = worksheetRows[0] ?? []
   const normalizedRows = worksheetRows.map((row, rowIndex) =>
     row.map((cell, columnIndex) =>
@@ -289,8 +309,10 @@ export default function DatabasePage() {
   const [draftRowTableId, setDraftRowTableId] = useState<string | null>(null)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const allSheetsFileInputRef = useRef<HTMLInputElement>(null)
   const [importTargetTableId, setImportTargetTableId] = useState<string | null>(null)
   const [isImportingSheet, setIsImportingSheet] = useState(false)
+  const [isImportingAllSheets, setIsImportingAllSheets] = useState(false)
 
   const [editingRowId, setEditingRowId] = useState<string | null>(null)
   const [editingRowData, setEditingRowData] = useState<Record<string, string> | null>(null)
@@ -358,6 +380,11 @@ export default function DatabasePage() {
         importSheetSuccess: (created: number, updated: number, skipped: number, failed: number) =>
           `Импорт завершен. Создано: ${created}, обновлено: ${updated}, пропущено: ${skipped}, ошибок: ${failed}.`,
         importSheetFailed: 'Не удалось импортировать XLSX',
+        importAllSheets: 'Импорт / обновить все листы (XLSX)',
+        importingAllSheets: 'Импорт всех листов...',
+        importAllSheetsSuccess: (sheets: number, created: number, updated: number, skipped: number, failed: number) =>
+          `Импорт книги завершен. Листов: ${sheets}. Создано: ${created}, обновлено: ${updated}, пропущено: ${skipped}, ошибок: ${failed}.`,
+        importAllSheetsFailed: 'Не удалось импортировать XLSX книгу',
       }
     }
 
@@ -423,6 +450,11 @@ export default function DatabasePage() {
         importSheetSuccess: (created: number, updated: number, skipped: number, failed: number) =>
           `Import tugadi. Yaratildi: ${created}, yangilandi: ${updated}, o‘tkazildi: ${skipped}, xatolar: ${failed}.`,
         importSheetFailed: 'XLSX import qilib bo‘lmadi',
+        importAllSheets: 'XLSX import / yangilash (barcha sahifalar)',
+        importingAllSheets: 'Barcha sahifalar import...',
+        importAllSheetsSuccess: (sheets: number, created: number, updated: number, skipped: number, failed: number) =>
+          `Excel import tugadi. Sahifalar: ${sheets}. Yaratildi: ${created}, yangilandi: ${updated}, o‘tkazildi: ${skipped}, xatolar: ${failed}.`,
+        importAllSheetsFailed: 'Excel faylni import qilib bo‘lmadi',
       }
     }
 
@@ -487,6 +519,11 @@ export default function DatabasePage() {
       importSheetSuccess: (created: number, updated: number, skipped: number, failed: number) =>
         `Import complete. Created: ${created}, updated: ${updated}, skipped: ${skipped}, failed: ${failed}.`,
       importSheetFailed: 'Failed to import XLSX',
+      importAllSheets: 'Import / Update all sheets (XLSX)',
+      importingAllSheets: 'Importing all sheets...',
+      importAllSheetsSuccess: (sheets: number, created: number, updated: number, skipped: number, failed: number) =>
+        `Workbook import complete. Sheets: ${sheets}. Created: ${created}, updated: ${updated}, skipped: ${skipped}, failed: ${failed}.`,
+      importAllSheetsFailed: 'Failed to import XLSX workbook',
     }
   }, [language])
 
@@ -583,6 +620,52 @@ export default function DatabasePage() {
         'mealType': 'прием пищи',
         'expectedCalories': 'ожидаемые калории',
         'totalPrice': 'общая сумма',
+        'preferences': 'настройки',
+        'orderPattern': 'шаблон заказа',
+        'password': 'пароль',
+        'deletedBy': 'удалил',
+        'defaultCourierId': 'курьер по умолчанию ID',
+        'planType': 'тип плана',
+        'deliveryDays': 'дни доставки',
+        'autoOrdersEnabled': 'авто заказы включены',
+        'balance': 'баланс',
+        'assignedSetId': 'назначенный set ID',
+        'latitude': 'широта',
+        'longitude': 'долгота',
+        'priority': 'приоритет',
+        'sourceChannel': 'канал источника',
+        'statusChangedAt': 'статус изменен',
+        'assignedAt': 'назначено',
+        'pickedUpAt': 'забрано',
+        'pausedAt': 'приостановлено',
+        'resumedAt': 'возобновлено',
+        'deliveredAt': 'доставлено',
+        'failedAt': 'не удалось',
+        'canceledAt': 'отменено',
+        'confirmedAt': 'подтверждено',
+        'etaMinutes': 'ETA минут',
+        'routeDistanceKm': 'расстояние (км)',
+        'routeDurationMin': 'длительность (мин)',
+        'sequenceInRoute': 'порядок в маршруте',
+        'customerRating': 'оценка клиента',
+        'customerFeedback': 'отзыв клиента',
+        'lastLatitude': 'последняя широта',
+        'lastLongitude': 'последняя долгота',
+        'lastLocationAt': 'последняя геолокация',
+        'orderType': 'тип заказа',
+        'fromAutoOrder': 'из авто заказа',
+        'trialEndsAt': 'окончание пробного периода',
+        'allowedTabs': 'разрешенные вкладки',
+        'googleId': 'Google ID',
+        'hasPassword': 'есть пароль',
+        'transportType': 'тип транспорта',
+        'vehicleNumber': 'номер машины',
+        'maxLoad': 'макс груз',
+        'shiftStartedAt': 'смена началась',
+        'shiftEndedAt': 'смена закончилась',
+        'lastSeenAt': 'последний визит',
+        'averageDeliveryMinutes': 'ср. доставка (мин)',
+        'companyBalance': 'баланс компании',
       },
       uz: {
         'Admins': 'Adminlar',
@@ -664,6 +747,52 @@ export default function DatabasePage() {
         'mealType': 'ovqatlanish turi',
         'expectedCalories': 'kutilayotgan kaloriyalar',
         'totalPrice': 'umumiy narx',
+        'preferences': 'Preferences',
+        'orderPattern': 'Order Pattern',
+        'password': 'Password',
+        'deletedBy': 'Deleted By',
+        'defaultCourierId': 'Default Courier Id',
+        'planType': 'Plan Type',
+        'deliveryDays': 'Delivery Days',
+        'autoOrdersEnabled': 'Auto Orders Enabled',
+        'balance': 'Balance',
+        'assignedSetId': 'Assigned Set Id',
+        'latitude': 'Latitude',
+        'longitude': 'Longitude',
+        'priority': 'Priority',
+        'sourceChannel': 'Source Channel',
+        'statusChangedAt': 'Status Changed At',
+        'assignedAt': 'Assigned At',
+        'pickedUpAt': 'Picked Up At',
+        'pausedAt': 'Paused At',
+        'resumedAt': 'Resumed At',
+        'deliveredAt': 'Delivered At',
+        'failedAt': 'Failed At',
+        'canceledAt': 'Canceled At',
+        'confirmedAt': 'Confirmed At',
+        'etaMinutes': 'Eta Minutes',
+        'routeDistanceKm': 'Route Distance Km',
+        'routeDurationMin': 'Route Duration Min',
+        'sequenceInRoute': 'Sequence In Route',
+        'customerRating': 'Customer Rating',
+        'customerFeedback': 'Customer Feedback',
+        'lastLatitude': 'Last Latitude',
+        'lastLongitude': 'Last Longitude',
+        'lastLocationAt': 'Last Location At',
+        'orderType': 'Order Type',
+        'fromAutoOrder': 'From Auto Order',
+        'trialEndsAt': 'Trial Ends At',
+        'allowedTabs': 'Allowed Tabs',
+        'googleId': 'Google Id',
+        'hasPassword': 'Has Password',
+        'transportType': 'Transport Type',
+        'vehicleNumber': 'Vehicle Number',
+        'maxLoad': 'Max Load',
+        'shiftStartedAt': 'Shift Started At',
+        'shiftEndedAt': 'Shift Ended At',
+        'lastSeenAt': 'Last Seen At',
+        'averageDeliveryMinutes': 'Average Delivery Minutes',
+        'companyBalance': 'Company Balance',
       }
     }
     return dbDict[language as string]?.[key] || humanizeKey(key)
@@ -787,6 +916,10 @@ export default function DatabasePage() {
     fileInputRef.current?.click()
   }, [])
 
+  const handleImportAllSheetsClick = useCallback(() => {
+    allSheetsFileInputRef.current?.click()
+  }, [])
+
   const handleImportFileChosen = useCallback(
     async (file: File | null) => {
       if (!file || !importTargetTableId) return
@@ -827,6 +960,45 @@ export default function DatabasePage() {
       }
     },
     [importTargetTableId, loadSnapshot, tables, uiText.importSheetFailed, uiText.importSheetSuccess]
+  )
+
+  const handleImportAllSheetsFileChosen = useCallback(
+    async (file: File | null) => {
+      if (!file) return
+
+      setIsImportingAllSheets(true)
+      try {
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await fetch('/api/admin/database-import-xlsx-all', {
+          method: 'POST',
+          body: formData,
+        })
+        const data = (await response.json().catch(() => null)) as any
+
+        if (!response.ok) {
+          throw new Error(data?.error || uiText.importAllSheetsFailed)
+        }
+
+        toast.success(
+          uiText.importAllSheetsSuccess(
+            Number(data?.sheetsProcessed ?? 0),
+            Number(data?.created ?? 0),
+            Number(data?.updated ?? 0),
+            Number(data?.skipped ?? 0),
+            Number(data?.failed ?? 0)
+          )
+        )
+        void loadSnapshot(true)
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : uiText.importAllSheetsFailed)
+      } finally {
+        setIsImportingAllSheets(false)
+        if (allSheetsFileInputRef.current) allSheetsFileInputRef.current.value = ''
+      }
+    },
+    [loadSnapshot, uiText.importAllSheetsFailed, uiText.importAllSheetsSuccess]
   )
 
   const filteredRows = useMemo(() => {
@@ -918,7 +1090,7 @@ export default function DatabasePage() {
       overflowHeaderValue: uiText.overflowHeaderValue,
       overflowValueMarker: uiText.overflowValueMarker,
       columnPrefix: uiText.columnPrefix,
-    })
+    }, tDb)
     toast.success(uiText.workbookDownloaded)
   }
 
@@ -943,7 +1115,7 @@ export default function DatabasePage() {
       overflowHeaderValue: uiText.overflowHeaderValue,
       overflowValueMarker: uiText.overflowValueMarker,
       columnPrefix: uiText.columnPrefix,
-    })
+    }, tDb)
     toast.success(`${currentTable.title}: ${uiText.fullSheetDownloaded}`)
   }
 
@@ -960,7 +1132,7 @@ export default function DatabasePage() {
   }
 
   const handleOpenTambo = () => {
-    const targetLabel = currentTable?.title ?? uiText.workspaceTitle
+    const targetLabel = currentTable ? tDb(currentTable.title) : uiText.workspaceTitle
     window.dispatchEvent(
       new CustomEvent('tambo:open-chat', {
         detail: {
@@ -989,6 +1161,14 @@ export default function DatabasePage() {
         accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         className="hidden"
         onChange={(event) => void handleImportFileChosen(event.target.files?.[0] ?? null)}
+        aria-hidden
+      />
+      <input
+        ref={allSheetsFileInputRef}
+        type="file"
+        accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        className="hidden"
+        onChange={(event) => void handleImportAllSheetsFileChosen(event.target.files?.[0] ?? null)}
         aria-hidden
       />
       <Card className="overflow-hidden">
@@ -1061,6 +1241,14 @@ export default function DatabasePage() {
                 <Download className="mr-2 h-4 w-4" />
                 {uiText.downloadAllSheets}
               </Button>
+              <Button variant="outline" onClick={handleImportAllSheetsClick} disabled={isImportingAllSheets}>
+                {isImportingAllSheets ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
+                {isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}
+              </Button>
               <Button onClick={handleOpenTambo}>
                 <Bot className="mr-2 h-4 w-4" />
                 {uiText.askTambo}
@@ -1098,7 +1286,7 @@ export default function DatabasePage() {
               </TabsTrigger>
               {tables.map((table) => (
                 <TabsTrigger key={table.id} value={table.id}>
-                  {table.title}
+                  {tDb(table.title)}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -1121,7 +1309,7 @@ export default function DatabasePage() {
                   <TableBody>
                     {summary.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.title}</TableCell>
+                        <TableCell className="font-medium">{tDb(item.title)}</TableCell>
                         <TableCell>{item.rowCount}</TableCell>
                         <TableCell>{item.columnCount}</TableCell>
                         <TableCell>{item.description}</TableCell>
@@ -1146,7 +1334,7 @@ export default function DatabasePage() {
                       <Input
                         value={activeTab === table.id ? searchTerm : ''}
                         onChange={(event) => setSearchTerm(event.target.value)}
-                        placeholder={uiText.searchInTable(table.title)}
+                        placeholder={uiText.searchInTable(tDb(table.title))}
                         className="pl-9"
                       />
                     </div>
