@@ -449,27 +449,40 @@ export default function SuperAdminPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-          <p className="mt-3 text-sm text-muted-foreground">{t.common.loading}</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#fafbfc] dark:bg-[#06060a] relative overflow-hidden">
+        <div className="absolute inset-0 bg-dot-grid pointer-events-none opacity-40" />
+        <div className="absolute top-[-20%] left-[10%] w-[400px] h-[400px] rounded-full bg-indigo-500/[0.06] blur-[100px] pointer-events-none animate-pulse-glow" />
+        <div className="absolute bottom-[-10%] right-[10%] w-[350px] h-[350px] rounded-full bg-violet-500/[0.05] blur-[100px] pointer-events-none animate-pulse-glow" style={{ animationDelay: '1s' }} />
+        <div className="text-center relative z-10">
+          <div className="relative mx-auto mb-4">
+            <div className="h-12 w-12 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/25 animate-pulse">
+              <Loader2 className="h-5 w-5 text-white animate-spin" />
+            </div>
+          </div>
+          <p className="text-sm text-zinc-400 dark:text-white/40 font-medium">{t.common.loading}</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b bg-background">
+    <div className="min-h-screen bg-[#fafbfc] dark:bg-[#06060a] text-foreground relative overflow-hidden">
+      {/* Background effects */}
+      <div className="fixed inset-0 z-0 bg-dot-grid pointer-events-none opacity-40" />
+      <div className="fixed inset-0 z-0 bg-aurora pointer-events-none opacity-50" />
+      <div className="fixed top-[-200px] right-[-100px] w-[500px] h-[500px] rounded-full bg-indigo-500/[0.05] dark:bg-indigo-500/[0.03] blur-[120px] pointer-events-none animate-pulse-glow" />
+      <div className="fixed bottom-[-100px] left-[-100px] w-[400px] h-[400px] rounded-full bg-violet-500/[0.05] dark:bg-violet-500/[0.03] blur-[100px] pointer-events-none animate-pulse-glow" style={{ animationDelay: '2s' }} />
+
+      <header className="sticky top-0 z-40 border-b border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-[#06060a]/80 backdrop-blur-2xl accent-line">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md border text-xs font-semibold">
-              AF
-            </div>
-            <div>
-              <p className="text-lg font-semibold leading-none">Super Admin</p>
-              <p className="mt-1 text-xs text-muted-foreground">Control layer</p>
-            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white text-xs font-bold shadow-lg shadow-indigo-500/25">
+                AF
+              </div>
+              <div>
+                <p className="text-lg font-bold leading-none tracking-tight text-zinc-900 dark:text-white">Super Admin</p>
+                <p className="mt-1 text-[11px] font-semibold text-zinc-400 dark:text-white/40 tracking-wider uppercase">Control layer</p>
+              </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
@@ -558,7 +571,7 @@ export default function SuperAdminPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 xl:px-8">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 xl:px-8">
         <motion.div
           initial="hidden"
           animate="visible"
@@ -609,33 +622,33 @@ export default function SuperAdminPage() {
             hidden: { opacity: 0, scale: 0.98 },
             visible: { opacity: 1, scale: 1 }
           }}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Platform governance</CardTitle>
-              <CardDescription>
+          <Card className="rounded-2xl border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-white/[0.015] backdrop-blur-xl shadow-sm dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.4)] overflow-hidden">
+            <CardHeader className="border-b border-zinc-100 dark:border-white/[0.04] bg-zinc-50/50 dark:bg-white/[0.01]">
+              <CardTitle className="text-xl font-bold tracking-tight">Platform governance</CardTitle>
+              <CardDescription className="text-zinc-500 dark:text-white/40">
                 Manage middle admins, system visibility, communication, and audit history in one workflow.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
-                <TabsList className="grid h-auto w-full grid-cols-2 gap-2 p-1 md:grid-cols-5">
-                  <TabsTrigger value="admins" className="h-9 gap-2">
+                <TabsList className="grid h-auto w-full grid-cols-2 gap-1.5 p-1.5 md:grid-cols-5 bg-zinc-100/80 dark:bg-white/[0.04] rounded-xl">
+                  <TabsTrigger value="admins" className="h-9 gap-2 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.08] data-[state=active]:shadow-sm font-semibold text-[13px]">
                     <Users className="h-4 w-4" />
                     {t.admin.admins}
                   </TabsTrigger>
-                  <TabsTrigger value="interface" className="h-9 gap-2">
+                  <TabsTrigger value="interface" className="h-9 gap-2 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.08] data-[state=active]:shadow-sm font-semibold text-[13px]">
                     <LayoutDashboard className="h-4 w-4" />
                     {t.admin.interface}
                   </TabsTrigger>
-                  <TabsTrigger value="chat" className="h-9 gap-2">
+                  <TabsTrigger value="chat" className="h-9 gap-2 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.08] data-[state=active]:shadow-sm font-semibold text-[13px]">
                     <MessageSquare className="h-4 w-4" />
                     Chat
                   </TabsTrigger>
-                  <TabsTrigger value="statistics" className="h-9 gap-2">
+                  <TabsTrigger value="statistics" className="h-9 gap-2 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.08] data-[state=active]:shadow-sm font-semibold text-[13px]">
                     <BarChart3 className="h-4 w-4" />
                     {t.admin.statistics}
                   </TabsTrigger>
-                  <TabsTrigger value="history" className="h-9 gap-2">
+                  <TabsTrigger value="history" className="h-9 gap-2 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.08] data-[state=active]:shadow-sm font-semibold text-[13px]">
                     <History className="h-4 w-4" />
                     {t.admin.history}
                   </TabsTrigger>
@@ -757,7 +770,7 @@ export default function SuperAdminPage() {
                         return (
                           <div
                             key={admin.id}
-                            className="rounded-lg border bg-card p-4"
+                            className="rounded-2xl border border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-white/[0.02] p-5 hover:shadow-md dark:hover:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.3)] transition-all duration-300 backdrop-blur-xl hover:border-zinc-300 dark:hover:border-white/[0.1]"
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
@@ -1058,23 +1071,26 @@ function MetricCard({
   detail: string
   tone: 'teal' | 'sky' | 'emerald' | 'amber'
 }) {
-  const toneClass: Record<typeof tone, string> = {
-    teal: 'text-teal-700 bg-teal-50 border-teal-200',
-    sky: 'text-sky-700 bg-sky-50 border-sky-200',
-    emerald: 'text-emerald-700 bg-emerald-50 border-emerald-200',
-    amber: 'text-amber-700 bg-amber-50 border-amber-200',
+  const toneStyles: Record<typeof tone, { icon: string; bg: string; glow: string }> = {
+    teal: { icon: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-50 dark:bg-teal-500/[0.1] border-teal-200 dark:border-teal-500/20', glow: 'shadow-teal-500/20' },
+    sky: { icon: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-50 dark:bg-sky-500/[0.1] border-sky-200 dark:border-sky-500/20', glow: 'shadow-sky-500/20' },
+    emerald: { icon: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-500/[0.1] border-emerald-200 dark:border-emerald-500/20', glow: 'shadow-emerald-500/20' },
+    amber: { icon: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-500/[0.1] border-amber-200 dark:border-amber-500/20', glow: 'shadow-amber-500/20' },
   }
 
+  const style = toneStyles[tone]
+
   return (
-    <div className="rounded-lg border bg-card p-4">
-      <div className="flex items-start justify-between gap-3">
+    <div className="group rounded-2xl border border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-white/[0.02] p-5 hover:shadow-lg dark:hover:shadow-[0_12px_40px_-8px_rgba(0,0,0,0.4)] hover:border-zinc-300 dark:hover:border-white/[0.1] transition-all duration-400 backdrop-blur-xl relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent to-zinc-50/50 dark:to-white/[0.01] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="flex items-start justify-between gap-3 relative z-10">
         <div>
-          <p className="text-xs text-muted-foreground">{label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
-          <p className="mt-2 text-xs text-muted-foreground">{detail}</p>
+          <p className="text-xs font-semibold text-zinc-400 dark:text-white/40 tracking-wider uppercase">{label}</p>
+          <p className="mt-2.5 text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">{value}</p>
+          <p className="mt-2 text-xs font-medium text-zinc-400 dark:text-white/35">{detail}</p>
         </div>
-        <div className={cn('rounded-md border p-2', toneClass[tone])}>
-          <Icon className="h-4 w-4" />
+        <div className={cn('rounded-xl border p-2.5 shadow-sm', style.bg, style.glow)}>
+          <Icon className={cn('h-4.5 w-4.5', style.icon)} />
         </div>
       </div>
     </div>
@@ -1114,26 +1130,31 @@ function StatCard({
   value: number
   tone: 'emerald' | 'rose' | 'sky' | 'amber'
 }) {
-  const toneClass: Record<typeof tone, string> = {
-    emerald: 'text-emerald-700',
-    rose: 'text-rose-700',
-    sky: 'text-sky-700',
-    amber: 'text-amber-700',
+  const toneClass: Record<typeof tone, { text: string; dot: string }> = {
+    emerald: { text: 'text-emerald-600 dark:text-emerald-400', dot: 'bg-emerald-500' },
+    rose: { text: 'text-rose-600 dark:text-rose-400', dot: 'bg-rose-500' },
+    sky: { text: 'text-sky-600 dark:text-sky-400', dot: 'bg-sky-500' },
+    amber: { text: 'text-amber-600 dark:text-amber-400', dot: 'bg-amber-500' },
   }
 
+  const style = toneClass[tone]
+
   return (
-    <div className="rounded-lg border bg-card px-4 py-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={cn('mt-2 text-3xl font-semibold tracking-tight', toneClass[tone])}>{value}</p>
+    <div className="rounded-2xl border border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-white/[0.02] px-5 py-4 backdrop-blur-xl hover:shadow-md dark:hover:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.3)] transition-all duration-300">
+      <div className="flex items-center gap-2">
+        <div className={cn('h-2 w-2 rounded-full', style.dot)} />
+        <p className="text-xs font-semibold text-zinc-400 dark:text-white/40 tracking-wider uppercase">{label}</p>
+      </div>
+      <p className={cn('mt-2 text-3xl font-bold tracking-tight', style.text)}>{value}</p>
     </div>
   )
 }
 
 function StatRow({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-md border bg-card px-3 py-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p>
+    <div className="rounded-xl border border-zinc-100 dark:border-white/[0.04] bg-zinc-50/50 dark:bg-white/[0.015] px-4 py-3 hover:bg-white dark:hover:bg-white/[0.03] transition-colors duration-200">
+      <p className="text-[11px] font-semibold text-zinc-400 dark:text-white/35 tracking-wider uppercase">{label}</p>
+      <p className="mt-1 text-2xl font-bold tracking-tight text-zinc-800 dark:text-white/90">{value}</p>
     </div>
   )
 }

@@ -55,13 +55,15 @@ export function AdminLayout({ children, activeTab, onTabChange, onLogout, userNa
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-neutral-50 dark:bg-background text-foreground selection:bg-primary/30 relative overflow-hidden">
-      {/* Layered Dynamic Background */}
-      <div className="absolute inset-0 z-0 bg-neutral-100 dark:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] dark:from-neutral-900 dark:via-background dark:to-background pointer-events-none" />
-      <div className="absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-blue-500/[0.08] dark:from-blue-500/[0.04] via-violet-500/[0.04] dark:via-violet-500/[0.02] to-transparent pointer-events-none" />
+    <div className="flex min-h-screen bg-[#fafbfc] dark:bg-[#06060a] text-foreground selection:bg-indigo-500/20 relative overflow-hidden">
+      {/* ═══ Background Effects ═══ */}
+      <div className="fixed inset-0 z-0 bg-dot-grid pointer-events-none opacity-30" />
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-indigo-500/[0.06] dark:from-indigo-500/[0.03] via-violet-500/[0.03] dark:via-violet-500/[0.015] to-transparent" />
+      </div>
       {/* Mesh gradient orbs */}
-      <div className="absolute top-[-200px] right-[-100px] w-[500px] h-[500px] rounded-full bg-blue-500/[0.06] dark:bg-blue-500/[0.03] blur-[100px] pointer-events-none animate-pulse-glow" />
-      <div className="absolute bottom-[-100px] left-[-100px] w-[400px] h-[400px] rounded-full bg-violet-500/[0.06] dark:bg-violet-500/[0.03] blur-[100px] pointer-events-none animate-pulse-glow" style={{ animationDelay: '1.5s' }} />
+      <div className="fixed top-[-200px] right-[-100px] w-[500px] h-[500px] rounded-full bg-indigo-500/[0.05] dark:bg-indigo-500/[0.025] blur-[120px] pointer-events-none animate-pulse-glow" />
+      <div className="fixed bottom-[-100px] left-[-100px] w-[400px] h-[400px] rounded-full bg-violet-500/[0.05] dark:bg-violet-500/[0.025] blur-[100px] pointer-events-none animate-pulse-glow" style={{ animationDelay: '2s' }} />
 
       <Sidebar
         activeTab={activeTab}
@@ -76,7 +78,7 @@ export function AdminLayout({ children, activeTab, onTabChange, onLogout, userNa
         <Button
           variant="outline"
           size="icon"
-          className="fixed left-3 top-3 z-[120] h-9 w-9 bg-white/50 dark:bg-black/50 border-black/10 dark:border-white/[0.08] backdrop-blur-2xl text-zinc-900 dark:text-white rounded-xl lg:hidden hover:bg-white dark:hover:bg-white/[0.08] shadow-sm"
+          className="fixed left-3 top-3 z-[120] h-9 w-9 bg-white/70 dark:bg-black/50 border-zinc-200 dark:border-white/[0.08] backdrop-blur-2xl text-zinc-700 dark:text-white rounded-xl lg:hidden hover:bg-white dark:hover:bg-white/[0.08] shadow-sm"
           onClick={() => setIsSidebarOpen((prev) => !prev)}
         >
           <svg
@@ -111,16 +113,20 @@ export function AdminLayout({ children, activeTab, onTabChange, onLogout, userNa
               initial={{ opacity: 0, y: 12, scale: 0.99 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.99 }}
-              transition={{ duration: 0.35 }}
-              className="h-full min-h-[80vh] rounded-2xl md:rounded-[1.5rem] border border-black/5 dark:border-white/[0.06] bg-white/70 dark:bg-white/[0.015] p-4 md:p-6 lg:p-8 shadow-sm dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.4)] backdrop-blur-xl"
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="h-full min-h-[80vh] rounded-2xl md:rounded-[1.5rem] border border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-white/[0.015] p-4 md:p-6 lg:p-8 shadow-sm dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.4)] backdrop-blur-xl relative overflow-hidden"
             >
+              {/* Premium top shine */}
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent pointer-events-none" />
               {children}
             </motion.div>
           </AnimatePresence>
         </main>
 
         {/* Premium floating mobile bottom nav */}
-        <nav className="safe-area-inset-bottom fixed bottom-3 left-3 right-3 z-40 rounded-2xl border border-black/10 dark:border-white/[0.08] bg-white/95 dark:bg-black/70 backdrop-blur-2xl px-2 py-2.5 lg:hidden shadow-lg dark:shadow-[0_-4px_32px_-8px_rgba(0,0,0,0.5)]">
+        <nav className="safe-area-inset-bottom fixed bottom-3 left-3 right-3 z-40 rounded-2xl border border-zinc-200 dark:border-white/[0.08] bg-white/95 dark:bg-[#0c0c12]/90 backdrop-blur-2xl px-2 py-2.5 lg:hidden shadow-xl dark:shadow-[0_-4px_32px_-8px_rgba(0,0,0,0.5)]">
+          {/* Top accent line */}
+          <div className="absolute top-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent pointer-events-none" />
           <div className="mx-auto flex max-w-md items-center justify-around">
             <MobileNavItem
               isActive={activeTab === 'orders'}
@@ -172,14 +178,14 @@ function MobileNavItem({
       className={cn(
         'relative flex min-w-[60px] flex-col items-center justify-center rounded-xl px-3 py-2 transition-all duration-300',
         isActive
-          ? 'text-zinc-950 dark:text-white'
-          : 'text-zinc-400 dark:text-white/40 hover:text-zinc-600 dark:hover:text-white/60'
+          ? 'text-indigo-600 dark:text-indigo-400'
+          : 'text-zinc-400 dark:text-white/35 hover:text-zinc-600 dark:hover:text-white/55'
       )}
     >
       {isActive && (
         <motion.div
           layoutId="mobile-nav-active"
-          className="absolute inset-0 rounded-xl bg-black/5 dark:bg-white/[0.08] border border-black/10 dark:border-white/[0.1]"
+          className="absolute inset-0 rounded-xl bg-indigo-50 dark:bg-indigo-500/[0.08] border border-indigo-200/50 dark:border-indigo-500/[0.15]"
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
         />
       )}

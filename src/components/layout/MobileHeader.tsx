@@ -31,22 +31,22 @@ export function MobileHeader({
   const resolvedUserName = userName ?? defaultUserName;
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-black/5 dark:border-white/[0.06] bg-white/70 dark:bg-black/60 backdrop-blur-2xl lg:hidden">
+    <header className="sticky top-0 z-40 w-full border-b border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-[#06060a]/80 backdrop-blur-2xl lg:hidden accent-line">
       <div className="flex h-14 items-center justify-between px-4">
-        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-zinc-500 dark:text-white/60 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.06]" onClick={onMenuClick}>
+        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-zinc-500 dark:text-white/50 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.06]" onClick={onMenuClick}>
           <Menu className="h-5 w-5" />
         </Button>
 
         <div className="flex min-w-0 items-center gap-2">
-          <span className="truncate text-sm font-bold tracking-tight text-zinc-900 dark:text-white/90">
+          <span className="truncate text-sm font-bold tracking-tight text-zinc-800 dark:text-white/90">
             {tabLabels[currentTab] || currentTab}
           </span>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-xl text-zinc-500 dark:text-white/60 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.06]">
+          <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-xl text-zinc-500 dark:text-white/50 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.06]">
             <Bell className="h-4 w-4" />
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white shadow-[0_0_8px_rgba(239,68,68,0.4)]">
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 px-1 text-[9px] font-bold text-white shadow-lg shadow-indigo-500/30">
               3
             </span>
           </Button>
@@ -54,8 +54,8 @@ export function MobileHeader({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl">
-                <Avatar className="h-7 w-7 border border-black/10 dark:border-white/[0.1] shadow-sm">
-                  <AvatarFallback className="bg-gradient-to-br from-zinc-200 to-zinc-100 dark:from-white/10 dark:to-white/5 text-[11px] font-bold text-zinc-700 dark:text-white/80">
+                <Avatar className="h-7 w-7 border border-zinc-200 dark:border-white/[0.1] shadow-sm">
+                  <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-500/15 dark:to-violet-500/15 text-[11px] font-bold text-indigo-700 dark:text-indigo-400">
                     {resolvedUserName.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -70,7 +70,7 @@ export function MobileHeader({
                 <Settings className="mr-2 h-4 w-4" />
                 {t.admin.settings}
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={onLogout}>
+              <DropdownMenuItem className="text-rose-500 focus:text-rose-500" onClick={onLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 {t.common.logout}
               </DropdownMenuItem>

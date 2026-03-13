@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { signOut } from 'next-auth/react'
@@ -598,79 +598,95 @@ export default function CourierPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="mb-4">
-          <RefreshCw className="w-8 h-8 text-primary" />
+      <div className="min-h-screen bg-[#fafbfc] dark:bg-[#06060a] flex flex-col items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-dot-grid pointer-events-none opacity-40" />
+        <div className="absolute top-[-20%] left-[10%] w-[400px] h-[400px] rounded-full bg-indigo-500/[0.06] blur-[100px] pointer-events-none animate-pulse-glow" />
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="mb-4 relative z-10">
+          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+            <RefreshCw className="w-5 h-5 text-white" />
+          </div>
         </motion.div>
-        <p className="text-slate-500">{t.common.loading}</p>
+        <p className="text-zinc-400 dark:text-white/40 font-medium relative z-10">{t.common.loading}</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-50 border-b border-border bg-background safe-top">
+    <div className="min-h-screen bg-[#fafbfc] dark:bg-[#06060a] pb-20 relative overflow-hidden">
+      <div className="fixed inset-0 z-0 bg-dot-grid pointer-events-none opacity-30" />
+      <div className="fixed top-[-200px] right-[-50px] w-[400px] h-[400px] rounded-full bg-indigo-500/[0.04] dark:bg-indigo-500/[0.02] blur-[100px] pointer-events-none animate-pulse-glow" />
+      
+      <header className="sticky top-0 z-50 border-b border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-[#06060a]/80 backdrop-blur-2xl safe-top accent-line">
         <div className="max-w-3xl mx-auto px-4 h-16 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary/10 rounded-md flex items-center justify-center text-primary">
-              <Package className="w-5 h-5" />
+          <div className="flex items-center space-x-2.5">
+            <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+              <Package className="w-4.5 h-4.5" />
             </div>
-            <h1 className="font-bold text-lg ">{t.courier.title}</h1>
+            <h1 className="font-bold text-lg tracking-tight text-zinc-900 dark:text-white">{t.courier.title}</h1>
           </div>
           <div className="flex items-center space-x-2">
             <LanguageSwitcher />
             {isRefreshing && (
               <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-                <RefreshCw className="w-4 h-4 text-slate-400" />
+                <RefreshCw className="w-4 h-4 text-zinc-400 dark:text-white/40" />
               </motion.div>
             )}
-            <Button variant="ghost" size="icon" onClick={handleLogout} className="text-slate-500 hover:text-destructive">
+            <Button variant="ghost" size="icon" onClick={handleLogout} className="text-zinc-400 dark:text-white/40 hover:text-rose-500 dark:hover:text-rose-400 rounded-xl">
               <LogOut className="w-5 h-5" />
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-3xl mx-auto px-4 py-6 space-y-6 relative z-10">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid h-auto w-full grid-cols-3 gap-2 p-1">
-            <TabsTrigger value="orders" className="flex items-center gap-2">
+          <TabsList className="grid h-auto w-full grid-cols-3 gap-1.5 p-1.5 bg-zinc-100/80 dark:bg-white/[0.04] rounded-xl">
+            <TabsTrigger value="orders" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.08] data-[state=active]:shadow-sm font-semibold text-[13px]">
               <Package className="w-4 h-4" />
               {t.courier.orders}
             </TabsTrigger>
-            <TabsTrigger value="chat" className="flex items-center gap-2">
+            <TabsTrigger value="chat" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.08] data-[state=active]:shadow-sm font-semibold text-[13px]">
               <MessageSquare className="w-4 h-4" />
               {t.courier.chat}
             </TabsTrigger>
-            <TabsTrigger value="profile" className="flex items-center gap-2">
+            <TabsTrigger value="profile" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.08] data-[state=active]:shadow-sm font-semibold text-[13px]">
               <User className="w-4 h-4" />
               {t.courier.profile}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="orders" className="space-y-4">
-            <Card>
-              <CardContent className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">{uiText.active}</p>
-                  <p className="mt-1 text-2xl font-semibold">{activeOrdersCount}</p>
+            <Card className="rounded-2xl border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-white/[0.02] backdrop-blur-xl shadow-sm">
+              <CardContent className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-xl bg-indigo-50/50 dark:bg-indigo-500/[0.06] p-3 border border-indigo-100 dark:border-indigo-500/10">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                    <p className="text-[11px] font-semibold text-indigo-600/70 dark:text-indigo-400/60 tracking-wider uppercase">{uiText.active}</p>
+                  </div>
+                  <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-400">{activeOrdersCount}</p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">{uiText.paused}</p>
-                  <p className="mt-1 text-2xl font-semibold">{pausedOrdersCount}</p>
+                <div className="rounded-xl bg-amber-50/50 dark:bg-amber-500/[0.06] p-3 border border-amber-100 dark:border-amber-500/10">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                    <p className="text-[11px] font-semibold text-amber-600/70 dark:text-amber-400/60 tracking-wider uppercase">{uiText.paused}</p>
+                  </div>
+                  <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{pausedOrdersCount}</p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">{uiText.lastSync}</p>
-                  <p className="mt-1 text-sm font-medium">{lastSyncLabel}</p>
+                <div className="rounded-xl bg-zinc-50/50 dark:bg-white/[0.02] p-3 border border-zinc-100 dark:border-white/[0.04]">
+                  <p className="text-[11px] font-semibold text-zinc-400 dark:text-white/35 tracking-wider uppercase mb-1">{uiText.lastSync}</p>
+                  <p className="text-sm font-bold text-zinc-700 dark:text-white/80">{lastSyncLabel}</p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">{uiText.deliveryMomentum}</p>
-                  <p className="mt-1 text-2xl font-semibold">{deliveryMomentum}%</p>
+                <div className="rounded-xl bg-emerald-50/50 dark:bg-emerald-500/[0.06] p-3 border border-emerald-100 dark:border-emerald-500/10">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <p className="text-[11px] font-semibold text-emerald-600/70 dark:text-emerald-400/60 tracking-wider uppercase">{uiText.deliveryMomentum}</p>
+                  </div>
+                  <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{deliveryMomentum}%</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden rounded-2xl border-zinc-200/80 dark:border-white/[0.06] shadow-sm">
               <CardContent className="p-0 h-[300px] relative z-0">
                 <CourierMap orders={orders} currentLocation={currentLocation} onMarkerClick={handleOpenOrder} />
               </CardContent>
