@@ -129,10 +129,10 @@ export default function DispatchLeafletMap({
     return [41.2995, 69.2401]
   }, [markers, warehouse])
 
-  if (!isMounted) return <div className="h-full w-full bg-slate-100 animate-pulse rounded-lg" />
+  if (!isMounted) return <div className="h-full w-full animate-pulse border bg-muted/30" />
 
   return (
-    <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%', borderRadius: '0.5rem' }}>
+    <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%' }}>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

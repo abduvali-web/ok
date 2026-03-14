@@ -365,6 +365,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         role: 'Роль',
         visibleTabs: 'Видимые вкладки',
         dispatchDate: 'Дата распределения',
+        dispatchChooseDate: 'Выбрать дату',
+        dispatchSave: 'Сохранить',
+        dispatchStart: 'Начать',
         security: 'Безопасность',
         securityDescription: 'Защитите доступ к аккаунту и быстро завершайте сессии.',
         changePassword: 'Сменить пароль',
@@ -431,6 +434,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         role: 'Rol',
         visibleTabs: 'Ko‘rinadigan tablar',
         dispatchDate: 'Jo‘natish sanasi',
+        dispatchChooseDate: 'Sanani tanlang',
+        dispatchSave: 'Saqlash',
+        dispatchStart: 'Boshlash',
         security: 'Xavfsizlik',
         securityDescription: 'Akkauntga kirishni himoya qiling va sessiyalarni tez yakunlang.',
         changePassword: 'Parolni o‘zgartirish',
@@ -496,6 +502,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       role: 'Role',
       visibleTabs: 'Visible tabs',
       dispatchDate: 'Dispatch date',
+      dispatchChooseDate: 'Choose date',
+      dispatchSave: 'Save',
+      dispatchStart: 'Start',
       security: 'Security',
       securityDescription: 'Protect account access and end sessions quickly.',
       changePassword: 'Change password',
@@ -1961,16 +1970,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     ? CalendarDays
     : selectedDayIsActive
       ? Save
-      : isSelectedDateToday
-        ? Play
-        : Save
+      : Play
   const dispatchActionLabel = !selectedDate
-    ? 'Choose date'
+    ? profileUiText.dispatchChooseDate
     : selectedDayIsActive
-      ? 'Save'
-      : isSelectedDateToday
-        ? 'Start'
-        : 'Draft'
+      ? profileUiText.dispatchSave
+      : profileUiText.dispatchStart
 
   if (isLoading) {
     return (
@@ -2227,7 +2232,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       {isDeletingOrders ? t.common.loading : t.admin.delete}
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       className="h-9 gap-2 px-3"
                       onClick={() => setIsDispatchOpen(true)}
                       disabled={!selectedDate}

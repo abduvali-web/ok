@@ -18,6 +18,7 @@ import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities'
 
 import type { Admin, Order } from '@/components/admin/dashboard/types'
+import { useLanguage } from '@/contexts/LanguageContext'
 import {
   expandShortMapsUrl,
   extractAnyUrl,
@@ -33,13 +34,13 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { GripVertical, Loader2, Play, Save, Route, Users } from 'lucide-react'
+import { GripVertical, Loader2, Maximize2, Minimize2, Play, Route, Save, Users } from 'lucide-react'
 
 const DispatchLeafletMap = dynamic(() => import('./DispatchLeafletMap'), {
   ssr: false,
   loading: () => (
-    <div className="h-full w-full bg-slate-100 animate-pulse rounded-lg flex items-center justify-center text-slate-400">
-      Загрузка карты...
+    <div className="flex h-full w-full animate-pulse items-center justify-center rounded-lg border bg-muted/30 text-muted-foreground">
+      Loading map…
     </div>
   ),
 })
@@ -138,7 +139,7 @@ function SortableOrderItem({
     >
       <button
         type="button"
-        className="mt-1 text-slate-400 hover:text-slate-600 cursor-grab active:cursor-grabbing"
+        className="mt-1 cursor-grab text-muted-foreground/70 hover:text-muted-foreground active:cursor-grabbing"
         {...attributes}
         {...listeners}
       >
@@ -149,11 +150,11 @@ function SortableOrderItem({
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
           <div className="font-semibold text-sm truncate">#{number}</div>
-          {!coords && <Badge variant="outline" className="text-[10px]">Без координат</Badge>}
+          {!coords && <Badge variant="outline" className="text-[10px]">No coords</Badge>}
         </div>
-        <div className="text-xs text-slate-600 truncate">{order.customer?.name || order.customerName || 'Клиент'}</div>
-        <div className="text-[11px] text-slate-400 truncate">{order.deliveryAddress}</div>
-        <div className="mt-1 text-[10px] text-slate-400 truncate">Курьер: {courierName}</div>
+        <div className="text-xs truncate">{order.customer?.name || order.customerName || '-'}</div>
+        <div className="text-[11px] text-muted-foreground truncate">{order.deliveryAddress}</div>
+        <div className="mt-1 text-[10px] text-muted-foreground truncate">{courierName}</div>
       </div>
 
       <div className="flex flex-col items-end gap-1">
@@ -198,6 +199,7 @@ export function DispatchMapPanel({
   autoSortOnOpen?: boolean
   onSaved: () => void
 }) {
+  const { language } = useLanguage()
   const safeOrders = orders
   const safeCouriers = couriers
 
@@ -211,11 +213,78 @@ export function DispatchMapPanel({
   const [isStarting, setIsStarting] = useState(false)
   const [isDayActiveOverride, setIsDayActiveOverride] = useState<boolean | null>(null)
   const [search, setSearch] = useState('')
+  const [isMapFocus, setIsMapFocus] = useState(false)
   const [roadPolylineByContainer, setRoadPolylineByContainer] = useState<Record<string, LatLng[]>>({})
 
   const expandedCache = useRef(new Map<string, string>())
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
+
+  const uiText = useMemo(() => {
+    if (language === 'uz') {
+      return {
+        title: (dateLabel: string) => `Xarita / Marshrutlar — ${dateLabel}`,
+        statusActive: 'Faol',
+        statusPlanned: 'Reja',
+        description: 'Buyurtmalarni kuryerlar orasida tortib o‘tkazing, tartib va raqamlarni o‘zgartiring. Buyurtma rangi = kuryer rangi.',
+        searchPlaceholder: 'Qidirish (raqam, mijoz, manzil)…',
+        mapFocus: 'Xaritani kattalashtirish',
+        showRoutes: 'Marshrutlarni ko‘rsatish',
+        couriers: 'Kuryerlar',
+        unassigned: 'Biriktirilmagan',
+        courierFallback: 'Kuryer',
+        noOrders: 'Buyurtmalar yo‘q',
+        dragging: 'Sudralmoqda',
+        close: 'Yopish',
+        save: 'Saqlash',
+        saving: 'Saqlanmoqda…',
+        start: 'Boshlash',
+        starting: 'Boshlanmoqda…',
+      }
+    }
+
+    if (language === 'ru') {
+      return {
+        title: (dateLabel: string) => `Карта / Маршруты — ${dateLabel}`,
+        statusActive: 'Активный',
+        statusPlanned: 'План',
+        description: 'Перетащите заказы между курьерами, изменяйте порядок и номера. Цвет заказа = цвет курьера.',
+        searchPlaceholder: 'Поиск (номер, клиент, адрес)…',
+        mapFocus: 'Увеличить карту',
+        showRoutes: 'Показать маршруты',
+        couriers: 'Курьеры',
+        unassigned: 'Без курьера',
+        courierFallback: 'Курьер',
+        noOrders: 'Нет заказов',
+        dragging: 'Перетаскивание',
+        close: 'Закрыть',
+        save: 'Сохранить',
+        saving: 'Сохранение…',
+        start: 'Начать',
+        starting: 'Запуск…',
+      }
+    }
+
+    return {
+      title: (dateLabel: string) => `Map / Routes — ${dateLabel}`,
+      statusActive: 'Active',
+      statusPlanned: 'Planned',
+      description: 'Drag orders between couriers, adjust ordering and numbers. Order color = courier color.',
+      searchPlaceholder: 'Search (number, client, address)…',
+      mapFocus: 'Maximize map',
+      showRoutes: 'Show routes',
+      couriers: 'Couriers',
+      unassigned: 'Unassigned',
+      courierFallback: 'Courier',
+      noOrders: 'No orders',
+      dragging: 'Dragging',
+      close: 'Close',
+      save: 'Save',
+      saving: 'Saving…',
+      start: 'Start',
+      starting: 'Starting…',
+    }
+  }, [language])
 
   const orderById = useMemo(() => new Map(safeOrders.map((o) => [o.id, o])), [safeOrders])
 
@@ -250,7 +319,10 @@ export function DispatchMapPanel({
   const isDayActive = isDayActiveOverride ?? isDayActiveDerived
 
   useEffect(() => {
-    if (open) setIsDayActiveOverride(null)
+    if (open) {
+      setIsDayActiveOverride(null)
+      setIsMapFocus(false)
+    }
   }, [open])
 
   const isTodaySelected = useMemo(() => {
@@ -874,134 +946,169 @@ export function DispatchMapPanel({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[95vw] sm:max-w-6xl flex flex-col">
-        <SheetHeader>
+      <SheetContent side="right" className="inset-0 h-[100svh] w-screen max-w-none border-0 p-0 gap-0">
+        <SheetHeader className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <SheetTitle className="flex items-center gap-2">
             <Route className="w-4 h-4" />
-            Карта/Маршруты — {selectedDateLabel}
-            <Badge variant={isDayActive ? 'default' : 'secondary'} className="ml-2 text-[10px]">
-              {isDayActive ? 'Активный' : 'Черновик'}
+            {uiText.title(selectedDateLabel)}
+            <Badge variant={isDayActive ? 'default' : 'outline'} className="ml-2 text-[10px]">
+              {isDayActive ? uiText.statusActive : uiText.statusPlanned}
             </Badge>
           </SheetTitle>
-          <SheetDescription>
-            Перетащите заказы между курьерами, изменяйте порядок и номера. Цвет заказа = цвет курьера.
-          </SheetDescription>
+          <SheetDescription>{uiText.description}</SheetDescription>
         </SheetHeader>
 
-        <div className="px-4 flex-1 overflow-auto flex flex-col gap-3">
+        <div className="flex flex-1 flex-col gap-3 overflow-auto p-4">
           <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
             <Input
-              placeholder="Поиск (номер, клиент, адрес)…"
+              placeholder={uiText.searchPlaceholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="sm:w-[320px]"
             />
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9"
+              onClick={() => setIsMapFocus((value) => !value)}
+            >
+              {isMapFocus ? <Minimize2 className="mr-2 h-4 w-4" /> : <Maximize2 className="mr-2 h-4 w-4" />}
+              {isMapFocus ? uiText.showRoutes : uiText.mapFocus}
+            </Button>
           </div>
 
-          <Card className="p-2">
-            <div className="h-[40vh] sm:h-[52vh] w-full">
-              <DispatchLeafletMap warehouse={warehousePoint} markers={buildMapData.markers} polylines={buildMapData.polylines} />
+          <Card className="overflow-hidden">
+            <div className={isMapFocus ? "h-[calc(100svh-240px)] w-full" : "h-[50vh] lg:h-[62vh] w-full"}>
+              <DispatchLeafletMap
+                key={isMapFocus ? 'map-focus' : 'map-split'}
+                warehouse={warehousePoint}
+                markers={buildMapData.markers}
+                polylines={buildMapData.polylines}
+              />
             </div>
           </Card>
 
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-          >
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-              {allContainerIds.map((containerId) => {
-                const isUnassigned = containerId === UNASSIGNED
-                const name = isUnassigned ? 'Без курьера' : courierNameById.get(containerId) || `Курьер ${containerId.slice(0, 6)}`
-                const color = isUnassigned ? '#94A3B8' : getCourierColor(containerId)
-                const ids = containers[containerId] || []
-                const visibleIds = filteredOrderIds ? ids.filter((id) => filteredOrderIds.has(id)) : ids
-                const stats = routeStatsByContainer[containerId]
-                const durationSec = stats?.durationSec
-                const durationMin = typeof durationSec === 'number' && Number.isFinite(durationSec) ? Math.max(1, Math.round(durationSec / 60)) : null
-                const approx = stats?.source && stats.source !== 'ors'
+          {!isMapFocus && (
+            <>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+              >
+                <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+                  {allContainerIds.map((containerId) => {
+                    const isUnassigned = containerId === UNASSIGNED
+                    const name = isUnassigned
+                      ? uiText.unassigned
+                      : courierNameById.get(containerId) || `${uiText.courierFallback} ${containerId.slice(0, 6)}`
+                    const color = isUnassigned ? '#94A3B8' : getCourierColor(containerId)
+                    const ids = containers[containerId] || []
+                    const visibleIds = filteredOrderIds ? ids.filter((id) => filteredOrderIds.has(id)) : ids
+                    const stats = routeStatsByContainer[containerId]
+                    const durationSec = stats?.durationSec
+                    const durationMin =
+                      typeof durationSec === 'number' && Number.isFinite(durationSec)
+                        ? Math.max(1, Math.round(durationSec / 60))
+                        : null
+                    const approx = stats?.source && stats.source !== 'ors'
 
-                return (
-                  <DroppableColumn key={containerId} id={containerId}>
-                    <div className="rounded-lg border p-3 bg-muted/20">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
-                          <div className="font-semibold text-sm truncate">{name}</div>
-                          <Badge variant="outline" className="text-[10px]">{ids.length}</Badge>
-                          {durationMin != null && (
-                            <Badge variant="secondary" className="text-[10px]">
-                              {approx ? '≈' : ''}{durationMin} min
-                            </Badge>
-                          )}
+                    return (
+                      <DroppableColumn key={containerId} id={containerId}>
+                        <div className="rounded-lg border bg-muted/10 p-3">
+                          <div className="mb-2 flex items-center justify-between">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <div className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
+                              <div className="truncate text-sm font-semibold">{name}</div>
+                              <Badge variant="outline" className="text-[10px] tabular-nums">{ids.length}</Badge>
+                              {durationMin != null && (
+                                <Badge variant="secondary" className="text-[10px] tabular-nums">
+                                  {approx ? '≈' : ''}
+                                  {durationMin} min
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+
+                          <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+                            <div className="max-h-[42vh] space-y-2 overflow-auto pr-1">
+                              {visibleIds.map((id) => {
+                                const o = orderById.get(id)
+                                if (!o) return null
+                                const n = orderNumberById[id]
+                                const coords = coordsById[id]
+                                const courierName = isUnassigned
+                                  ? uiText.unassigned
+                                  : (courierNameById.get(containerId) || uiText.courierFallback)
+                                return (
+                                  <SortableOrderItem
+                                    key={id}
+                                    order={o}
+                                    color={color}
+                                    courierName={courierName}
+                                    number={n}
+                                    coords={coords}
+                                    onNumberChange={(next) => swapOrderNumbers(id, next)}
+                                  />
+                                )
+                              })}
+                              {visibleIds.length === 0 && (
+                                <div className="py-6 text-center text-xs text-muted-foreground">{uiText.noOrders}</div>
+                              )}
+                            </div>
+                          </SortableContext>
                         </div>
-                      </div>
-
-                      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-                        <div className="space-y-2 max-h-[42vh] overflow-auto pr-1">
-                          {visibleIds.map((id) => {
-                            const o = orderById.get(id)
-                            if (!o) return null
-                            const n = orderNumberById[id]
-                            const coords = coordsById[id]
-                            const courierName = isUnassigned ? 'Без курьера' : (courierNameById.get(containerId) || 'Курьер')
-                            return (
-                              <SortableOrderItem
-                                key={id}
-                                order={o}
-                                color={color}
-                                courierName={courierName}
-                                number={n}
-                                coords={coords}
-                                onNumberChange={(next) => swapOrderNumbers(id, next)}
-                              />
-                            )
-                          })}
-                          {visibleIds.length === 0 && (
-                            <div className="text-xs text-slate-400 py-6 text-center">Нет заказов</div>
-                          )}
-                        </div>
-                      </SortableContext>
-                    </div>
-                  </DroppableColumn>
-                )
-              })}
-            </div>
-          </DndContext>
-
-          <div className="flex items-center gap-2 text-sm">
-            <Users className="w-4 h-4 text-slate-500" />
-            <div className="text-slate-600">Couriers:</div>
-            <div className="flex flex-wrap gap-2">
-              {safeCouriers.map((c) => (
-                <div key={c.id} className="inline-flex items-center gap-2 px-2 py-1 rounded-md border bg-background">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getCourierColor(c.id) }} />
-                  <div className="text-xs">{c.name}</div>
+                      </DroppableColumn>
+                    )
+                  })}
                 </div>
-              ))}
-              <div className="inline-flex items-center gap-2 px-2 py-1 rounded-md border bg-background">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#94A3B8' }} />
-                <div className="text-xs">Unassigned</div>
-              </div>
-            </div>
-          </div>
+              </DndContext>
 
-          {activeId && (
-            <div className="text-xs text-slate-400">
-              Перетаскивание: {orderNumberById[activeId] ? `#${orderNumberById[activeId]}` : activeId}
-            </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Users className="h-4 w-4" />
+                  <div>{uiText.couriers}:</div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {safeCouriers.map((c) => (
+                    <div key={c.id} className="inline-flex items-center gap-2 rounded-md border bg-background px-2 py-1">
+                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: getCourierColor(c.id) }} />
+                      <div className="text-xs">{c.name}</div>
+                    </div>
+                  ))}
+                  <div className="inline-flex items-center gap-2 rounded-md border bg-background px-2 py-1">
+                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#94A3B8' }} />
+                    <div className="text-xs">{uiText.unassigned}</div>
+                  </div>
+                </div>
+              </div>
+
+              {activeId && (
+                <div className="text-xs text-muted-foreground">
+                  {uiText.dragging}:{' '}
+                  {orderNumberById[activeId] ? `#${orderNumberById[activeId]}` : activeId}
+                </div>
+              )}
+            </>
           )}
         </div>
 
-        <SheetFooter className="border-t px-4 py-3">
+        <SheetFooter className="border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <div className="w-full flex items-center justify-between gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving || isStarting}>
-              Закрыть
+            <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isSaving || isStarting}>
+              {uiText.close}
             </Button>
 
-            <Button onClick={() => void primaryAction()} disabled={isSaving || isStarting}>
+            <Button
+              size="sm"
+              className="min-w-[140px]"
+              onClick={() => void primaryAction()}
+              disabled={isSaving || isStarting}
+              aria-busy={isSaving || isStarting}
+            >
               {isSaving || isStarting ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : isDayActive ? (
@@ -1014,15 +1121,15 @@ export function DispatchMapPanel({
 
               {isDayActive
                 ? isSaving
-                  ? 'Сохранение…'
-                  : 'Сохранить'
+                  ? uiText.saving
+                  : uiText.save
                 : isTodaySelected
                   ? isStarting
-                    ? 'Запуск…'
-                    : 'Начать'
+                    ? uiText.starting
+                    : uiText.start
                   : isSaving
-                    ? 'Сохранение…'
-                    : 'Сохранить'}
+                    ? uiText.saving
+                    : uiText.save}
             </Button>
           </div>
         </SheetFooter>
