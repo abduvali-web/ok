@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -61,14 +61,6 @@ function createLabeledIcon(color: string, label: string) {
   })
 }
 
-function MapUpdater({ center }: { center: [number, number] }) {
-  const map = useMap()
-  useEffect(() => {
-    map.flyTo(center, 13, { duration: 0.5 })
-  }, [center, map])
-  return null
-}
-
 function MapViewport({
   warehouse,
   markers,
@@ -79,30 +71,65 @@ function MapViewport({
   polylines: DispatchMapPolyline[]
 }) {
   const map = useMap()
+  const lastFitKey = useRef<string | null>(null)
 
   useEffect(() => {
-    const points: Array<[number, number]> = []
-    if (warehouse) points.push([warehouse.lat, warehouse.lng])
-    for (const m of markers) points.push([m.position.lat, m.position.lng])
-    for (const line of polylines) {
-      for (const p of line.positions) points.push([p.lat, p.lng])
+    let count = 0
+    let firstPoint: [number, number] | null = null
+    let minLat = Infinity
+    let maxLat = -Infinity
+    let minLng = Infinity
+    let maxLng = -Infinity
+
+    const addPoint = (lat: number, lng: number) => {
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+      count += 1
+      if (!firstPoint) firstPoint = [lat, lng]
+      minLat = Math.min(minLat, lat)
+      maxLat = Math.max(maxLat, lat)
+      minLng = Math.min(minLng, lng)
+      maxLng = Math.max(maxLng, lng)
     }
 
-    if (points.length === 0) return
+    if (warehouse) addPoint(warehouse.lat, warehouse.lng)
+    for (const m of markers) addPoint(m.position.lat, m.position.lng)
+    for (const line of polylines) for (const p of line.positions) addPoint(p.lat, p.lng)
 
-    // Ensures map is measured correctly inside sheet/modal before fitting bounds.
-    setTimeout(() => {
+    if (count === 0 || !firstPoint) return
+
+    const fitKey = `${count}:${minLat.toFixed(5)},${minLng.toFixed(5)}:${maxLat.toFixed(5)},${maxLng.toFixed(5)}`
+    if (lastFitKey.current === fitKey) return
+    lastFitKey.current = fitKey
+    const singlePoint: [number, number] = firstPoint
+
+    // Ensures map is measured correctly inside sheet/modal (it animates in).
+    const fit = () => {
       map.invalidateSize()
-      if (points.length === 1) {
-        map.flyTo(points[0], 14, { duration: 0.5 })
+
+      map.stop()
+      if (count === 1) {
+        map.flyTo(singlePoint, 14, { duration: 0.5 })
         return
       }
 
-      map.fitBounds(L.latLngBounds(points), {
-        padding: [40, 40],
-        maxZoom: 15,
-      })
-    }, 30)
+      map.fitBounds(
+        L.latLngBounds([
+          [minLat, minLng],
+          [maxLat, maxLng],
+        ]),
+        {
+          padding: [40, 40],
+          maxZoom: 15,
+        }
+      )
+    }
+
+    const t1 = setTimeout(fit, 60)
+    const t2 = setTimeout(fit, 380)
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+    }
   }, [map, markers, polylines, warehouse])
 
   return null
@@ -162,7 +189,6 @@ export default function DispatchLeafletMap({
         </Marker>
       ))}
 
-      <MapUpdater center={center} />
       <MapViewport warehouse={warehouse} markers={markers} polylines={polylines} />
     </MapContainer>
   )

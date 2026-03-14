@@ -34,7 +34,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { GripVertical, Loader2, Maximize2, Minimize2, Play, Route, Save, Users } from 'lucide-react'
+import { GripVertical, Loader2, Play, Route, Save, Users } from 'lucide-react'
 
 const DispatchLeafletMap = dynamic(() => import('./DispatchLeafletMap'), {
   ssr: false,
@@ -213,7 +213,6 @@ export function DispatchMapPanel({
   const [isStarting, setIsStarting] = useState(false)
   const [isDayActiveOverride, setIsDayActiveOverride] = useState<boolean | null>(null)
   const [search, setSearch] = useState('')
-  const [isMapFocus, setIsMapFocus] = useState(false)
   const [roadPolylineByContainer, setRoadPolylineByContainer] = useState<Record<string, LatLng[]>>({})
 
   const expandedCache = useRef(new Map<string, string>())
@@ -228,8 +227,6 @@ export function DispatchMapPanel({
         statusPlanned: 'Reja',
         description: 'Buyurtmalarni kuryerlar orasida tortib o‘tkazing, tartib va raqamlarni o‘zgartiring. Buyurtma rangi = kuryer rangi.',
         searchPlaceholder: 'Qidirish (raqam, mijoz, manzil)…',
-        mapFocus: 'Xaritani kattalashtirish',
-        showRoutes: 'Marshrutlarni ko‘rsatish',
         couriers: 'Kuryerlar',
         unassigned: 'Biriktirilmagan',
         courierFallback: 'Kuryer',
@@ -250,8 +247,6 @@ export function DispatchMapPanel({
         statusPlanned: 'План',
         description: 'Перетащите заказы между курьерами, изменяйте порядок и номера. Цвет заказа = цвет курьера.',
         searchPlaceholder: 'Поиск (номер, клиент, адрес)…',
-        mapFocus: 'Увеличить карту',
-        showRoutes: 'Показать маршруты',
         couriers: 'Курьеры',
         unassigned: 'Без курьера',
         courierFallback: 'Курьер',
@@ -271,8 +266,6 @@ export function DispatchMapPanel({
       statusPlanned: 'Planned',
       description: 'Drag orders between couriers, adjust ordering and numbers. Order color = courier color.',
       searchPlaceholder: 'Search (number, client, address)…',
-      mapFocus: 'Maximize map',
-      showRoutes: 'Show routes',
       couriers: 'Couriers',
       unassigned: 'Unassigned',
       courierFallback: 'Courier',
@@ -321,7 +314,6 @@ export function DispatchMapPanel({
   useEffect(() => {
     if (open) {
       setIsDayActiveOverride(null)
-      setIsMapFocus(true)
     }
   }, [open])
 
@@ -969,23 +961,11 @@ export function DispatchMapPanel({
               onChange={(e) => setSearch(e.target.value)}
               className="sm:w-[320px]"
             />
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9"
-              onClick={() => setIsMapFocus((value) => !value)}
-            >
-              {isMapFocus ? <Minimize2 className="mr-2 h-4 w-4" /> : <Maximize2 className="mr-2 h-4 w-4" />}
-              {isMapFocus ? uiText.showRoutes : uiText.mapFocus}
-            </Button>
           </div>
 
           <Card className="overflow-hidden">
-            <div className={isMapFocus ? "h-[calc(100svh-240px)] w-full" : "h-[50vh] lg:h-[62vh] w-full"}>
+            <div className="h-[55svh] lg:h-[62svh] w-full">
               <DispatchLeafletMap
-                key={isMapFocus ? 'map-focus' : 'map-split'}
                 warehouse={warehousePoint}
                 markers={buildMapData.markers}
                 polylines={buildMapData.polylines}
@@ -993,17 +973,15 @@ export function DispatchMapPanel({
             </div>
           </Card>
 
-          {!isMapFocus && (
-            <>
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDragEnd={handleDragEnd}
-              >
-                <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-                  {allContainerIds.map((containerId) => {
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+              {allContainerIds.map((containerId) => {
                     const isUnassigned = containerId === UNASSIGNED
                     const name = isUnassigned
                       ? uiText.unassigned
@@ -1037,7 +1015,7 @@ export function DispatchMapPanel({
                           </div>
 
                           <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-                            <div className="max-h-[42vh] space-y-2 overflow-auto pr-1">
+                            <div className="space-y-2">
                               {visibleIds.map((id) => {
                                 const o = orderById.get(id)
                                 if (!o) return null
@@ -1066,36 +1044,34 @@ export function DispatchMapPanel({
                         </div>
                       </DroppableColumn>
                     )
-                  })}
-                </div>
-              </DndContext>
+              })}
+            </div>
+          </DndContext>
 
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Users className="h-4 w-4" />
-                  <div>{uiText.couriers}:</div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <div>{uiText.couriers}:</div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {safeCouriers.map((c) => (
+                <div key={c.id} className="inline-flex items-center gap-2 rounded-md border bg-background px-2 py-1">
+                  <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: getCourierColor(c.id) }} />
+                  <div className="text-xs">{c.name}</div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {safeCouriers.map((c) => (
-                    <div key={c.id} className="inline-flex items-center gap-2 rounded-md border bg-background px-2 py-1">
-                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: getCourierColor(c.id) }} />
-                      <div className="text-xs">{c.name}</div>
-                    </div>
-                  ))}
-                  <div className="inline-flex items-center gap-2 rounded-md border bg-background px-2 py-1">
-                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#94A3B8' }} />
-                    <div className="text-xs">{uiText.unassigned}</div>
-                  </div>
-                </div>
+              ))}
+              <div className="inline-flex items-center gap-2 rounded-md border bg-background px-2 py-1">
+                <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#94A3B8' }} />
+                <div className="text-xs">{uiText.unassigned}</div>
               </div>
+            </div>
+          </div>
 
-              {activeId && (
-                <div className="text-xs text-muted-foreground">
-                  {uiText.dragging}:{' '}
-                  {orderNumberById[activeId] ? `#${orderNumberById[activeId]}` : activeId}
-                </div>
-              )}
-            </>
+          {activeId && (
+            <div className="text-xs text-muted-foreground">
+              {uiText.dragging}:{' '}
+              {orderNumberById[activeId] ? `#${orderNumberById[activeId]}` : activeId}
+            </div>
           )}
         </div>
 
