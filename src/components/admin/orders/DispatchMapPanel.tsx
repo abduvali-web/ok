@@ -951,20 +951,20 @@ export function DispatchMapPanel({
             </Badge>
           </SheetTitle>
           <SheetDescription>{uiText.description}</SheetDescription>
-        </SheetHeader>
 
-        <div className="flex flex-1 flex-col gap-3 overflow-auto p-4">
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+          <div className="pt-2">
             <Input
               placeholder={uiText.searchPlaceholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="sm:w-[320px]"
+              className="h-9 sm:max-w-[360px]"
             />
           </div>
+        </SheetHeader>
 
+        <div className="flex flex-1 flex-col gap-3 overflow-auto p-4">
           <Card className="overflow-hidden">
-            <div className="h-[55svh] lg:h-[62svh] w-full">
+            <div className="h-[calc(100svh-240px)] lg:h-[calc(100svh-220px)] w-full">
               <DispatchLeafletMap
                 warehouse={warehousePoint}
                 markers={buildMapData.markers}
