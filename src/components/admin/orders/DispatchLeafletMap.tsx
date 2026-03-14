@@ -95,16 +95,22 @@ function MapViewport({
     for (const m of markers) addPoint(m.position.lat, m.position.lng)
     for (const line of polylines) for (const p of line.positions) addPoint(p.lat, p.lng)
 
-    if (count === 0 || !firstPoint) return
+    const hasPoints = count > 0 && !!firstPoint
 
-    const fitKey = `${count}:${minLat.toFixed(5)},${minLng.toFixed(5)}:${maxLat.toFixed(5)},${maxLng.toFixed(5)}`
-    if (lastFitKey.current === fitKey) return
-    lastFitKey.current = fitKey
-    const singlePoint: [number, number] = firstPoint
+    let fitKey: string | null = null
+    let singlePoint: [number, number] | null = null
+    if (hasPoints) {
+      fitKey = `${count}:${minLat.toFixed(5)},${minLng.toFixed(5)}:${maxLat.toFixed(5)},${maxLng.toFixed(5)}`
+      if (lastFitKey.current === fitKey) fitKey = null
+      singlePoint = firstPoint
+    }
 
     // Ensures map is measured correctly inside sheet/modal (it animates in).
     const fit = () => {
       map.invalidateSize()
+
+      if (!fitKey || !singlePoint) return
+      lastFitKey.current = fitKey
 
       map.stop()
       if (count === 1) {

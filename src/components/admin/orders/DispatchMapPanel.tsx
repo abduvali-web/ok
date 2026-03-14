@@ -32,7 +32,6 @@ import { getCourierColor } from '@/lib/courier-colors'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { GripVertical, Loader2, Play, Route, Save, Users } from 'lucide-react'
 
@@ -962,8 +961,8 @@ export function DispatchMapPanel({
           </div>
         </SheetHeader>
 
-        <div className="flex flex-1 flex-col gap-3 overflow-auto p-4">
-          <Card className="overflow-hidden">
+        <div className="flex flex-1 flex-col overflow-auto">
+          <div className="border-b bg-muted/10">
             <div className="h-[calc(100svh-240px)] lg:h-[calc(100svh-220px)] w-full">
               <DispatchLeafletMap
                 warehouse={warehousePoint}
@@ -971,17 +970,18 @@ export function DispatchMapPanel({
                 polylines={buildMapData.polylines}
               />
             </div>
-          </Card>
+          </div>
 
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-          >
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-              {allContainerIds.map((containerId) => {
+          <div className="flex flex-col gap-3 p-4">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+                {allContainerIds.map((containerId) => {
                     const isUnassigned = containerId === UNASSIGNED
                     const name = isUnassigned
                       ? uiText.unassigned
@@ -997,82 +997,83 @@ export function DispatchMapPanel({
                         : null
                     const approx = stats?.source && stats.source !== 'ors'
 
-                    return (
-                      <DroppableColumn key={containerId} id={containerId}>
-                        <div className="rounded-lg border bg-muted/10 p-3">
-                          <div className="mb-2 flex items-center justify-between">
-                            <div className="flex min-w-0 items-center gap-2">
-                              <div className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
-                              <div className="truncate text-sm font-semibold">{name}</div>
-                              <Badge variant="outline" className="text-[10px] tabular-nums">{ids.length}</Badge>
-                              {durationMin != null && (
-                                <Badge variant="secondary" className="text-[10px] tabular-nums">
-                                  {approx ? '≈' : ''}
-                                  {durationMin} min
-                                </Badge>
-                              )}
-                            </div>
+                  return (
+                    <DroppableColumn key={containerId} id={containerId}>
+                      <div className="rounded-lg border bg-muted/10 p-3">
+                        <div className="mb-2 flex items-center justify-between">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <div className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
+                            <div className="truncate text-sm font-semibold">{name}</div>
+                            <Badge variant="outline" className="text-[10px] tabular-nums">{ids.length}</Badge>
+                            {durationMin != null && (
+                              <Badge variant="secondary" className="text-[10px] tabular-nums">
+                                {approx ? '≈' : ''}
+                                {durationMin} min
+                              </Badge>
+                            )}
                           </div>
-
-                          <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-                            <div className="space-y-2">
-                              {visibleIds.map((id) => {
-                                const o = orderById.get(id)
-                                if (!o) return null
-                                const n = orderNumberById[id]
-                                const coords = coordsById[id]
-                                const courierName = isUnassigned
-                                  ? uiText.unassigned
-                                  : (courierNameById.get(containerId) || uiText.courierFallback)
-                                return (
-                                  <SortableOrderItem
-                                    key={id}
-                                    order={o}
-                                    color={color}
-                                    courierName={courierName}
-                                    number={n}
-                                    coords={coords}
-                                    onNumberChange={(next) => swapOrderNumbers(id, next)}
-                                  />
-                                )
-                              })}
-                              {visibleIds.length === 0 && (
-                                <div className="py-6 text-center text-xs text-muted-foreground">{uiText.noOrders}</div>
-                              )}
-                            </div>
-                          </SortableContext>
                         </div>
-                      </DroppableColumn>
-                    )
-              })}
-            </div>
-          </DndContext>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Users className="h-4 w-4" />
-              <div>{uiText.couriers}:</div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {safeCouriers.map((c) => (
-                <div key={c.id} className="inline-flex items-center gap-2 rounded-md border bg-background px-2 py-1">
-                  <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: getCourierColor(c.id) }} />
-                  <div className="text-xs">{c.name}</div>
+                        <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+                          <div className="space-y-2">
+                            {visibleIds.map((id) => {
+                              const o = orderById.get(id)
+                              if (!o) return null
+                              const n = orderNumberById[id]
+                              const coords = coordsById[id]
+                              const courierName = isUnassigned
+                                ? uiText.unassigned
+                                : (courierNameById.get(containerId) || uiText.courierFallback)
+                              return (
+                                <SortableOrderItem
+                                  key={id}
+                                  order={o}
+                                  color={color}
+                                  courierName={courierName}
+                                  number={n}
+                                  coords={coords}
+                                  onNumberChange={(next) => swapOrderNumbers(id, next)}
+                                />
+                              )
+                            })}
+                            {visibleIds.length === 0 && (
+                              <div className="py-6 text-center text-xs text-muted-foreground">{uiText.noOrders}</div>
+                            )}
+                          </div>
+                        </SortableContext>
+                      </div>
+                    </DroppableColumn>
+                  )
+                })}
+              </div>
+            </DndContext>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Users className="h-4 w-4" />
+                <div>{uiText.couriers}:</div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {safeCouriers.map((c) => (
+                  <div key={c.id} className="inline-flex items-center gap-2 rounded-md border bg-background px-2 py-1">
+                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: getCourierColor(c.id) }} />
+                    <div className="text-xs">{c.name}</div>
+                  </div>
+                ))}
+                <div className="inline-flex items-center gap-2 rounded-md border bg-background px-2 py-1">
+                  <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#94A3B8' }} />
+                  <div className="text-xs">{uiText.unassigned}</div>
                 </div>
-              ))}
-              <div className="inline-flex items-center gap-2 rounded-md border bg-background px-2 py-1">
-                <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#94A3B8' }} />
-                <div className="text-xs">{uiText.unassigned}</div>
               </div>
             </div>
-          </div>
 
-          {activeId && (
-            <div className="text-xs text-muted-foreground">
-              {uiText.dragging}:{' '}
-              {orderNumberById[activeId] ? `#${orderNumberById[activeId]}` : activeId}
-            </div>
-          )}
+            {activeId && (
+              <div className="text-xs text-muted-foreground">
+                {uiText.dragging}:{' '}
+                {orderNumberById[activeId] ? `#${orderNumberById[activeId]}` : activeId}
+              </div>
+            )}
+          </div>
         </div>
 
         <SheetFooter className="border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
