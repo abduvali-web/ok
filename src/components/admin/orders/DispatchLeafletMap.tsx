@@ -62,10 +62,12 @@ function createLabeledIcon(color: string, label: string) {
 }
 
 function MapViewport({
+  suspendFit,
   warehouse,
   markers,
   polylines,
 }: {
+  suspendFit?: boolean
   warehouse?: LatLng | null
   markers: DispatchMapMarker[]
   polylines: DispatchMapPolyline[]
@@ -109,6 +111,7 @@ function MapViewport({
     const fit = () => {
       map.invalidateSize()
 
+      if (suspendFit) return
       if (!fitKey || !singlePoint) return
       lastFitKey.current = fitKey
 
@@ -136,16 +139,18 @@ function MapViewport({
       clearTimeout(t1)
       clearTimeout(t2)
     }
-  }, [map, markers, polylines, warehouse])
+  }, [map, markers, polylines, suspendFit, warehouse])
 
   return null
 }
 
 export default function DispatchLeafletMap({
+  suspendFit,
   warehouse,
   markers,
   polylines,
 }: {
+  suspendFit?: boolean
   warehouse?: LatLng | null
   markers: DispatchMapMarker[]
   polylines: DispatchMapPolyline[]
@@ -195,7 +200,7 @@ export default function DispatchLeafletMap({
         </Marker>
       ))}
 
-      <MapViewport warehouse={warehouse} markers={markers} polylines={polylines} />
+      <MapViewport suspendFit={suspendFit} warehouse={warehouse} markers={markers} polylines={polylines} />
     </MapContainer>
   )
 }

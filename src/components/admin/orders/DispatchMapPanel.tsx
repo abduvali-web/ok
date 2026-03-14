@@ -215,8 +215,35 @@ export function DispatchMapPanel({
   const [roadPolylineByContainer, setRoadPolylineByContainer] = useState<Record<string, LatLng[]>>({})
 
   const expandedCache = useRef(new Map<string, string>())
+  const dirtyRouteContainersRef = useRef<Set<string>>(new Set())
+  const dirtyRouteVersionByIdRef = useRef<Record<string, number>>({})
+  const routeRequestSeqRef = useRef(0)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
+
+  const markContainersDirty = useCallback((containerIds: string[]) => {
+    for (const id of containerIds) {
+      dirtyRouteContainersRef.current.add(id)
+      dirtyRouteVersionByIdRef.current[id] = (dirtyRouteVersionByIdRef.current[id] ?? 0) + 1
+    }
+  }, [])
+
+  const clearDirtyRoads = useCallback(() => {
+    const dirty = Array.from(dirtyRouteContainersRef.current)
+    if (dirty.length === 0) return
+
+    setRoadPolylineByContainer((prev) => {
+      const next = { ...prev }
+      for (const id of dirty) delete next[id]
+      return next
+    })
+
+    setRouteStatsByContainer((prev) => {
+      const next = { ...prev }
+      for (const id of dirty) delete next[id]
+      return next
+    })
+  }, [])
 
   const uiText = useMemo(() => {
     if (language === 'uz') {
@@ -353,8 +380,10 @@ export function DispatchMapPanel({
     setContainers(grouped)
     setOrderNumberById(numbers)
     setRoadPolylineByContainer({})
+    setRouteStatsByContainer({})
+    markContainersDirty(allContainerIds)
     setSearch('')
-  }, [allContainerIds, open, safeOrders])
+  }, [allContainerIds, markContainersDirty, open, safeOrders])
 
   // Resolve coordinates for orders
   useEffect(() => {
@@ -529,6 +558,111 @@ export function DispatchMapPanel({
 
     return { markers, polylines }
   }, [containers, coordsById, courierNameById, courierStartById, orderById, orderNumberById, roadPolylineByContainer, warehousePoint])
+
+  const lastStableMapDataRef = useRef<{ markers: typeof buildMapData.markers; polylines: typeof buildMapData.polylines } | null>(null)
+  const mapDataForRender = useMemo(() => {
+    if (activeId && lastStableMapDataRef.current) return lastStableMapDataRef.current
+    lastStableMapDataRef.current = buildMapData
+    return buildMapData
+  }, [activeId, buildMapData])
+
+  const refreshRoadRoutes = useCallback(async (containerIds: string[]) => {
+    const versionsAtStart: Record<string, number> = {}
+    for (const id of containerIds) versionsAtStart[id] = dirtyRouteVersionByIdRef.current[id] ?? 0
+
+    const routes = containerIds
+      .map((containerId) => {
+        const ids = containers[containerId] || []
+        const stops = ids
+          .map((id) => {
+            const coords = coordsById[id]
+            if (!coords) return null
+            return { orderId: id, lat: coords.lat, lng: coords.lng }
+          })
+          .filter((s): s is { orderId: string; lat: number; lng: number } => s !== null)
+
+        const startPoint = courierStartById.get(containerId) ?? warehousePoint ?? null
+        const pointCount = (startPoint ? 1 : 0) + stops.length
+        if (pointCount < 2) return null
+
+        return { containerId, startPoint, stops }
+      })
+      .filter((r): r is { containerId: string; startPoint: LatLng | null; stops: Array<{ orderId: string; lat: number; lng: number }> } => r !== null)
+
+    if (routes.length === 0) return
+
+    const seq = ++routeRequestSeqRef.current
+    try {
+      const res = await fetch('/api/admin/dispatch/ors-polyline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ routes }),
+      })
+      if (!res.ok) return
+
+      const data: unknown = await res.json().catch(() => null)
+      const rawRoutes =
+        data &&
+        typeof data === 'object' &&
+        Array.isArray((data as { routes?: unknown }).routes)
+          ? (data as { routes: unknown[] }).routes
+          : []
+
+      if (seq !== routeRequestSeqRef.current) return
+
+      const polylineNext: Record<string, LatLng[]> = {}
+      const statsNext: Record<string, { durationSec: number | null; source: string }> = {}
+
+      for (const raw of rawRoutes) {
+        if (!raw || typeof raw !== 'object') continue
+        const r = raw as Record<string, unknown>
+        const containerId = typeof r.containerId === 'string' ? r.containerId : ''
+        if (!containerId) continue
+
+        const polyline = Array.isArray(r.polyline)
+          ? r.polyline
+            .map((p) => {
+              if (!p || typeof p !== 'object') return null
+              const coord = p as Record<string, unknown>
+              const lat = Number(coord.lat)
+              const lng = Number(coord.lng)
+              if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+              return { lat, lng }
+            })
+            .filter((p): p is LatLng => p !== null)
+          : []
+
+        const durationSecRaw = r.durationSec
+        const durationSec = typeof durationSecRaw === 'number' && Number.isFinite(durationSecRaw) ? durationSecRaw : null
+        const source = typeof r.source === 'string' ? r.source : 'unknown'
+
+        if (polyline.length >= 2) polylineNext[containerId] = polyline
+        statsNext[containerId] = { durationSec, source }
+      }
+
+      setRoadPolylineByContainer((prev) => ({ ...prev, ...polylineNext }))
+      setRouteStatsByContainer((prev) => ({ ...prev, ...statsNext }))
+    } finally {
+      for (const id of containerIds) {
+        const current = dirtyRouteVersionByIdRef.current[id] ?? 0
+        if (current === (versionsAtStart[id] ?? 0)) dirtyRouteContainersRef.current.delete(id)
+      }
+    }
+  }, [containers, coordsById, courierStartById, warehousePoint])
+
+  useEffect(() => {
+    if (!open) return
+    if (activeId) return
+
+    const dirty = Array.from(dirtyRouteContainersRef.current)
+    if (dirty.length === 0) return
+
+    const t = setTimeout(() => {
+      void refreshRoadRoutes(dirty)
+    }, 500)
+
+    return () => clearTimeout(t)
+  }, [activeId, open, refreshRoadRoutes])
 
   const applyAutoSortAll = useCallback(async () => {
     const hasCourierStart = safeCouriers.some((c) => typeof c.latitude === 'number' && typeof c.longitude === 'number')
@@ -754,7 +888,6 @@ export function DispatchMapPanel({
 
     const active = String(event.active.id)
     const over = String(overId)
-    setRoadPolylineByContainer({})
 
     setContainers((prev) => {
       const activeContainer = findContainerForId(prev, active)
@@ -773,6 +906,7 @@ export function DispatchMapPanel({
       const nextOver = [...overItems.slice(0, overIndex), active, ...overItems.slice(overIndex)]
 
       const next = { ...prev, [activeContainer]: nextActive, [overContainer]: nextOver }
+      markContainersDirty([activeContainer, overContainer])
 
       // Renumber affected containers
       setOrderNumberById((numbersPrev) => {
@@ -793,7 +927,6 @@ export function DispatchMapPanel({
 
     const activeId = String(active.id)
     const overId = String(over.id)
-    setRoadPolylineByContainer({})
 
     setContainers((prev) => {
       const containerId = findContainerForId(prev, activeId)
@@ -808,15 +941,17 @@ export function DispatchMapPanel({
 
       const nextItems = arrayMove(items, oldIndex, newIndex)
       const next = { ...prev, [containerId]: nextItems }
+      markContainersDirty([containerId])
 
       setOrderNumberById((numbersPrev) => (renumberInOrder(nextItems, numbersPrev) as Record<string, number>))
       return next
     })
+
+    clearDirtyRoads()
   }
 
   const swapOrderNumbers = (orderId: string, nextNumber: number) => {
     if (!Number.isFinite(nextNumber)) return
-    setRoadPolylineByContainer({})
     const allIds = Object.values(containers).flat()
     const targetId = allIds.find((id) => orderNumberById[id] === nextNumber)
     if (!targetId) {
@@ -963,11 +1098,12 @@ export function DispatchMapPanel({
 
         <div className="flex flex-1 flex-col overflow-auto">
           <div className="border-b bg-muted/10">
-            <div className="h-[calc(100svh-240px)] lg:h-[calc(100svh-220px)] w-full">
+            <div className="h-[46svh] lg:h-[52svh] w-full">
               <DispatchLeafletMap
+                suspendFit={!!activeId}
                 warehouse={warehousePoint}
-                markers={buildMapData.markers}
-                polylines={buildMapData.polylines}
+                markers={mapDataForRender.markers}
+                polylines={mapDataForRender.polylines}
               />
             </div>
           </div>
