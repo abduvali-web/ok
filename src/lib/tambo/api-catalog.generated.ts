@@ -155,11 +155,26 @@ export const SITE_ENDPOINT_CATALOG = [
     "description": "Couriers list/create/update (PATCH requires courierId, supports name/location/salary)."
   },
   {
-    "path": "/api/admin/database-row",
+    "path": "/api/admin/database-import-xlsx",
     "methods": [
       "POST"
     ],
-    "description": "database row endpoint (POST)."
+    "description": "database import xlsx endpoint (POST)."
+  },
+  {
+    "path": "/api/admin/database-import-xlsx-all",
+    "methods": [
+      "POST"
+    ],
+    "description": "database import xlsx all endpoint (POST)."
+  },
+  {
+    "path": "/api/admin/database-row",
+    "methods": [
+      "POST",
+      "PUT"
+    ],
+    "description": "database row endpoint (POST/PUT)."
   },
   {
     "path": "/api/admin/database-snapshot",
@@ -181,6 +196,13 @@ export const SITE_ENDPOINT_CATALOG = [
       "POST"
     ],
     "description": "ors optimize endpoint (POST)."
+  },
+  {
+    "path": "/api/admin/dispatch/ors-polyline",
+    "methods": [
+      "POST"
+    ],
+    "description": "ors polyline endpoint (POST)."
   },
   {
     "path": "/api/admin/dispatch/start-day",

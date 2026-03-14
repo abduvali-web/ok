@@ -49,8 +49,15 @@ import { toast } from 'sonner';
 import { getAllIngredients } from '@/lib/menuData';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector';
+
 interface FinanceTabProps {
     className?: string;
+    selectedDate?: Date | null;
+    applySelectedDate?: (date: Date | null) => void;
+    shiftSelectedDate?: (days: number) => void;
+    selectedDateLabel?: string;
+    profileUiText?: any;
 }
 
 interface Client {
@@ -80,7 +87,14 @@ interface Transaction {
     customer?: { name: string; phone: string };
 }
 
-export function FinanceTab({ className }: FinanceTabProps) {
+export function FinanceTab({ 
+    className,
+    selectedDate,
+    applySelectedDate,
+    shiftSelectedDate,
+    selectedDateLabel,
+    profileUiText
+}: FinanceTabProps) {
     const { t } = useLanguage();
     const [activeSubTab, setActiveSubTab] = useState('clients');
     const [companyBalance, setCompanyBalance] = useState(0);
@@ -133,11 +147,16 @@ export function FinanceTab({ className }: FinanceTabProps) {
         } else if (activeSubTab === 'history') {
             fetchCompanyFinance(); // Refresh history
         }
-    }, [activeSubTab, balanceFilter, categoryFilter]); // Re-fetch when filter changes
+    }, [activeSubTab, balanceFilter, categoryFilter, selectedDate]); // Re-fetch when filter or date changes
 
     const fetchCompanyFinance = async () => {
         try {
-            const response = await fetch(`/api/admin/finance/company?limit=50&type=all&category=${categoryFilter}`);
+            let url = `/api/admin/finance/company?limit=50&type=all&category=${categoryFilter}`;
+            if (activeSubTab === 'history' && selectedDate) {
+                // Only filter by date when viewing history, so total company balance isn't affected.
+                url += `&date=${selectedDate.toISOString()}`;
+            }
+            const response = await fetch(url);
             if (response.ok) {
                 const data = await response.json();
                 setCompanyBalance(data.companyBalance);
@@ -581,9 +600,18 @@ export function FinanceTab({ className }: FinanceTabProps) {
                         <CardHeader>
                             <CardTitle className="text-lg font-medium">{t.finance.history}</CardTitle>
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-2">
-                                <CardDescription>
+                                <CardDescription className="flex-1">
                                     {t.finance.historyDesc}
                                 </CardDescription>
+                                {applySelectedDate && shiftSelectedDate && selectedDateLabel && profileUiText && (
+                                    <CalendarDateSelector
+                                        selectedDate={selectedDate || null}
+                                        applySelectedDate={applySelectedDate}
+                                        shiftSelectedDate={shiftSelectedDate}
+                                        selectedDateLabel={selectedDateLabel}
+                                        profileUiText={profileUiText}
+                                    />
+                                )}
                                 <Select
                                     value={categoryFilter}
                                     onValueChange={setCategoryFilter}

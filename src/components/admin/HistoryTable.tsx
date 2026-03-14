@@ -25,6 +25,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
 
 interface ActionLog {
   id: string
@@ -49,6 +50,11 @@ interface HistoryTableProps {
   role?: string
   limit?: number
   compactMode?: boolean
+  selectedDate?: Date | null
+  applySelectedDate?: (date: Date | null) => void
+  shiftSelectedDate?: (days: number) => void
+  selectedDateLabel?: string
+  profileUiText?: any
 }
 
 type ActionFilter = 'all' | 'create' | 'update' | 'delete' | 'other'
@@ -60,7 +66,16 @@ function getActionKind(action: string): ActionFilter {
   return 'other'
 }
 
-export function HistoryTable({ role: _role, limit = 10, compactMode = false }: HistoryTableProps) {
+export function HistoryTable({ 
+  role: _role, 
+  limit = 10, 
+  compactMode = false,
+  selectedDate,
+  applySelectedDate,
+  shiftSelectedDate,
+  selectedDateLabel,
+  profileUiText
+}: HistoryTableProps) {
   const { t, language } = useLanguage()
   const [logs, setLogs] = useState<ActionLog[]>([])
   const [users, setUsers] = useState<User[]>([])
@@ -102,6 +117,10 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
         params.append('adminId', selectedUser)
       }
 
+      if (selectedDate) {
+        params.append('date', selectedDate.toISOString())
+      }
+
       const response = await fetch(`/api/admin/action-logs?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -117,7 +136,7 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
     } finally {
       setIsLoading(false)
     }
-  }, [limit, page, selectedUser])
+  }, [limit, page, selectedUser, selectedDate])
 
   useEffect(() => {
     void fetchUsers()
@@ -129,7 +148,7 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
 
   useEffect(() => {
     setPage(0)
-  }, [selectedUser])
+  }, [selectedUser, selectedDate])
 
   function getActionBadgeColor(action: string) {
     if (action.includes('CREATE')) return 'border border-border bg-background text-foreground'
@@ -207,9 +226,20 @@ export function HistoryTable({ role: _role, limit = 10, compactMode = false }: H
             <CardTitle>{t.admin.actionHistory}</CardTitle>
             <CardDescription>{t.admin.totalRecords}: {total}</CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={() => void fetchLogs()} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </Button>
+          <div className="flex items-center gap-2">
+            {applySelectedDate && shiftSelectedDate && selectedDateLabel && profileUiText && (
+              <CalendarDateSelector
+                selectedDate={selectedDate || null}
+                applySelectedDate={applySelectedDate}
+                shiftSelectedDate={shiftSelectedDate}
+                selectedDateLabel={selectedDateLabel}
+                profileUiText={profileUiText}
+              />
+            )}
+            <Button variant="outline" size="sm" onClick={() => void fetchLogs()} disabled={isLoading}>
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-2 md:grid-cols-[minmax(0,220px)_minmax(0,220px)_1fr]">

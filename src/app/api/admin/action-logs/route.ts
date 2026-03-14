@@ -14,8 +14,25 @@ export async function GET(request: NextRequest) {
     const targetAdminId = searchParams.get('adminId')
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
+    const dateStr = searchParams.get('date')
 
     const where: any = {}
+
+    if (dateStr) {
+      const date = new Date(dateStr)
+      if (!isNaN(date.getTime())) {
+        const startOfDay = new Date(date)
+        startOfDay.setHours(0, 0, 0, 0)
+        
+        const endOfDay = new Date(date)
+        endOfDay.setHours(23, 59, 59, 999)
+        
+        where.createdAt = {
+          gte: startOfDay,
+          lte: endOfDay
+        }
+      }
+    }
 
     // Role-based filtering logic
     if (user.role === 'SUPER_ADMIN') {

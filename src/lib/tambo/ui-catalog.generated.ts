@@ -73,6 +73,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "source": "components/ui/calendar.tsx"
   },
   {
+    "name": "CalendarDateSelector",
+    "purpose": "UI component from components admin dashboard shared CalendarDateSelector",
+    "source": "components/admin/dashboard/shared/CalendarDateSelector.tsx"
+  },
+  {
     "name": "card",
     "purpose": "UI component from components ui card",
     "source": "components/ui/card.tsx"

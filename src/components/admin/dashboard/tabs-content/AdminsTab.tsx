@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { type FormEvent, useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -14,6 +14,7 @@ import { mapLegacyAllowedTabId, type CanonicalTabId } from '@/components/admin/d
 import { AllowedTabsPicker } from '@/components/admin/dashboard/AllowedTabsPicker'
 import { FormField } from '@/components/admin/dashboard/shared/FormField'
 import { EntityStatusBadge } from '@/components/admin/dashboard/shared/EntityStatusBadge'
+import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { fetchApi } from '@/lib/api-client'
 
@@ -86,11 +87,23 @@ export function AdminsTab({
   isLowAdminView,
   onRefresh,
   tabsCopy,
+  orders = [],
+  selectedDate,
+  applySelectedDate,
+  shiftSelectedDate,
+  selectedDateLabel,
+  profileUiText = {} as any,
 }: {
   lowAdmins: Admin[]
   isLowAdminView: boolean
   onRefresh: () => void
   tabsCopy: Record<CanonicalTabId, string>
+  orders?: any[]
+  selectedDate?: Date | null
+  applySelectedDate?: (date: Date | null) => void
+  shiftSelectedDate?: (days: number) => void
+  selectedDateLabel?: string
+  profileUiText?: any
 }) {
   const { t, language } = useLanguage()
 
@@ -155,6 +168,28 @@ export function AdminsTab({
         return a.name.localeCompare(b.name)
       })
   }, [lowAdmins, roleFilter, searchTerm, statusFilter])
+
+  const adminStats = useMemo(() => {
+    const stats: Record<string, { delivered: number, notDelivered: number }> = {}
+    lowAdmins.forEach((a) => {
+      stats[a.id] = { delivered: 0, notDelivered: 0 }
+    })
+    
+    if (orders && orders.length > 0) {
+      orders.forEach((order) => {
+        if (!order.courierId) return
+        if (!stats[order.courierId]) stats[order.courierId] = { delivered: 0, notDelivered: 0 }
+        
+        const status = order.orderStatus
+        if (status === 'SUCCESSFUL') {
+          stats[order.courierId].delivered++
+        } else if (status !== 'NEW' && status !== 'CANCELED') {
+          stats[order.courierId].notDelivered++
+        }
+      })
+    }
+    return stats
+  }, [lowAdmins, orders])
 
   const setPendingAction = useCallback((adminId: string, action: PendingAction | null) => {
     setPendingActions((prev) => {
@@ -330,12 +365,23 @@ export function AdminsTab({
                 <CardTitle>{t.admin.manageLowAdmins}</CardTitle>
                 <CardDescription>{t.admin.manageLowAdminsDesc}</CardDescription>
               </div>
-              {!isLowAdminView && (
-                <Button onClick={openCreateModal} className="h-9 gap-2 px-3">
-                  <Plus className="size-4" />
-                  {t.admin.create}
-                </Button>
-              )}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                {applySelectedDate && shiftSelectedDate && selectedDateLabel && profileUiText && (
+                  <CalendarDateSelector
+                    selectedDate={selectedDate || null}
+                    applySelectedDate={applySelectedDate}
+                    shiftSelectedDate={shiftSelectedDate}
+                    selectedDateLabel={selectedDateLabel}
+                    profileUiText={profileUiText}
+                  />
+                )}
+                {!isLowAdminView && (
+                  <Button onClick={openCreateModal} className="h-9 gap-2 px-3">
+                    <Plus className="size-4" />
+                    {t.admin.create}
+                  </Button>
+                )}
+              </div>
             </div>
 
             <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_170px_170px_auto]">
@@ -386,6 +432,8 @@ export function AdminsTab({
                     <TableHead className="w-[200px]">{t.admin.table.name}</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead className="w-[150px]">{t.admin.table.role}</TableHead>
+                    <TableHead className="w-[100px]">Delivered</TableHead>
+                    <TableHead className="w-[120px]">Not Delivered</TableHead>
                     <TableHead className="w-[130px]">{t.common.status}</TableHead>
                     <TableHead className="w-[130px]">{t.finance.salary}</TableHead>
                     <TableHead className="w-[260px] text-right">{t.admin.table.actions}</TableHead>
@@ -402,6 +450,12 @@ export function AdminsTab({
                         <TableCell className="py-1.5 font-medium">{admin.name}</TableCell>
                         <TableCell className="py-1.5 text-muted-foreground">{admin.email}</TableCell>
                         <TableCell className="py-1.5">{roleLabel[normalizedRole]}</TableCell>
+                        <TableCell className="py-1.5 font-medium text-emerald-600">
+                          {normalizedRole === 'COURIER' ? adminStats[admin.id]?.delivered || 0 : '-'}
+                        </TableCell>
+                        <TableCell className="py-1.5 font-medium text-rose-600">
+                          {normalizedRole === 'COURIER' ? adminStats[admin.id]?.notDelivered || 0 : '-'}
+                        </TableCell>
                         <TableCell className="py-1.5">
                           <EntityStatusBadge
                             isActive={admin.isActive}
@@ -454,7 +508,7 @@ export function AdminsTab({
 
                   {filteredAdmins.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-20 text-center text-muted-foreground">
+                      <TableCell colSpan={8} className="h-20 text-center text-muted-foreground">
                         <div className="inline-flex items-center gap-2 text-sm">
                           <Users className="size-4" />
                           No admins found for current filters

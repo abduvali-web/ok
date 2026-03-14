@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
@@ -90,6 +90,7 @@ import {
 
 import { MobileSidebar } from '@/components/MobileSidebar'
 import { MobileTabIndicator } from '@/components/MobileTabIndicator'
+import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
 
 const OrdersTable = dynamic(
   () => import('@/components/admin/OrdersTable').then((mod) => mod.OrdersTable),
@@ -2217,7 +2218,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               <CardContent>
                 {/* Unified action panel */}
                 <div className="mb-4 rounded-lg border bg-muted/20 p-3">
-                  <div className="grid gap-2 lg:grid-cols-[auto_auto_auto_1fr]">
+                  <div className="grid gap-2 lg:grid-cols-[auto_auto_auto_auto_1fr]">
                     <Button onClick={() => setIsCreateOrderModalOpen(true)} className="h-9 gap-2 px-3">
                       <Plus className="w-4 h-4" />
                       {t.admin.createOrder}
@@ -2240,74 +2241,19 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       <DispatchActionIcon className="w-4 h-4" />
                       {dispatchActionLabel}
                     </Button>
+                    <CalendarDateSelector
+                      selectedDate={selectedDate}
+                      applySelectedDate={applySelectedDate}
+                      shiftSelectedDate={shiftSelectedDate}
+                      selectedDateLabel={selectedDateLabel}
+                      profileUiText={profileUiText}
+                    />
                     <div className="flex items-center justify-end text-xs text-muted-foreground">
                       {selectedOrders.size > 0 ? `${selectedOrders.size} selected` : 'No selection'}
                     </div>
                   </div>
 
-                  <div className="mt-3 rounded-xl border border-border/60 bg-gradient-to-r from-background to-muted/20 p-3">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Button variant="outline" className="h-9 gap-1.5" onClick={() => shiftSelectedDate(-1)}>
-                          <ChevronLeft className="h-4 w-4" />
-                          Prev
-                        </Button>
-
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="secondary" className="h-9 min-w-[240px] justify-between gap-2 px-3 text-left">
-                              <span className="flex min-w-0 items-center gap-2">
-                                <CalendarDays className="h-4 w-4 shrink-0 text-primary" />
-                                <span className="truncate text-sm font-medium">{selectedDateLabel}</span>
-                              </span>
-                              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                                {profileUiText.calendar}
-                              </span>
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={selectedDate ?? undefined}
-                              onSelect={(nextDate) => applySelectedDate(nextDate ?? null)}
-                              initialFocus
-                            />
-                            <div className="flex items-center justify-between border-t px-3 py-2">
-                              <Button type="button" size="sm" variant="outline" className="h-8" onClick={() => applySelectedDate(new Date())}>
-                                {profileUiText.today}
-                              </Button>
-                              {selectedDate ? (
-                                <Button type="button" size="sm" variant="ghost" className="h-8" onClick={() => applySelectedDate(null)}>
-                                  {profileUiText.clearDate}
-                                </Button>
-                              ) : null}
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-
-                        <Button variant="outline" className="h-9 gap-1.5" onClick={() => shiftSelectedDate(1)}>
-                          {profileUiText.next}
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => shiftSelectedDate(-1)}>
-                          {profileUiText.yesterday}
-                        </Button>
-                        <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => applySelectedDate(new Date())}>
-                          {profileUiText.today}
-                        </Button>
-                        <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => shiftSelectedDate(1)}>
-                          {profileUiText.tomorrow}
-                        </Button>
-                        <div className="flex items-center gap-2 rounded-md border border-dashed border-border/60 px-2.5 py-1.5 text-xs text-muted-foreground">
-                          <Clock className="h-3.5 w-3.5" />
-                          <span className="max-w-[210px] truncate">{selectedDateLabel}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  {/* Calendar removed from here and moved inline above */ }
                 </div>
 
                 {/* Filters Panel */}
@@ -2584,9 +2530,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       )}
                     </CardDescription>
                   </div>
-                  <div className="grid w-full gap-2 lg:w-auto lg:grid-cols-[190px_auto]">
+                  <div className="grid w-full gap-2 lg:w-auto lg:flex lg:items-center">
+                    <CalendarDateSelector
+                      selectedDate={selectedDate}
+                      applySelectedDate={applySelectedDate}
+                      shiftSelectedDate={shiftSelectedDate}
+                      selectedDateLabel={selectedDateLabel}
+                      profileUiText={profileUiText}
+                    />
                     <Select value={clientStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setClientStatusFilter(value)}>
-                      <SelectTrigger className="h-9 w-full">
+                      <SelectTrigger className="h-9 w-36">
                         <SelectValue placeholder={profileUiText.statusFilter} />
                       </SelectTrigger>
                       <SelectContent>
@@ -3000,6 +2953,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Phone</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Address</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Calories</th>
+                          <th className="px-4 py-2 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Orders</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Delivery days</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                             Status / Auto
@@ -3040,6 +2994,24 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
                                 {client.calories} kcal
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap text-sm text-center">
+                                {(() => {
+                                  const clientOrders = orders.filter(o => o.customerPhone === client.phone)
+                                  if (clientOrders.length === 0) return <span className="text-muted-foreground">-</span>
+                                  
+                                  const successful = clientOrders.filter(o => o.orderStatus === 'SUCCESSFUL').length
+                                  const pending = clientOrders.filter(o => o.orderStatus === 'NEW').length
+                                  const failed = clientOrders.length - successful - pending
+                                  
+                                  return (
+                                    <div className="flex items-center justify-center gap-2 text-xs">
+                                      {successful > 0 && <span className="text-emerald-600 font-bold" title="Delivered">{successful}</span>}
+                                      {failed > 0 && <span className="text-rose-600 font-bold" title="Failed/Not Delivered">{failed}</span>}
+                                      {pending > 0 && <span className="text-amber-500 font-bold" title="New/Pending">{pending}</span>}
+                                    </div>
+                                  )
+                                })()}
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
                                 <div className="text-xs">
@@ -3175,7 +3147,18 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
           )}
 
           {/* Admins Tab */}
-          <AdminsTab lowAdmins={lowAdmins} isLowAdminView={isLowAdminView} onRefresh={fetchData} tabsCopy={tabsCopy} />
+          <AdminsTab 
+            lowAdmins={lowAdmins} 
+            isLowAdminView={isLowAdminView} 
+            onRefresh={fetchData} 
+            tabsCopy={tabsCopy} 
+            orders={orders}
+            selectedDate={selectedDate}
+            applySelectedDate={applySelectedDate}
+            shiftSelectedDate={shiftSelectedDate}
+            selectedDateLabel={selectedDateLabel}
+            profileUiText={profileUiText}
+          />
 
           {/* Interface Tab */}
 
@@ -3184,9 +3167,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
           </TabsContent >
 
           {/* History Tab */}
-          < TabsContent value="history" className="space-y-6" >
-            <HistoryTable role={meRole || 'MIDDLE_ADMIN'} />
-          </TabsContent >
+          <TabsContent value="history" className="space-y-6">
+            <HistoryTable 
+              role={meRole || 'MIDDLE_ADMIN'} 
+              limit={50} 
+              selectedDate={selectedDate}
+              applySelectedDate={applySelectedDate}
+              shiftSelectedDate={shiftSelectedDate}
+              selectedDateLabel={selectedDateLabel}
+              profileUiText={profileUiText}
+            />
+          </TabsContent>
 
           {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-6">
