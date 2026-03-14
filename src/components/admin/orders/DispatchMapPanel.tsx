@@ -946,7 +946,10 @@ export function DispatchMapPanel({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="inset-0 h-[100svh] w-screen max-w-none border-0 p-0 gap-0">
+      <SheetContent
+        side="right"
+        className="inset-0 left-0 right-0 h-[100svh] !w-screen !max-w-none border-0 p-0 gap-0 sm:!w-screen sm:!max-w-none md:!max-w-none lg:!max-w-none xl:!max-w-none"
+      >
         <SheetHeader className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <SheetTitle className="flex items-center gap-2">
             <Route className="w-4 h-4" />
