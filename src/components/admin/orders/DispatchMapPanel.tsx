@@ -321,7 +321,7 @@ export function DispatchMapPanel({
   useEffect(() => {
     if (open) {
       setIsDayActiveOverride(null)
-      setIsMapFocus(false)
+      setIsMapFocus(true)
     }
   }, [open])
 
