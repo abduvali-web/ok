@@ -69,6 +69,30 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     const [shoppingList, setShoppingList] = useState<Map<string, { amount: number; unit: string }>>(new Map());
     const [calcRange, setCalcRange] = useState<DateRange | undefined>(undefined)
 
+    // Cooking audit state (period + per-day drilldown)
+    const [cookingRange, setCookingRange] = useState<DateRange | undefined>(() => {
+        const tomorrow = new Date()
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        tomorrow.setHours(0, 0, 0, 0)
+        return { from: tomorrow, to: tomorrow }
+    })
+    const [selectedCookingDateISO, setSelectedCookingDateISO] = useState<string>(() => {
+        const tomorrow = new Date()
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        tomorrow.setHours(0, 0, 0, 0)
+        return tomorrow.toISOString().split('T')[0]
+    })
+    const [cookingPlans, setCookingPlans] = useState<Array<{ date: string; menuNumber: number; dishes: any; cookedStats: any }>>([])
+    const [isCookingPlansLoading, setIsCookingPlansLoading] = useState(false)
+    const [cookingPlansError, setCookingPlansError] = useState<string>('')
+
+    const toLocalIsoDate = useCallback((d: Date) => {
+        const yyyy = d.getFullYear()
+        const mm = String(d.getMonth() + 1).padStart(2, '0')
+        const dd = String(d.getDate()).padStart(2, '0')
+        return `${yyyy}-${mm}-${dd}`
+    }, [])
+
     useEffect(() => {
         if (!calcRange?.from) return
         const end = calcRange.to ?? calcRange.from
@@ -85,6 +109,98 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
 
         setSelectedDates(dates)
     }, [calcRange])
+
+    const cookingRangeDays = useMemo(() => {
+        if (!cookingRange?.from) return [] as string[]
+        const end = cookingRange.to ?? cookingRange.from
+
+        const dates: string[] = []
+        const cursor = new Date(cookingRange.from)
+        cursor.setHours(0, 0, 0, 0)
+
+        const limit = 31 // keep the UI usable (month max)
+        while (cursor.getTime() <= end.getTime() && dates.length < limit) {
+            dates.push(cursor.toISOString().split('T')[0])
+            cursor.setDate(cursor.getDate() + 1)
+        }
+        return dates
+    }, [cookingRange])
+
+    useEffect(() => {
+        if (!cookingRangeDays.length) return
+        // Ensure selected day stays inside the chosen range.
+        if (!cookingRangeDays.includes(selectedCookingDateISO)) {
+            setSelectedCookingDateISO(cookingRangeDays[0])
+        }
+    }, [cookingRangeDays, selectedCookingDateISO])
+
+    const refreshCookingPlansForRange = useCallback(async () => {
+        if (!cookingRange?.from) {
+            setCookingPlans([])
+            return
+        }
+
+        const fromIso = toLocalIsoDate(cookingRange.from)
+        const toIso = toLocalIsoDate(cookingRange.to ?? cookingRange.from)
+
+        setIsCookingPlansLoading(true)
+        setCookingPlansError('')
+        try {
+            const response = await fetch(`/api/admin/warehouse/cooking-plan?from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`)
+            const data = await response.json().catch(() => ({}))
+            if (!response.ok) {
+                setCookingPlans([])
+                setCookingPlansError(data?.error || 'Failed to load cooking plans')
+                return
+            }
+
+            setCookingPlans(Array.isArray((data as any)?.plans) ? (data as any).plans : [])
+        } catch (error) {
+            setCookingPlans([])
+            setCookingPlansError(error instanceof Error ? error.message : 'Failed to load cooking plans')
+        } finally {
+            setIsCookingPlansLoading(false)
+        }
+    }, [cookingRange, toLocalIsoDate])
+
+    useEffect(() => {
+        void refreshCookingPlansForRange()
+    }, [refreshCookingPlansForRange])
+
+    const cookingTotals = useMemo(() => {
+        const safeNumber = (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? value : 0)
+
+        let planned = 0
+        let cooked = 0
+
+        for (const plan of cookingPlans) {
+            const dishes = plan?.dishes && typeof plan.dishes === 'object' ? plan.dishes : {}
+            for (const qty of Object.values(dishes as Record<string, unknown>)) {
+                planned += safeNumber(qty)
+            }
+
+            const cookedStats = plan?.cookedStats && typeof plan.cookedStats === 'object' ? plan.cookedStats : {}
+            for (const dishStats of Object.values(cookedStats as Record<string, unknown>)) {
+                if (!dishStats || typeof dishStats !== 'object') continue
+                for (const qty of Object.values(dishStats as Record<string, unknown>)) {
+                    cooked += safeNumber(qty)
+                }
+            }
+        }
+
+        const remaining = Math.max(0, planned - cooked)
+        return { planned, cooked, remaining }
+    }, [cookingPlans])
+
+    const selectedCookingMenuNumber = useMemo(() => {
+        try {
+            const date = new Date(selectedCookingDateISO)
+            if (Number.isNaN(date.getTime())) return tomorrowMenuNumber
+            return getMenuNumber(date)
+        } catch {
+            return tomorrowMenuNumber
+        }
+    }, [selectedCookingDateISO, tomorrowMenuNumber])
 
     // Load tomorrow's menu on mount
     useEffect(() => {
@@ -794,8 +910,60 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
 
                         {/* Cooking Tab - Dishes to prepare for tomorrow */}
                         <TabsContent value="cooking" className="space-y-4">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <CalendarRangeSelector
+                                    value={cookingRange}
+                                    onChange={setCookingRange}
+                                    uiText={{
+                                        calendar: 'Period',
+                                        today: 'Today',
+                                        thisWeek: 'This week',
+                                        thisMonth: 'This month',
+                                        clearRange: 'Clear',
+                                        allTime: 'All time',
+                                    }}
+                                    locale={language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'}
+                                    className="min-w-[240px]"
+                                />
+
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <span>Planned: <span className="font-semibold text-foreground">{cookingTotals.planned}</span></span>
+                                    <span>·</span>
+                                    <span>Cooked: <span className="font-semibold text-emerald-600">{cookingTotals.cooked}</span></span>
+                                    <span>·</span>
+                                    <span>Remaining: <span className="font-semibold text-amber-600">{cookingTotals.remaining}</span></span>
+                                    {isCookingPlansLoading ? <Loader2 className="ml-1 h-3.5 w-3.5 animate-spin" /> : null}
+                                </div>
+                            </div>
+
+                            {cookingPlansError ? (
+                                <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                                    {cookingPlansError}
+                                </div>
+                            ) : null}
+
+                            {cookingRangeDays.length > 1 ? (
+                                <div className="flex gap-2 overflow-x-auto rounded-lg border bg-card p-2">
+                                    {cookingRangeDays.map((iso) => (
+                                        <button
+                                            key={iso}
+                                            type="button"
+                                            onClick={() => setSelectedCookingDateISO(iso)}
+                                            className={[
+                                                'shrink-0 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors',
+                                                iso === selectedCookingDateISO
+                                                    ? 'bg-primary text-primary-foreground border-primary'
+                                                    : 'bg-background hover:bg-muted/30 border-border',
+                                            ].join(' ')}
+                                        >
+                                            {iso}
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : null}
+
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-                                <strong>{t.warehouse.cookingInfo.replace('{number}', tomorrowMenuNumber.toString())}</strong>
+                                <strong>{t.warehouse.cookingInfo.replace('{number}', selectedCookingMenuNumber.toString())}</strong>
                             </div>
 
                             {/* Client distribution info */}
@@ -811,12 +979,12 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
 
                             {/* NEW: Detailed Cooking Manager */}
                             <CookingManager
-                                date={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]} // Tomorrow
-                                menuNumber={tomorrowMenuNumber}
+                                date={selectedCookingDateISO}
+                                menuNumber={selectedCookingMenuNumber}
                                 clientsByCalorie={clientsByCalorie}
                                 clients={allClients}
                                 orders={allOrders}
-                                onCook={fetchData} // Refresh inventory on cook
+                                onCook={() => { fetchData(); void refreshCookingPlansForRange(); }} // Refresh inventory + audit summary on cook
                                 orderInfo={{
                                     total: Object.values(clientsByCalorie).reduce((a, b) => a + b, 0),
                                     byCalorie: clientsByCalorie

@@ -11,28 +11,74 @@ export async function GET(request: Request) {
 
         const { searchParams } = new URL(request.url);
         const dateStr = searchParams.get('date');
+        const fromStr = searchParams.get('from');
+        const toStr = searchParams.get('to');
 
-        if (!dateStr) {
+        const toLocalDayBounds = (input: string) => {
+            const d = new Date(input);
+            if (Number.isNaN(d.getTime())) return null;
+            const start = new Date(d);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(d);
+            end.setHours(23, 59, 59, 999);
+            return { start, end };
+        };
+
+        // Backward-compatible single-day fetch
+        if (dateStr) {
+            const bounds = toLocalDayBounds(dateStr);
+            if (!bounds) {
+                return NextResponse.json({ error: 'Invalid date' }, { status: 400 });
+            }
+
+            const plan = await db.dailyCookingPlan.findFirst({
+                where: {
+                    date: {
+                        gte: bounds.start,
+                        lte: bounds.end,
+                    }
+                },
+            });
+
+            if (!plan) {
+                return NextResponse.json({ dishes: {}, cookedStats: {} });
+            }
+
+            return NextResponse.json({ dishes: plan.dishes, cookedStats: plan.cookedStats || {} });
+        }
+
+        // Period/range fetch for audits
+        if (!fromStr && !toStr) {
             return NextResponse.json({ error: 'Date is required' }, { status: 400 });
         }
 
-        const date = new Date(dateStr);
+        const fromBounds = fromStr ? toLocalDayBounds(fromStr) : null;
+        const toBounds = toStr ? toLocalDayBounds(toStr) : null;
 
-        // Find plan for this date
-        const plan = await db.dailyCookingPlan.findFirst({
+        if (fromStr && !fromBounds) return NextResponse.json({ error: 'Invalid from' }, { status: 400 });
+        if (toStr && !toBounds) return NextResponse.json({ error: 'Invalid to' }, { status: 400 });
+
+        const start = fromBounds?.start ?? toBounds!.start;
+        const end = toBounds?.end ?? fromBounds!.end;
+
+        const plans = await db.dailyCookingPlan.findMany({
             where: {
                 date: {
-                    gte: new Date(date.setHours(0, 0, 0, 0)),
-                    lt: new Date(date.setHours(23, 59, 59, 999)),
-                }
+                    gte: start,
+                    lte: end,
+                },
             },
+            orderBy: { date: 'asc' },
         });
 
-        if (!plan) {
-            return NextResponse.json({ dishes: {}, cookedStats: {} });
-        }
-
-        return NextResponse.json({ dishes: plan.dishes, cookedStats: plan.cookedStats || {} });
+        return NextResponse.json({
+            plans: plans.map((plan) => ({
+                date: plan.date.toISOString().split('T')[0],
+                menuNumber: plan.menuNumber,
+                dishes: plan.dishes,
+                cookedStats: plan.cookedStats || {},
+            })),
+        });
     } catch (error) {
         console.error('Error fetching cooking plan:', error);
         return NextResponse.json({ error: 'Failed to fetch cooking plan' }, { status: 500 });
