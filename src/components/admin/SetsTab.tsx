@@ -36,7 +36,7 @@ import {
     ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { MENUS, MEAL_TYPES, getDishImageUrl, type Dish, type Ingredient } from '@/lib/menuData';
+import { MENUS, MEAL_TYPES, type Dish, type Ingredient } from '@/lib/menuData';
 
 // Types for custom sets
 // Types for custom sets
@@ -613,14 +613,6 @@ export function SetsTab() {
                                                         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                                                             {group?.dishes.map((dish, idx) => (
                                                                 <div key={`${dish.dishId}-${idx}`} className="bg-card p-3 rounded-xl border border-border hover:shadow-md transition-all flex gap-3 group relative">
-                                                                    <div className="w-20 h-20 rounded-lg bg-slate-100 overflow-hidden shrink-0">
-                                                                        <img
-                                                                            src={getDishImageUrl(typeof dish.dishId === 'number' ? dish.dishId : parseInt(dish.dishId.toString()) || 0)}
-                                                                            alt={dish.dishName}
-                                                                            className="w-full h-full object-cover"
-                                                                            onError={(e) => (e.target as HTMLImageElement).src = '/dashboard/placeholder-dish.png'}
-                                                                        />
-                                                                    </div>
                                                                     <div className="flex-1 min-w-0">
                                                                         <div className="flex justify-between items-start">
                                                                             <div>

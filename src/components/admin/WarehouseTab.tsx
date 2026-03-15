@@ -150,7 +150,6 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     const [availableSets, setAvailableSets] = useState<any[]>([]);
 
     // Calculation state
-    const [selectedDates, setSelectedDates] = useState<string[]>([]);
     const [calculatedIngredients, setCalculatedIngredients] = useState<Map<string, { amount: number; unit: string }>>(new Map());
     const [shoppingList, setShoppingList] = useState<Map<string, { amount: number; unit: string }>>(new Map());
     const [calcRange, setCalcRange] = useState<DateRange | undefined>(undefined)
@@ -179,21 +178,21 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         return `${yyyy}-${mm}-${dd}`
     }, [])
 
-    useEffect(() => {
-        if (!calcRange?.from) return
+    const calcRangeDays = useMemo(() => {
+        if (!calcRange?.from) return [] as string[]
         const end = calcRange.to ?? calcRange.from
 
         const dates: string[] = []
         const cursor = new Date(calcRange.from)
         cursor.setHours(0, 0, 0, 0)
-        const limit = 45
 
+        const limit = 45 // keep UI & calculations bounded
         while (cursor.getTime() <= end.getTime() && dates.length < limit) {
             dates.push(cursor.toISOString().split('T')[0])
             cursor.setDate(cursor.getDate() + 1)
         }
 
-        setSelectedDates(dates)
+        return dates
     }, [calcRange])
 
     const cookingRangeDays = useMemo(() => {
@@ -768,15 +767,15 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         toast.success(auditUiText.menuCalcDone(tomorrowMenuNumber));
     };
 
-    const calculateForPeriod = () => {
-        if (selectedDates.length === 0) {
+    const calculateForPeriod = (dates: string[]) => {
+        if (dates.length === 0) {
             toast.error(auditUiText.selectDatesForCalc);
             return;
         }
 
         const totalIngredients = new Map<string, { amount: number; unit: string }>();
 
-        for (const dateStr of selectedDates) {
+        for (const dateStr of dates) {
             const date = new Date(dateStr);
             const menuNumber = getMenuNumber(date);
 
@@ -804,32 +803,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         const shopping = calculateShoppingList(totalIngredients, inventory);
         setShoppingList(shopping);
 
-        toast.success(auditUiText.periodCalcDone(selectedDates.length));
-    };
-
-    const handleDateToggle = (dateStr: string) => {
-        setSelectedDates(prev => {
-            if (prev.includes(dateStr)) {
-                return prev.filter(d => d !== dateStr);
-            }
-            return [...prev, dateStr];
-        });
-    };
-
-    // Generate next 14 days for selection
-    const getNext14Days = (): Array<{ date: string; label: string; menuNumber: number }> => {
-        const days: Array<{ date: string; label: string; menuNumber: number }> = [];
-        const today = new Date();
-        for (let i = 1; i <= 14; i++) {
-            const date = new Date(today);
-            date.setDate(today.getDate() + i);
-                days.push({
-                    date: date.toISOString().split('T')[0],
-                    label: date.toLocaleDateString(dateLocale, { weekday: 'short', day: 'numeric', month: 'short' }),
-                    menuNumber: getMenuNumber(date),
-                });
-            }
-        return days;
+        toast.success(auditUiText.periodCalcDone(dates.length));
     };
 
     const _mealTypeIcons: Record<keyof typeof MEAL_TYPES, string> = {
@@ -1094,11 +1068,6 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                         {t.warehouse.calcDaysInfo}
                                     </div>
 
-                                    <Button onClick={calculateForTomorrow} className="w-full gap-2" variant="default">
-                                        <Calculator className="w-4 h-4" />
-                                        {t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())}
-                                    </Button>
-
                                     <CalendarRangeSelector
                                         value={calcRange}
                                         onChange={setCalcRange}
@@ -1107,33 +1076,19 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                         className="w-full min-w-0"
                                     />
 
-                                    <div className="space-y-2">
-                                        <Label className="text-sm font-medium">{t.warehouse.selectCalculated}</Label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {getNext14Days().map(({ date, label, menuNumber }) => (
-                                                <button
-                                                    key={date}
-                                                    onClick={() => handleDateToggle(date)}
-                                                    className={`p-2 text-left rounded-lg border transition-colors ${selectedDates.includes(date)
-                                                        ? 'bg-primary text-white border-primary'
-                                                        : 'bg-card hover:bg-muted/30 border-border'
-                                                        }`}
-                                                >
-                                                    <div className="text-sm font-medium">{label}</div>
-                                                    <div className={`text-xs ${selectedDates.includes(date) ? 'text-white/80' : 'text-slate-500'
-                                                        }`}>
-                                                        {t.warehouse.menuFor} {menuNumber}
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                        {selectedDates.length > 0 && (
-                                            <Button onClick={calculateForPeriod} className="w-full gap-2 mt-2">
-                                                <Calculator className="w-4 h-4" />
-                                                {t.warehouse.calcForDays.replace('{count}', selectedDates.length.toString())}
-                                            </Button>
-                                        )}
-                                    </div>
+                                    <Button
+                                        onClick={() => {
+                                            if (calcRangeDays.length > 0) calculateForPeriod(calcRangeDays)
+                                            else calculateForTomorrow()
+                                        }}
+                                        className="w-full gap-2"
+                                        variant="default"
+                                    >
+                                        <Calculator className="w-4 h-4" />
+                                        {calcRangeDays.length > 0
+                                            ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
+                                            : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())}
+                                    </Button>
                                 </div>
 
                                 {/* Right: Results */}

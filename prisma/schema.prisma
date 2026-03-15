@@ -411,7 +411,6 @@ model Dish {
   description String?
   mealType    String
   ingredients Json     // [{ name: string, amount: number, unit: string }]
-  imageUrl    String?
   calorieMappings Json? // { "7": ["1200", "2000"], "8": ["1600"] }
   menus       Menu[]   // Relation to Menu
   createdAt   DateTime @default(now())

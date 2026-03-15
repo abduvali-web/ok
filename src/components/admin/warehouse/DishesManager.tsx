@@ -27,7 +27,6 @@ interface Dish {
     description?: string;
     mealType: string;
     ingredients: IngredientRef[];
-    imageUrl?: string;
     calorieMappings?: Record<string, string[]>; // { "7": ["1200", "2000"] }
     menuNumbers?: number[];
 }
@@ -163,8 +162,6 @@ export function DishesManager() {
                 addDishTitle: 'Добавить блюдо',
                 dishNamePlaceholder: 'Название блюда',
                 selectTypePlaceholder: 'Выберите тип',
-                imageUrlOptional: 'URL изображения (необязательно)',
-                imageUrlPlaceholder: 'https://example.com/image.jpg',
                 menusCalorieTitle: 'Меню и группы калорий (1-21)',
                 dayLabel: (day: number) => `День ${day}`,
                 selectDaysHint: 'Сначала выберите дни, затем группы калорий для каждого дня.',
@@ -205,8 +202,6 @@ export function DishesManager() {
                 addDishTitle: "Taom qo'shish",
                 dishNamePlaceholder: 'Taom nomi',
                 selectTypePlaceholder: 'Turini tanlang',
-                imageUrlOptional: 'Rasm URL (ixtiyoriy)',
-                imageUrlPlaceholder: 'https://example.com/image.jpg',
                 menusCalorieTitle: 'Menyu va kaloriya guruhlari (1-21)',
                 dayLabel: (day: number) => `Kun ${day}`,
                 selectDaysHint: "Avval kunlarni tanlang, so'ng har bir kun uchun kaloriya guruhlarini belgilang.",
@@ -246,8 +241,6 @@ export function DishesManager() {
             addDishTitle: 'Add Dish',
             dishNamePlaceholder: 'Dish Name',
             selectTypePlaceholder: 'Select type',
-            imageUrlOptional: 'Image URL (Optional)',
-            imageUrlPlaceholder: 'https://example.com/image.jpg',
             menusCalorieTitle: 'Menus & Calorie Groups (1-21)',
             dayLabel: (day: number) => `Day ${day}`,
             selectDaysHint: 'Select days and then specific calorie groups for each day.',
@@ -414,7 +407,6 @@ export function DishesManager() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>{uiText.image}</TableHead>
                             <TableHead>{uiText.name}</TableHead>
                             <TableHead>{uiText.mealType}</TableHead>
                             <TableHead>{uiText.calorieMappings}</TableHead>
@@ -426,26 +418,19 @@ export function DishesManager() {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8">
+                                <TableCell colSpan={6} className="text-center py-8">
                                     <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                                 </TableCell>
                             </TableRow>
                         ) : filteredDishes.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 text-slate-500">
+                                <TableCell colSpan={6} className="text-center py-8 text-slate-500">
                                     {uiText.noDishesFound}
                                 </TableCell>
                             </TableRow>
                         ) : (
                             filteredDishes.map((dish) => (
                                 <TableRow key={dish.id}>
-                                    <TableCell>
-                                        {dish.imageUrl && (
-                                            <div className="w-10 h-10 rounded-md overflow-hidden bg-slate-100">
-                                                <img src={dish.imageUrl} alt={dish.name} className="w-full h-full object-cover" />
-                                            </div>
-                                        )}
-                                    </TableCell>
                                     <TableCell className="font-medium">{dish.name}</TableCell>
                                     <TableCell>
                                         <span className="text-xs font-medium px-2 py-1 rounded bg-slate-100">
@@ -523,17 +508,6 @@ export function DishesManager() {
                                         ))}
                                     </SelectContent>
                                 </Select>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-4">
-                            <div className="space-y-2">
-                                <Label>{uiText.imageUrlOptional}</Label>
-                                <Input
-                                    value={currentDish.imageUrl || ''}
-                                    onChange={(e) => setCurrentDish({ ...currentDish, imageUrl: e.target.value })}
-                                    placeholder={uiText.imageUrlPlaceholder}
-                                />
                             </div>
                         </div>
 

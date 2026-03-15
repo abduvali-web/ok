@@ -9,7 +9,6 @@ interface DishInput {
     description?: string
     mealType: string
     ingredients: { name: string; amount: number; unit: string }[]
-    imageUrl?: string
     calorieMappings?: any // { "7": ["1200", "2000"], "8": ["1600"] }
     menuNumbers?: number[] // Array of menu numbers (1-21) this dish belongs to
 }
@@ -51,7 +50,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body: DishInput = await request.json()
-        const { name, description, mealType, ingredients, imageUrl, calorieMappings, menuNumbers } = body
+        const { name, description, mealType, ingredients, calorieMappings, menuNumbers } = body
 
         if (!name || !mealType) {
             return NextResponse.json({ error: 'Missing Required Fields' }, { status: 400 })
@@ -63,7 +62,6 @@ export async function POST(request: NextRequest) {
                 description,
                 mealType,
                 ingredients: ingredients || [], // Store as JSON
-                imageUrl,
                 calorieMappings,
                 menus: {
                     connect: menuNumbers?.map(num => ({ number: num })) || []
@@ -89,7 +87,7 @@ export async function PUT(request: NextRequest) {
         }
 
         const body: DishInput = await request.json()
-        const { id, name, description, mealType, ingredients, imageUrl, calorieMappings, menuNumbers } = body
+        const { id, name, description, mealType, ingredients, calorieMappings, menuNumbers } = body
 
         if (!id) {
             return NextResponse.json({ error: 'Missing ID' }, { status: 400 })
@@ -102,7 +100,6 @@ export async function PUT(request: NextRequest) {
                 description,
                 mealType,
                 ingredients: ingredients || [],
-                imageUrl,
                 calorieMappings,
                 menus: {
                     set: [], // Disconnect all first (simpler than managing connect/disconnect diffs)

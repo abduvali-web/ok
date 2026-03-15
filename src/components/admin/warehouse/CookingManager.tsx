@@ -16,7 +16,6 @@ interface Dish {
     name: string;
     description?: string;
     mealType: string;
-    imageUrl?: string;
     calorieMappings?: Record<string, string[]>;
 }
 
