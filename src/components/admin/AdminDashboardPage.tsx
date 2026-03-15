@@ -77,7 +77,6 @@ import { AdminsTab } from '@/components/admin/dashboard/tabs-content/AdminsTab'
 import { OrderModal } from '@/components/admin/dashboard/modals/OrderModal'
 import { DispatchMapPanel } from '@/components/admin/orders/DispatchMapPanel'
 import { FilterToolbar } from '@/components/admin/dashboard/shared/FilterToolbar'
-import { SectionMetrics } from '@/components/admin/dashboard/shared/SectionMetrics'
 import { TabEmptyState } from '@/components/admin/dashboard/shared/TabEmptyState'
 import { EntityStatusBadge } from '@/components/admin/dashboard/shared/EntityStatusBadge'
 import {
@@ -694,70 +693,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         .some((field) => String(field).toLowerCase().includes(normalizedSearch))
     })
   }, [clientSearchTerm, clients])
-
-  const orderMetrics = useMemo(() => {
-    const pendingCount = filteredOrders.filter((order) => order.orderStatus === 'PENDING').length
-    const inDeliveryCount = filteredOrders.filter((order) => order.orderStatus === 'IN_DELIVERY').length
-
-    return [
-      {
-        id: 'orders-visible',
-        label: 'Visible orders',
-        value: filteredOrders.length,
-        tone: 'primary' as const,
-      },
-      {
-        id: 'orders-selected',
-        label: 'Selected orders',
-        value: selectedOrders.size,
-        tone: selectedOrders.size > 0 ? ('warning' as const) : ('neutral' as const),
-      },
-      {
-        id: 'orders-pending',
-        label: 'Pending',
-        value: pendingCount,
-        tone: 'warning' as const,
-      },
-      {
-        id: 'orders-delivery',
-        label: 'In delivery',
-        value: inDeliveryCount,
-        tone: 'success' as const,
-      },
-    ]
-  }, [filteredOrders, selectedOrders.size])
-
-  const clientMetrics = useMemo(() => {
-    const activeCount = filteredClients.filter((client) => client.isActive).length
-    const pausedCount = filteredClients.length - activeCount
-
-    return [
-      {
-        id: 'clients-visible',
-        label: 'Visible clients',
-        value: filteredClients.length,
-        tone: 'primary' as const,
-      },
-      {
-        id: 'clients-selected',
-        label: 'Selected clients',
-        value: selectedClients.size,
-        tone: selectedClients.size > 0 ? ('warning' as const) : ('neutral' as const),
-      },
-      {
-        id: 'clients-active',
-        label: 'Active',
-        value: activeCount,
-        tone: 'success' as const,
-      },
-      {
-        id: 'clients-paused',
-        label: 'Paused',
-        value: pausedCount,
-        tone: 'danger' as const,
-      },
-    ]
-  }, [filteredClients, selectedClients.size])
 
   const selectedClientsSnapshot = useMemo(
     () => clients.filter((client) => selectedClients.has(client.id)),
@@ -2265,32 +2200,27 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
           {/* Orders Tab */}
           <TabsContent value="orders" className="space-y-4">
             <Card className="glass-card">
-              <CardHeader>
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <CardHeader className="space-y-4 pb-3">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                   <div>
                     <CardTitle className="text-xl font-semibold">{t.admin.manageOrders}</CardTitle>
                     <CardDescription>
                       {t.admin.manageOrdersDesc}
                     </CardDescription>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {/* Unified action panel */}
-                <div className="mb-4 rounded-lg border bg-muted/20 p-3">
-                  <div className="grid gap-2 lg:grid-cols-[auto_auto_auto_auto_1fr]">
+                  <div className="flex w-full flex-wrap items-center justify-end gap-2 lg:w-auto">
                     <Button onClick={() => setIsCreateOrderModalOpen(true)} className="h-9 gap-2 px-3">
                       <Plus className="w-4 h-4" />
                       {t.admin.createOrder}
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="destructive"
                       className="h-9 gap-2 px-3"
                       onClick={() => setIsDeleteOrdersDialogOpen(true)}
                       disabled={selectedOrders.size === 0 || isDeletingOrders}
                     >
                       <Trash2 className="w-4 h-4" />
-                      {isDeletingOrders ? t.common.loading : t.admin.delete}
+                      {isDeletingOrders ? t.common.loading : `${t.admin.deleteSelected} (${selectedOrders.size})`}
                     </Button>
                     <Button
                       variant="secondary"
@@ -2312,14 +2242,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       locale={dateLocale}
                       profileUiText={profileUiText}
                     />
-                    <div className="flex items-center justify-end text-xs text-muted-foreground">
-                      {selectedOrders.size > 0 ? `${selectedOrders.size} selected` : 'No selection'}
-                    </div>
                   </div>
-
-                  {/* Calendar removed from here and moved inline above */ }
                 </div>
-
+              </CardHeader>
+              <CardContent>
                 {/* Filters Panel */}
                 {
                   false && showFilters && (
@@ -2522,8 +2448,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   )
                 }
 
-                <div className="mb-3 space-y-3">
-                  <SectionMetrics items={orderMetrics} columnsClassName="sm:grid-cols-2 xl:grid-cols-4" />
+                <div className="mb-3">
                   <FilterToolbar
                     inputRef={searchInputRef}
                     searchValue={searchTerm}
@@ -2954,8 +2879,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     </Dialog>
               </CardHeader>
               <CardContent>
-                <div className="mb-4 space-y-3">
-                  <SectionMetrics items={clientMetrics} columnsClassName="sm:grid-cols-2 xl:grid-cols-4" />
+                <div className="mb-4">
                   <FilterToolbar
                     searchValue={clientSearchTerm}
                     onSearchChange={setClientSearchTerm}
