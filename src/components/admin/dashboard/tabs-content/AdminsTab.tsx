@@ -406,8 +406,8 @@ export function AdminsTab({
                 )}
                 {!isLowAdminView && (
                   <>
-                    <Button onClick={openCreateModal} className="h-9 gap-2 px-3">
-                      <Plus className="size-4" />
+                    <Button onClick={openCreateModal} className="h-9">
+                      <Plus className="mr-2 size-4" />
                       {t.admin.create}
                     </Button>
                     <Button
@@ -521,7 +521,7 @@ export function AdminsTab({
                               onClick={() => openEditModal(admin)}
                               disabled={Boolean(pendingAction) || isBulkMutating}
                             >
-                              <Edit className="size-4" />
+                              <Edit className="mr-2 size-4" />
                               {t.admin.edit}
                             </Button>
                           </TableCell>

@@ -2199,36 +2199,35 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
           {/* Orders Tab */}
           <TabsContent value="orders" className="space-y-4">
-            <Card className="glass-card">
+            <Card className="border bg-card">
               <CardHeader className="space-y-4 pb-3">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                   <div>
-                    <CardTitle className="text-xl font-semibold">{t.admin.manageOrders}</CardTitle>
+                    <CardTitle>{t.admin.manageOrders}</CardTitle>
                     <CardDescription>
                       {t.admin.manageOrdersDesc}
                     </CardDescription>
                   </div>
                   <div className="flex w-full flex-wrap items-center justify-end gap-2 lg:w-auto">
-                    <Button onClick={() => setIsCreateOrderModalOpen(true)} className="h-9 gap-2 px-3">
-                      <Plus className="w-4 h-4" />
+                    <Button onClick={() => setIsCreateOrderModalOpen(true)} className="h-9">
+                      <Plus className="mr-2 size-4" />
                       {t.admin.createOrder}
                     </Button>
                     <Button
                       variant="destructive"
-                      className="h-9 gap-2 px-3"
+                      className="h-9"
                       onClick={() => setIsDeleteOrdersDialogOpen(true)}
                       disabled={selectedOrders.size === 0 || isDeletingOrders}
                     >
-                      <Trash2 className="w-4 h-4" />
                       {isDeletingOrders ? t.common.loading : `${t.admin.deleteSelected} (${selectedOrders.size})`}
                     </Button>
                     <Button
-                      variant="secondary"
-                      className="h-9 gap-2 px-3"
+                      variant="outline"
+                      className="h-9"
                       onClick={() => setIsDispatchOpen(true)}
                       disabled={!selectedDate}
                     >
-                      <DispatchActionIcon className="w-4 h-4" />
+                      <DispatchActionIcon className="mr-2 size-4" />
                       {dispatchActionLabel}
                     </Button>
                     <CalendarDateSelector
@@ -2505,9 +2504,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
           {/* Clients Tab */}
           <TabsContent value="clients" className="space-y-6">
-            <Card className="glass-card">
-              <CardHeader>
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <Card className="border bg-card">
+              <CardHeader className="space-y-4 pb-3">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                   <div>
                     <CardTitle>{t.admin.manageClients}</CardTitle>
                     <CardDescription>
@@ -2560,7 +2559,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         setIsCreateClientModalOpen(true)
                       }}
                     >
-                      <Plus className="w-4 h-4 mr-2" />
+                      <Plus className="mr-2 size-4" />
                       {profileUiText.createClient}
                     </Button>
                     <Button
@@ -2573,7 +2572,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       }
                       disabled={selectedClients.size === 0 || isMutatingClients}
                     >
-                      {shouldPauseSelectedClients ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+                      {shouldPauseSelectedClients ? <Pause className="mr-2 size-4" /> : <Play className="mr-2 size-4" />}
                       {isMutatingClients ? t.common.loading : shouldPauseSelectedClients ? t.admin.pause : t.admin.resume}
                     </Button>
                     <Button
@@ -2898,12 +2897,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 </div>
 {/* Clients Table */}
                 {/* Desktop View */}
-                <div className="hidden md:block border rounded-lg overflow-hidden">
+                <div className="hidden md:block rounded-md border">
                   <div className="max-h-96 overflow-y-auto">
                     <table className="w-full">
                       <thead className="bg-muted sticky top-0">
                         <tr>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-12">
+                          <th className="w-12 px-4 py-2 text-left text-xs font-medium text-muted-foreground">
                             <input
                               type="checkbox"
                               className="rounded border-border"
@@ -2917,30 +2916,30 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                               checked={selectedClients.size === filteredClients.length && filteredClients.length > 0}
                             />
                           </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Name</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Nickname</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Phone</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Address</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Calories</th>
-                          <th className="px-4 py-2 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Orders</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Delivery days</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Name</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Nickname</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Phone</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Address</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Calories</th>
+                          <th className="px-4 py-2 text-center text-xs font-medium text-muted-foreground">Orders</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Delivery days</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
                             Status / Auto
                           </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
                             Notes
                           </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
                             Created
                           </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
                             Actions
                           </th>
                         </tr>
                       </thead>
                       <tbody className="bg-card divide-y divide-border">
                         {filteredClients.map((client) => (
-                            <tr key={client.id} className="hover:bg-muted">
+                            <tr key={client.id} className="hover:bg-muted/50">
                               <td className="px-4 py-2 whitespace-nowrap text-sm">
                                 <input
                                   type="checkbox"
@@ -2949,19 +2948,19 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                   onChange={() => handleToggleClientSelection(client.id)}
                                 />
                               </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-slate-900">
+                              <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
                                 {client.name}
                               </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-500">
+                              <td className="px-4 py-2 whitespace-nowrap text-sm text-muted-foreground">
                                 {client.nickName || '-'}
                               </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
+                              <td className="px-4 py-2 whitespace-nowrap text-sm">
                                 {client.phone}
                               </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
+                              <td className="px-4 py-2 whitespace-nowrap text-sm">
                                 {client.address}
                               </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
+                              <td className="px-4 py-2 whitespace-nowrap text-sm">
                                 {client.calories} kcal
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-center">
@@ -2982,17 +2981,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                   )
                                 })()}
                               </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
+                              <td className="px-4 py-2 whitespace-nowrap text-sm">
                                 <div className="text-xs">
-                                  {client.deliveryDays?.monday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Mon</span>}
-                                  {client.deliveryDays?.tuesday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Tue</span>}
-                                  {client.deliveryDays?.wednesday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Wed</span>}
-                                  {client.deliveryDays?.thursday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Thu</span>}
-                                  {client.deliveryDays?.friday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Fri</span>}
-                                  {client.deliveryDays?.saturday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Sat</span>}
-                                  {client.deliveryDays?.sunday && <span className="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">Sun</span>}
+                                  {client.deliveryDays?.monday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Mon</span>}
+                                  {client.deliveryDays?.tuesday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Tue</span>}
+                                  {client.deliveryDays?.wednesday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Wed</span>}
+                                  {client.deliveryDays?.thursday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Thu</span>}
+                                  {client.deliveryDays?.friday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Fri</span>}
+                                  {client.deliveryDays?.saturday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Sat</span>}
+                                  {client.deliveryDays?.sunday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Sun</span>}
                                   {(!client.deliveryDays || Object.values(client.deliveryDays).every(day => !day)) && (
-                                    <span className="text-slate-400">-</span>
+                                    <span className="text-muted-foreground">-</span>
                                   )}
                                 </div>
                               </td>
@@ -3000,27 +2999,28 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 <div className="flex flex-col gap-1">
                                   <EntityStatusBadge
                                     isActive={client.isActive}
-                                    activeLabel="Active"
-                                    inactiveLabel="Paused"
+                                    activeLabel={t.admin.table.active}
+                                    inactiveLabel={t.admin.table.paused}
                                     inactiveTone="danger"
                                     showDot
                                     onClick={() => handleToggleClientStatus(client.id, client.isActive)}
                                   />
                                 </div>
                               </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
+                              <td className="px-4 py-2 whitespace-nowrap text-sm">
                                 {client.specialFeatures || '-'}
                               </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
+                              <td className="px-4 py-2 whitespace-nowrap text-sm">
                                 {new Date(client.createdAt).toLocaleDateString('en-GB')}
                               </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-900">
+                              <td className="px-4 py-2 whitespace-nowrap text-sm">
                                 <Button
-                                  variant="ghost"
+                                  variant="outline"
                                   size="icon"
+                                  className="h-8 w-8"
                                   onClick={() => handleEditClient(client)}
                                 >
-                                  <Edit className="w-4 h-4" />
+                                  <Edit className="size-4" />
                                 </Button>
                               </td>
                             </tr>
@@ -3049,8 +3049,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     />
                   )}
                   {filteredClients.map((client) => (
-                      <Card key={client.id} className="overflow-hidden">
-                        <CardHeader className="pb-2 bg-muted/30">
+                      <Card key={client.id} className="border bg-card">
+                        <CardHeader className="pb-2">
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-2">
                               <Checkbox
@@ -3064,8 +3064,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             </div>
                             <EntityStatusBadge
                               isActive={client.isActive}
-                              activeLabel="ÐÐºÑ‚Ð¸Ð²ÐµÐ½"
-                              inactiveLabel="ÐŸÑ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½"
+                              activeLabel={t.admin.table.active}
+                              inactiveLabel={t.admin.table.paused}
                               inactiveTone="danger"
                               showDot
                               onClick={() => handleToggleClientStatus(client.id, client.isActive)}
@@ -3074,7 +3074,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         </CardHeader>
                         <CardContent className="pt-4 space-y-3">
                           <div className="flex items-start gap-3">
-                            <MapPin className="w-4 h-4 mt-1 text-muted-foreground" />
+                            <MapPin className="mt-1 size-4 text-muted-foreground" />
                             <div className="text-sm">{client.address}</div>
                           </div>
 
@@ -3085,13 +3085,13 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           <div className="text-xs text-muted-foreground">
                             <div className="font-medium mb-1">Ð”Ð½Ð¸ Ð´Ð¾ÑÑ‚Ð°Ð²ÐºÐ¸:</div>
                             <div className="flex flex-wrap gap-1">
-                              {client.deliveryDays?.monday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">ÐŸÐ½</span>}
-                              {client.deliveryDays?.tuesday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Ð’Ñ‚</span>}
-                              {client.deliveryDays?.wednesday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Ð¡Ñ€</span>}
-                              {client.deliveryDays?.thursday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Ð§Ñ‚</span>}
-                              {client.deliveryDays?.friday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">ÐŸÑ‚</span>}
-                              {client.deliveryDays?.saturday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Ð¡Ð±</span>}
-                              {client.deliveryDays?.sunday && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">Ð’Ñ</span>}
+                              {client.deliveryDays?.monday && <span className="rounded-sm border bg-muted px-1.5 py-0.5 text-muted-foreground">ÐŸÐ½</span>}
+                              {client.deliveryDays?.tuesday && <span className="rounded-sm border bg-muted px-1.5 py-0.5 text-muted-foreground">Ð’Ñ‚</span>}
+                              {client.deliveryDays?.wednesday && <span className="rounded-sm border bg-muted px-1.5 py-0.5 text-muted-foreground">Ð¡Ñ€</span>}
+                              {client.deliveryDays?.thursday && <span className="rounded-sm border bg-muted px-1.5 py-0.5 text-muted-foreground">Ð§Ñ‚</span>}
+                              {client.deliveryDays?.friday && <span className="rounded-sm border bg-muted px-1.5 py-0.5 text-muted-foreground">ÐŸÑ‚</span>}
+                              {client.deliveryDays?.saturday && <span className="rounded-sm border bg-muted px-1.5 py-0.5 text-muted-foreground">Ð¡Ð±</span>}
+                              {client.deliveryDays?.sunday && <span className="rounded-sm border bg-muted px-1.5 py-0.5 text-muted-foreground">Ð’Ñ</span>}
                             </div>
                           </div>
                         </CardContent>
