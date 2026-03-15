@@ -2877,7 +2877,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 <div className="hidden md:block rounded-md border">
                   <div className="max-h-96 overflow-y-auto">
                     <table className="w-full">
-                      <thead className="bg-muted sticky top-0">
+                      <thead className="sticky top-0 bg-card">
                         <tr>
                           <th className="w-12 px-4 py-2 text-left text-xs font-medium text-muted-foreground">
                             <input
