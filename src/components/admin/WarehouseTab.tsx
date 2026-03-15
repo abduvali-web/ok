@@ -31,6 +31,8 @@ import {
 
 import { IngredientsManager } from './warehouse/IngredientsManager';
 import { CookingManager } from './warehouse/CookingManager'; // Integrated
+import { CalendarRangeSelector } from '@/components/admin/dashboard/shared/CalendarRangeSelector'
+import type { DateRange } from 'react-day-picker'
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SetsTab } from './SetsTab';
 import { SectionMetrics } from '@/components/admin/dashboard/shared/SectionMetrics';
@@ -41,7 +43,7 @@ interface WarehouseTabProps {
 }
 
 export function WarehouseTab({ className }: WarehouseTabProps) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [activeSubTab, setActiveSubTab] = useState('cooking');
     const [tomorrowMenu, setTomorrowMenu] = useState<DailyMenu | undefined>(undefined);
     const [tomorrowMenuNumber, setTomorrowMenuNumber] = useState<number>(0);
@@ -65,6 +67,24 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     const [selectedDates, setSelectedDates] = useState<string[]>([]);
     const [calculatedIngredients, setCalculatedIngredients] = useState<Map<string, { amount: number; unit: string }>>(new Map());
     const [shoppingList, setShoppingList] = useState<Map<string, { amount: number; unit: string }>>(new Map());
+    const [calcRange, setCalcRange] = useState<DateRange | undefined>(undefined)
+
+    useEffect(() => {
+        if (!calcRange?.from) return
+        const end = calcRange.to ?? calcRange.from
+
+        const dates: string[] = []
+        const cursor = new Date(calcRange.from)
+        cursor.setHours(0, 0, 0, 0)
+        const limit = 45
+
+        while (cursor.getTime() <= end.getTime() && dates.length < limit) {
+            dates.push(cursor.toISOString().split('T')[0])
+            cursor.setDate(cursor.getDate() + 1)
+        }
+
+        setSelectedDates(dates)
+    }, [calcRange])
 
     // Load tomorrow's menu on mount
     useEffect(() => {
@@ -831,6 +851,21 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                         <Calculator className="w-4 h-4" />
                                         {t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())}
                                     </Button>
+
+                                    <CalendarRangeSelector
+                                        value={calcRange}
+                                        onChange={setCalcRange}
+                                        uiText={{
+                                            calendar: 'Period',
+                                            today: 'Today',
+                                            thisWeek: 'This week',
+                                            thisMonth: 'This month',
+                                            clearRange: 'Clear',
+                                            allTime: 'All time',
+                                        }}
+                                        locale={language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'}
+                                        className="w-full min-w-0"
+                                    />
 
                                     <div className="space-y-2">
                                         <Label className="text-sm font-medium">{t.warehouse.selectCalculated}</Label>

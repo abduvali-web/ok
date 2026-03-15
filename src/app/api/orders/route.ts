@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const date = searchParams.get('date')
+    const from = searchParams.get('from')
+    const to = searchParams.get('to')
     const filtersParam = searchParams.get('filters')
     let filters: any = {}
     if (filtersParam) {
@@ -82,6 +84,22 @@ export async function GET(request: NextRequest) {
           const orderDate = order.deliveryDate ? new Date(order.deliveryDate).toISOString().split('T')[0] : new Date(order.createdAt).toISOString().split('T')[0]
           return orderDate === date
         })
+      } else if (from || to) {
+        const isIsoDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value)
+        const fromIso = from && isIsoDate(from) ? from : null
+        const toIso = to && isIsoDate(to) ? to : null
+
+        if (fromIso || toIso) {
+          filteredOrders = filteredOrders.filter(order => {
+            const orderDate = order.deliveryDate
+              ? new Date(order.deliveryDate).toISOString().split('T')[0]
+              : new Date(order.createdAt).toISOString().split('T')[0]
+
+            if (fromIso && orderDate < fromIso) return false
+            if (toIso && orderDate > toIso) return false
+            return true
+          })
+        }
       }
       if (Object.keys(filters).length > 0) {
         filteredOrders = filteredOrders.filter(order => {

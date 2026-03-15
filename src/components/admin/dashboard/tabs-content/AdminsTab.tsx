@@ -181,7 +181,7 @@ export function AdminsTab({
         if (!stats[order.courierId]) stats[order.courierId] = { delivered: 0, notDelivered: 0 }
         
         const status = order.orderStatus
-        if (status === 'SUCCESSFUL') {
+        if (status === 'DELIVERED') {
           stats[order.courierId].delivered++
         } else if (status !== 'NEW' && status !== 'CANCELED') {
           stats[order.courierId].notDelivered++

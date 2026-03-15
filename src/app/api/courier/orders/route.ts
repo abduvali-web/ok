@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const dateParam = searchParams.get('date')
+    const fromParam = searchParams.get('from')
+    const toParam = searchParams.get('to')
 
     let dateFilter: Record<string, any> = {}
     if (dateParam) {
@@ -26,6 +28,30 @@ export async function GET(request: NextRequest) {
           gte: start,
           lte: end,
         },
+      }
+    } else if (fromParam || toParam) {
+      const deliveryDate: Record<string, Date> = {}
+
+      if (fromParam) {
+        const from = new Date(fromParam)
+        if (!Number.isNaN(from.getTime())) {
+          const start = new Date(from)
+          start.setHours(0, 0, 0, 0)
+          deliveryDate.gte = start
+        }
+      }
+
+      if (toParam) {
+        const to = new Date(toParam)
+        if (!Number.isNaN(to.getTime())) {
+          const end = new Date(to)
+          end.setHours(23, 59, 59, 999)
+          deliveryDate.lte = end
+        }
+      }
+
+      if (Object.keys(deliveryDate).length > 0) {
+        dateFilter = { deliveryDate }
       }
     }
 

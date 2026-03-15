@@ -2246,6 +2246,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       applySelectedDate={applySelectedDate}
                       shiftSelectedDate={shiftSelectedDate}
                       selectedDateLabel={selectedDateLabel}
+                      showShiftButtons={false}
                       profileUiText={profileUiText}
                     />
                     <div className="flex items-center justify-end text-xs text-muted-foreground">
@@ -3000,15 +3001,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                   const clientOrders = orders.filter(o => o.customerPhone === client.phone)
                                   if (clientOrders.length === 0) return <span className="text-muted-foreground">-</span>
                                   
-                                  const successful = clientOrders.filter(o => o.orderStatus === 'SUCCESSFUL').length
-                                  const pending = clientOrders.filter(o => o.orderStatus === 'NEW').length
-                                  const failed = clientOrders.length - successful - pending
+                                  const delivered = clientOrders.filter(o => o.orderStatus === 'DELIVERED').length
+                                  const active = clientOrders.filter(o => ['NEW', 'PENDING', 'IN_PROCESS', 'IN_DELIVERY', 'PAUSED'].includes(o.orderStatus)).length
+                                  const failed = clientOrders.length - delivered - active
                                   
                                   return (
                                     <div className="flex items-center justify-center gap-2 text-xs">
-                                      {successful > 0 && <span className="text-emerald-600 font-bold" title="Delivered">{successful}</span>}
+                                      {delivered > 0 && <span className="text-emerald-600 font-bold" title="Delivered">{delivered}</span>}
                                       {failed > 0 && <span className="text-rose-600 font-bold" title="Failed/Not Delivered">{failed}</span>}
-                                      {pending > 0 && <span className="text-amber-500 font-bold" title="New/Pending">{pending}</span>}
+                                      {active > 0 && <span className="text-amber-500 font-bold" title="Active">{active}</span>}
                                     </div>
                                   )
                                 })()}

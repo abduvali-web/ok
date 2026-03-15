@@ -6,8 +6,10 @@ import { AlertCircle, CheckCircle2, Clock3, Loader2, ReceiptText, Search, Truck 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SiteClientNav, SitePageSurface, SitePanel, SitePublicHeader } from '@/components/site/SiteScaffold'
+import { CalendarRangeSelector } from '@/components/admin/dashboard/shared/CalendarRangeSelector'
 import { useSiteConfig } from '@/hooks/useSiteConfig'
 import { makeClientSiteHref } from '@/lib/site-urls'
+import type { DateRange } from 'react-day-picker'
 
 type HistoryOrder = {
   id: string
@@ -25,9 +27,23 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
 
   const [isLoading, setIsLoading] = useState(true)
   const [orders, setOrders] = useState<HistoryOrder[]>([])
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+    const today = new Date()
+    const from = new Date(today.getFullYear(), today.getMonth(), 1)
+    from.setHours(0, 0, 0, 0)
+    today.setHours(0, 0, 0, 0)
+    return { from, to: today }
+  })
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'DELIVERED' | 'FAILED'>('ALL')
   const [searchTerm, setSearchTerm] = useState('')
   const [sortDirection, setSortDirection] = useState<'LATEST' | 'OLDEST'>('LATEST')
+
+  const getLocalIsoDate = (d: Date) => {
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    return `${yyyy}-${mm}-${dd}`
+  }
 
   useEffect(() => {
     if (siteLoading) return
@@ -36,7 +52,13 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
       setIsLoading(true)
       try {
         const token = localStorage.getItem('customerToken')
-        const response = await fetch('/api/customers/orders', {
+        const queryParams = new URLSearchParams()
+        if (dateRange?.from) {
+          queryParams.set('from', getLocalIsoDate(dateRange.from))
+          queryParams.set('to', getLocalIsoDate(dateRange.to ?? dateRange.from))
+        }
+        const url = `/api/customers/orders${queryParams.size ? `?${queryParams.toString()}` : ''}`
+        const response = await fetch(url, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         })
 
@@ -56,7 +78,7 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
     }
 
     void load()
-  }, [params.subdomain, router, siteLoading])
+  }, [dateRange, params.subdomain, router, siteLoading])
 
   const deliveredCount = useMemo(
     () => orders.filter((order) => order.orderStatus === 'DELIVERED').length,
@@ -152,6 +174,20 @@ export default function ClientHistoryPage({ params }: { params: { subdomain: str
           </div>
           <div className="flex gap-2">
             <SiteClientNav subdomain={params.subdomain} currentPath={makeClientSiteHref(params.subdomain, '/history')} />
+            <CalendarRangeSelector
+              value={dateRange}
+              onChange={setDateRange}
+              uiText={{
+                calendar: 'Period',
+                today: 'Today',
+                thisWeek: 'This week',
+                thisMonth: 'This month',
+                clearRange: 'Clear',
+                allTime: 'All time',
+              }}
+              locale="en-US"
+              className="min-w-[220px]"
+            />
             <Button variant="outline" className="rounded-md" onClick={() => router.push(makeClientSiteHref(params.subdomain, '/client'))}>
               Back to client
             </Button>

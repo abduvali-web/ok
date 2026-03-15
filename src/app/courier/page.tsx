@@ -33,6 +33,8 @@ import { ChatTab } from '@/components/chat/ChatTab'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { RouteOptimizeButton } from '@/components/admin/RouteOptimizeButton'
 import { extractCoordsFromText } from '@/lib/geo'
+import { CalendarRangeSelector } from '@/components/admin/dashboard/shared/CalendarRangeSelector'
+import type { DateRange } from 'react-day-picker'
 
 const CourierMap = dynamic(() => import('@/components/courier/CourierMap'), {
   ssr: false,
@@ -67,7 +69,14 @@ interface Order {
 
 export default function CourierPage() {
   const { t, language } = useLanguage()
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return { from: today, to: today }
+  })
+  const dateRangeRef = useRef<DateRange | undefined>(undefined)
   const [orders, setOrders] = useState<Order[]>([])
+  const [allOrders, setAllOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | undefined>(undefined)
@@ -83,6 +92,11 @@ export default function CourierPage() {
   const lastSentLocationRef = useRef<{ lat: number; lng: number; at: number } | null>(null)
   const isSendingLocationRef = useRef(false)
   const watchIdRef = useRef<number | null>(null)
+  const didInitialRangeFetchRef = useRef(false)
+
+  useEffect(() => {
+    dateRangeRef.current = dateRange
+  }, [dateRange])
 
   const uiText = useMemo(
     () => ({
@@ -105,12 +119,19 @@ export default function CourierPage() {
         noOrdersInStatus: 'No orders in this status',
         tryAnotherStatus: 'Try another status filter or refresh queue.',
         delivered: 'Delivered',
+        notDelivered: 'Not delivered',
         notes: 'Notes',
         details: 'Details',
         new: 'New',
         note: 'Note',
         quantityUnit: 'pcs',
         amountReceived: 'Amount received from client',
+        calendar: 'Calendar',
+        today: 'Today',
+        thisWeek: 'This week',
+        thisMonth: 'This month',
+        clearRange: 'Clear',
+        allTime: 'All time',
       },
       uz: {
         notSynced: 'Sinxronlanmagan',
@@ -131,12 +152,19 @@ export default function CourierPage() {
         noOrdersInStatus: 'Bu holatda buyurtmalar yoq',
         tryAnotherStatus: 'Boshqa holatni tanlang yoki yangilang.',
         delivered: 'Yetkazildi',
+        notDelivered: 'Yetkazilmagan',
         notes: 'Izohlar',
         details: 'Batafsil',
         new: 'Yangi',
         note: 'Izoh',
         quantityUnit: 'dona',
         amountReceived: 'Mijozdan olingan summa',
+        calendar: 'Kalendar',
+        today: 'Bugun',
+        thisWeek: 'Shu hafta',
+        thisMonth: 'Shu oy',
+        clearRange: 'Tozalash',
+        allTime: 'Barcha vaqt',
       },
       ru: {
         notSynced: 'Еще не синхронизировано',
@@ -157,12 +185,19 @@ export default function CourierPage() {
         noOrdersInStatus: 'Нет заказов с этим статусом',
         tryAnotherStatus: 'Выберите другой статус или обновите список.',
         delivered: 'Доставлен',
+        notDelivered: 'Не доставлено',
         notes: 'Комментарий',
         details: 'Детали',
         new: 'Новый',
         note: 'Примечание',
         quantityUnit: 'шт',
         amountReceived: 'Получено от клиента',
+        calendar: 'Календарь',
+        today: 'Сегодня',
+        thisWeek: 'Эта неделя',
+        thisMonth: 'Этот месяц',
+        clearRange: 'Сбросить',
+        allTime: 'За все время',
       },
     })[language],
     [language]
@@ -186,6 +221,19 @@ export default function CourierPage() {
   const inDeliveryOrdersCount = useMemo(
     () => orders.filter((order) => order.orderStatus === 'IN_DELIVERY').length,
     [orders]
+  )
+
+  const deliveredOrdersCount = useMemo(
+    () => allOrders.filter((order) => order.orderStatus === 'DELIVERED').length,
+    [allOrders]
+  )
+
+  const notDeliveredOrdersCount = useMemo(
+    () =>
+      allOrders.filter((order) =>
+        order.orderStatus === 'FAILED' || order.orderStatus === 'CANCELED' || order.orderStatus === 'CANCELLED'
+      ).length,
+    [allOrders]
   )
 
   const lastSyncLabel = useMemo(
@@ -379,7 +427,10 @@ export default function CourierPage() {
 
     try {
       const today = getLocalIsoDate()
-      const response = await fetch(`/api/courier/orders?date=${encodeURIComponent(today)}`)
+      const range = dateRangeRef.current
+      const fromIso = range?.from ? getLocalIsoDate(range.from) : today
+      const toIso = range?.from ? getLocalIsoDate(range.to ?? range.from) : today
+      const response = await fetch(`/api/courier/orders?from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`)
 
       if (response.status === 401) {
         window.location.href = '/login'
@@ -413,6 +464,7 @@ export default function CourierPage() {
               order.orderStatus === 'PENDING' || order.orderStatus === 'IN_DELIVERY' || order.orderStatus === 'PAUSED'
           )
           .sort((a: Order, b: Order) => (a.orderNumber ?? 0) - (b.orderNumber ?? 0))
+        setAllOrders(normalized)
         setOrders(activeAndPendingOrders)
         setLastOrdersSyncAt(new Date())
 
@@ -435,6 +487,15 @@ export default function CourierPage() {
       setIsRefreshing(false)
     }
   }
+
+  useEffect(() => {
+    if (!didInitialRangeFetchRef.current) {
+      didInitialRangeFetchRef.current = true
+      return
+    }
+
+    void fetchOrders(true)
+  }, [dateRange])
 
   const handleOpenOrder = (order: Order) => {
     setSelectedOrder(order)
@@ -742,15 +803,45 @@ export default function CourierPage() {
 
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <Package className="w-5 h-5 text-primary" />
-                  {t.courier.todayOrders} ({orderedVisibleOrders.length}
-                  {orderStatusFilter !== 'ALL' ? `/${orders.length}` : ''})
-                </h2>
-                <Button variant="outline" size="sm" className="rounded-md" onClick={() => fetchOrders(true)} disabled={isRefreshing}>
-                  <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  {uiText.refresh}
-                </Button>
+                <div className="min-w-0">
+                  <h2 className="text-lg font-semibold flex items-center gap-2">
+                    <Package className="w-5 h-5 text-primary" />
+                    {t.courier.todayOrders} ({orderedVisibleOrders.length}
+                    {orderStatusFilter !== 'ALL' ? `/${orders.length}` : ''})
+                  </h2>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span>
+                      {uiText.delivered}:{' '}
+                      <span className="font-semibold text-emerald-600">{deliveredOrdersCount}</span>
+                    </span>
+                    <span>·</span>
+                    <span>
+                      {uiText.notDelivered}:{' '}
+                      <span className="font-semibold text-rose-600">{notDeliveredOrdersCount}</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <CalendarRangeSelector
+                    value={dateRange}
+                    onChange={setDateRange}
+                    uiText={{
+                      calendar: uiText.calendar,
+                      today: uiText.today,
+                      thisWeek: uiText.thisWeek,
+                      thisMonth: uiText.thisMonth,
+                      clearRange: uiText.clearRange,
+                      allTime: uiText.allTime,
+                    }}
+                    locale={language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'}
+                    className="min-w-[220px]"
+                  />
+                  <Button variant="outline" size="sm" className="rounded-md" onClick={() => fetchOrders(true)} disabled={isRefreshing}>
+                    <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    {uiText.refresh}
+                  </Button>
+                </div>
               </div>
 
               <div className="flex flex-wrap gap-2">

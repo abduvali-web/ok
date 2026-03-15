@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowUpRight, Clock3, Loader2, LogOut, MapPin, Package, ReceiptText, RefreshCw, Salad, ShieldCheck, Wallet } from 'lucide-react'
 import { toast } from 'sonner'
@@ -10,8 +10,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { SiteClientNav, SitePageSurface, SitePanel, SitePublicHeader } from '@/components/site/SiteScaffold'
+import { CalendarRangeSelector } from '@/components/admin/dashboard/shared/CalendarRangeSelector'
 import { useSiteConfig } from '@/hooks/useSiteConfig'
 import { makeClientSiteHref } from '@/lib/site-urls'
+import type { DateRange } from 'react-day-picker'
 
 type CustomerProfile = {
   id: string
@@ -77,12 +79,27 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
   const [isLoading, setIsLoading] = useState(true)
   const [profile, setProfile] = useState<CustomerProfile | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+    const today = new Date()
+    const from = new Date(today.getFullYear(), today.getMonth(), 1)
+    from.setHours(0, 0, 0, 0)
+    today.setHours(0, 0, 0, 0)
+    return { from, to: today }
+  })
   const [todayMenu, setTodayMenu] = useState<TodayMenuResponse | null>(null)
   const [googleMapsLink, setGoogleMapsLink] = useState('')
   const [isSavingLocation, setIsSavingLocation] = useState(false)
   const [isTogglingPlan, setIsTogglingPlan] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null)
+  const didInitialRangeFetchRef = useRef(false)
+
+  const getLocalIsoDate = (d: Date) => {
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    return `${yyyy}-${mm}-${dd}`
+  }
 
   const loadDashboardData = useCallback(
     async (background = false) => {
@@ -93,9 +110,15 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
         const customerToken = localStorage.getItem('customerToken')
         const authHeaders = customerToken ? { Authorization: `Bearer ${customerToken}` } : undefined
 
+        const ordersParams = new URLSearchParams()
+        if (dateRange?.from) {
+          ordersParams.set('from', getLocalIsoDate(dateRange.from))
+          ordersParams.set('to', getLocalIsoDate(dateRange.to ?? dateRange.from))
+        }
+
         const [profileRes, ordersRes, menuRes] = await Promise.all([
           fetch('/api/customers/profile', { headers: authHeaders }),
-          fetch('/api/customers/orders', { headers: authHeaders }),
+          fetch(`/api/customers/orders${ordersParams.size ? `?${ordersParams.toString()}` : ''}`, { headers: authHeaders }),
           fetch('/api/customers/today-menu', { headers: authHeaders }),
         ])
 
@@ -122,13 +145,23 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
         setIsRefreshing(false)
       }
     },
-    [params.subdomain, router]
+    [dateRange, params.subdomain, router]
   )
 
   useEffect(() => {
     if (siteLoading) return
     void loadDashboardData()
   }, [loadDashboardData, siteLoading])
+
+  useEffect(() => {
+    if (siteLoading) return
+    if (!didInitialRangeFetchRef.current) {
+      didInitialRangeFetchRef.current = true
+      return
+    }
+
+    void loadDashboardData(true)
+  }, [dateRange, loadDashboardData, siteLoading])
 
   const activeOrder = useMemo(() => {
     return orders.find((order) => !['DELIVERED', 'FAILED', 'CANCELED', 'CANCELLED', 'PAUSED'].includes(order.orderStatus)) || null
@@ -286,6 +319,20 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
 
           <div className="flex flex-wrap items-center gap-2">
             <SiteClientNav subdomain={params.subdomain} currentPath={makeClientSiteHref(params.subdomain, '/client')} />
+            <CalendarRangeSelector
+              value={dateRange}
+              onChange={setDateRange}
+              uiText={{
+                calendar: 'Period',
+                today: 'Today',
+                thisWeek: 'This week',
+                thisMonth: 'This month',
+                clearRange: 'Clear',
+                allTime: 'All time',
+              }}
+              locale="en-US"
+              className="min-w-[220px]"
+            />
             <Button
               variant="outline"
               onClick={() => void loadDashboardData(true)}

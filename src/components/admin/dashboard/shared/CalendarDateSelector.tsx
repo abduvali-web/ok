@@ -6,8 +6,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 interface CalendarDateSelectorProps {
   selectedDate: Date | null
   applySelectedDate: (date: Date | null) => void
-  shiftSelectedDate: (days: number) => void
+  shiftSelectedDate?: (days: number) => void
   selectedDateLabel: string
+  showShiftButtons?: boolean
   profileUiText: {
     calendar: string
     today: string
@@ -22,6 +23,7 @@ export function CalendarDateSelector({
   applySelectedDate,
   shiftSelectedDate,
   selectedDateLabel,
+  showShiftButtons = true,
   profileUiText,
 }: CalendarDateSelectorProps) {
   return (
@@ -54,16 +56,18 @@ export function CalendarDateSelector({
             </Button>
           ) : null}
         </div>
-        <div className="flex flex-col gap-2 px-3 pb-2">
-          <div className="flex items-center gap-2">
-            <Button type="button" size="sm" variant="outline" className="flex-1 h-8" onClick={() => shiftSelectedDate(-1)}>
-              {profileUiText.yesterday}
-            </Button>
-            <Button type="button" size="sm" variant="outline" className="flex-1 h-8" onClick={() => shiftSelectedDate(1)}>
-              {profileUiText.tomorrow}
-            </Button>
+        {showShiftButtons && shiftSelectedDate ? (
+          <div className="flex flex-col gap-2 px-3 pb-2">
+            <div className="flex items-center gap-2">
+              <Button type="button" size="sm" variant="outline" className="flex-1 h-8" onClick={() => shiftSelectedDate(-1)}>
+                {profileUiText.yesterday}
+              </Button>
+              <Button type="button" size="sm" variant="outline" className="flex-1 h-8" onClick={() => shiftSelectedDate(1)}>
+                {profileUiText.tomorrow}
+              </Button>
+            </div>
           </div>
-        </div>
+        ) : null}
       </PopoverContent>
     </Popover>
   )

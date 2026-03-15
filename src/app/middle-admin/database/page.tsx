@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
   Bot,
-  CalendarIcon,
   Database,
   Download,
   Edit,
@@ -26,12 +25,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Calendar } from '@/components/ui/calendar'
-import { format, addDays } from 'date-fns'
+import { addDays } from 'date-fns'
 import { DateRange } from 'react-day-picker'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { CalendarRangeSelector } from '@/components/admin/dashboard/shared/CalendarRangeSelector'
 
 type DatabaseTable = {
   id: string
@@ -370,7 +368,12 @@ export default function DatabasePage() {
         visibleSheets: 'Видимые листы',
         totalRows: 'Всего строк',
         totalColumns: 'Всего колонок',
+        calendar: 'Календарь',
         allTime: 'За все время',
+        today: 'Сегодня',
+        thisWeek: 'Эта неделя',
+        thisMonth: 'Этот месяц',
+        clearRange: 'Сбросить',
         database: 'База данных',
         scope: 'Область',
         generatedAt: 'Сформировано',
@@ -449,7 +452,12 @@ export default function DatabasePage() {
         visibleSheets: 'Ko‘rinadigan sahifalar',
         totalRows: 'Jami qatorlar',
         totalColumns: 'Jami ustunlar',
+        calendar: 'Kalendar',
         allTime: 'Barcha vaqt',
+        today: 'Bugun',
+        thisWeek: 'Shu hafta',
+        thisMonth: 'Shu oy',
+        clearRange: 'Tozalash',
       database: 'Maʼlumotlar bazasi',
       scope: 'Qamrov',
       generatedAt: 'Yaratilgan vaqti',
@@ -527,7 +535,12 @@ export default function DatabasePage() {
       visibleSheets: 'Visible sheets',
       totalRows: 'Total rows',
       totalColumns: 'Total columns',
+      calendar: 'Calendar',
       allTime: 'All time',
+      today: 'Today',
+      thisWeek: 'This week',
+      thisMonth: 'This month',
+      clearRange: 'Clear',
       database: 'Database',
       scope: 'Scope',
       generatedAt: 'Generated At',
@@ -1300,39 +1313,19 @@ export default function DatabasePage() {
                 {tables.length} {uiText.sheetsCount}
               </div>
               
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-[240px] justify-start">
-                    <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                    {date?.from ? (
-                      date.to ? (
-                        <>
-                          {format(date.from, 'LLL dd, y')} – {format(date.to, 'LLL dd, y')}
-                        </>
-                      ) : (
-                        format(date.from, 'LLL dd, y')
-                      )
-                    ) : (
-                      <span>{uiText.allTime}</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={date?.from}
-                    selected={date}
-                    onSelect={setDate}
-                    numberOfMonths={typeof window !== 'undefined' && window.innerWidth >= 768 ? 2 : 1}
-                  />
-                  <div className="border-t p-3">
-                    <Button variant="ghost" size="sm" className="w-full justify-center" onClick={() => setDate(undefined)}>
-                      {uiText.allTime}
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <CalendarRangeSelector
+                value={date}
+                onChange={setDate}
+                uiText={{
+                  calendar: uiText.calendar,
+                  today: uiText.today,
+                  thisWeek: uiText.thisWeek,
+                  thisMonth: uiText.thisMonth,
+                  clearRange: uiText.clearRange,
+                  allTime: uiText.allTime,
+                }}
+                locale={language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'}
+              />
 
               <Button variant="outline" size="sm" onClick={() => void loadSnapshot(true)} disabled={isRefreshing}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
