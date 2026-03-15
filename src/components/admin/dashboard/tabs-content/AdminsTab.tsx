@@ -2,7 +2,7 @@
 
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { Edit, Pause, Play, Plus, Search, Users } from 'lucide-react'
+import { Edit, Pause, Play, Plus, Search, Trash2, Users } from 'lucide-react'
 
 import type { Admin } from '@/components/admin/dashboard/types'
 import {
@@ -32,6 +32,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,
@@ -408,27 +409,47 @@ export function AdminsTab({
                 )}
                 {!isLowAdminView && (
                   <>
-                    <Button onClick={openCreateModal} className="h-9">
-                      <Plus className="mr-2 size-4" />
-                      {t.admin.create}
+                    <Button
+                      onClick={openCreateModal}
+                      variant="default"
+                      size="icon"
+                      className="h-9 w-9"
+                      aria-label={t.admin.create}
+                      title={t.admin.create}
+                    >
+                      <Plus className="size-4" />
                     </Button>
                     <Button
                       variant="outline"
-                      className="h-9"
+                      size="icon"
+                      className="h-9 w-9"
                       onClick={() => void handleBulkToggleStatus()}
                       disabled={selectedAdminIds.size === 0 || isBulkMutating}
+                      aria-label={shouldPauseSelectedAdmins ? t.admin.pause : t.admin.resume}
+                      title={shouldPauseSelectedAdmins ? t.admin.pause : t.admin.resume}
                     >
-                      {shouldPauseSelectedAdmins ? <Pause className="mr-2 size-4" /> : <Play className="mr-2 size-4" />}
-                      {isBulkMutating ? t.common.loading : shouldPauseSelectedAdmins ? t.admin.pause : t.admin.resume}
+                      {shouldPauseSelectedAdmins ? <Pause className="size-4" /> : <Play className="size-4" />}
                     </Button>
                     <Button
                       variant="destructive"
-                      className="h-9"
+                      size="icon"
+                      className="h-9 w-9"
                       onClick={() => setIsBulkDeleteOpen(true)}
                       disabled={selectedAdminIds.size === 0 || isBulkMutating}
+                      aria-label={`${t.admin.deleteSelected} (${selectedAdminIds.size})`}
+                      title={`${t.admin.deleteSelected} (${selectedAdminIds.size})`}
                     >
-                      {isBulkMutating ? t.common.loading : `${t.admin.deleteSelected} (${selectedAdminIds.size})`}
+                      {isBulkMutating ? (
+                        <span className="text-xs">{t.common.loading}</span>
+                      ) : (
+                        <Trash2 className="size-4" />
+                      )}
                     </Button>
+                    {selectedAdminIds.size > 0 && (
+                      <Badge variant="secondary" className="h-7 px-2 text-xs">
+                        {selectedAdminIds.size}
+                      </Badge>
+                    )}
                   </>
                 )}
               </div>
@@ -518,13 +539,14 @@ export function AdminsTab({
                           <TableCell className="py-1.5 text-right">
                             <Button
                               variant="outline"
-                              size="sm"
-                              className="h-8 px-2"
+                              size="icon"
+                              className="h-8 w-8"
                               onClick={() => openEditModal(admin)}
                               disabled={Boolean(pendingAction) || isBulkMutating}
+                              aria-label={t.admin.edit}
+                              title={t.admin.edit}
                             >
-                              <Edit className="mr-2 size-4" />
-                              {t.admin.edit}
+                              <Edit className="size-4" />
                             </Button>
                           </TableCell>
                         )}

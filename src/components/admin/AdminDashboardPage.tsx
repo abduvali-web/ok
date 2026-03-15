@@ -2250,27 +2250,46 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       locale={dateLocale}
                       profileUiText={profileUiText}
                     />
-                    <Button onClick={() => setIsCreateOrderModalOpen(true)} className="h-9">
-                      <Plus className="mr-2 size-4" />
-                      {t.admin.createOrder}
+                    <Button
+                      onClick={() => setIsCreateOrderModalOpen(true)}
+                      size="icon"
+                      className="h-9 w-9"
+                      aria-label={t.admin.createOrder}
+                      title={t.admin.createOrder}
+                    >
+                      <Plus className="size-4" />
                     </Button>
                     <Button
                       variant="outline"
-                      className="h-9"
+                      size="icon"
+                      className="h-9 w-9"
                       onClick={() => setIsDispatchOpen(true)}
                       disabled={!selectedDate}
+                      aria-label={dispatchActionLabel}
+                      title={dispatchActionLabel}
                     >
-                      <DispatchActionIcon className="mr-2 size-4" />
-                      {dispatchActionLabel}
+                      <DispatchActionIcon className="size-4" />
                     </Button>
                     <Button
                       variant="destructive"
-                      className="h-9"
+                      size="icon"
+                      className="h-9 w-9"
                       onClick={() => setIsDeleteOrdersDialogOpen(true)}
                       disabled={selectedOrders.size === 0 || isDeletingOrders}
+                      aria-label={`${t.admin.deleteSelected} (${selectedOrders.size})`}
+                      title={`${t.admin.deleteSelected} (${selectedOrders.size})`}
                     >
-                      {isDeletingOrders ? t.common.loading : `${t.admin.deleteSelected} (${selectedOrders.size})`}
+                      {isDeletingOrders ? (
+                        <span className="text-xs">{t.common.loading}</span>
+                      ) : (
+                        <Trash2 className="size-4" />
+                      )}
                     </Button>
+                    {selectedOrders.size > 0 && (
+                      <Badge variant="secondary" className="h-7 px-2 text-xs">
+                        {selectedOrders.size}
+                      </Badge>
+                    )}
                   </div>
                 </div>
 
@@ -2538,7 +2557,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       profileUiText={profileUiText}
                     />
                     <Button
-                      className="h-9"
+                      size="icon"
+                      className="h-9 w-9"
                       onClick={() => {
                         setEditingClientId(null)
                         setClientFormData({
@@ -2571,31 +2591,46 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         setClientError('')
                         setIsCreateClientModalOpen(true)
                       }}
+                      aria-label={profileUiText.createClient}
+                      title={profileUiText.createClient}
                     >
-                      <Plus className="mr-2 size-4" />
-                      {profileUiText.createClient}
+                      <Plus className="size-4" />
                     </Button>
                     <Button
                       variant="outline"
-                      className="h-9"
+                      size="icon"
+                      className="h-9 w-9"
                       onClick={() =>
                         shouldPauseSelectedClients
                           ? setIsPauseClientsDialogOpen(true)
                           : setIsResumeClientsDialogOpen(true)
                       }
                       disabled={selectedClients.size === 0 || isMutatingClients}
+                      aria-label={shouldPauseSelectedClients ? t.admin.pause : t.admin.resume}
+                      title={shouldPauseSelectedClients ? t.admin.pause : t.admin.resume}
                     >
-                      {shouldPauseSelectedClients ? <Pause className="mr-2 size-4" /> : <Play className="mr-2 size-4" />}
-                      {isMutatingClients ? t.common.loading : shouldPauseSelectedClients ? t.admin.pause : t.admin.resume}
+                      {shouldPauseSelectedClients ? <Pause className="size-4" /> : <Play className="size-4" />}
                     </Button>
                     <Button
                       variant="destructive"
-                      className="h-9"
+                      size="icon"
+                      className="h-9 w-9"
                       onClick={() => setIsDeleteClientsDialogOpen(true)}
                       disabled={selectedClients.size === 0 || isMutatingClients}
+                      aria-label={`${t.admin.deleteSelected} (${selectedClients.size})`}
+                      title={`${t.admin.deleteSelected} (${selectedClients.size})`}
                     >
-                      {isMutatingClients ? t.common.loading : `${t.admin.deleteSelected} (${selectedClients.size})`}
+                      {isMutatingClients ? (
+                        <span className="text-xs">{t.common.loading}</span>
+                      ) : (
+                        <Trash2 className="size-4" />
+                      )}
                     </Button>
+                    {selectedClients.size > 0 && (
+                      <Badge variant="secondary" className="h-7 px-2 text-xs">
+                        {selectedClients.size}
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center">

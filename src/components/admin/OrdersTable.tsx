@@ -245,10 +245,19 @@ export function OrdersTable({
                                         {order.paymentStatus === 'PAID' ? t.common.paid : t.common.notPaid}
                                     </Badge>
 
-                                    <Button variant="outline" className="h-9 px-3" onClick={() => onEditOrder?.(order)}>
-                                        <Edit className="mr-1.5 h-4 w-4" />
-                                        {t.admin.edit} · P{order.priority ?? 3}
-                                    </Button>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs text-muted-foreground">P{order.priority ?? 3}</span>
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-9 w-9"
+                                            onClick={() => onEditOrder?.(order)}
+                                            aria-label={t.admin.edit}
+                                            title={t.admin.edit}
+                                        >
+                                            <Edit className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
