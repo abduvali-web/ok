@@ -2555,7 +2555,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     )}
                     {searchTerm && (
                       <Button variant="outline" size="sm" onClick={() => setSearchTerm('')} className="h-9 px-3">
-                        Clear
+                        {profileUiText.clear}
                       </Button>
                     )}
                     {activeFiltersCount > 0 && (

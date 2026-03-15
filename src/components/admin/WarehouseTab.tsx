@@ -44,6 +44,92 @@ interface WarehouseTabProps {
 
 export function WarehouseTab({ className }: WarehouseTabProps) {
     const { t, language } = useLanguage();
+
+    const dateLocale = useMemo(() => {
+        if (language === 'ru') return 'ru-RU'
+        if (language === 'uz') return 'uz-UZ'
+        return 'en-US'
+    }, [language])
+
+    const calendarRangeUiText = useMemo(() => {
+        if (language === 'ru') {
+            return {
+                calendar: 'Календарь',
+                today: 'Сегодня',
+                thisWeek: 'Эта неделя',
+                thisMonth: 'Этот месяц',
+                clearRange: 'Сбросить',
+                allTime: 'За все время',
+            }
+        }
+        if (language === 'uz') {
+            return {
+                calendar: 'Kalendar',
+                today: 'Bugun',
+                thisWeek: 'Shu hafta',
+                thisMonth: 'Shu oy',
+                clearRange: 'Tozalash',
+                allTime: 'Barcha vaqt',
+            }
+        }
+        return {
+            calendar: 'Calendar',
+            today: 'Today',
+            thisWeek: 'This week',
+            thisMonth: 'This month',
+            clearRange: 'Clear',
+            allTime: 'All time',
+        }
+    }, [language])
+
+    const auditUiText = useMemo(() => {
+        if (language === 'ru') {
+            return {
+                setsTab: 'Сеты',
+                planned: 'Запланировано',
+                cooked: 'Приготовлено',
+                remaining: 'Осталось',
+                failedLoadCookingPlans: 'Не удалось загрузить планы готовки',
+                loadedOrdersTomorrow: (count: number) => `Загружено ${count} заказов на завтра`,
+                loadedActiveClients: (count: number) => `Загружено ${count} активных клиентов`,
+                clientsLoadError: 'Ошибка загрузки данных клиентов',
+                warehouseLoadError: 'Ошибка загрузки данных склада',
+                menuCalcDone: (menu: number) => `Расчет для меню ${menu} выполнен`,
+                selectDatesForCalc: 'Выберите даты для расчета',
+                periodCalcDone: (count: number) => `Расчет для ${count} дней выполнен`,
+            }
+        }
+        if (language === 'uz') {
+            return {
+                setsTab: 'Setlar',
+                planned: 'Reja',
+                cooked: 'Pishirildi',
+                remaining: 'Qoldi',
+                failedLoadCookingPlans: 'Pishirish rejalari yuklanmadi',
+                loadedOrdersTomorrow: (count: number) => `Ertangi kun uchun ${count} ta buyurtma yuklandi`,
+                loadedActiveClients: (count: number) => `${count} ta faol mijoz yuklandi`,
+                clientsLoadError: "Mijozlar ma'lumotini yuklashda xatolik",
+                warehouseLoadError: "Ombor ma'lumotini yuklashda xatolik",
+                menuCalcDone: (menu: number) => `${menu}-menyu uchun hisob-kitob bajarildi`,
+                selectDatesForCalc: 'Hisoblash uchun sanalarni tanlang',
+                periodCalcDone: (count: number) => `${count} kun uchun hisob-kitob bajarildi`,
+            }
+        }
+        return {
+            setsTab: 'Sets',
+            planned: 'Planned',
+            cooked: 'Cooked',
+            remaining: 'Remaining',
+            failedLoadCookingPlans: 'Failed to load cooking plans',
+            loadedOrdersTomorrow: (count: number) => `Loaded ${count} orders for tomorrow`,
+            loadedActiveClients: (count: number) => `Loaded ${count} active clients`,
+            clientsLoadError: 'Failed to load client data',
+            warehouseLoadError: 'Failed to load warehouse data',
+            menuCalcDone: (menu: number) => `Calculation for menu ${menu} completed`,
+            selectDatesForCalc: 'Select dates to calculate',
+            periodCalcDone: (count: number) => `Calculation for ${count} days completed`,
+        }
+    }, [language])
     const [activeSubTab, setActiveSubTab] = useState('cooking');
     const [tomorrowMenu, setTomorrowMenu] = useState<DailyMenu | undefined>(undefined);
     const [tomorrowMenuNumber, setTomorrowMenuNumber] = useState<number>(0);
@@ -150,14 +236,14 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             const data = await response.json().catch(() => ({}))
             if (!response.ok) {
                 setCookingPlans([])
-                setCookingPlansError(data?.error || 'Failed to load cooking plans')
+                setCookingPlansError(data?.error || auditUiText.failedLoadCookingPlans)
                 return
             }
 
             setCookingPlans(Array.isArray((data as any)?.plans) ? (data as any).plans : [])
         } catch (error) {
             setCookingPlans([])
-            setCookingPlansError(error instanceof Error ? error.message : 'Failed to load cooking plans')
+            setCookingPlansError(error instanceof Error ? error.message : auditUiText.failedLoadCookingPlans)
         } finally {
             setIsCookingPlansLoading(false)
         }
@@ -345,7 +431,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                 });
                 setClientsByCalorie(distribution);
                 console.log('Distribution from orders:', distribution, 'Orders count:', tomorrowOrders.length);
-                toast.success(`Загружено ${tomorrowOrders.length} заказов на завтра`);
+                toast.success(auditUiText.loadedOrdersTomorrow(tomorrowOrders.length));
                 return;
             }
 
@@ -370,10 +456,10 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             setClientsByCalorie(distribution);
             const totalClients = Object.values(distribution).reduce((a, b) => a + b, 0);
             console.log('Distribution from clients:', distribution, 'Total:', totalClients);
-            toast.success(`Загружено ${totalClients} активных клиентов`);
+            toast.success(auditUiText.loadedActiveClients(totalClients));
         } catch (error) {
             console.error('Error fetching client data:', error);
-            toast.error('Ошибка загрузки данных клиентов');
+            toast.error(auditUiText.clientsLoadError);
         } finally {
             setIsLoadingClients(false);
         }
@@ -461,7 +547,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             }
         } catch (error) {
             console.error('Error fetching warehouse data:', error);
-            toast.error('Ошибка загрузки данных склада');
+            toast.error(auditUiText.warehouseLoadError);
         }
     };
 
@@ -679,12 +765,12 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         const shopping = calculateShoppingList(totalIngredients, inventory);
         setShoppingList(shopping);
 
-        toast.success(`Расчёт для меню ${tomorrowMenuNumber} выполнен`);
+        toast.success(auditUiText.menuCalcDone(tomorrowMenuNumber));
     };
 
     const calculateForPeriod = () => {
         if (selectedDates.length === 0) {
-            toast.error('Выберите даты для расчёта');
+            toast.error(auditUiText.selectDatesForCalc);
             return;
         }
 
@@ -718,7 +804,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         const shopping = calculateShoppingList(totalIngredients, inventory);
         setShoppingList(shopping);
 
-        toast.success(`Расчёт для ${selectedDates.length} дней выполнен`);
+        toast.success(auditUiText.periodCalcDone(selectedDates.length));
     };
 
     const handleDateToggle = (dateStr: string) => {
@@ -737,12 +823,12 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         for (let i = 1; i <= 14; i++) {
             const date = new Date(today);
             date.setDate(today.getDate() + i);
-            days.push({
-                date: date.toISOString().split('T')[0],
-                label: date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' }),
-                menuNumber: getMenuNumber(date),
-            });
-        }
+                days.push({
+                    date: date.toISOString().split('T')[0],
+                    label: date.toLocaleDateString(dateLocale, { weekday: 'short', day: 'numeric', month: 'short' }),
+                    menuNumber: getMenuNumber(date),
+                });
+            }
         return days;
     };
 
@@ -895,7 +981,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                             </TabsTrigger>
                             <TabsTrigger value="sets" className="flex items-center gap-2">
                                 <UtensilsCrossed className="w-4 h-4" />
-                                <span className="hidden sm:inline">Сеты</span>
+                                <span className="hidden sm:inline">{auditUiText.setsTab}</span>
                             </TabsTrigger>
                             <TabsTrigger value="inventory" className="flex items-center gap-2">
                                 <Package className="w-4 h-4" />
@@ -914,24 +1000,17 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 <CalendarRangeSelector
                                     value={cookingRange}
                                     onChange={setCookingRange}
-                                    uiText={{
-                                        calendar: 'Period',
-                                        today: 'Today',
-                                        thisWeek: 'This week',
-                                        thisMonth: 'This month',
-                                        clearRange: 'Clear',
-                                        allTime: 'All time',
-                                    }}
-                                    locale={language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'}
+                                    uiText={calendarRangeUiText}
+                                    locale={dateLocale}
                                     className="min-w-[240px]"
                                 />
 
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <span>Planned: <span className="font-semibold text-foreground">{cookingTotals.planned}</span></span>
+                                    <span>{auditUiText.planned}: <span className="font-semibold text-foreground">{cookingTotals.planned}</span></span>
                                     <span>·</span>
-                                    <span>Cooked: <span className="font-semibold text-emerald-600">{cookingTotals.cooked}</span></span>
+                                    <span>{auditUiText.cooked}: <span className="font-semibold text-emerald-600">{cookingTotals.cooked}</span></span>
                                     <span>·</span>
-                                    <span>Remaining: <span className="font-semibold text-amber-600">{cookingTotals.remaining}</span></span>
+                                    <span>{auditUiText.remaining}: <span className="font-semibold text-amber-600">{cookingTotals.remaining}</span></span>
                                     {isCookingPlansLoading ? <Loader2 className="ml-1 h-3.5 w-3.5 animate-spin" /> : null}
                                 </div>
                             </div>
@@ -1023,15 +1102,8 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                     <CalendarRangeSelector
                                         value={calcRange}
                                         onChange={setCalcRange}
-                                        uiText={{
-                                            calendar: 'Period',
-                                            today: 'Today',
-                                            thisWeek: 'This week',
-                                            thisMonth: 'This month',
-                                            clearRange: 'Clear',
-                                            allTime: 'All time',
-                                        }}
-                                        locale={language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'}
+                                        uiText={calendarRangeUiText}
+                                        locale={dateLocale}
                                         className="w-full min-w-0"
                                     />
 

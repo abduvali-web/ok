@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch'
 import { SiteClientNav, SitePageSurface, SitePanel, SitePublicHeader } from '@/components/site/SiteScaffold'
 import { CalendarRangeSelector } from '@/components/admin/dashboard/shared/CalendarRangeSelector'
 import { useSiteConfig } from '@/hooks/useSiteConfig'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { makeClientSiteHref } from '@/lib/site-urls'
 import type { DateRange } from 'react-day-picker'
 
@@ -75,6 +76,7 @@ function normalizeOrderStatus(status: string) {
 export default function ClientHomePage({ params }: { params: { subdomain: string } }) {
   const router = useRouter()
   const { site, isLoading: siteLoading } = useSiteConfig(params.subdomain)
+  const { language } = useLanguage()
 
   const [isLoading, setIsLoading] = useState(true)
   const [profile, setProfile] = useState<CustomerProfile | null>(null)
@@ -93,6 +95,17 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null)
   const didInitialRangeFetchRef = useRef(false)
+
+  const dateLocale = useMemo(() => (language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'), [language])
+  const calendarUiText = useMemo(() => {
+    if (language === 'ru') {
+      return { calendar: 'Календарь', today: 'Сегодня', thisWeek: 'Эта неделя', thisMonth: 'Этот месяц', clearRange: 'Сбросить', allTime: 'За все время' }
+    }
+    if (language === 'uz') {
+      return { calendar: 'Kalendar', today: 'Bugun', thisWeek: 'Shu hafta', thisMonth: 'Shu oy', clearRange: 'Tozalash', allTime: 'Barcha vaqt' }
+    }
+    return { calendar: 'Calendar', today: 'Today', thisWeek: 'This week', thisMonth: 'This month', clearRange: 'Clear', allTime: 'All time' }
+  }, [language])
 
   const getLocalIsoDate = (d: Date) => {
     const yyyy = d.getFullYear()
@@ -322,15 +335,8 @@ export default function ClientHomePage({ params }: { params: { subdomain: string
             <CalendarRangeSelector
               value={dateRange}
               onChange={setDateRange}
-              uiText={{
-                calendar: 'Period',
-                today: 'Today',
-                thisWeek: 'This week',
-                thisMonth: 'This month',
-                clearRange: 'Clear',
-                allTime: 'All time',
-              }}
-              locale="en-US"
+              uiText={calendarUiText}
+              locale={dateLocale}
               className="min-w-[220px]"
             />
             <Button

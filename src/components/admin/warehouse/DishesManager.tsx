@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -47,8 +47,31 @@ function IngredientSelector({
     onChange: (val: string, unit?: string) => void;
     items: WarehouseItem[]
 }) {
+    const { language } = useLanguage();
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
+
+    const uiText = useMemo(() => {
+        if (language === 'ru') {
+            return {
+                selectIngredient: 'Выберите ингредиент...',
+                searchOrTypeNew: 'Поиск или новый...',
+                useValue: (val: string) => `Использовать "${val}"`,
+            }
+        }
+        if (language === 'uz') {
+            return {
+                selectIngredient: 'Ingredient tanlang...',
+                searchOrTypeNew: "Qidirish yoki yangi...",
+                useValue: (val: string) => `"${val}" ni ishlatish`,
+            }
+        }
+        return {
+            selectIngredient: 'Select ingredient...',
+            searchOrTypeNew: 'Search or type new...',
+            useValue: (val: string) => `Use "${val}"`,
+        }
+    }, [language]);
 
     // Filter items based on search if needed, or rely on Command's internal filtering.
     // To support "Create", we need to know if there's a match.
@@ -64,14 +87,14 @@ function IngredientSelector({
                     aria-expanded={open}
                     className="w-full justify-between font-normal h-8"
                 >
-                    {value || "Select ingredient..."}
+                    {value || uiText.selectIngredient}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[300px] p-0">
                 <Command>
                     <CommandInput
-                        placeholder="Search or type new..."
+                        placeholder={uiText.searchOrTypeNew}
                         value={search}
                         onValueChange={setSearch}
                     />
@@ -85,7 +108,7 @@ function IngredientSelector({
                                     setOpen(false);
                                 }}
                             >
-                                Use "{search}"
+                                {uiText.useValue(search)}
                             </Button>
                         </CommandEmpty>
                         <CommandGroup>
@@ -120,7 +143,133 @@ function IngredientSelector({
 const CALORIE_GROUPS = [1200, 1600, 2000, 2500, 3000];
 
 export function DishesManager() {
-    const { t: _t } = useLanguage();
+    const { language } = useLanguage();
+
+    const uiText = useMemo(() => {
+        if (language === 'ru') {
+            return {
+                searchPlaceholder: 'Поиск блюд...',
+                addDish: 'Добавить блюдо',
+                image: 'Фото',
+                name: 'Название',
+                mealType: 'Тип приема пищи',
+                calorieMappings: 'Калорийные группы',
+                menus: 'Меню',
+                ingredients: 'Ингредиенты',
+                actions: 'Действия',
+                noDishesFound: 'Блюда не найдены',
+                none: 'Нет',
+                editDish: 'Редактировать блюдо',
+                addDishTitle: 'Добавить блюдо',
+                dishNamePlaceholder: 'Название блюда',
+                selectTypePlaceholder: 'Выберите тип',
+                imageUrlOptional: 'URL изображения (необязательно)',
+                imageUrlPlaceholder: 'https://example.com/image.jpg',
+                menusCalorieTitle: 'Меню и группы калорий (1-21)',
+                dayLabel: (day: number) => `День ${day}`,
+                selectDaysHint: 'Сначала выберите дни, затем группы калорий для каждого дня.',
+                add: 'Добавить',
+                ingredient: 'Ингредиент',
+                amount: 'Количество',
+                unit: 'Ед.',
+                noIngredientsAdded: 'Ингредиенты не добавлены',
+                cancel: 'Отмена',
+                save: 'Сохранить',
+                failedLoadData: 'Не удалось загрузить данные',
+                nameMealTypeRequired: 'Название и тип обязательны',
+                dishUpdated: 'Блюдо обновлено',
+                dishCreated: 'Блюдо создано',
+                failedSaveDish: 'Не удалось сохранить блюдо',
+                errorSaveDish: 'Ошибка сохранения блюда',
+                confirmDeleteDish: 'Удалить это блюдо?',
+                dishDeleted: 'Блюдо удалено',
+                failedDeleteDish: 'Не удалось удалить блюдо',
+                errorDeleteDish: 'Ошибка удаления блюда',
+            }
+        }
+
+        if (language === 'uz') {
+            return {
+                searchPlaceholder: 'Taomlarni qidirish...',
+                addDish: "Taom qo'shish",
+                image: 'Rasm',
+                name: 'Nomi',
+                mealType: "Ovqat turi",
+                calorieMappings: 'Kaloriya guruhlari',
+                menus: 'Menyu',
+                ingredients: 'Ingredientlar',
+                actions: 'Amallar',
+                noDishesFound: 'Taom topilmadi',
+                none: "Yo'q",
+                editDish: 'Taomni tahrirlash',
+                addDishTitle: "Taom qo'shish",
+                dishNamePlaceholder: 'Taom nomi',
+                selectTypePlaceholder: 'Turini tanlang',
+                imageUrlOptional: 'Rasm URL (ixtiyoriy)',
+                imageUrlPlaceholder: 'https://example.com/image.jpg',
+                menusCalorieTitle: 'Menyu va kaloriya guruhlari (1-21)',
+                dayLabel: (day: number) => `Kun ${day}`,
+                selectDaysHint: "Avval kunlarni tanlang, so'ng har bir kun uchun kaloriya guruhlarini belgilang.",
+                add: "Qo'shish",
+                ingredient: 'Ingredient',
+                amount: 'Miqdor',
+                unit: "O'lchov",
+                noIngredientsAdded: "Ingredient qo'shilmagan",
+                cancel: 'Bekor qilish',
+                save: 'Saqlash',
+                failedLoadData: "Ma'lumot yuklanmadi",
+                nameMealTypeRequired: 'Nom va ovqat turi shart',
+                dishUpdated: 'Taom yangilandi',
+                dishCreated: 'Taom yaratildi',
+                failedSaveDish: "Taomni saqlab bo'lmadi",
+                errorSaveDish: "Taomni saqlashda xatolik",
+                confirmDeleteDish: "Ushbu taom o'chirilsinmi?",
+                dishDeleted: "Taom o'chirildi",
+                failedDeleteDish: "Taomni o'chirib bo'lmadi",
+                errorDeleteDish: "Taomni o'chirishda xatolik",
+            }
+        }
+
+        return {
+            searchPlaceholder: 'Search dishes...',
+            addDish: 'Add Dish',
+            image: 'Image',
+            name: 'Name',
+            mealType: 'Meal Type',
+            calorieMappings: 'Calorie Mappings',
+            menus: 'Menus',
+            ingredients: 'Ingredients',
+            actions: 'Actions',
+            noDishesFound: 'No dishes found',
+            none: 'None',
+            editDish: 'Edit Dish',
+            addDishTitle: 'Add Dish',
+            dishNamePlaceholder: 'Dish Name',
+            selectTypePlaceholder: 'Select type',
+            imageUrlOptional: 'Image URL (Optional)',
+            imageUrlPlaceholder: 'https://example.com/image.jpg',
+            menusCalorieTitle: 'Menus & Calorie Groups (1-21)',
+            dayLabel: (day: number) => `Day ${day}`,
+            selectDaysHint: 'Select days and then specific calorie groups for each day.',
+            add: 'Add',
+            ingredient: 'Ingredient',
+            amount: 'Amount',
+            unit: 'Unit',
+            noIngredientsAdded: 'No ingredients added',
+            cancel: 'Cancel',
+            save: 'Save',
+            failedLoadData: 'Failed to load data',
+            nameMealTypeRequired: 'Name and Meal Type are required',
+            dishUpdated: 'Dish updated',
+            dishCreated: 'Dish created',
+            failedSaveDish: 'Failed to save dish',
+            errorSaveDish: 'Error saving dish',
+            confirmDeleteDish: 'Are you sure you want to delete this dish?',
+            dishDeleted: 'Dish deleted',
+            failedDeleteDish: 'Failed to delete dish',
+            errorDeleteDish: 'Error deleting dish',
+        }
+    }, [language]);
     const [dishes, setDishes] = useState<Dish[]>([]);
     const [warehouseItems, setWarehouseItems] = useState<WarehouseItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -149,7 +298,7 @@ export function DishesManager() {
             }
         } catch (error) {
             console.error('Failed to load data', error);
-            toast.error('Failed to load data');
+            toast.error(uiText.failedLoadData);
         } finally {
             setLoading(false);
         }
@@ -157,7 +306,7 @@ export function DishesManager() {
 
     const handleSave = async () => {
         if (!currentDish.name || !currentDish.mealType) {
-            toast.error('Name and Meal Type are required');
+            toast.error(uiText.nameMealTypeRequired);
             return;
         }
 
@@ -171,23 +320,23 @@ export function DishesManager() {
             });
 
             if (res.ok) {
-                toast.success(currentDish.id ? 'Dish updated' : 'Dish created');
+                toast.success(currentDish.id ? uiText.dishUpdated : uiText.dishCreated);
                 fetchData();
                 setIsDialogOpen(false);
                 setCurrentDish({ ingredients: [], menuNumbers: [] });
             } else {
-                toast.error('Failed to save dish');
+                toast.error(uiText.failedSaveDish);
             }
         } catch (error) {
             console.error('Error saving dish', error);
-            toast.error('Error saving dish');
+            toast.error(uiText.errorSaveDish);
         } finally {
             setIsSaving(false);
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this dish?')) return;
+        if (!confirm(uiText.confirmDeleteDish)) return;
 
         try {
             const res = await fetch(`/api/admin/warehouse/dishes?id=${id}`, {
@@ -195,14 +344,14 @@ export function DishesManager() {
             });
 
             if (res.ok) {
-                toast.success('Dish deleted');
+                toast.success(uiText.dishDeleted);
                 fetchData();
             } else {
-                toast.error('Failed to delete dish');
+                toast.error(uiText.failedDeleteDish);
             }
         } catch (error) {
             console.error('Error deleting dish', error);
-            toast.error('Error deleting dish');
+            toast.error(uiText.errorDeleteDish);
         }
     };
 
@@ -250,14 +399,14 @@ export function DishesManager() {
                 <div className="relative w-72">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
                     <Input
-                        placeholder="Search dishes..."
+                        placeholder={uiText.searchPlaceholder}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-8"
                     />
                 </div>
                 <Button onClick={() => { setCurrentDish({ ingredients: [], unit: 'gr', menuNumbers: [] } as any); setIsDialogOpen(true); }}>
-                    <Plus className="mr-2 h-4 w-4" /> Add Dish
+                    <Plus className="mr-2 h-4 w-4" /> {uiText.addDish}
                 </Button>
             </div>
 
@@ -265,13 +414,13 @@ export function DishesManager() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Image</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Meal Type</TableHead>
-                            <TableHead>Calorie Mappings</TableHead>
-                            <TableHead>Menus</TableHead>
-                            <TableHead>Ingredients</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead>{uiText.image}</TableHead>
+                            <TableHead>{uiText.name}</TableHead>
+                            <TableHead>{uiText.mealType}</TableHead>
+                            <TableHead>{uiText.calorieMappings}</TableHead>
+                            <TableHead>{uiText.menus}</TableHead>
+                            <TableHead>{uiText.ingredients}</TableHead>
+                            <TableHead className="text-right">{uiText.actions}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -284,7 +433,7 @@ export function DishesManager() {
                         ) : filteredDishes.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-8 text-slate-500">
-                                    No dishes found
+                                    {uiText.noDishesFound}
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -311,7 +460,7 @@ export function DishesManager() {
                                                     <span>{groups.join(',')}</span>
                                                 </div>
                                             ))}
-                                            {!dish.calorieMappings && <span className="text-slate-400 text-xs">None</span>}
+                                            {!dish.calorieMappings && <span className="text-slate-400 text-xs">{uiText.none}</span>}
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -347,26 +496,26 @@ export function DishesManager() {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>{currentDish.id ? 'Edit Dish' : 'Add Dish'}</DialogTitle>
+                        <DialogTitle>{currentDish.id ? uiText.editDish : uiText.addDishTitle}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label>Name</Label>
+                                <Label>{uiText.name}</Label>
                                 <Input
                                     value={currentDish.name || ''}
                                     onChange={(e) => setCurrentDish({ ...currentDish, name: e.target.value })}
-                                    placeholder="Dish Name"
+                                    placeholder={uiText.dishNamePlaceholder}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Meal Type</Label>
+                                <Label>{uiText.mealType}</Label>
                                 <Select
                                     value={currentDish.mealType}
                                     onValueChange={(val) => setCurrentDish({ ...currentDish, mealType: val })}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select type" />
+                                        <SelectValue placeholder={uiText.selectTypePlaceholder} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {Object.entries(MEAL_TYPES).map(([key, label]) => (
@@ -379,17 +528,17 @@ export function DishesManager() {
 
                         <div className="grid grid-cols-1 gap-4">
                             <div className="space-y-2">
-                                <Label>Image URL (Optional)</Label>
+                                <Label>{uiText.imageUrlOptional}</Label>
                                 <Input
                                     value={currentDish.imageUrl || ''}
                                     onChange={(e) => setCurrentDish({ ...currentDish, imageUrl: e.target.value })}
-                                    placeholder="https://example.com/image.jpg"
+                                    placeholder={uiText.imageUrlPlaceholder}
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Menus & Calorie Groups (1-21)</Label>
+                            <Label>{uiText.menusCalorieTitle}</Label>
                             <div className="space-y-3 p-3 border border-border rounded-lg bg-muted/20 max-h-64 overflow-y-auto">
                                 {Array.from({ length: 21 }, (_, i) => i + 1).map(num => {
                                     const dayStr = num.toString();
@@ -419,7 +568,7 @@ export function DishesManager() {
                                                             : "bg-muted/50 text-muted-foreground border-border"
                                                     )}
                                                 >
-                                                    Day {num}
+                                                    {uiText.dayLabel(num)}
                                                     {isSelected && <Check className="h-3 w-3" />}
                                                 </div>
 
@@ -459,21 +608,21 @@ export function DishesManager() {
                                     );
                                 })}
                             </div>
-                            <p className="text-xs text-slate-400">Select days and then specific calorie groups for each day.</p>
+                            <p className="text-xs text-slate-400">{uiText.selectDaysHint}</p>
                         </div>
 
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                                <Label>Ingredients</Label>
+                                <Label>{uiText.ingredients}</Label>
                                 <Button size="sm" variant="outline" onClick={addIngredientRow} type="button">
-                                    <Plus className="h-3 w-3 mr-1" /> Add
+                                    <Plus className="h-3 w-3 mr-1" /> {uiText.add}
                                 </Button>
                             </div>
                             <div className="space-y-2 border border-border rounded-lg p-2 bg-muted/20">
                                 {currentDish.ingredients?.map((ing, idx) => (
                                     <div key={idx} className="flex gap-2 items-end">
                                         <div className="flex-1 space-y-1">
-                                            <Label className="text-xs">Ingredient</Label>
+                                            <Label className="text-xs">{uiText.ingredient}</Label>
                                             <IngredientSelector
                                                 value={ing.name}
                                                 items={warehouseItems}
@@ -481,7 +630,7 @@ export function DishesManager() {
                                             />
                                         </div>
                                         <div className="w-24 space-y-1">
-                                            <Label className="text-xs">Amount</Label>
+                                            <Label className="text-xs">{uiText.amount}</Label>
                                             <Input
                                                 type="number"
                                                 className="h-8"
@@ -490,7 +639,7 @@ export function DishesManager() {
                                             />
                                         </div>
                                         <div className="w-20 space-y-1">
-                                            <Label className="text-xs">Unit</Label>
+                                            <Label className="text-xs">{uiText.unit}</Label>
                                             <Input
                                                 className="h-8"
                                                 value={ing.unit}
@@ -508,16 +657,16 @@ export function DishesManager() {
                                     </div>
                                 ))}
                                 {(!currentDish.ingredients || currentDish.ingredients.length === 0) && (
-                                    <div className="text-center text-xs text-slate-400 py-2">No ingredients added</div>
+                                    <div className="text-center text-xs text-slate-400 py-2">{uiText.noIngredientsAdded}</div>
                                 )}
                             </div>
                         </div>
                     </div >
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>{uiText.cancel}</Button>
                         <Button onClick={handleSave} disabled={isSaving}>
                             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Save
+                            {uiText.save}
                         </Button>
                     </DialogFooter>
                 </DialogContent >

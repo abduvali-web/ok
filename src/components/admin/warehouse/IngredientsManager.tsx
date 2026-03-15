@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Pencil, Trash2, Plus, Search, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Ingredient {
     id: string;
@@ -21,6 +22,95 @@ interface IngredientsManagerProps {
 }
 
 export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
+    const { language } = useLanguage();
+
+    const uiText = useMemo(() => {
+        if (language === 'ru') {
+            return {
+                searchPlaceholder: 'Поиск ингредиентов...',
+                addIngredient: 'Добавить ингредиент',
+                name: 'Название',
+                amountInStock: 'Количество (на складе)',
+                unit: 'Ед.',
+                actions: 'Действия',
+                noIngredientsFound: 'Ингредиенты не найдены',
+                editIngredient: 'Редактировать ингредиент',
+                addIngredientTitle: 'Добавить ингредиент',
+                amountInitial: 'Количество (начальное)',
+                cancel: 'Отмена',
+                save: 'Сохранить',
+                exampleName: 'например: Рис',
+                unitExample: 'гр, мл, шт',
+                failedLoadIngredients: 'Не удалось загрузить ингредиенты',
+                nameRequired: 'Название обязательно',
+                ingredientUpdated: 'Ингредиент обновлен',
+                ingredientCreated: 'Ингредиент создан',
+                failedSaveIngredient: 'Не удалось сохранить ингредиент',
+                errorSaveIngredient: 'Ошибка сохранения ингредиента',
+                confirmDeleteIngredient: 'Удалить этот ингредиент?',
+                ingredientDeleted: 'Ингредиент удален',
+                failedDeleteIngredient: 'Не удалось удалить ингредиент',
+                errorDeleteIngredient: 'Ошибка удаления ингредиента',
+            }
+        }
+
+        if (language === 'uz') {
+            return {
+                searchPlaceholder: 'Ingredientlarni qidirish...',
+                addIngredient: "Ingredient qo'shish",
+                name: 'Nomi',
+                amountInStock: 'Miqdor (omborda)',
+                unit: "O'lchov",
+                actions: 'Amallar',
+                noIngredientsFound: 'Ingredient topilmadi',
+                editIngredient: 'Ingredientni tahrirlash',
+                addIngredientTitle: "Ingredient qo'shish",
+                amountInitial: "Miqdor (boshlang'ich)",
+                cancel: 'Bekor qilish',
+                save: 'Saqlash',
+                exampleName: 'masalan: Guruch',
+                unitExample: 'gr, ml, dona',
+                failedLoadIngredients: 'Ingredientlar yuklanmadi',
+                nameRequired: 'Nom kiritish shart',
+                ingredientUpdated: 'Ingredient yangilandi',
+                ingredientCreated: 'Ingredient yaratildi',
+                failedSaveIngredient: "Ingredientni saqlab bo'lmadi",
+                errorSaveIngredient: 'Ingredientni saqlashda xatolik',
+                confirmDeleteIngredient: "Ushbu ingredient o'chirilsinmi?",
+                ingredientDeleted: "Ingredient o'chirildi",
+                failedDeleteIngredient: "Ingredientni o'chirib bo'lmadi",
+                errorDeleteIngredient: "Ingredientni o'chirishda xatolik",
+            }
+        }
+
+        return {
+            searchPlaceholder: 'Search ingredients...',
+            addIngredient: 'Add Ingredient',
+            name: 'Name',
+            amountInStock: 'Amount (In Stock)',
+            unit: 'Unit',
+            actions: 'Actions',
+            noIngredientsFound: 'No ingredients found',
+            editIngredient: 'Edit Ingredient',
+            addIngredientTitle: 'Add Ingredient',
+            amountInitial: 'Amount (Initial)',
+            cancel: 'Cancel',
+            save: 'Save',
+            exampleName: 'e.g. Rice',
+            unitExample: 'gr, ml, pcs',
+            failedLoadIngredients: 'Failed to load ingredients',
+            nameRequired: 'Name is required',
+            ingredientUpdated: 'Ingredient updated',
+            ingredientCreated: 'Ingredient created',
+            failedSaveIngredient: 'Failed to save ingredient',
+            errorSaveIngredient: 'Error saving ingredient',
+            confirmDeleteIngredient: 'Are you sure you want to delete this ingredient?',
+            ingredientDeleted: 'Ingredient deleted',
+            failedDeleteIngredient: 'Failed to delete ingredient',
+            errorDeleteIngredient: 'Error deleting ingredient',
+        }
+    }, [language]);
+
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -42,7 +132,7 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
             }
         } catch (error) {
             console.error('Failed to fetch ingredients', error);
-            toast.error('Failed to load ingredients');
+            toast.error(uiText.failedLoadIngredients);
         } finally {
             setLoading(false);
         }
@@ -50,7 +140,7 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
 
     const handleSave = async () => {
         if (!currentIngredient.name) {
-            toast.error('Name is required');
+            toast.error(uiText.nameRequired);
             return;
         }
 
@@ -64,24 +154,24 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
             });
 
             if (res.ok) {
-                toast.success(currentIngredient.id ? 'Ingredient updated' : 'Ingredient created');
+                toast.success(currentIngredient.id ? uiText.ingredientUpdated : uiText.ingredientCreated);
                 fetchIngredients();
                 setIsDialogOpen(false);
                 setCurrentIngredient({});
                 if (onUpdate) onUpdate();
             } else {
-                toast.error('Failed to save ingredient');
+                toast.error(uiText.failedSaveIngredient);
             }
         } catch (error) {
             console.error('Error saving ingredient', error);
-            toast.error('Error saving ingredient');
+            toast.error(uiText.errorSaveIngredient);
         } finally {
             setIsSaving(false);
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this ingredient?')) return;
+        if (!confirm(uiText.confirmDeleteIngredient)) return;
 
         try {
             const res = await fetch(`/api/admin/warehouse/ingredients?id=${id}`, {
@@ -89,15 +179,15 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
             });
 
             if (res.ok) {
-                toast.success('Ingredient deleted');
+                toast.success(uiText.ingredientDeleted);
                 fetchIngredients();
                 if (onUpdate) onUpdate();
             } else {
-                toast.error('Failed to delete ingredient');
+                toast.error(uiText.failedDeleteIngredient);
             }
         } catch (error) {
             console.error('Error deleting ingredient', error);
-            toast.error('Error deleting ingredient');
+            toast.error(uiText.errorDeleteIngredient);
         }
     };
 
@@ -111,14 +201,14 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                 <div className="relative w-72">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
                     <Input
-                        placeholder="Search ingredients..."
+                        placeholder={uiText.searchPlaceholder}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-8"
                     />
                 </div>
                 <Button onClick={() => { setCurrentIngredient({ unit: 'gr', amount: 0 }); setIsDialogOpen(true); }}>
-                    <Plus className="mr-2 h-4 w-4" /> Add Ingredient
+                    <Plus className="mr-2 h-4 w-4" /> {uiText.addIngredient}
                 </Button>
             </div>
 
@@ -126,10 +216,10 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                 <Table>
                     <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
                         <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Amount (In Stock)</TableHead>
-                            <TableHead>Unit</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead>{uiText.name}</TableHead>
+                            <TableHead>{uiText.amountInStock}</TableHead>
+                            <TableHead>{uiText.unit}</TableHead>
+                            <TableHead className="text-right">{uiText.actions}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -142,7 +232,7 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                         ) : filteredIngredients.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={4} className="text-center py-8 text-slate-500">
-                                    No ingredients found
+                                    {uiText.noIngredientsFound}
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -171,20 +261,20 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{currentIngredient.id ? 'Edit Ingredient' : 'Add Ingredient'}</DialogTitle>
+                        <DialogTitle>{currentIngredient.id ? uiText.editIngredient : uiText.addIngredientTitle}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label>Name</Label>
+                            <Label>{uiText.name}</Label>
                             <Input
                                 value={currentIngredient.name || ''}
                                 onChange={(e) => setCurrentIngredient({ ...currentIngredient, name: e.target.value })}
-                                placeholder="e.g. Rice"
+                                placeholder={uiText.exampleName}
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label>Amount (Initial)</Label>
+                                <Label>{uiText.amountInitial}</Label>
                                 <Input
                                     type="number"
                                     value={currentIngredient.amount || 0}
@@ -192,20 +282,20 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Unit</Label>
+                                <Label>{uiText.unit}</Label>
                                 <Input
                                     value={currentIngredient.unit || 'gr'}
                                     onChange={(e) => setCurrentIngredient({ ...currentIngredient, unit: e.target.value })}
-                                    placeholder="gr, ml, pcs"
+                                    placeholder={uiText.unitExample}
                                 />
                             </div>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>{uiText.cancel}</Button>
                         <Button onClick={handleSave} disabled={isSaving}>
                             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Save
+                            {uiText.save}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

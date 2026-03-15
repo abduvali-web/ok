@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Loader2, ChefHat, AlertTriangle, UtensilsCrossed, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { MENUS } from '@/lib/menuData';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Dish {
     id: string | number; // Support both for compatibility
@@ -69,6 +70,89 @@ interface CookingManagerProps {
 const CALORIE_GROUPS = [1200, 1600, 2000, 2500, 3000];
 
 export function CookingManager({ date, menuNumber, clientsByCalorie: globalClientsByCalorie, clients = [], orders = [], onCook, orderInfo: _orderInfo }: CookingManagerProps) {
+    const { language } = useLanguage();
+
+    const uiText = useMemo(() => {
+        if (language === 'ru') {
+            return {
+                title: 'Контроль готовки',
+                customSet: 'Сет',
+                activeSetDescription: 'Блюда загружены из активного сета для этого дня',
+                standardMenuDescription: 'Используется стандартное меню (нет активных сетов)',
+                setLabel: 'Сет:',
+                selectSet: 'Выберите сет',
+                autoActiveGlobal: 'Авто (Активный глобальный)',
+                filterLabel: 'Фильтр:',
+                all: 'Все',
+                allCalories: 'Все калории',
+                ordersForTomorrow: 'Заказы на завтра:',
+                portions: 'порций',
+                noOrdersGlobal: 'Нет заказов на эту дату (глобально)',
+                dish: 'Блюдо',
+                ready: 'Готово',
+                left: 'Осталось',
+                cookedAndDeducted: 'Приготовлено и списано со склада',
+                loadFailed: 'Не удалось загрузить данные',
+                enterValidAmount: 'Введите корректное количество',
+                cookFailed: 'Не удалось приготовить',
+                cookError: 'Ошибка приготовления',
+                noDishes: (menu: number) => `Нет блюд для отображения (меню ${menu}). Проверьте настройки выбранного сета.`,
+            }
+        }
+
+        if (language === 'uz') {
+            return {
+                title: 'Pishirish nazorati',
+                customSet: 'Set',
+                activeSetDescription: 'Ushbu kun uchun taomlar faol setdan yuklandi',
+                standardMenuDescription: "Standart menyu ishlatiladi (faol set yo'q)",
+                setLabel: 'Set:',
+                selectSet: 'Setni tanlang',
+                autoActiveGlobal: 'Avto (Faol global)',
+                filterLabel: 'Filter:',
+                all: 'Barchasi',
+                allCalories: 'Barcha kaloriya',
+                ordersForTomorrow: 'Ertangi buyurtmalar:',
+                portions: 'porsiya',
+                noOrdersGlobal: "Bu sana uchun buyurtma yo'q (global)",
+                dish: 'Taom',
+                ready: 'Tayyor',
+                left: 'Qoldi',
+                cookedAndDeducted: 'Pishirildi va ombordan yechildi',
+                loadFailed: "Ma'lumot yuklanmadi",
+                enterValidAmount: "To'g'ri miqdor kiriting",
+                cookFailed: "Pishirib bo'lmadi",
+                cookError: 'Pishirishda xatolik',
+                noDishes: (menu: number) => `Ko'rsatish uchun taom yo'q (menyu ${menu}). Tanlangan set sozlamalarini tekshiring.`,
+            }
+        }
+
+        return {
+            title: 'Cooking Control',
+            customSet: 'Custom Set',
+            activeSetDescription: 'Dishes loaded from active set for this day',
+            standardMenuDescription: 'Using standard menu (no active sets)',
+            setLabel: 'Set:',
+            selectSet: 'Select Set',
+            autoActiveGlobal: 'Auto (Active Global)',
+            filterLabel: 'Filter:',
+            all: 'All',
+            allCalories: 'All Calories',
+            ordersForTomorrow: 'Orders for tomorrow:',
+            portions: 'portions',
+            noOrdersGlobal: 'No orders for this date (global)',
+            dish: 'Dish',
+            ready: 'Ready',
+            left: 'Left',
+            cookedAndDeducted: 'Cooked and deducted from stock',
+            loadFailed: 'Failed to load data',
+            enterValidAmount: 'Please enter a valid amount',
+            cookFailed: 'Failed to cook',
+            cookError: 'Error cooking',
+            noDishes: (menu: number) => `No dishes to display (menu ${menu}). Check selected set settings.`,
+        }
+    }, [language]);
+
     const [dishes, setDishes] = useState<Dish[]>([]);
     const [loading, setLoading] = useState(true);
     const [cookingPlan, setCookingPlan] = useState<any>(null); // { cookedStats: { dishId: { 1200: 5 } } }
@@ -244,7 +328,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
             }
         } catch (error) {
             console.error('Failed to load cooking data', error);
-            toast.error('Failed to load data');
+            toast.error(uiText.loadFailed);
         } finally {
             setLoading(false);
         }
@@ -273,7 +357,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
         }
 
         if (updates.length === 0) {
-            toast.error('Please enter a valid amount');
+            toast.error(uiText.enterValidAmount);
             return;
         }
 
@@ -292,7 +376,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
             });
 
             if (res.ok) {
-                toast.success('Приготовлено и списано со склада');
+                toast.success(uiText.cookedAndDeducted);
                 // Clear inputs
                 setCookingAmounts(prev => {
                     const newState = { ...prev };
@@ -307,11 +391,11 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
                 if (onCook) onCook();
             } else {
                 const data = await res.json();
-                toast.error(data.error || 'Failed to cook');
+                toast.error(data.error || uiText.cookFailed);
             }
         } catch (error) {
             console.error('Error cooking:', error);
-            toast.error('Error cooking');
+            toast.error(uiText.cookError);
         } finally {
             setIsCooking(false);
         }
@@ -406,30 +490,30 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h3 className="text-lg font-medium flex items-center gap-2">
-                        Cooking Control
+                        {uiText.title}
                         {activeSet && (
                             <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
                                 <UtensilsCrossed className="w-3 h-3 mr-1" />
-                                Custom Set: {activeSet.name}
+                                {uiText.customSet}: {activeSet.name}
                             </Badge>
                         )}
                     </h3>
                     <p className="text-sm text-slate-500">
                         {activeSet
-                            ? "Блюда загружены из активного сета для этого дня"
-                            : "Используется стандартное меню (нет активных сетов)"}
+                            ? uiText.activeSetDescription
+                            : uiText.standardMenuDescription}
                     </p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto items-start sm:items-center">
                     <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <span className="text-sm text-slate-500 whitespace-nowrap">Set:</span>
+                        <span className="text-sm text-slate-500 whitespace-nowrap">{uiText.setLabel}</span>
                         <Select value={selectedSetId} onValueChange={setSelectedSetId}>
                             <SelectTrigger className="w-full sm:w-[180px]">
-                                <SelectValue placeholder="Select Set" />
+                                <SelectValue placeholder={uiText.selectSet} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="active">Auto (Active Global)</SelectItem>
+                                <SelectItem value="active">{uiText.autoActiveGlobal}</SelectItem>
                                 {safeAvailableSets.map(s => (
                                     <SelectItem key={s.id} value={s.id}>
                                         {s.name} {s.isActive ? '✓' : ''}
@@ -440,13 +524,13 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
                     </div>
 
                     <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <span className="text-sm text-slate-500 whitespace-nowrap">Filter:</span>
+                        <span className="text-sm text-slate-500 whitespace-nowrap">{uiText.filterLabel}</span>
                         <Select value={selectedCalorieGroup} onValueChange={setSelectedCalorieGroup}>
                             <SelectTrigger className="w-full sm:w-[120px]">
-                                <SelectValue placeholder="All" />
+                                <SelectValue placeholder={uiText.all} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Calories</SelectItem>
+                                <SelectItem value="all">{uiText.allCalories}</SelectItem>
                                 {CALORIE_GROUPS.map(c => (
                                     <SelectItem key={c} value={c.toString()}>{c} kcal</SelectItem>
                                 ))}
@@ -460,9 +544,9 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-2">
                     <Users className="w-4 h-4 text-blue-600" />
-                    <span className="font-medium text-blue-800">Заказы на завтра:</span>
+                    <span className="font-medium text-blue-800">{uiText.ordersForTomorrow}</span>
                     <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                        {Object.values(clientsByCalorie).reduce((a, b) => a + b, 0)} порций
+                        {Object.values(clientsByCalorie).reduce((a, b) => a + b, 0)} {uiText.portions}
                     </Badge>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -476,7 +560,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
                         );
                     })}
                     {Object.values(clientsByCalorie).every(v => v === 0) && (
-                        <span className="text-sm text-blue-600">Нет заказов на эту дату (Глобально)</span>
+                        <span className="text-sm text-blue-600">{uiText.noOrdersGlobal}</span>
                     )}
                     {activeSet && selectedSetId !== 'active' && activeSet.id !== selectedSetId && (
                         <div className="w-full text-xs text-amber-600 mt-1 flex items-center">
@@ -491,7 +575,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[200px]">Dish</TableHead>
+                            <TableHead className="w-[200px]">{uiText.dish}</TableHead>
                             {filteredCalorieGroups.map(cal => (
                                 <TableHead key={cal} className="text-center min-w-[150px]">
                                     {cal} kcal
@@ -540,9 +624,9 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
                                                 <div className={`rounded-lg p-2 space-y-2 border ${needed === 0 ? 'bg-muted/20 border-dashed' : 'bg-muted/20 border'}`}>
                                                     <div className="flex justify-between text-xs">
                                                         <span className={cooked >= needed && needed > 0 ? "text-green-600 font-medium" : "text-amber-600"}>
-                                                            Ready: {cooked}
+                                                            {uiText.ready}: {cooked}
                                                         </span>
-                                                        <span className="text-slate-500">Left: {remaining}</span>
+                                                        <span className="text-slate-500">{uiText.left}: {remaining}</span>
                                                     </div>
                                                     <div className="flex gap-1">
                                                         <Input
@@ -573,7 +657,7 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
             </div>
             {dishes.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg border border-border border-dashed">
-                    Нет блюд для отображения (Меню {menuNumber}). Проверьте настройки выбранного сета.
+                    {uiText.noDishes(menuNumber)}
                 </div>
             )}
         </div>
