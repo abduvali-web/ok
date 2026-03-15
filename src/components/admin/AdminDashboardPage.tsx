@@ -31,6 +31,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
@@ -2896,150 +2904,124 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               <CardContent>
  {/* Clients Table */}
                 {/* Desktop View */}
-                <div className="hidden md:block rounded-md border bg-background">
-                  <div className="max-h-96 overflow-y-auto">
-                    <table className="w-full">
-                      <thead className="sticky top-0 bg-card">
-                        <tr>
-                          <th className="w-12 px-4 py-2 text-left text-xs font-medium text-muted-foreground">
-                            <input
-                              type="checkbox"
-                              className="rounded border-border"
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedClients(new Set(filteredClients.map(c => c.id)))
+                <div className="hidden md:block rounded-md border">
+                  <div className="max-h-96 overflow-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="h-9">
+                          <TableHead className="w-[44px] px-2">
+                            <Checkbox
+                              aria-label="Select all clients"
+                              checked={
+                                filteredClients.length > 0 && selectedClients.size === filteredClients.length
+                                  ? true
+                                  : selectedClients.size > 0
+                                    ? 'indeterminate'
+                                    : false
+                              }
+                              onCheckedChange={(checked) => {
+                                if (checked === true) {
+                                  setSelectedClients(new Set(filteredClients.map((c) => c.id)))
                                 } else {
                                   setSelectedClients(new Set())
                                 }
                               }}
-                              checked={selectedClients.size === filteredClients.length && filteredClients.length > 0}
                             />
-                          </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Name</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Nickname</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Phone</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Address</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Calories</th>
-                          <th className="px-4 py-2 text-center text-xs font-medium text-muted-foreground">Orders</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Delivery days</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
-                            Status / Auto
-                          </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
-                            Notes
-                          </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
-                            Created
-                          </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-background divide-y divide-border">
+                          </TableHead>
+                          <TableHead>{t.common.name}</TableHead>
+                          <TableHead>{profileUiText.nickname}</TableHead>
+                          <TableHead>{t.common.phone}</TableHead>
+                          <TableHead>{t.common.address}</TableHead>
+                          <TableHead>Calories</TableHead>
+                          <TableHead className="text-center">Orders</TableHead>
+                          <TableHead>Delivery days</TableHead>
+                          <TableHead>{t.common.status}</TableHead>
+                          <TableHead>Notes</TableHead>
+                          <TableHead>Created</TableHead>
+                          <TableHead className="text-right">{t.admin.table.actions}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+
+                      <TableBody>
                         {filteredClients.map((client) => (
-                            <tr key={client.id} className="hover:bg-muted/50">
-                              <td className="px-4 py-2 whitespace-nowrap text-sm">
-                                <input
-                                  type="checkbox"
-                                  className="rounded border-border"
-                                  checked={selectedClients.has(client.id)}
-                                  onChange={() => handleToggleClientSelection(client.id)}
-                                />
-                              </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                                {client.name}
-                              </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm text-muted-foreground">
-                                {client.nickName || '-'}
-                              </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm">
-                                {client.phone}
-                              </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm">
-                                {client.address}
-                              </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm">
-                                {client.calories} kcal
-                              </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm text-center">
-                                {(() => {
-                                  const clientOrders = orders.filter(o => o.customerPhone === client.phone)
-                                  if (clientOrders.length === 0) return <span className="text-muted-foreground">-</span>
-                                  
-                                  const delivered = clientOrders.filter(o => o.orderStatus === 'DELIVERED').length
-                                  const active = clientOrders.filter(o => ['NEW', 'PENDING', 'IN_PROCESS', 'IN_DELIVERY', 'PAUSED'].includes(o.orderStatus)).length
-                                  const failed = clientOrders.length - delivered - active
-                                  
-                                  return (
-                                    <div className="flex items-center justify-center gap-2 text-xs">
-                                      {delivered > 0 && <span className="text-emerald-600 font-bold" title="Delivered">{delivered}</span>}
-                                      {failed > 0 && <span className="text-rose-600 font-bold" title="Failed/Not Delivered">{failed}</span>}
-                                      {active > 0 && <span className="text-amber-500 font-bold" title="Active">{active}</span>}
-                                    </div>
-                                  )
-                                })()}
-                              </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm">
-                                <div className="text-xs">
-                                  {client.deliveryDays?.monday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Mon</span>}
-                                  {client.deliveryDays?.tuesday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Tue</span>}
-                                  {client.deliveryDays?.wednesday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Wed</span>}
-                                  {client.deliveryDays?.thursday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Thu</span>}
-                                  {client.deliveryDays?.friday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Fri</span>}
-                                  {client.deliveryDays?.saturday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Sat</span>}
-                                  {client.deliveryDays?.sunday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Sun</span>}
-                                  {(!client.deliveryDays || Object.values(client.deliveryDays).every(day => !day)) && (
-                                    <span className="text-muted-foreground">-</span>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm">
-                                <div className="flex flex-col gap-1">
-                                  <EntityStatusBadge
-                                    isActive={client.isActive}
-                                    activeLabel={t.admin.table.active}
-                                    inactiveLabel={t.admin.table.paused}
-                                    inactiveTone="danger"
-                                    showDot
-                                    onClick={() => handleToggleClientStatus(client.id, client.isActive)}
-                                  />
-                                </div>
-                              </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm">
-                                {client.specialFeatures || '-'}
-                              </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm">
-                                {new Date(client.createdAt).toLocaleDateString('en-GB')}
-                              </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm">
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => handleEditClient(client)}
-                                >
-                                  <Edit className="size-4" />
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        {filteredClients.length === 0 && (
-                          <tr>
-                            <td colSpan={11} className="px-4 py-8 text-center">
-                              <TabEmptyState
-                                title="ÐšÐ»Ð¸ÐµÐ½Ñ‚Ñ‹ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ñ‹"
-                                description="Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚Ðµ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ñ‹ Ð¸Ð»Ð¸ Ð¿Ð¾Ð¸ÑÐºÐ¾Ð²Ñ‹Ð¹ Ð·Ð°Ð¿Ñ€Ð¾Ñ."
+                          <TableRow key={client.id} className="h-10">
+                            <TableCell className="px-2 py-1.5">
+                              <Checkbox
+                                aria-label={`Select client ${client.name}`}
+                                checked={selectedClients.has(client.id)}
+                                onCheckedChange={() => handleToggleClientSelection(client.id)}
                               />
-                            </td>
-                          </tr>
+                            </TableCell>
+                            <TableCell className="py-1.5 font-medium">{client.name}</TableCell>
+                            <TableCell className="py-1.5 text-muted-foreground">{client.nickName || '-'}</TableCell>
+                            <TableCell className="py-1.5">{client.phone}</TableCell>
+                            <TableCell className="py-1.5">{client.address}</TableCell>
+                            <TableCell className="py-1.5">{client.calories} kcal</TableCell>
+                            <TableCell className="py-1.5 text-center">
+                              {(() => {
+                                const clientOrders = orders.filter((o) => o.customerPhone === client.phone)
+                                if (clientOrders.length === 0) return <span className="text-muted-foreground">-</span>
+                                const delivered = clientOrders.filter((o) => o.orderStatus === 'DELIVERED').length
+                                const active = clientOrders.filter((o) => ['NEW','PENDING','IN_PROCESS','IN_DELIVERY','PAUSED'].includes(o.orderStatus)).length
+                                const failed = clientOrders.length - delivered - active
+                                return (
+                                  <div className="flex items-center justify-center gap-2 text-xs">
+                                    {delivered > 0 && <span className="font-bold text-emerald-600" title="Delivered">{delivered}</span>}
+                                    {failed > 0 && <span className="font-bold text-rose-600" title="Failed/Not Delivered">{failed}</span>}
+                                    {active > 0 && <span className="font-bold text-amber-500" title="Active">{active}</span>}
+                                  </div>
+                                )
+                              })()}
+                            </TableCell>
+                            <TableCell className="py-1.5">
+                              <div className="text-xs">
+                                {client.deliveryDays?.monday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Mon</span>}
+                                {client.deliveryDays?.tuesday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Tue</span>}
+                                {client.deliveryDays?.wednesday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Wed</span>}
+                                {client.deliveryDays?.thursday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Thu</span>}
+                                {client.deliveryDays?.friday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Fri</span>}
+                                {client.deliveryDays?.saturday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Sat</span>}
+                                {client.deliveryDays?.sunday && <span className="mr-1 inline-flex items-center rounded-sm border bg-muted px-1 py-0.5 text-[11px] text-muted-foreground">Sun</span>}
+                                {(!client.deliveryDays || Object.values(client.deliveryDays).every((day) => !day)) && (
+                                  <span className="text-muted-foreground">-</span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-1.5">
+                              <EntityStatusBadge
+                                isActive={client.isActive}
+                                activeLabel={t.admin.table.active}
+                                inactiveLabel={t.admin.table.paused}
+                                inactiveTone="danger"
+                                showDot
+                                onClick={() => handleToggleClientStatus(client.id, client.isActive)}
+                              />
+                            </TableCell>
+                            <TableCell className="py-1.5">{client.specialFeatures || '-'}</TableCell>
+                            <TableCell className="py-1.5">{new Date(client.createdAt).toLocaleDateString('en-GB')}</TableCell>
+                            <TableCell className="py-1.5 text-right">
+                              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleEditClient(client)}>
+                                <Edit className="size-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+
+                        {filteredClients.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={12} className="h-24 text-center text-muted-foreground">
+                              <TabEmptyState
+                                title="Клиенты не найдены"
+                                description="Измените фильтры или поисковый запрос."
+                              />
+                            </TableCell>
+                          </TableRow>
                         )}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   </div>
                 </div>
-
-                {/* Mobile View */}
+{/* Mobile View */}
                 <div className="md:hidden space-y-4">
                   {filteredClients.length === 0 && (
                     <TabEmptyState
