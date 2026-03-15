@@ -88,6 +88,7 @@ export function HistoryTable({
   const [hasMore, setHasMore] = useState(false)
 
   const dateLocale = language === 'ru' ? ru : language === 'uz' ? uz : enUS
+  const calendarLocale = language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -233,6 +234,7 @@ export function HistoryTable({
                 applySelectedDate={applySelectedDate}
                 shiftSelectedDate={shiftSelectedDate}
                 selectedDateLabel={selectedDateLabel}
+                locale={calendarLocale}
                 profileUiText={profileUiText}
               />
             )}

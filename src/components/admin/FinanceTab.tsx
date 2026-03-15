@@ -95,7 +95,8 @@ export function FinanceTab({
     selectedDateLabel,
     profileUiText
 }: FinanceTabProps) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
+    const calendarLocale = language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'
     const [activeSubTab, setActiveSubTab] = useState('clients');
     const [companyBalance, setCompanyBalance] = useState(0);
     const [clients, setClients] = useState<Client[]>([]);
@@ -609,6 +610,7 @@ export function FinanceTab({
                                         applySelectedDate={applySelectedDate}
                                         shiftSelectedDate={shiftSelectedDate}
                                         selectedDateLabel={selectedDateLabel}
+                                        locale={calendarLocale}
                                         profileUiText={profileUiText}
                                     />
                                 )}

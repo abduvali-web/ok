@@ -1,13 +1,19 @@
-import { CalendarDays, ChevronLeft, ChevronRight, Clock } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import type { DateRange } from 'react-day-picker'
+
 import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { CalendarRangeSelector } from '@/components/admin/dashboard/shared/CalendarRangeSelector'
 
 interface CalendarDateSelectorProps {
   selectedDate: Date | null
   applySelectedDate: (date: Date | null) => void
   shiftSelectedDate?: (days: number) => void
   selectedDateLabel: string
+  locale?: string
+  /**
+   * Legacy UX toggle: when true, show prev/next day buttons next to the calendar trigger.
+   * Default false to match the "middle-admin database" calendar UX (period-first, no day shifting row).
+   */
   showShiftButtons?: boolean
   profileUiText: {
     calendar: string
@@ -15,7 +21,18 @@ interface CalendarDateSelectorProps {
     clearDate: string
     yesterday: string
     tomorrow: string
+    // Optional: if not provided we fall back to English strings.
+    thisWeek?: string
+    thisMonth?: string
+    allTime?: string
   }
+}
+
+function toLocalIsoDate(d: Date) {
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
 }
 
 export function CalendarDateSelector({
@@ -23,52 +40,67 @@ export function CalendarDateSelector({
   applySelectedDate,
   shiftSelectedDate,
   selectedDateLabel,
-  showShiftButtons = true,
+  locale = 'en-US',
+  showShiftButtons = false,
   profileUiText,
 }: CalendarDateSelectorProps) {
+  const value: DateRange | undefined = selectedDate ? { from: selectedDate, to: selectedDate } : undefined
+
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="secondary" className="h-9 min-w-[240px] justify-between gap-2 px-3 text-left">
-          <span className="flex min-w-0 items-center gap-2">
-            <CalendarDays className="h-4 w-4 shrink-0 text-primary" />
-            <span className="truncate text-sm font-medium">{selectedDateLabel}</span>
-          </span>
-          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-            {profileUiText.calendar}
-          </span>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="single"
-          selected={selectedDate ?? undefined}
-          onSelect={(nextDate) => applySelectedDate(nextDate ?? null)}
-          initialFocus
-        />
-        <div className="flex items-center justify-between border-t px-3 py-2">
-          <Button type="button" size="sm" variant="outline" className="h-8" onClick={() => applySelectedDate(new Date())}>
-            {profileUiText.today}
+    <div className="flex items-center gap-2">
+      {showShiftButtons && shiftSelectedDate ? (
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-9 w-9"
+            onClick={() => shiftSelectedDate(-1)}
+            title={profileUiText.yesterday}
+          >
+            <ChevronLeft className="h-4 w-4" />
           </Button>
-          {selectedDate ? (
-            <Button type="button" size="sm" variant="ghost" className="h-8" onClick={() => applySelectedDate(null)}>
-              {profileUiText.clearDate}
-            </Button>
-          ) : null}
-        </div>
-        {showShiftButtons && shiftSelectedDate ? (
-          <div className="flex flex-col gap-2 px-3 pb-2">
-            <div className="flex items-center gap-2">
-              <Button type="button" size="sm" variant="outline" className="flex-1 h-8" onClick={() => shiftSelectedDate(-1)}>
-                {profileUiText.yesterday}
-              </Button>
-              <Button type="button" size="sm" variant="outline" className="flex-1 h-8" onClick={() => shiftSelectedDate(1)}>
-                {profileUiText.tomorrow}
-              </Button>
-            </div>
-          </div>
-        ) : null}
-      </PopoverContent>
-    </Popover>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-9 w-9"
+            onClick={() => shiftSelectedDate(1)}
+            title={profileUiText.tomorrow}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </>
+      ) : null}
+
+      <CalendarRangeSelector
+        value={value}
+        onChange={(nextRange) => {
+          if (!nextRange?.from) {
+            applySelectedDate(null)
+            return
+          }
+
+          // Keep legacy "single-day" semantics: even though the picker is range-capable,
+          // we treat any selection as a single chosen day.
+          const normalized = new Date(nextRange.from)
+          normalized.setHours(0, 0, 0, 0)
+          applySelectedDate(normalized)
+        }}
+        uiText={{
+          calendar: profileUiText.calendar,
+          today: profileUiText.today,
+          thisWeek: profileUiText.thisWeek ?? 'This week',
+          thisMonth: profileUiText.thisMonth ?? 'This month',
+          clearRange: profileUiText.clearDate,
+          allTime: profileUiText.allTime ?? selectedDateLabel,
+        }}
+        locale={locale}
+        className="min-w-[240px]"
+      />
+
+      {/* Keep the selected label in the DOM for quick QA/debug in case locale formatting differs. */}
+      <span className="sr-only">{selectedDate ? toLocalIsoDate(selectedDate) : selectedDateLabel}</span>
+    </div>
   )
 }

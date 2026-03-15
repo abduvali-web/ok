@@ -106,6 +106,7 @@ export function AdminsTab({
   profileUiText?: any
 }) {
   const { t, language } = useLanguage()
+  const calendarLocale = language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'
 
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState<AdminRoleFilter>('all')
@@ -372,6 +373,7 @@ export function AdminsTab({
                     applySelectedDate={applySelectedDate}
                     shiftSelectedDate={shiftSelectedDate}
                     selectedDateLabel={selectedDateLabel}
+                    locale={calendarLocale}
                     profileUiText={profileUiText}
                   />
                 )}

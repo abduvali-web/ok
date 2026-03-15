@@ -397,6 +397,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         calendar: 'Календарь',
         today: 'Сегодня',
         clearDate: 'Очистить дату',
+        allTime: 'За все время',
+        thisWeek: 'Эта неделя',
+        thisMonth: 'Этот месяц',
         next: 'Далее',
         yesterday: 'Вчера',
         tomorrow: 'Завтра',
@@ -466,6 +469,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         calendar: 'Kalendar',
         today: 'Bugun',
         clearDate: 'Sanani tozalash',
+        allTime: 'Barcha vaqt',
+        thisWeek: 'Shu hafta',
+        thisMonth: 'Shu oy',
         next: 'Keyingi',
         yesterday: 'Kecha',
         tomorrow: 'Ertaga',
@@ -531,12 +537,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       searchClientPlaceholder: 'Search client...',
       searchClientsAria: 'Search clients',
       clear: 'Clear',
-      calendar: 'Calendar',
-      today: 'Today',
-      clearDate: 'Clear date',
-      next: 'Next',
-      yesterday: 'Yesterday',
-      tomorrow: 'Tomorrow',
+        calendar: 'Calendar',
+        today: 'Today',
+        clearDate: 'Clear date',
+        allTime: 'All time',
+        thisWeek: 'This week',
+        thisMonth: 'This month',
+        next: 'Next',
+        yesterday: 'Yesterday',
+        tomorrow: 'Tomorrow',
       searchOrdersPlaceholder: 'Search by name, address, or order number...',
       searchOrdersAria: 'Search orders',
       rows: 'rows',
@@ -2247,6 +2256,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       shiftSelectedDate={shiftSelectedDate}
                       selectedDateLabel={selectedDateLabel}
                       showShiftButtons={false}
+                      locale={dateLocale}
                       profileUiText={profileUiText}
                     />
                     <div className="flex items-center justify-end text-xs text-muted-foreground">
@@ -2537,6 +2547,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       applySelectedDate={applySelectedDate}
                       shiftSelectedDate={shiftSelectedDate}
                       selectedDateLabel={selectedDateLabel}
+                      locale={dateLocale}
                       profileUiText={profileUiText}
                     />
                     <Select value={clientStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setClientStatusFilter(value)}>
