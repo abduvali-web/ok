@@ -53,6 +53,7 @@ import {
   Save,
   RefreshCw,
   Filter,
+  Search,
   Route,
   CalendarDays,
   MapPin,
@@ -76,7 +77,6 @@ import { useDashboardData } from '@/components/admin/dashboard/useDashboardData'
 import { AdminsTab } from '@/components/admin/dashboard/tabs-content/AdminsTab'
 import { OrderModal } from '@/components/admin/dashboard/modals/OrderModal'
 import { DispatchMapPanel } from '@/components/admin/orders/DispatchMapPanel'
-import { FilterToolbar } from '@/components/admin/dashboard/shared/FilterToolbar'
 import { TabEmptyState } from '@/components/admin/dashboard/shared/TabEmptyState'
 import { EntityStatusBadge } from '@/components/admin/dashboard/shared/EntityStatusBadge'
 import {
@@ -2209,27 +2209,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     </CardDescription>
                   </div>
                   <div className="flex w-full flex-wrap items-center justify-end gap-2 lg:w-auto">
-                    <Button onClick={() => setIsCreateOrderModalOpen(true)} className="h-9">
-                      <Plus className="mr-2 size-4" />
-                      {t.admin.createOrder}
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      className="h-9"
-                      onClick={() => setIsDeleteOrdersDialogOpen(true)}
-                      disabled={selectedOrders.size === 0 || isDeletingOrders}
-                    >
-                      {isDeletingOrders ? t.common.loading : `${t.admin.deleteSelected} (${selectedOrders.size})`}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="h-9"
-                      onClick={() => setIsDispatchOpen(true)}
-                      disabled={!selectedDate}
-                    >
-                      <DispatchActionIcon className="mr-2 size-4" />
-                      {dispatchActionLabel}
-                    </Button>
                     <CalendarDateSelector
                       selectedDate={selectedDate}
                       applySelectedDate={applySelectedDate}
@@ -2240,6 +2219,40 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       showShiftButtons={false}
                       locale={dateLocale}
                       profileUiText={profileUiText}
+                    />
+                    <Button onClick={() => setIsCreateOrderModalOpen(true)} className="h-9">
+                      <Plus className="mr-2 size-4" />
+                      {t.admin.createOrder}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-9"
+                      onClick={() => setIsDispatchOpen(true)}
+                      disabled={!selectedDate}
+                    >
+                      <DispatchActionIcon className="mr-2 size-4" />
+                      {dispatchActionLabel}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="h-9"
+                      onClick={() => setIsDeleteOrdersDialogOpen(true)}
+                      disabled={selectedOrders.size === 0 || isDeletingOrders}
+                    >
+                      {isDeletingOrders ? t.common.loading : `${t.admin.deleteSelected} (${selectedOrders.size})`}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex items-center">
+                  <div className="relative w-full md:max-w-md">
+                    <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      ref={searchInputRef}
+                      value={searchTerm}
+                      onChange={(event) => setSearchTerm(event.target.value)}
+                      placeholder={profileUiText.searchOrdersPlaceholder}
+                      className="h-9 pl-8"
                     />
                   </div>
                 </div>
@@ -2447,36 +2460,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   )
                 }
 
-                <div className="mb-3">
-                  <FilterToolbar
-                    inputRef={searchInputRef}
-                    searchValue={searchTerm}
-                    onSearchChange={setSearchTerm}
-                    searchPlaceholder={profileUiText.searchOrdersPlaceholder}
-                    searchAriaLabel={profileUiText.searchOrdersAria}
-                  >
-                    <Badge variant="secondary" className="h-9 rounded-md px-3">
-                      {filteredOrders.length} {profileUiText.rows}
-                    </Badge>
-                    {activeFiltersCount > 0 && (
-                      <Badge variant="outline" className="h-9 rounded-md px-3">
-                        <Filter className="mr-1 h-3.5 w-3.5" />
-                        {activeFiltersCount} {profileUiText.filters}
-                      </Badge>
-                    )}
-                    {searchTerm && (
-                      <Button variant="outline" size="sm" onClick={() => setSearchTerm('')} className="h-9 px-3">
-                        {profileUiText.clear}
-                      </Button>
-                    )}
-                    {activeFiltersCount > 0 && (
-                      <Button variant="outline" size="sm" onClick={clearOrderFilters} className="h-9 px-3">
-                        {profileUiText.resetFilters}
-                      </Button>
-                    )}
-                  </FilterToolbar>
-                </div>
-
                 {filteredOrders.length === 0 ? (
                   <TabEmptyState
                     title={profileUiText.noOrdersFound}
@@ -2583,6 +2566,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     >
                       {isMutatingClients ? t.common.loading : `${t.admin.deleteSelected} (${selectedClients.size})`}
                     </Button>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <div className="relative w-full md:max-w-md">
+                    <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={clientSearchTerm}
+                      onChange={(event) => setClientSearchTerm(event.target.value)}
+                      placeholder={profileUiText.searchClientPlaceholder}
+                      className="h-9 pl-8"
+                    />
                   </div>
                 </div>
                     <Dialog open={isCreateClientModalOpen} onOpenChange={setIsCreateClientModalOpen}>
@@ -2878,24 +2872,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     </Dialog>
               </CardHeader>
               <CardContent>
-                <div className="mb-4">
-                  <FilterToolbar
-                    searchValue={clientSearchTerm}
-                    onSearchChange={setClientSearchTerm}
-                    searchPlaceholder={profileUiText.searchClientPlaceholder}
-                    searchAriaLabel={profileUiText.searchClientsAria}
-                  >
-                    {clientSearchTerm && (
-                      <Button variant="outline" size="sm" className="h-9" onClick={() => setClientSearchTerm('')}>
-                        {profileUiText.clear}
-                      </Button>
-                    )}
-                    <Badge variant="secondary" className="h-9 rounded-md px-3">
-                      {filteredClients.length} clients
-                    </Badge>
-                  </FilterToolbar>
-                </div>
-{/* Clients Table */}
+ {/* Clients Table */}
                 {/* Desktop View */}
                 <div className="hidden md:block rounded-md border">
                   <div className="max-h-96 overflow-y-auto">
