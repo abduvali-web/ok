@@ -102,7 +102,7 @@ export function CalendarRangeSelector({
         <Button
           type="button"
           variant="secondary"
-          className={['h-9 min-w-[240px] justify-between gap-2 px-3 text-left', className].filter(Boolean).join(' ')}
+          className={['h-9 w-[240px] max-w-full justify-between gap-2 px-3 text-left', className].filter(Boolean).join(' ')}
         >
           <span className="flex min-w-0 items-center gap-2">
             <CalendarDays className="h-4 w-4 shrink-0 text-primary" />
@@ -144,4 +144,3 @@ export function CalendarRangeSelector({
     </Popover>
   )
 }
-

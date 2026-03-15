@@ -341,12 +341,33 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     [filters]
   )
 
+  // Use local (calendar) dates for matching `deliveryDate` (stored as YYYY-MM-DD).
+  // Avoid `toISOString()` here, because timezone offsets can shift the day.
+  const toLocalIsoDate = useCallback((d: Date) => {
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    return `${yyyy}-${mm}-${dd}`
+  }, [])
+
+  const parseLocalIsoDate = useCallback((iso: string) => {
+    const parts = iso.split('-')
+    if (parts.length !== 3) return null
+    const yyyy = Number(parts[0])
+    const mm = Number(parts[1])
+    const dd = Number(parts[2])
+    if (!Number.isFinite(yyyy) || !Number.isFinite(mm) || !Number.isFinite(dd)) return null
+    const dt = new Date(yyyy, mm - 1, dd)
+    dt.setHours(0, 0, 0, 0)
+    return Number.isNaN(dt.getTime()) ? null : dt
+  }, [])
+
   const isSelectedDateToday = useMemo(() => {
     if (!selectedDate) return false
-    const todayISO = new Date().toISOString().split('T')[0]
-    const selectedISO = selectedDate.toISOString().split('T')[0]
+    const todayISO = toLocalIsoDate(new Date())
+    const selectedISO = toLocalIsoDate(selectedDate)
     return selectedISO === todayISO
-  }, [selectedDate])
+  }, [selectedDate, toLocalIsoDate])
 
   const selectedDayIsActive = useMemo(() => {
     if (!selectedDate) return null
@@ -575,7 +596,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       phoneFormat: 'Format: +998 XX XXX XX XX',
     }
   }, [language])
-  const selectedDateISO = selectedDate ? selectedDate.toISOString().split('T')[0] : ''
+  const selectedDateISO = selectedDate ? toLocalIsoDate(selectedDate) : ''
   const selectedDateLabel = selectedDate
     ? selectedDate.toLocaleDateString(dateLocale, {
       weekday: 'short',
@@ -634,8 +655,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
     setSelectedPeriod({ from, to })
 
-    const fromIso = from.toISOString().split('T')[0]
-    const toIso = to.toISOString().split('T')[0]
+    const fromIso = toLocalIsoDate(from)
+    const toIso = toLocalIsoDate(to)
     if (fromIso === toIso) {
       setSelectedDate(from)
       setDateCursor(from)
@@ -643,7 +664,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       setSelectedDate(null)
       setDateCursor(from)
     }
-  }, [])
+  }, [toLocalIsoDate])
 
   const shiftSelectedDate = useCallback((days: number) => {
     const baseDate = selectedDate ? new Date(selectedDate) : new Date()
@@ -796,14 +817,14 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         setSelectedDate(null)
         setDateCursor(new Date())
       } else if (state.selectedPeriodISO && typeof state.selectedPeriodISO === 'object') {
-        const restoredFrom = new Date(state.selectedPeriodISO.from)
-        const restoredTo = new Date(state.selectedPeriodISO.to)
-        if (!Number.isNaN(restoredFrom.getTime()) && !Number.isNaN(restoredTo.getTime())) {
+        const restoredFrom = parseLocalIsoDate(state.selectedPeriodISO.from)
+        const restoredTo = parseLocalIsoDate(state.selectedPeriodISO.to)
+        if (restoredFrom && restoredTo) {
           applySelectedPeriod({ from: restoredFrom, to: restoredTo })
         }
       } else if (typeof state.selectedDateISO === 'string') {
-        const restoredDate = new Date(state.selectedDateISO)
-        if (!Number.isNaN(restoredDate.getTime())) {
+        const restoredDate = parseLocalIsoDate(state.selectedDateISO)
+        if (restoredDate) {
           applySelectedPeriod({ from: restoredDate, to: restoredDate })
         }
       }
@@ -812,7 +833,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     } finally {
       setIsUiStateHydrated(true)
     }
-  }, [applySelectedPeriod, isUiStateHydrated, uiStateStorageKey])
+  }, [applySelectedPeriod, isUiStateHydrated, parseLocalIsoDate, uiStateStorageKey])
 
   useEffect(() => {
     if (!isUiStateHydrated || typeof window === 'undefined') return
@@ -823,8 +844,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         activeTab,
         selectedPeriodISO: selectedPeriod?.from
           ? {
-              from: selectedPeriod.from.toISOString().split('T')[0],
-              to: (selectedPeriod.to ?? selectedPeriod.from).toISOString().split('T')[0],
+              from: toLocalIsoDate(selectedPeriod.from),
+              to: toLocalIsoDate(selectedPeriod.to ?? selectedPeriod.from),
             }
           : null,
         showFilters,
@@ -841,6 +862,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     searchTerm,
     selectedPeriod,
     showFilters,
+    toLocalIsoDate,
     uiStateStorageKey,
   ])
 
@@ -1288,7 +1310,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       const longitude = parsedCoordinates?.lng ?? null
 
       // Add coordinates and date to order data, but keep original address
-      const effectiveOrderDate = (selectedDate ?? new Date()).toISOString().split('T')[0]
+      const effectiveOrderDate = toLocalIsoDate(selectedDate ?? new Date())
 
       const orderDataWithCoords = {
         ...orderFormData,
@@ -2874,7 +2896,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               <CardContent>
  {/* Clients Table */}
                 {/* Desktop View */}
-                <div className="hidden md:block rounded-md border">
+                <div className="hidden md:block rounded-md border bg-background">
                   <div className="max-h-96 overflow-y-auto">
                     <table className="w-full">
                       <thead className="sticky top-0 bg-card">
@@ -2914,7 +2936,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-card divide-y divide-border">
+                      <tbody className="bg-background divide-y divide-border">
                         {filteredClients.map((client) => (
                             <tr key={client.id} className="hover:bg-muted/50">
                               <td className="px-4 py-2 whitespace-nowrap text-sm">
@@ -3026,7 +3048,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     />
                   )}
                   {filteredClients.map((client) => (
-                      <Card key={client.id} className="border bg-card">
+                      <Card key={client.id} className="border bg-background">
                         <CardHeader className="pb-2">
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-2">

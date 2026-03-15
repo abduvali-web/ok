@@ -109,7 +109,7 @@ export function CalendarDateSelector({
           allTime: profileUiText.allTime ?? selectedDateLabel ?? 'All time',
         }}
         locale={locale}
-        className="min-w-[240px]"
+        className="w-[240px] max-w-full"
       />
 
       {/* Keep the selected label in the DOM for quick QA/debug in case locale formatting differs. */}

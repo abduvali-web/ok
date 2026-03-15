@@ -393,16 +393,18 @@ export function AdminsTab({
               </div>
               <div className="flex w-full flex-wrap items-center justify-end gap-2 lg:w-auto">
                 {applySelectedDate && (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) && profileUiText && (
-                  <CalendarDateSelector
-                    selectedDate={selectedDate || null}
-                    applySelectedDate={applySelectedDate}
-                    shiftSelectedDate={shiftSelectedDate}
-                    selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
-                    selectedPeriod={selectedPeriod}
-                    applySelectedPeriod={applySelectedPeriod}
-                    locale={calendarLocale}
-                    profileUiText={profileUiText}
-                  />
+                  <div className="basis-full sm:basis-auto sm:mr-auto">
+                    <CalendarDateSelector
+                      selectedDate={selectedDate || null}
+                      applySelectedDate={applySelectedDate}
+                      shiftSelectedDate={shiftSelectedDate}
+                      selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
+                      selectedPeriod={selectedPeriod}
+                      applySelectedPeriod={applySelectedPeriod}
+                      locale={calendarLocale}
+                      profileUiText={profileUiText}
+                    />
+                  </div>
                 )}
                 {!isLowAdminView && (
                   <>
