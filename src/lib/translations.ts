@@ -239,6 +239,7 @@ export const translations = {
             worker: 'Работник',
             pause: 'Приостановить',
             resume: 'Активировать',
+            noAdminsFound: 'Администраторы не найдены',
 
             // Auto Orders
             createAutoOrders: 'Создать авто-заказы',
@@ -657,6 +658,7 @@ export const translations = {
             worker: 'Xodim',
             pause: 'To\'xtatish',
             resume: 'Faollashtirish',
+            noAdminsFound: 'Administratorlar topilmadi',
 
             // Auto Orders
             createAutoOrders: 'Avto-buyurtmalarni yaratish',
@@ -1073,6 +1075,7 @@ export const translations = {
             worker: 'Worker',
             pause: 'Pause',
             resume: 'Activate',
+            noAdminsFound: 'No admins found',
 
             // Auto Orders
             createAutoOrders: 'Create Auto Orders',
