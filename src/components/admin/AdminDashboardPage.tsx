@@ -175,7 +175,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const [isDispatchOpen, setIsDispatchOpen] = useState(false)
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set())
   const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set())
-  const [clientStatusFilter, setClientStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [clientSearchTerm, setClientSearchTerm] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [isDeleteOrdersDialogOpen, setIsDeleteOrdersDialogOpen] = useState(false)
@@ -688,19 +687,13 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     const normalizedSearch = clientSearchTerm.trim().toLowerCase()
 
     return clients.filter((client) => {
-      const statusMatch =
-        clientStatusFilter === 'all' ||
-        (clientStatusFilter === 'active' && client.isActive) ||
-        (clientStatusFilter === 'inactive' && !client.isActive)
-
-      if (!statusMatch) return false
       if (!normalizedSearch) return true
 
       return [client.name, client.nickName, client.phone, client.address]
         .filter(Boolean)
         .some((field) => String(field).toLowerCase().includes(normalizedSearch))
     })
-  }, [clientSearchTerm, clientStatusFilter, clients])
+  }, [clientSearchTerm, clients])
 
   const orderMetrics = useMemo(() => {
     const pendingCount = filteredOrders.filter((order) => order.orderStatus === 'PENDING').length
@@ -808,7 +801,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   // Add effect to reset selected clients when filter changes
   useEffect(() => {
     setSelectedClients(new Set())
-  }, [clientStatusFilter, clientSearchTerm])
+  }, [clientSearchTerm])
 
   useEffect(() => {
     if (!isOrderDetailsModalOpen || !selectedOrder?.id) {
@@ -856,7 +849,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         searchTerm?: string
         clientSearchTerm?: string
         optimizeCourierId?: string
-        clientStatusFilter?: 'all' | 'active' | 'inactive'
       }
 
       if (typeof state.activeTab === 'string') setActiveTab(state.activeTab)
@@ -864,9 +856,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       if (typeof state.searchTerm === 'string') setSearchTerm(state.searchTerm.slice(0, 160))
       if (typeof state.clientSearchTerm === 'string') setClientSearchTerm(state.clientSearchTerm.slice(0, 160))
       if (typeof state.optimizeCourierId === 'string') setOptimizeCourierId(state.optimizeCourierId)
-      if (state.clientStatusFilter === 'all' || state.clientStatusFilter === 'active' || state.clientStatusFilter === 'inactive') {
-        setClientStatusFilter(state.clientStatusFilter)
-      }
       if (state.selectedPeriodISO === null || state.selectedDateISO === null) {
         setSelectedPeriod(undefined)
         setSelectedDate(null)
@@ -907,13 +896,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         searchTerm,
         clientSearchTerm,
         optimizeCourierId,
-        clientStatusFilter,
       })
     )
   }, [
     activeTab,
     clientSearchTerm,
-    clientStatusFilter,
     isUiStateHydrated,
     optimizeCourierId,
     searchTerm,
@@ -2600,14 +2587,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     <CardTitle>{t.admin.manageClients}</CardTitle>
                     <CardDescription>
                       {t.admin.manageClientsDesc}
-                      {clientStatusFilter !== 'all' && (
-                        <span className="ml-2 text-sm">
-                          ({profileUiText.showing}: {filteredClients.length} {profileUiText.of} {clients.length})
-                        </span>
-                      )}
                     </CardDescription>
                   </div>
-                  <div className="grid w-full gap-2 lg:w-auto lg:flex lg:items-center">
+                  <div className="flex w-full flex-wrap items-center justify-end gap-2 lg:w-auto">
                     <CalendarDateSelector
                       selectedDate={selectedDate}
                       applySelectedDate={applySelectedDate}
@@ -2618,28 +2600,68 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       locale={dateLocale}
                       profileUiText={profileUiText}
                     />
-                    <Select value={clientStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setClientStatusFilter(value)}>
-                      <SelectTrigger className="h-9 w-36">
-                        <SelectValue placeholder={profileUiText.statusFilter} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{profileUiText.allClients}</SelectItem>
-                        <SelectItem value="active">{profileUiText.activeOnly}</SelectItem>
-                        <SelectItem value="inactive">{profileUiText.pausedOnly}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button variant="outline" className="h-9" onClick={() => setActiveTab('bin')}>
-                      {profileUiText.bin}
+                    <Button
+                      className="h-9"
+                      onClick={() => {
+                        setEditingClientId(null)
+                        setClientFormData({
+                          name: '',
+                          nickName: '',
+                          phone: '',
+                          address: '',
+                          calories: 1200,
+                          planType: 'CLASSIC',
+                          dailyPrice: 84000,
+                          notes: '',
+                          specialFeatures: '',
+                          deliveryDays: {
+                            monday: false,
+                            tuesday: false,
+                            wednesday: false,
+                            thursday: false,
+                            friday: false,
+                            saturday: false,
+                            sunday: false,
+                          },
+                          autoOrdersEnabled: true,
+                          isActive: true,
+                          defaultCourierId: '',
+                          googleMapsLink: '',
+                          latitude: null,
+                          longitude: null,
+                          assignedSetId: '',
+                        })
+                        setClientError('')
+                        setIsCreateClientModalOpen(true)
+                      }}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      {profileUiText.createClient}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-9"
+                      onClick={() =>
+                        shouldPauseSelectedClients
+                          ? setIsPauseClientsDialogOpen(true)
+                          : setIsResumeClientsDialogOpen(true)
+                      }
+                      disabled={selectedClients.size === 0 || isMutatingClients}
+                    >
+                      {shouldPauseSelectedClients ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+                      {isMutatingClients ? t.common.loading : shouldPauseSelectedClients ? t.admin.pause : t.admin.resume}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="h-9"
+                      onClick={() => setIsDeleteClientsDialogOpen(true)}
+                      disabled={selectedClients.size === 0 || isMutatingClients}
+                    >
+                      {isMutatingClients ? t.common.loading : `${t.admin.deleteSelected} (${selectedClients.size})`}
                     </Button>
                   </div>
                 </div>
                     <Dialog open={isCreateClientModalOpen} onOpenChange={setIsCreateClientModalOpen}>
-                      <DialogTrigger asChild>
-                        <Button>
-                          <Plus className="w-4 h-4 mr-2" />
-                          {profileUiText.createClient}
-                        </Button>
-                      </DialogTrigger>
                       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>{editingClientId ? profileUiText.editClient : profileUiText.createClient}</DialogTitle>
@@ -2950,64 +2972,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                     </Badge>
                   </FilterToolbar>
                 </div>
-
-                {/* Client Management Buttons */}
-                {selectedClients.size > 0 && (
-                  <div className="mb-4 rounded-lg border bg-muted/20 p-3">
-                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Selected clients: {selectedClients.size}
-                      </span>
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-9"
-                          onClick={() => {
-                            const client = clients.find(c => selectedClients.has(c.id))
-                            if (client) handleEditClient(client)
-                          }}
-                          disabled={selectedClients.size !== 1}
-                        >
-                          <Edit className="w-4 h-4 mr-2" />
-                          Ð ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-9"
-                          onClick={() =>
-                            shouldPauseSelectedClients
-                              ? setIsPauseClientsDialogOpen(true)
-                              : setIsResumeClientsDialogOpen(true)
-                          }
-                          disabled={selectedClients.size === 0 || isMutatingClients}
-                        >
-                          {shouldPauseSelectedClients ? (
-                            <Pause className="w-4 h-4 mr-2" />
-                          ) : (
-                            <Play className="w-4 h-4 mr-2" />
-                          )}
-                          {isMutatingClients
-                            ? t.common.loading
-                            : shouldPauseSelectedClients
-                              ? 'ÐŸÑ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ'
-                              : 'Ð’Ð¾Ð·Ð¾Ð±Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ'}
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="h-9"
-                          onClick={() => setIsDeleteClientsDialogOpen(true)}
-                          disabled={selectedClients.size === 0 || isMutatingClients}
-                        >
-                          {isMutatingClients ? t.common.loading : 'Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ'}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {/* Clients Table */}
+{/* Clients Table */}
                 {/* Desktop View */}
                 <div className="hidden md:block border rounded-lg overflow-hidden">
                   <div className="max-h-96 overflow-y-auto">
