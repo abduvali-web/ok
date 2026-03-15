@@ -15,6 +15,7 @@ import { AllowedTabsPicker } from '@/components/admin/dashboard/AllowedTabsPicke
 import { FormField } from '@/components/admin/dashboard/shared/FormField'
 import { EntityStatusBadge } from '@/components/admin/dashboard/shared/EntityStatusBadge'
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
+import type { DateRange } from 'react-day-picker'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { fetchApi } from '@/lib/api-client'
 
@@ -92,6 +93,9 @@ export function AdminsTab({
   applySelectedDate,
   shiftSelectedDate,
   selectedDateLabel,
+  selectedPeriod,
+  applySelectedPeriod,
+  selectedPeriodLabel,
   profileUiText = {} as any,
 }: {
   lowAdmins: Admin[]
@@ -103,6 +107,9 @@ export function AdminsTab({
   applySelectedDate?: (date: Date | null) => void
   shiftSelectedDate?: (days: number) => void
   selectedDateLabel?: string
+  selectedPeriod?: DateRange | undefined
+  applySelectedPeriod?: (range: DateRange | undefined) => void
+  selectedPeriodLabel?: string
   profileUiText?: any
 }) {
   const { t, language } = useLanguage()
@@ -367,12 +374,14 @@ export function AdminsTab({
                 <CardDescription>{t.admin.manageLowAdminsDesc}</CardDescription>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                {applySelectedDate && shiftSelectedDate && selectedDateLabel && profileUiText && (
+                {applySelectedDate && (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) && profileUiText && (
                   <CalendarDateSelector
                     selectedDate={selectedDate || null}
                     applySelectedDate={applySelectedDate}
                     shiftSelectedDate={shiftSelectedDate}
-                    selectedDateLabel={selectedDateLabel}
+                    selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
+                    selectedPeriod={selectedPeriod}
+                    applySelectedPeriod={applySelectedPeriod}
                     locale={calendarLocale}
                     profileUiText={profileUiText}
                   />

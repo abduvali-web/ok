@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import type { Admin, Client, Order, Stats } from '@/components/admin/dashboard/types'
+import type { DateRange } from 'react-day-picker'
 
 type DashboardFilters = Record<string, unknown>
 
@@ -11,10 +12,10 @@ function isAbortError(error: unknown) {
 }
 
 export function useDashboardData({
-  selectedDate,
+  selectedPeriod,
   filters,
 }: {
-  selectedDate: Date | null
+  selectedPeriod: DateRange | undefined
   filters: DashboardFilters
 }) {
   const [meRole, setMeRole] = useState<string | null>(null)
@@ -105,10 +106,17 @@ export function useDashboardData({
 
       await Promise.race([refreshLowAdmins(signal), timeoutPromise])
 
-      const ordersUrl = selectedDate
-        ? `/api/orders?date=${selectedDate.toISOString().split('T')[0]}&filters=${encodeURIComponent(
-            JSON.stringify(filters)
-          )}`
+      const toLocalIsoDate = (d: Date) => {
+        const yyyy = d.getFullYear()
+        const mm = String(d.getMonth() + 1).padStart(2, '0')
+        const dd = String(d.getDate()).padStart(2, '0')
+        return `${yyyy}-${mm}-${dd}`
+      }
+
+      const ordersUrl = selectedPeriod?.from
+        ? `/api/orders?from=${encodeURIComponent(toLocalIsoDate(selectedPeriod.from))}&to=${encodeURIComponent(
+            toLocalIsoDate(selectedPeriod.to ?? selectedPeriod.from)
+          )}&filters=${encodeURIComponent(JSON.stringify(filters))}`
         : `/api/orders?filters=${encodeURIComponent(JSON.stringify(filters))}`
 
       const fetchPromise = Promise.all([
@@ -147,7 +155,7 @@ export function useDashboardData({
     } finally {
       setIsLoading(false)
     }
-  }, [filters, refreshBinClients, refreshBinOrders, refreshLowAdmins, selectedDate])
+  }, [filters, refreshBinClients, refreshBinOrders, refreshLowAdmins, selectedPeriod])
 
   useEffect(() => {
     const controller = new AbortController()

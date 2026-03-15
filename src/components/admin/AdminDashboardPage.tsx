@@ -91,6 +91,7 @@ import {
 import { MobileSidebar } from '@/components/MobileSidebar'
 import { MobileTabIndicator } from '@/components/MobileTabIndicator'
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
+import type { DateRange } from 'react-day-picker'
 
 const OrdersTable = dynamic(
   () => import('@/components/admin/OrdersTable').then((mod) => mod.OrdersTable),
@@ -163,6 +164,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const [activeTab, setActiveTab] = useState(() => (mode === 'middle' ? 'orders' : 'statistics'))
   const [currentDate, setCurrentDate] = useState('')
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => (mode === 'middle' ? new Date() : null))
+  const [selectedPeriod, setSelectedPeriod] = useState<DateRange | undefined>(() => {
+    if (mode !== 'middle') return undefined
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return { from: today, to: today }
+  })
   const [, setDateCursor] = useState<Date>(() => new Date())
   const [isUiStateHydrated, setIsUiStateHydrated] = useState(false)
   const [isDispatchOpen, setIsDispatchOpen] = useState(false)
@@ -313,7 +320,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     refreshAll,
     refreshBinClients,
     refreshBinOrders,
-  } = useDashboardData({ selectedDate, filters })
+  } = useDashboardData({ selectedPeriod, filters })
 
   const fetchData = () => refreshAll()
   const fetchBinClients = () => refreshBinClients()
@@ -580,9 +587,27 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     })
     : profileUiText.noDateSelected
 
+  const selectedPeriodLabel = useMemo(() => {
+    if (!selectedPeriod?.from) return profileUiText.allTime ?? profileUiText.noDateSelected
+
+    const from = selectedPeriod.from
+    const to = selectedPeriod.to ?? selectedPeriod.from
+    const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' }
+    const fromLabel = from.toLocaleDateString(dateLocale, opts)
+    const toLabel = to.toLocaleDateString(dateLocale, opts)
+    return fromLabel === toLabel ? fromLabel : `${fromLabel} - ${toLabel}`
+  }, [dateLocale, profileUiText.allTime, profileUiText.noDateSelected, selectedPeriod])
+
+  const dispatchOrders = useMemo(() => {
+    if (!selectedDateISO) return []
+    if (!Array.isArray(orders) || orders.length === 0) return []
+    return orders.filter((order: any) => String(order?.deliveryDate ?? '') === selectedDateISO)
+  }, [orders, selectedDateISO])
+
   const applySelectedDate = useCallback((nextDate: Date | null) => {
     if (!nextDate) {
       setSelectedDate(null)
+      setSelectedPeriod(undefined)
       return
     }
 
@@ -591,7 +616,34 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
     if (!Number.isNaN(normalizedDate.getTime())) {
       setSelectedDate(normalizedDate)
+      setSelectedPeriod({ from: normalizedDate, to: normalizedDate })
       setDateCursor(normalizedDate)
+    }
+  }, [])
+
+  const applySelectedPeriod = useCallback((nextPeriod: DateRange | undefined) => {
+    if (!nextPeriod?.from) {
+      setSelectedPeriod(undefined)
+      setSelectedDate(null)
+      setDateCursor(new Date())
+      return
+    }
+
+    const from = new Date(nextPeriod.from)
+    from.setHours(0, 0, 0, 0)
+    const to = nextPeriod.to ? new Date(nextPeriod.to) : new Date(from)
+    to.setHours(0, 0, 0, 0)
+
+    setSelectedPeriod({ from, to })
+
+    const fromIso = from.toISOString().split('T')[0]
+    const toIso = to.toISOString().split('T')[0]
+    if (fromIso === toIso) {
+      setSelectedDate(from)
+      setDateCursor(from)
+    } else {
+      setSelectedDate(null)
+      setDateCursor(from)
     }
   }, [])
 
@@ -799,6 +851,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       const state = JSON.parse(rawState) as {
         activeTab?: string
         selectedDateISO?: string | null
+        selectedPeriodISO?: { from: string; to: string } | null
         showFilters?: boolean
         searchTerm?: string
         clientSearchTerm?: string
@@ -814,14 +867,20 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       if (state.clientStatusFilter === 'all' || state.clientStatusFilter === 'active' || state.clientStatusFilter === 'inactive') {
         setClientStatusFilter(state.clientStatusFilter)
       }
-      if (state.selectedDateISO === null) {
+      if (state.selectedPeriodISO === null || state.selectedDateISO === null) {
+        setSelectedPeriod(undefined)
         setSelectedDate(null)
         setDateCursor(new Date())
+      } else if (state.selectedPeriodISO && typeof state.selectedPeriodISO === 'object') {
+        const restoredFrom = new Date(state.selectedPeriodISO.from)
+        const restoredTo = new Date(state.selectedPeriodISO.to)
+        if (!Number.isNaN(restoredFrom.getTime()) && !Number.isNaN(restoredTo.getTime())) {
+          applySelectedPeriod({ from: restoredFrom, to: restoredTo })
+        }
       } else if (typeof state.selectedDateISO === 'string') {
         const restoredDate = new Date(state.selectedDateISO)
         if (!Number.isNaN(restoredDate.getTime())) {
-          setSelectedDate(restoredDate)
-          setDateCursor(restoredDate)
+          applySelectedPeriod({ from: restoredDate, to: restoredDate })
         }
       }
     } catch (error) {
@@ -829,7 +888,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     } finally {
       setIsUiStateHydrated(true)
     }
-  }, [isUiStateHydrated, uiStateStorageKey])
+  }, [applySelectedPeriod, isUiStateHydrated, uiStateStorageKey])
 
   useEffect(() => {
     if (!isUiStateHydrated || typeof window === 'undefined') return
@@ -838,7 +897,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       uiStateStorageKey,
       JSON.stringify({
         activeTab,
-        selectedDateISO: selectedDate ? selectedDate.toISOString().split('T')[0] : null,
+        selectedPeriodISO: selectedPeriod?.from
+          ? {
+              from: selectedPeriod.from.toISOString().split('T')[0],
+              to: (selectedPeriod.to ?? selectedPeriod.from).toISOString().split('T')[0],
+            }
+          : null,
         showFilters,
         searchTerm,
         clientSearchTerm,
@@ -853,14 +917,14 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     isUiStateHydrated,
     optimizeCourierId,
     searchTerm,
-    selectedDate,
+    selectedPeriod,
     showFilters,
     uiStateStorageKey,
   ])
 
   useEffect(() => {
-    if (selectedDate) setDateCursor(selectedDate)
-  }, [selectedDate])
+    if (selectedPeriod?.from) setDateCursor(selectedPeriod.from)
+  }, [selectedPeriod])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -2254,7 +2318,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       selectedDate={selectedDate}
                       applySelectedDate={applySelectedDate}
                       shiftSelectedDate={shiftSelectedDate}
-                      selectedDateLabel={selectedDateLabel}
+                      selectedDateLabel={selectedPeriodLabel}
+                      selectedPeriod={selectedPeriod}
+                      applySelectedPeriod={applySelectedPeriod}
                       showShiftButtons={false}
                       locale={dateLocale}
                       profileUiText={profileUiText}
@@ -2546,7 +2612,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       selectedDate={selectedDate}
                       applySelectedDate={applySelectedDate}
                       shiftSelectedDate={shiftSelectedDate}
-                      selectedDateLabel={selectedDateLabel}
+                      selectedDateLabel={selectedPeriodLabel}
+                      selectedPeriod={selectedPeriod}
+                      applySelectedPeriod={applySelectedPeriod}
                       locale={dateLocale}
                       profileUiText={profileUiText}
                     />
@@ -3149,7 +3217,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
             <DispatchMapPanel
               open={isDispatchOpen}
               onOpenChange={setIsDispatchOpen}
-              orders={orders}
+              orders={dispatchOrders}
               couriers={couriers}
               selectedDateLabel={selectedDate ? selectedDateLabel : profileUiText.allOrders}
               selectedDateISO={selectedDateISO || undefined}
@@ -3168,7 +3236,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
             selectedDate={selectedDate}
             applySelectedDate={applySelectedDate}
             shiftSelectedDate={shiftSelectedDate}
-            selectedDateLabel={selectedDateLabel}
+            selectedDateLabel={selectedPeriodLabel}
+            selectedPeriod={selectedPeriod}
+            applySelectedPeriod={applySelectedPeriod}
+            selectedPeriodLabel={selectedPeriodLabel}
             profileUiText={profileUiText}
           />
 
@@ -3186,7 +3257,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               selectedDate={selectedDate}
               applySelectedDate={applySelectedDate}
               shiftSelectedDate={shiftSelectedDate}
-              selectedDateLabel={selectedDateLabel}
+              selectedDateLabel={selectedPeriodLabel}
+              selectedPeriod={selectedPeriod}
+              applySelectedPeriod={applySelectedPeriod}
+              selectedPeriodLabel={selectedPeriodLabel}
               profileUiText={profileUiText}
             />
           </TabsContent>
@@ -3464,7 +3538,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
           {/* Finance Tab */}
           <TabsContent value="finance" className="space-y-4">
-            <FinanceTab />
+            <FinanceTab
+              selectedDate={selectedDate}
+              applySelectedDate={applySelectedDate}
+              shiftSelectedDate={shiftSelectedDate}
+              selectedDateLabel={selectedPeriodLabel}
+              selectedPeriod={selectedPeriod}
+              applySelectedPeriod={applySelectedPeriod}
+              selectedPeriodLabel={selectedPeriodLabel}
+              profileUiText={profileUiText}
+            />
           </TabsContent>
 
 

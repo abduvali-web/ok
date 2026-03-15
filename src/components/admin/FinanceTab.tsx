@@ -50,6 +50,7 @@ import { getAllIngredients } from '@/lib/menuData';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector';
+import type { DateRange } from 'react-day-picker'
 
 interface FinanceTabProps {
     className?: string;
@@ -57,6 +58,9 @@ interface FinanceTabProps {
     applySelectedDate?: (date: Date | null) => void;
     shiftSelectedDate?: (days: number) => void;
     selectedDateLabel?: string;
+    selectedPeriod?: DateRange | undefined
+    applySelectedPeriod?: (range: DateRange | undefined) => void
+    selectedPeriodLabel?: string
     profileUiText?: any;
 }
 
@@ -93,6 +97,9 @@ export function FinanceTab({
     applySelectedDate,
     shiftSelectedDate,
     selectedDateLabel,
+    selectedPeriod,
+    applySelectedPeriod,
+    selectedPeriodLabel,
     profileUiText
 }: FinanceTabProps) {
     const { t, language } = useLanguage();
@@ -110,6 +117,19 @@ export function FinanceTab({
     const [balanceFilter, setBalanceFilter] = useState<'all' | 'positive' | 'negative' | 'zero'>('all');
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [categories, setCategories] = useState<string[]>([]);
+
+    const visibleHistory = useMemo(() => {
+        if (!selectedPeriod?.from) return history
+        const start = new Date(selectedPeriod.from)
+        start.setHours(0, 0, 0, 0)
+        const end = new Date(selectedPeriod.to ?? selectedPeriod.from)
+        end.setHours(23, 59, 59, 999)
+
+        return history.filter((tx) => {
+            const at = new Date(tx.createdAt).getTime()
+            return at >= start.getTime() && at <= end.getTime()
+        })
+    }, [history, selectedPeriod])
 
     // Modals
     const [isCompanyFundsModalOpen, setIsCompanyFundsModalOpen] = useState(false);
@@ -604,12 +624,14 @@ export function FinanceTab({
                                 <CardDescription className="flex-1">
                                     {t.finance.historyDesc}
                                 </CardDescription>
-                                {applySelectedDate && shiftSelectedDate && selectedDateLabel && profileUiText && (
+                                {applySelectedDate && (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) && profileUiText && (
                                     <CalendarDateSelector
                                         selectedDate={selectedDate || null}
                                         applySelectedDate={applySelectedDate}
                                         shiftSelectedDate={shiftSelectedDate}
-                                        selectedDateLabel={selectedDateLabel}
+                                        selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
+                                        selectedPeriod={selectedPeriod}
+                                        applySelectedPeriod={applySelectedPeriod}
                                         locale={calendarLocale}
                                         profileUiText={profileUiText}
                                     />
@@ -647,14 +669,14 @@ export function FinanceTab({
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {history.length === 0 ? (
+                                        {visibleHistory.length === 0 ? (
                                             <TableRow>
                                                 <TableCell colSpan={6} className="h-24 text-center text-slate-500">
                                                     {t.finance.emptyHistory}
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
-                                            history
+                                            visibleHistory
                                                 .filter(tx => categoryFilter === 'all' || tx.category === categoryFilter)
                                                 .map((tx) => (
                                                     <TableRow key={tx.id}>

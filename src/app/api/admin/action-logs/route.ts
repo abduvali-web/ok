@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
     const dateStr = searchParams.get('date')
+    const fromStr = searchParams.get('from')
+    const toStr = searchParams.get('to')
 
     const where: any = {}
 
@@ -31,6 +33,30 @@ export async function GET(request: NextRequest) {
           gte: startOfDay,
           lte: endOfDay
         }
+      }
+    } else if (fromStr || toStr) {
+      const createdAt: { gte?: Date; lte?: Date } = {}
+
+      if (fromStr) {
+        const from = new Date(fromStr)
+        if (!isNaN(from.getTime())) {
+          const start = new Date(from)
+          start.setHours(0, 0, 0, 0)
+          createdAt.gte = start
+        }
+      }
+
+      if (toStr) {
+        const to = new Date(toStr)
+        if (!isNaN(to.getTime())) {
+          const end = new Date(to)
+          end.setHours(23, 59, 59, 999)
+          createdAt.lte = end
+        }
+      }
+
+      if (createdAt.gte || createdAt.lte) {
+        where.createdAt = createdAt
       }
     }
 

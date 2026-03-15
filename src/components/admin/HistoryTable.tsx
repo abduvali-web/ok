@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/table'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
+import type { DateRange } from 'react-day-picker'
 
 interface ActionLog {
   id: string
@@ -54,6 +55,9 @@ interface HistoryTableProps {
   applySelectedDate?: (date: Date | null) => void
   shiftSelectedDate?: (days: number) => void
   selectedDateLabel?: string
+  selectedPeriod?: DateRange | undefined
+  applySelectedPeriod?: (range: DateRange | undefined) => void
+  selectedPeriodLabel?: string
   profileUiText?: any
 }
 
@@ -74,6 +78,9 @@ export function HistoryTable({
   applySelectedDate,
   shiftSelectedDate,
   selectedDateLabel,
+  selectedPeriod,
+  applySelectedPeriod,
+  selectedPeriodLabel,
   profileUiText
 }: HistoryTableProps) {
   const { t, language } = useLanguage()
@@ -118,7 +125,17 @@ export function HistoryTable({
         params.append('adminId', selectedUser)
       }
 
-      if (selectedDate) {
+      if (selectedPeriod?.from) {
+        const toLocalIsoDate = (d: Date) => {
+          const yyyy = d.getFullYear()
+          const mm = String(d.getMonth() + 1).padStart(2, '0')
+          const dd = String(d.getDate()).padStart(2, '0')
+          return `${yyyy}-${mm}-${dd}`
+        }
+
+        params.append('from', toLocalIsoDate(selectedPeriod.from))
+        params.append('to', toLocalIsoDate(selectedPeriod.to ?? selectedPeriod.from))
+      } else if (selectedDate) {
         params.append('date', selectedDate.toISOString())
       }
 
@@ -137,7 +154,7 @@ export function HistoryTable({
     } finally {
       setIsLoading(false)
     }
-  }, [limit, page, selectedUser, selectedDate])
+  }, [limit, page, selectedPeriod, selectedUser, selectedDate])
 
   useEffect(() => {
     void fetchUsers()
@@ -149,7 +166,7 @@ export function HistoryTable({
 
   useEffect(() => {
     setPage(0)
-  }, [selectedUser, selectedDate])
+  }, [selectedUser, selectedPeriod, selectedDate])
 
   function getActionBadgeColor(action: string) {
     if (action.includes('CREATE')) return 'border border-border bg-background text-foreground'
@@ -228,12 +245,14 @@ export function HistoryTable({
             <CardDescription>{t.admin.totalRecords}: {total}</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            {applySelectedDate && shiftSelectedDate && selectedDateLabel && profileUiText && (
+            {applySelectedDate && (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) && profileUiText && (
               <CalendarDateSelector
                 selectedDate={selectedDate || null}
                 applySelectedDate={applySelectedDate}
                 shiftSelectedDate={shiftSelectedDate}
-                selectedDateLabel={selectedDateLabel}
+                selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
+                selectedPeriod={selectedPeriod}
+                applySelectedPeriod={applySelectedPeriod}
                 locale={calendarLocale}
                 profileUiText={profileUiText}
               />
