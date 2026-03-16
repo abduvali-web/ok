@@ -220,6 +220,27 @@ const ALIASES_BY_TABLE: Partial<Record<TableId, Record<string, string>>> = {
     maosh: 'salary',
     'зарплата': 'salary',
   },
+  warehouse: {
+    name: 'name',
+    ism: 'name',
+    nomi: 'name',
+    название: 'name',
+    amount: 'amount',
+    miqdori: 'amount',
+    количество: 'amount',
+    unit: 'unit',
+    birligi: 'unit',
+    единица: 'unit',
+    'kcal per gram': 'kcalPerGram',
+    kaloriya: 'kcalPerGram',
+    калории: 'kcalPerGram',
+    'price per unit': 'pricePerUnit',
+    narxi: 'pricePerUnit',
+    цена: 'pricePerUnit',
+    'price unit': 'priceUnit',
+    'narx birligi': 'priceUnit',
+    'единица цены': 'priceUnit',
+  },
 }
 
 export function mapHeaderToKey(tableId: TableId, header: string): string {
