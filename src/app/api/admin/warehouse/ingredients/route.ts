@@ -7,6 +7,7 @@ interface IngredientInput {
     name: string
     amount: number
     unit: string
+    kcalPerGram?: number | null
     pricePerUnit?: number | null
     priceUnit?: string
 }
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body: IngredientInput = await request.json()
-        const { name, amount, unit, pricePerUnit, priceUnit } = body
+        const { name, amount, unit, kcalPerGram, pricePerUnit, priceUnit } = body
 
         if (!name) {
             return NextResponse.json({ error: 'Missing Name' }, { status: 400 })
@@ -48,6 +49,7 @@ export async function POST(request: NextRequest) {
                 name,
                 amount: amount || 0,
                 unit: unit || 'gr',
+                kcalPerGram: typeof kcalPerGram === 'number' ? kcalPerGram : null,
                 pricePerUnit: typeof pricePerUnit === 'number' ? pricePerUnit : null,
                 priceUnit: priceUnit || 'kg',
             }
@@ -68,7 +70,7 @@ export async function PUT(request: NextRequest) {
         }
 
         const body: IngredientInput = await request.json()
-        const { id, name, amount, unit, pricePerUnit, priceUnit } = body
+        const { id, name, amount, unit, kcalPerGram, pricePerUnit, priceUnit } = body
 
         if (!id) {
             return NextResponse.json({ error: 'Missing ID' }, { status: 400 })
@@ -80,6 +82,7 @@ export async function PUT(request: NextRequest) {
                 name,
                 amount,
                 unit,
+                kcalPerGram: typeof kcalPerGram === 'number' ? kcalPerGram : null,
                 pricePerUnit: typeof pricePerUnit === 'number' ? pricePerUnit : null,
                 priceUnit: priceUnit || 'kg',
             }

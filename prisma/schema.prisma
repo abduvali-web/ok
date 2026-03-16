@@ -355,6 +355,8 @@ model WarehouseItem {
   name      String   @unique
   amount    Float    @default(0)
   unit      String   @default("gr")
+  // kcal per 1 gram (used for set/day calorie totals).
+  kcalPerGram Float?  @default(0)
   // Last known purchase price for this item (used for audit + inventory economics).
   // `pricePerUnit` is in UZS per `priceUnit` (typically "kg").
   pricePerUnit Float?

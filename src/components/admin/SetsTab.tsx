@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,9 @@ import {
     ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { SearchPanel } from '@/components/ui/search-panel';
+import { IconButton } from '@/components/ui/icon-button';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { MENUS, MEAL_TYPES, type Dish, type Ingredient } from '@/lib/menuData';
 
 // Types for custom sets
@@ -43,11 +46,15 @@ import { MENUS, MEAL_TYPES, type Dish, type Ingredient } from '@/lib/menuData';
 interface SetDish {
     dishId: string | number; // Support CUIDs from DB and legacy numeric IDs
     dishName: string;
-    mealType: keyof typeof MEAL_TYPES;
+    mealType: string;
+    mealIndex?: number | null;
     customIngredients?: Ingredient[];
 }
 
 interface CalorieGroup {
+    id?: string; // stable key inside JSON
+    name?: string;
+    price?: number | null;
     calories: number;
     dishes: SetDish[];
 }
@@ -67,25 +74,213 @@ interface MenuSet {
 }
 
 const CALORIE_OPTIONS = [1200, 1600, 2000, 2500, 3000];
+const DEFAULT_MAX_DAYS = 60;
+const MEAL_TYPE_ORDER: Array<keyof typeof MEAL_TYPES> = [
+    'BREAKFAST',
+    'SECOND_BREAKFAST',
+    'LUNCH',
+    'SNACK',
+    'DINNER',
+    'SIXTH_MEAL',
+];
+
+function getMealIndex(mealType: string) {
+    const idx = MEAL_TYPE_ORDER.indexOf(mealType as any);
+    return idx >= 0 ? idx + 1 : null;
+}
 
 export function SetsTab() {
+    const { language } = useLanguage();
+
+    const uiText = useMemo(() => {
+        if (language === 'uz') {
+            return {
+                title: 'Setlar',
+                subtitle: 'Menuni kunlar bo‘yicha sozlash',
+                newSet: 'Yangi set',
+                newDish: 'Yangi taom',
+                setsList: 'Setlar ro‘yxati',
+                updatedAt: 'Yangilandi',
+                search: 'Qidirish',
+                selectSetHint: 'Tahrirlashni boshlash uchun chapdan setni tanlang',
+                days: 'Kunlar',
+                dayMenuTitle: (day: string) => `Kun ${day} menyusi`,
+                noDayDataTitle: 'Bu kun uchun menyu yo‘q',
+                noDayDataDesc: (day: string) => `Siz bo‘shdan boshlashingiz yoki ${day}-kun uchun standart menyuni nusxalashingiz mumkin.`,
+                copyStandard: (day: string) => `Standart menyuni nusxalash (Kun ${day})`,
+                copiedDay: (day: string) => `Kun ${day} menyusi nusxalandi`,
+                confirmDeleteSet: 'Ushbu setni o‘chirasizmi?',
+                deleted: 'O‘chirildi',
+                saveError: 'Saqlashda xatolik',
+                loadSetsError: 'Setlarni yuklashda xatolik',
+                loadDishesError: 'Taomlarni yuklashda xatolik',
+                setNameRequired: 'Set nomini kiriting',
+                create: 'Yaratish',
+                cancel: 'Bekor qilish',
+                setName: 'Set nomi',
+                dish: 'Taom',
+                meal: 'Ovqat',
+                addMeal: 'Taom qo‘shish',
+                editMeal: 'Taomni tahrirlash',
+                noDishes: 'Taomlar yo‘q',
+                customWeight: 'Moslashtirilgan vazn',
+                standard: 'Standart',
+                addIngredient: 'Ingredient qo‘shish',
+                selectIngredient: 'Ingredient tanlang...',
+                ingredients: 'Ingredientlar',
+                ingredientsDesc: 'Bu taom uchun ingredientlar tarkibini va og‘irligini sozlang.',
+                tableName: 'Nomi',
+                tableAmount: 'Miqdor',
+                tableUnit: 'Birlik',
+                noIngredients: 'Ingredient yo‘q',
+                ingredientAlreadyAdded: 'Ingredient allaqachon qo‘shilgan',
+                saveChanges: 'O‘zgarishlarni saqlash',
+                groups: 'Guruhlar',
+                group: 'Guruh',
+                newGroup: 'Yangi guruh',
+                groupName: 'Guruh nomi',
+                groupCalories: 'Kaloriya (kcal)',
+                groupPrice: 'Narx',
+                mealLabel: (n: number) => `${n}-taom`,
+                menuDay: (day: string) => `Menyu ${day}`,
+                addDay: 'Kun qo‘shish',
+                maxDaysReached: (n: number) => `Maksimal kunlar: ${n}`,
+            };
+        }
+
+        if (language === 'ru') {
+            return {
+                title: 'Сеты',
+                subtitle: 'Настройка меню по дням',
+                newSet: 'Новый сет',
+                newDish: 'Новое блюдо',
+                setsList: 'Список сетов',
+                updatedAt: 'Обновлено',
+                search: 'Поиск',
+                selectSetHint: 'Выберите сет слева, чтобы начать редактирование',
+                days: 'Дни',
+                dayMenuTitle: (day: string) => `Меню на День ${day}`,
+                noDayDataTitle: 'Нет меню для этого дня',
+                noDayDataDesc: (day: string) => `Вы можете начать с чистого листа или скопировать стандартное меню для Дня ${day}.`,
+                copyStandard: (day: string) => `Скопировать стандартное меню (День ${day})`,
+                copiedDay: (day: string) => `Меню дня ${day} скопировано`,
+                confirmDeleteSet: 'Удалить этот сет?',
+                deleted: 'Удалено',
+                saveError: 'Ошибка сохранения',
+                loadSetsError: 'Ошибка загрузки сетов',
+                loadDishesError: 'Ошибка загрузки блюд',
+                setNameRequired: 'Введите название сета',
+                create: 'Создать',
+                cancel: 'Отмена',
+                setName: 'Название сета',
+                dish: 'Блюдо',
+                meal: 'Приём пищи',
+                addMeal: 'Добавить блюдо',
+                editMeal: 'Редактировать блюдо',
+                noDishes: 'Нет блюд',
+                customWeight: 'Кастомный вес',
+                standard: 'Стандарт',
+                addIngredient: 'Добавить ингредиент',
+                selectIngredient: 'Выберите ингредиент...',
+                ingredients: 'Ингредиенты',
+                ingredientsDesc: 'Настройте состав и вес ингредиентов для этого блюда в рамках сета.',
+                tableName: 'Название',
+                tableAmount: 'Кол-во',
+                tableUnit: 'Ед.',
+                noIngredients: 'Нет ингредиентов',
+                ingredientAlreadyAdded: 'Ингредиент уже добавлен',
+                saveChanges: 'Сохранить изменения',
+                groups: 'Группы',
+                group: 'Группа',
+                newGroup: 'Новая группа',
+                groupName: 'Название группы',
+                groupCalories: 'Калории (kcal)',
+                groupPrice: 'Цена',
+                mealLabel: (n: number) => `Приём ${n}`,
+                menuDay: (day: string) => `Меню ${day}`,
+                addDay: 'Добавить день',
+                maxDaysReached: (n: number) => `Максимум дней: ${n}`,
+            };
+        }
+
+        return {
+            title: 'Sets',
+            subtitle: 'Configure menus by day',
+            newSet: 'New set',
+            newDish: 'New dish',
+            setsList: 'Sets list',
+            updatedAt: 'Updated',
+            search: 'Search',
+            selectSetHint: 'Select a set on the left to start editing',
+            days: 'Days',
+            dayMenuTitle: (day: string) => `Day ${day} menu`,
+            noDayDataTitle: 'No menu for this day',
+            noDayDataDesc: (day: string) => `Start from scratch or copy the standard menu for Day ${day}.`,
+            copyStandard: (day: string) => `Copy standard menu (Day ${day})`,
+            copiedDay: (day: string) => `Copied menu for Day ${day}`,
+            confirmDeleteSet: 'Delete this set?',
+            deleted: 'Deleted',
+            saveError: 'Save error',
+            loadSetsError: 'Failed to load sets',
+            loadDishesError: 'Failed to load dishes',
+            setNameRequired: 'Enter set name',
+            create: 'Create',
+            cancel: 'Cancel',
+            setName: 'Set name',
+            dish: 'Dish',
+            meal: 'Meal',
+            addMeal: 'Add meal',
+            editMeal: 'Edit meal',
+            noDishes: 'No dishes',
+            customWeight: 'Custom weight',
+            standard: 'Standard',
+            addIngredient: 'Add ingredient',
+            selectIngredient: 'Select an ingredient...',
+            ingredients: 'Ingredients',
+            ingredientsDesc: 'Adjust ingredients and amounts for this meal inside the set.',
+            tableName: 'Name',
+            tableAmount: 'Qty',
+            tableUnit: 'Unit',
+            noIngredients: 'No ingredients',
+            ingredientAlreadyAdded: 'Ingredient already added',
+            saveChanges: 'Save changes',
+            groups: 'Groups',
+            group: 'Group',
+            newGroup: 'New group',
+            groupName: 'Group name',
+            groupCalories: 'Calories (kcal)',
+            groupPrice: 'Price',
+            mealLabel: (n: number) => `Meal ${n}`,
+            menuDay: (day: string) => `Menu ${day}`,
+            addDay: 'Add day',
+            maxDaysReached: (n: number) => `Max days: ${n}`,
+        };
+    }, [language]);
+
     const [sets, setSets] = useState<MenuSet[]>([]);
     const [selectedSet, setSelectedSet] = useState<MenuSet | null>(null);
     const [activeDay, setActiveDay] = useState<string>("1"); // Current day being edited (1-21)
     const [availableDishes, setAvailableDishes] = useState<Dish[]>([]);
+    const [warehouseItems, setWarehouseItems] = useState<Array<{ name: string; unit?: string; kcalPerGram?: number | null }>>([]);
+    const [setSearch, setSetSearch] = useState('');
 
     // UI State
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isAddDishModalOpen, setIsAddDishModalOpen] = useState(false);
     const [isEditDishModalOpen, setIsEditDishModalOpen] = useState(false);
+    const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
     // Edit State
-    const [activeCalorieTab, setActiveCalorieTab] = useState('1200');
+    const [activeGroupTab, setActiveGroupTab] = useState('');
     const [addDishTarget, setAddDishTarget] = useState<{ calorieIndex: number } | null>(null);
     const [selectedDishToAdd, setSelectedDishToAdd] = useState<string>('');
-    const [selectedMealTypeToAdd, setSelectedMealTypeToAdd] = useState<string>('LUNCH');
+    const [mealIndexToAdd, setMealIndexToAdd] = useState<number>(1);
+    const [dishSearch, setDishSearch] = useState('');
+    const [addDishMode, setAddDishMode] = useState<'choose' | 'create'>('choose');
+    const [newDishName, setNewDishName] = useState('');
     const [editingDish, setEditingDish] = useState<{ setId: string; calorieIndex: number; dishIndex: number; dish: SetDish } | null>(null);
+    const [editingGroup, setEditingGroup] = useState<{ groupIndex: number; group: CalorieGroup } | null>(null);
 
     // Form state for new set
     const [newSetForm, setNewSetForm] = useState({
@@ -93,11 +288,17 @@ export function SetsTab() {
         description: ''
     });
 
+    const [groupForm, setGroupForm] = useState<{ name: string; calories: number; price: string }>({
+        name: '',
+        calories: 2000,
+        price: '',
+    });
+
     // Load sets and dishes
     useEffect(() => {
         const init = async () => {
             setIsLoading(true);
-            await Promise.all([fetchSets(), fetchDishes()]);
+            await Promise.all([fetchSets(), fetchDishes(), fetchWarehouseItems()]);
             setIsLoading(false);
         };
         init();
@@ -122,18 +323,26 @@ export function SetsTab() {
             }
         } catch (error) {
             console.error('Error fetching sets:', error);
-            toast.error('Ошибка загрузки сетов');
+            toast.error(uiText.loadSetsError);
         }
     };
 
     const createDefaultSet = async () => {
         try {
+            const defaultName =
+                language === 'ru' ? 'Стандартный сет' :
+                    language === 'uz' ? 'Standart set' :
+                        'Default set';
+            const defaultDesc =
+                language === 'ru' ? 'Автоматически созданный сет' :
+                    language === 'uz' ? 'Avtomatik yaratilgan set' :
+                        'Auto-created default set';
             const response = await fetch('/api/admin/sets', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    name: 'Стандартный сет',
-                    description: 'Автоматически созданный сет'
+                    name: defaultName,
+                    description: defaultDesc
                 })
             });
 
@@ -141,7 +350,7 @@ export function SetsTab() {
                 const newSet = await response.json();
                 setSets([newSet]);
                 setSelectedSet(newSet);
-                toast.success('Создан стандартный сет по умолчанию');
+                toast.success(defaultName);
             }
         } catch (e) {
             console.error('Failed to create default set', e);
@@ -160,13 +369,58 @@ export function SetsTab() {
             }
         } catch (error) {
             console.error('Error fetching dishes:', error);
-            toast.error('Ошибка загрузки блюд');
+            toast.error(uiText.loadDishesError);
+        }
+    };
+
+    const fetchWarehouseItems = async () => {
+        try {
+            const response = await fetch('/api/admin/warehouse/ingredients');
+            if (response.ok) {
+                const data = await response.json();
+                setWarehouseItems(Array.isArray(data) ? data : []);
+            }
+        } catch {
+            // calorie totals are best-effort; ignore loading failures here
+            setWarehouseItems([]);
+        }
+    };
+
+    const createDish = async () => {
+        const name = newDishName.trim();
+        if (!name) return;
+
+        try {
+            const response = await fetch('/api/admin/warehouse/dishes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name,
+                    description: '',
+                    mealType: 'CUSTOM',
+                    ingredients: [],
+                }),
+            });
+
+            if (!response.ok) {
+                toast.error(uiText.saveError);
+                return;
+            }
+
+            const created = await response.json().catch(() => null);
+            const id = created && typeof created.id === 'string' ? created.id : null;
+            await fetchDishes();
+            if (id) setSelectedDishToAdd(id);
+            setAddDishMode('choose');
+            toast.success(uiText.saveChanges);
+        } catch {
+            toast.error(uiText.saveError);
         }
     };
 
     const createSet = async () => {
         if (!newSetForm.name.trim()) {
-            toast.error('Введите название сета');
+            toast.error(uiText.setNameRequired);
             return;
         }
 
@@ -186,12 +440,12 @@ export function SetsTab() {
                 setSelectedSet(newSet);
                 setIsCreateModalOpen(false);
                 setNewSetForm({ name: '', description: '' });
-                toast.success('Сет создан');
+                toast.success(uiText.create);
             } else {
-                toast.error('Ошибка создания');
+                toast.error(uiText.saveError);
             }
         } catch {
-            toast.error('Ошибка создания');
+            toast.error(uiText.saveError);
         }
     };
 
@@ -211,26 +465,35 @@ export function SetsTab() {
     };
 
     // Copy standard menu to current day
+    const buildStandardDayData = (dayNum: number): CalorieGroup[] | null => {
+        const menuNumber = ((dayNum - 1) % 21) + 1;
+        const menuData = MENUS.find(m => m.menuNumber === menuNumber);
+        if (!menuData) return null;
+
+        return CALORIE_OPTIONS.map((calories) => ({
+            id: String(calories),
+            calories,
+            name: `${calories} kcal`,
+            price: null,
+            dishes: menuData.dishes.map((dish) => ({
+                dishId: dish.id,
+                dishName: dish.name,
+                mealType: dish.mealType,
+                customIngredients: undefined,
+            })),
+        }));
+    };
+
     const copyStandardMenuToDay = async () => {
         if (!selectedSet) return;
 
         const dayNum = parseInt(activeDay);
-        const menuData = MENUS.find(m => m.menuNumber === dayNum);
+        const newDayData = buildStandardDayData(dayNum);
 
-        if (!menuData) {
-            toast.error('Стандартное меню для этого дня не найдено');
+        if (!newDayData) {
+            toast.error(uiText.noDayDataTitle);
             return;
         }
-
-        const newDayData: CalorieGroup[] = CALORIE_OPTIONS.map(calories => ({
-            calories,
-            dishes: menuData.dishes.map(dish => ({
-                dishId: dish.id,
-                dishName: dish.name,
-                mealType: dish.mealType,
-                customIngredients: undefined
-            }))
-        }));
 
         const updatedGroups = {
             ...(selectedSet.calorieGroups || {}),
@@ -245,7 +508,7 @@ export function SetsTab() {
 
         // Save
         await saveSet(updatedSet);
-        toast.success(`Меню дня ${activeDay} скопировано`);
+        toast.success(uiText.copiedDay(activeDay));
     };
 
     const saveSet = async (setToSave: MenuSet) => {
@@ -257,8 +520,73 @@ export function SetsTab() {
             });
         } catch (e) {
             console.error(e);
-            toast.error('Ошибка сохранения');
+            toast.error(uiText.saveError);
         }
+    };
+
+    useEffect(() => {
+        if (!isGroupModalOpen) return;
+
+        if (editingGroup) {
+            setGroupForm({
+                name: editingGroup.group.name || '',
+                calories: typeof editingGroup.group.calories === 'number' ? editingGroup.group.calories : 2000,
+                price: typeof editingGroup.group.price === 'number' ? String(editingGroup.group.price) : '',
+            });
+            return;
+        }
+
+        setGroupForm({ name: '', calories: 2000, price: '' });
+    }, [editingGroup, isGroupModalOpen]);
+
+    const makeGroupId = () => {
+        try {
+            const id = (globalThis as any)?.crypto?.randomUUID?.();
+            if (typeof id === 'string' && id.length > 0) return id;
+        } catch {
+            // ignore
+        }
+        return `g_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    };
+
+    const upsertGroup = async () => {
+        if (!selectedSet) return;
+
+        const baseGroups =
+            selectedSet.calorieGroups && !Array.isArray(selectedSet.calorieGroups)
+                ? (selectedSet.calorieGroups as any)
+                : {};
+
+        const name = (groupForm.name || '').trim();
+        const calories = Number(groupForm.calories);
+        const price = groupForm.price.trim() === '' ? null : Number(groupForm.price);
+
+        const nextId = editingGroup?.group?.id || makeGroupId();
+
+        const dayKeys = Object.keys(baseGroups);
+        const ensuredKeys = dayKeys.length > 0 ? dayKeys : Array.from({ length: 21 }, (_, i) => String(i + 1));
+
+        const nextGroups: Record<string, CalorieGroup[]> = {};
+        for (const dayKey of ensuredKeys) {
+            const dayArr: CalorieGroup[] = Array.isArray(baseGroups[dayKey]) ? baseGroups[dayKey] : [];
+
+            if (editingGroup) {
+                nextGroups[dayKey] = dayArr.map((g) => (g.id === nextId ? { ...g, id: nextId, name, calories, price, dishes: g.dishes || [] } : g));
+            } else {
+                nextGroups[dayKey] = [
+                    ...dayArr,
+                    { id: nextId, name, calories, price, dishes: [] },
+                ];
+            }
+        }
+
+        const updatedSet = { ...selectedSet, calorieGroups: nextGroups };
+        setSelectedSet(updatedSet);
+        setSets((prev) => prev.map((s) => (s.id === updatedSet.id ? updatedSet : s)));
+        setIsGroupModalOpen(false);
+        setEditingGroup(null);
+        await saveSet(updatedSet);
+        toast.success(uiText.saveChanges);
     };
 
     // CRUD Operations for Dishes (similar to before but aware of Day structure)
@@ -268,6 +596,12 @@ export function SetsTab() {
         const ingredients = new Map<string, string>(); // name -> unit
         availableDishes.forEach(d => {
             d.ingredients?.forEach(i => ingredients.set(i.name, i.unit));
+        });
+        // Also include warehouse items so managers can add any newly created ingredient.
+        warehouseItems.forEach((item) => {
+            const name = typeof item?.name === 'string' ? item.name.trim() : '';
+            if (!name) return;
+            ingredients.set(name, item.unit || 'gr');
         });
         return Array.from(ingredients.entries()).map(([name, unit]) => ({ name, unit })).sort((a, b) => a.name.localeCompare(b.name));
     };
@@ -293,7 +627,7 @@ export function SetsTab() {
             : [...getOriginalIngredients(editingDish.dish.dishId)];
 
         if (currentIngredients.find(i => i.name === name)) {
-            toast.error('Ингредиент уже добавлен');
+            toast.error(uiText.ingredientAlreadyAdded);
             return;
         }
 
@@ -336,7 +670,7 @@ export function SetsTab() {
         setEditingDish(null);
 
         await saveSet(updatedSet);
-        toast.success('Сохранено');
+        toast.success(uiText.saveChanges);
     };
 
     const deleteDishFromGroup = async (calorieIndex: number, dishIndex: number) => {
@@ -379,7 +713,7 @@ export function SetsTab() {
         if (updatedDayData.length === 0) {
             // Edge case: empty day, user clicks add manually without copying
             // Initialize structure
-            updatedDayData.push(...CALORIE_OPTIONS.map(c => ({ calories: c, dishes: [] })));
+            updatedDayData.push(...CALORIE_OPTIONS.map(c => ({ id: String(c), calories: c, name: `${c} kcal`, price: null, dishes: [] })));
         }
 
         updatedDayData[addDishTarget.calorieIndex] = {
@@ -387,10 +721,14 @@ export function SetsTab() {
             dishes: [...updatedDayData[addDishTarget.calorieIndex].dishes]
         };
 
+        const nextDishIndex = updatedDayData[addDishTarget.calorieIndex].dishes.length;
+        const mealIndex = Number.isFinite(mealIndexToAdd) && mealIndexToAdd > 0 ? Math.floor(mealIndexToAdd) : (getMealIndex(String(dishObj.mealType)) ?? 1);
+
         updatedDayData[addDishTarget.calorieIndex].dishes.push({
             dishId: dishObj.id,
             dishName: dishObj.name,
-            mealType: selectedMealTypeToAdd as any,
+            mealType: String(dishObj.mealType || 'CUSTOM'),
+            mealIndex,
             customIngredients: undefined
         });
 
@@ -406,9 +744,21 @@ export function SetsTab() {
         setIsAddDishModalOpen(false);
         setAddDishTarget(null);
         setSelectedDishToAdd('');
+        setDishSearch('');
+        setNewDishName('');
+        setAddDishMode('choose');
 
         await saveSet(updatedSet);
-        toast.success('Блюдо добавлено');
+        toast.success(uiText.addMeal);
+
+        // Immediately open ingredient editor for the newly added meal (manager flow).
+        setEditingDish({
+            setId: selectedSet.id,
+            calorieIndex: addDishTarget.calorieIndex,
+            dishIndex: nextDishIndex,
+            dish: { ...updatedDayData[addDishTarget.calorieIndex].dishes[nextDishIndex] },
+        });
+        setIsEditDishModalOpen(true);
     };
 
     const toggleSetStatus = async (set: MenuSet) => {
@@ -432,17 +782,17 @@ export function SetsTab() {
                     setSelectedSet({ ...selectedSet, ...updated });
                 }
 
-                toast.success('Статус обновлен');
+                toast.success(uiText.saveChanges);
             }
-        } catch { toast.error('Ошибка'); }
+        } catch { toast.error(uiText.saveError); }
     };
 
     const deleteSet = async (id: string) => {
-        if (!confirm('Удалить этот сет?')) return;
+        if (!confirm(uiText.confirmDeleteSet)) return;
         await fetch(`/api/admin/sets/${id}`, { method: 'DELETE' });
         setSets(prev => prev.filter(s => s.id !== id));
         if (selectedSet?.id === id) setSelectedSet(null);
-        toast.success('Удалено');
+        toast.success(uiText.deleted);
     };
 
     const getOriginalIngredients = (dishId: string | number): Ingredient[] => {
@@ -463,22 +813,108 @@ export function SetsTab() {
         return dish?.ingredients || [];
     };
 
-    const currentDayData = getCurrentDayData();
-    const hasDataForDay = currentDayData && currentDayData.length > 0;
+    const kcalPerGramByName = useMemo(() => {
+        const m = new Map<string, number>();
+        for (const item of warehouseItems) {
+            const name = typeof item?.name === 'string' ? item.name.trim().toLowerCase() : '';
+            const kcal = typeof item?.kcalPerGram === 'number' && Number.isFinite(item.kcalPerGram) ? item.kcalPerGram : null;
+            if (!name || kcal === null) continue;
+            m.set(name, kcal);
+        }
+        return m;
+    }, [warehouseItems]);
+
+    const toGrams = (amount: number, unit: string) => {
+        const a = typeof amount === 'number' && Number.isFinite(amount) ? amount : 0;
+        const u = (unit || '').toLowerCase().trim();
+        if (!a) return 0;
+        if (u === 'kg') return a * 1000;
+        if (u === 'g' || u === 'gr' || u === 'гр') return a;
+        if (u === 'mg') return a / 1000;
+        // Best-effort for liquids/pcs: treat as grams to still show a useful total.
+        return a;
+    };
+
+    const getDishCalories = (dish: SetDish) => {
+        const ingredients = dish.customIngredients ? dish.customIngredients : getOriginalIngredients(dish.dishId);
+        let total = 0;
+        for (const ing of ingredients || []) {
+            const nameKey = (ing.name || '').trim().toLowerCase();
+            const kcalPerGram = kcalPerGramByName.get(nameKey) ?? 0;
+            total += toGrams(Number(ing.amount), String(ing.unit)) * kcalPerGram;
+        }
+        return Number.isFinite(total) ? total : 0;
+    };
+
+    const getGroupCaloriesTotal = (group: CalorieGroup | null | undefined) => {
+        if (!group || !Array.isArray(group.dishes)) return 0;
+        let total = 0;
+        for (const d of group.dishes) total += getDishCalories(d);
+        return Number.isFinite(total) ? total : 0;
+    };
+
+    const visibleSets = useMemo(() => {
+        const q = setSearch.trim().toLowerCase();
+        if (!q) return sets;
+        return sets.filter((s) => (s.name || '').toLowerCase().includes(q));
+    }, [setSearch, sets]);
+
+    const currentDayDataRaw = getCurrentDayData();
+    const currentDayData = useMemo(() => {
+        return (currentDayDataRaw || []).map((g, idx) => ({
+            ...g,
+            id: g.id || String(g.calories ?? idx),
+            price: typeof g.price === 'number' ? g.price : (g.price ?? null),
+        }));
+    }, [currentDayDataRaw]);
+    const hasDataForDay = currentDayData.length > 0;
+
+    const dayNumbers = useMemo(() => {
+        if (!selectedSet || !selectedSet.calorieGroups || Array.isArray(selectedSet.calorieGroups)) {
+            return Array.from({ length: 21 }, (_, i) => i + 1);
+        }
+        const keys = Object.keys(selectedSet.calorieGroups as any)
+            .map((k) => parseInt(k, 10))
+            .filter((n) => Number.isFinite(n) && n > 0)
+            .sort((a, b) => a - b);
+        return keys.length > 0 ? keys : Array.from({ length: 21 }, (_, i) => i + 1);
+    }, [selectedSet]);
+
+    useEffect(() => {
+        if (!hasDataForDay) return;
+        if (currentDayData.some((g) => g.id === activeGroupTab)) return;
+        setActiveGroupTab(currentDayData[0]?.id || '');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeDay, hasDataForDay, currentDayData]);
 
     if (isLoading) return <div className="p-8"><div className="animate-spin h-8 w-8 border-2 border-primary rounded-full border-t-transparent mx-auto"></div></div>;
 
     return (
         <div className="space-y-4">
             {/* Header */}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-2xl font-bold">Глобальные Сеты</h2>
-                    <p className="text-sm text-muted-foreground">Настройка меню на все 21 день</p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0">
+                    <h2 className="text-2xl font-bold">{uiText.title}</h2>
+                    <p className="text-sm text-muted-foreground">{uiText.subtitle}</p>
                 </div>
-                <Button onClick={() => setIsCreateModalOpen(true)} className="bg-green-600 hover:bg-green-700">
-                    <Plus className="w-4 h-4 mr-2" /> Новый Сет
-                </Button>
+
+                {/* Orders-tab style: wrap on mobile so actions never disappear off-screen. */}
+                <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+                    <SearchPanel
+                        value={setSearch}
+                        onChange={setSetSearch}
+                        placeholder={uiText.search}
+                        className="w-full sm:w-[260px] md:w-[320px] flex-none basis-full sm:basis-auto"
+                    />
+                    <IconButton
+                        label={uiText.newSet}
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="bg-green-600 hover:bg-green-700"
+                        iconSize="md"
+                    >
+                        <Plus className="h-4 w-4" />
+                    </IconButton>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -486,11 +922,11 @@ export function SetsTab() {
                 <div className="lg:col-span-3">
                     <Card className="h-[calc(100vh-200px)] flex flex-col">
                         <CardHeader className="bg-muted/30 border-b border-border py-3">
-                            <CardTitle className="text-sm">Список Сетов</CardTitle>
+                            <CardTitle className="text-sm">{uiText.setsList}</CardTitle>
                         </CardHeader>
                         <ScrollArea className="flex-1 p-2">
                             <div className="space-y-2">
-                                {sets.map(set => (
+                                {visibleSets.map(set => (
                                     <div
                                         key={set.id}
                                         className={`p-3 rounded-lg border transition-all cursor-pointer ${selectedSet?.id === set.id ? 'bg-primary/5 border-primary shadow-sm' : 'hover:bg-muted/30 border-transparent'}`}
@@ -502,11 +938,17 @@ export function SetsTab() {
                                         </div>
                                         <div className="flex justify-between items-end">
                                             <span className="text-[10px] text-slate-400">
-                                                Обновлено: {new Date(set.updatedAt).toLocaleDateString()}
+                                                {uiText.updatedAt}: {new Date(set.updatedAt).toLocaleDateString()}
                                             </span>
-                                            <Button variant="ghost" size="icon" className="h-6 w-6 -mr-2" onClick={(e) => { e.stopPropagation(); deleteSet(set.id); }}>
+                                            <IconButton
+                                                label="Delete"
+                                                variant="ghost"
+                                                iconSize="sm"
+                                                className="h-6 w-6 -mr-2"
+                                                onClick={(e) => { e.stopPropagation(); deleteSet(set.id); }}
+                                            >
                                                 <Trash2 className="w-3 h-3 text-red-300 hover:text-red-500" />
-                                            </Button>
+                                            </IconButton>
                                         </div>
                                     </div>
                                 ))}
@@ -525,9 +967,9 @@ export function SetsTab() {
                                     <div className="flex items-center gap-1 min-w-max">
                                         <span className="text-xs font-medium px-2 text-slate-400 mr-2 flex items-center gap-1">
                                             <Calendar className="w-4 h-4" />
-                                            Дни:
+                                            {uiText.days}:
                                         </span>
-                                        {Array.from({ length: 21 }, (_, i) => i + 1).map(day => (
+                                        {dayNumbers.map(day => (
                                             <button
                                                 key={day}
                                                 onClick={() => setActiveDay(day.toString())}
@@ -541,6 +983,44 @@ export function SetsTab() {
                                                 {day}
                                             </button>
                                         ))}
+                                        <IconButton
+                                            label={uiText.addDay}
+                                            variant="ghost"
+                                            iconSize="md"
+                                            className="h-9 w-9 text-slate-200 hover:text-white hover:bg-slate-700"
+                                            onClick={() => void (async () => {
+                                                if (!selectedSet) return
+                                                const maxDay = Math.max(...dayNumbers)
+                                                const nextDay = maxDay + 1
+                                                if (nextDay > DEFAULT_MAX_DAYS) {
+                                                    toast.error(uiText.maxDaysReached(DEFAULT_MAX_DAYS))
+                                                    return
+                                                }
+
+                                                const baseGroups = (selectedSet.calorieGroups && !Array.isArray(selectedSet.calorieGroups))
+                                                    ? (selectedSet.calorieGroups as any)
+                                                    : {}
+
+                                                const nextDayData =
+                                                    buildStandardDayData(nextDay) ??
+                                                    (baseGroups[String(maxDay)]
+                                                        ? JSON.parse(JSON.stringify(baseGroups[String(maxDay)]))
+                                                        : CALORIE_OPTIONS.map((cal) => ({ id: String(cal), calories: cal, name: `${cal} kcal`, price: null, dishes: [] })))
+
+                                                const updatedGroups = {
+                                                    ...baseGroups,
+                                                    [String(nextDay)]: nextDayData,
+                                                }
+
+                                                const updatedSet = { ...selectedSet, calorieGroups: updatedGroups }
+                                                setSelectedSet(updatedSet)
+                                                setSets((prev) => prev.map((s) => (s.id === updatedSet.id ? updatedSet : s)))
+                                                setActiveDay(String(nextDay))
+                                                await saveSet(updatedSet)
+                                            })()}
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                        </IconButton>
                                     </div>
                                 </div>
                             </Card>
@@ -552,114 +1032,199 @@ export function SetsTab() {
                                             {activeDay}
                                         </div>
                                         <div>
-                                            <CardTitle>Меню на День {activeDay}</CardTitle>
-                                            <CardDescription>Настройка рациона для выбранного дня в сете "{selectedSet.name}"</CardDescription>
+                                            <CardTitle>{uiText.dayMenuTitle(activeDay)}</CardTitle>
+                                            <CardDescription className="truncate">{selectedSet.name}</CardDescription>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        <Button
-                                            variant={selectedSet.isActive ? "default" : "outline"}
+                                        <IconButton
+                                            label={selectedSet.isActive ? 'Active' : 'Activate'}
                                             onClick={() => toggleSetStatus(selectedSet)}
+                                            variant={selectedSet.isActive ? "default" : "outline"}
+                                            iconSize="md"
                                             className={selectedSet.isActive ? "bg-green-600 hover:bg-green-700" : ""}
                                         >
-                                            {selectedSet.isActive ? "Сет Активен" : "Активировать Сет"}
-                                        </Button>
+                                            <Flame className="h-4 w-4" />
+                                        </IconButton>
                                     </div>
                                 </CardHeader>
 
                                 {/* Day Content */}
                                 <CardContent className="flex-1 p-0">
                                     {!hasDataForDay ? (
-                                        <div className="h-full flex flex-col items-center justify-center p-12 text-center text-slate-500">
-                                            <UtensilsCrossed className="w-16 h-16 text-slate-200 mb-4" />
-                                            <h3 className="text-lg font-medium text-slate-900 mb-2">Меню на этот день пусто</h3>
-                                            <p className="max-w-md mb-6">Вы можете начать с чистого листа или скопировать стандартное меню для Дня {activeDay}, чтобы ускорить процесс.</p>
-                                            <Button onClick={copyStandardMenuToDay}>
-                                                <Copy className="w-4 h-4 mr-2" />
-                                                Скопировать стандартное меню (День {activeDay})
-                                            </Button>
+                                            <div className="h-full flex flex-col items-center justify-center p-12 text-center text-slate-500">
+                                                <UtensilsCrossed className="w-16 h-16 text-slate-200 mb-4" />
+                                            <h3 className="text-lg font-medium text-slate-900 mb-2">{uiText.noDayDataTitle}</h3>
+                                            <p className="max-w-md mb-6">{uiText.noDayDataDesc(activeDay)}</p>
+                                            <IconButton label={uiText.copyStandard(activeDay)} onClick={copyStandardMenuToDay} iconSize="md">
+                                                <Copy className="h-4 w-4" />
+                                            </IconButton>
                                         </div>
                                     ) : (
-                                        <Tabs value={activeCalorieTab} onValueChange={setActiveCalorieTab} className="h-full flex flex-col">
-                                            <div className="px-6 py-2 border-b">
-                                                <TabsList className="grid grid-cols-5 w-full">
-                                                    {CALORIE_OPTIONS.map(cal => (
-                                                        <TabsTrigger key={cal} value={cal.toString()}>{cal} ккал</TabsTrigger>
-                                                    ))}
+                                        <Tabs value={activeGroupTab} onValueChange={setActiveGroupTab} className="h-full flex flex-col">
+                                            <div className="px-6 py-2 border-b flex items-center gap-2">
+                                                <TabsList className="flex flex-wrap w-full justify-start gap-1">
+                                                    {currentDayData
+                                                        .slice()
+                                                        .sort((a, b) => (a.calories ?? 0) - (b.calories ?? 0))
+                                                        .map((g) => (
+                                                            <TabsTrigger key={g.id} value={g.id as string} className="px-3">
+                                                                {g.name || `${g.calories} kcal`}
+                                                            </TabsTrigger>
+                                                        ))}
                                                 </TabsList>
+
+                                                <IconButton
+                                                    label={uiText.newGroup}
+                                                    variant="outline"
+                                                    iconSize="md"
+                                                    onClick={() => {
+                                                        setEditingGroup(null)
+                                                        setIsGroupModalOpen(true)
+                                                    }}
+                                                >
+                                                    <Plus className="h-4 w-4" />
+                                                </IconButton>
                                             </div>
 
-                                            {CALORIE_OPTIONS.map(cal => {
-                                                const group = currentDayData.find(g => g.calories === cal);
-                                                const groupIdx = currentDayData.findIndex(g => g.calories === cal);
+                                            {currentDayData
+                                                .slice()
+                                                .sort((a, b) => (a.calories ?? 0) - (b.calories ?? 0))
+                                                .map((group) => {
+                                                    const groupIdx = currentDayData.findIndex((g) => g.id === group.id)
+                                                    const totalKcal = getGroupCaloriesTotal(group)
 
-                                                return (
-                                                    <TabsContent key={cal} value={cal.toString()} className="flex-1 p-6 m-0 bg-muted/20">
-                                                        <div className="flex justify-between items-center mb-4">
-                                                            <div className="flex items-center gap-2">
-                                                                <Flame className="w-5 h-5 text-orange-500" />
-                                                                <span className="font-semibold text-lg">{cal} ккал</span>
-                                                            </div>
-                                                            <Button size="sm" onClick={() => {
-                                                                setAddDishTarget({ calorieIndex: groupIdx });
-                                                                setIsAddDishModalOpen(true);
-                                                            }}>
-                                                                <Plus className="w-4 h-4 mr-2" /> Добавить блюдо
-                                                            </Button>
-                                                        </div>
+                                                    const dishesSorted = (group.dishes || [])
+                                                        .slice()
+                                                        .sort((a, b) => {
+                                                            const aN = typeof (a as any).mealIndex === 'number' ? (a as any).mealIndex : (getMealIndex(String(a.mealType)) ?? 999)
+                                                            const bN = typeof (b as any).mealIndex === 'number' ? (b as any).mealIndex : (getMealIndex(String(b.mealType)) ?? 999)
+                                                            return aN - bN
+                                                        })
 
-                                                        {/* Dishes Grid */}
-                                                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                                                            {group?.dishes.map((dish, idx) => (
-                                                                <div key={`${dish.dishId}-${idx}`} className="bg-card p-3 rounded-xl border border-border hover:shadow-md transition-all flex gap-3 group relative">
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <div className="flex justify-between items-start">
-                                                                            <div>
-                                                                                <Badge variant="outline" className="text-[10px] mb-1">{MEAL_TYPES[dish.mealType]}</Badge>
-                                                                                <h4 className="font-medium text-sm line-clamp-2">{dish.dishName}</h4>
-                                                                            </div>
-                                                                            <div className="flex gap-1">
-                                                                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
-                                                                                    setEditingDish({
-                                                                                        setId: selectedSet.id,
-                                                                                        calorieIndex: groupIdx,
-                                                                                        dishIndex: idx,
-                                                                                        dish: { ...dish }
-                                                                                    });
-                                                                                    setIsEditDishModalOpen(true);
-                                                                                }}>
-                                                                                    <Edit className="w-3.5 h-3.5 text-slate-500" />
-                                                                                </Button>
-                                                                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteDishFromGroup(groupIdx, idx)}>
-                                                                                    <Trash2 className="w-3.5 h-3.5 text-red-400" />
-                                                                                </Button>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <div className="mt-2 text-xs text-slate-500">
-                                                                            {dish.customIngredients ? (
-                                                                                <span className="text-amber-600 font-medium flex items-center gap-1">
-                                                                                    <Scale className="w-3 h-3" /> Кастомный вес
-                                                                                </span>
-                                                                            ) : (
-                                                                                <span className="text-slate-400 flex items-center gap-1">
-                                                                                    <Scale className="w-3 h-3" /> Стандарт
-                                                                                </span>
-                                                                            )}
-                                                                        </div>
+                                                    return (
+                                                        <TabsContent key={group.id} value={group.id as string} className="flex-1 p-6 m-0 bg-muted/20">
+                                                            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                                                                <div className="min-w-0">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Flame className="w-5 h-5 text-orange-500" />
+                                                                        <span className="font-semibold text-lg truncate">
+                                                                            {group.name || `${group.calories} kcal`}
+                                                                        </span>
+                                                                        <Badge variant="outline" className="text-[10px]">
+                                                                            {Math.round(totalKcal)} kcal
+                                                                        </Badge>
+                                                                        {typeof group.price === 'number' && Number.isFinite(group.price) ? (
+                                                                            <Badge variant="secondary" className="text-[10px]">
+                                                                                {group.price}
+                                                                            </Badge>
+                                                                        ) : null}
                                                                     </div>
                                                                 </div>
-                                                            ))}
-                                                            {(!group?.dishes || group.dishes.length === 0) && (
-                                                                <div className="col-span-full py-8 text-center text-slate-400 border-2 border-dashed rounded-lg">
-                                                                    Нет блюд
+
+                                                                <div className="flex items-center gap-2">
+                                                                    <IconButton
+                                                                        label={uiText.group}
+                                                                        variant="outline"
+                                                                        iconSize="md"
+                                                                        onClick={() => {
+                                                                            setEditingGroup({ groupIndex: groupIdx, group })
+                                                                            setIsGroupModalOpen(true)
+                                                                        }}
+                                                                    >
+                                                                        <Edit className="h-4 w-4" />
+                                                                    </IconButton>
+
+                                                                    <IconButton
+                                                                        label={uiText.addMeal}
+                                                                        iconSize="md"
+                                                                        onClick={() => {
+                                                                            setAddDishTarget({ calorieIndex: groupIdx })
+                                                                            setIsAddDishModalOpen(true)
+                                                                        }}
+                                                                    >
+                                                                        <Plus className="h-4 w-4" />
+                                                                    </IconButton>
                                                                 </div>
-                                                            )}
-                                                        </div>
-                                                    </TabsContent>
-                                                );
-                                            })}
+                                                            </div>
+
+                                                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                                                                {dishesSorted.map((dish, idx) => {
+                                                                    const mealIndex =
+                                                                        typeof (dish as any).mealIndex === 'number'
+                                                                            ? (dish as any).mealIndex
+                                                                            : (getMealIndex(String(dish.mealType)) ?? 1)
+                                                                    const dishKcal = getDishCalories(dish)
+
+                                                                    return (
+                                                                        <div key={`${dish.dishId}-${idx}`} className="bg-card p-3 rounded-xl border border-border hover:shadow-md transition-all flex gap-3 group relative">
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <div className="flex justify-between items-start gap-2">
+                                                                                    <div className="min-w-0">
+                                                                                        <Badge variant="outline" className="text-[10px] mb-1">
+                                                                                            {uiText.mealLabel(mealIndex)}
+                                                                                        </Badge>
+                                                                                        <h4 className="font-medium text-sm line-clamp-2">{dish.dishName}</h4>
+                                                                                        <div className="mt-1 text-[10px] text-muted-foreground">
+                                                                                            {Math.round(dishKcal)} kcal
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div className="flex gap-1 shrink-0">
+                                                                                        <IconButton
+                                                                                            label={uiText.editMeal}
+                                                                                            variant="ghost"
+                                                                                            iconSize="sm"
+                                                                                            className="h-7 w-7"
+                                                                                            onClick={() => {
+                                                                                                setEditingDish({
+                                                                                                    setId: selectedSet.id,
+                                                                                                    calorieIndex: groupIdx,
+                                                                                                    dishIndex: idx,
+                                                                                                    dish: { ...dish }
+                                                                                                });
+                                                                                                setIsEditDishModalOpen(true);
+                                                                                            }}
+                                                                                        >
+                                                                                            <Edit className="w-3.5 h-3.5 text-slate-500" />
+                                                                                        </IconButton>
+                                                                                        <IconButton
+                                                                                            label="Delete"
+                                                                                            variant="ghost"
+                                                                                            iconSize="sm"
+                                                                                            className="h-7 w-7"
+                                                                                            onClick={() => deleteDishFromGroup(groupIdx, idx)}
+                                                                                        >
+                                                                                            <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                                                                                        </IconButton>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <div className="mt-2 text-xs text-slate-500">
+                                                                                    {dish.customIngredients ? (
+                                                                                        <span className="text-amber-600 font-medium flex items-center gap-1">
+                                                                                            <Scale className="w-3 h-3" /> {uiText.customWeight}
+                                                                                        </span>
+                                                                                    ) : (
+                                                                                        <span className="text-slate-400 flex items-center gap-1">
+                                                                                            <Scale className="w-3 h-3" /> {uiText.standard}
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    )
+                                                                })}
+
+                                                                {(!group?.dishes || group.dishes.length === 0) && (
+                                                                    <div className="col-span-full py-8 text-center text-slate-400 border-2 border-dashed rounded-lg">
+                                                                        {uiText.noDishes}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </TabsContent>
+                                                    );
+                                                })}
                                         </Tabs>
                                     )}
                                 </CardContent>
@@ -670,7 +1235,7 @@ export function SetsTab() {
                             <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                                 <ArrowRight className="w-8 h-8 text-slate-300" />
                             </div>
-                            <p>Выберите сет слева, чтобы начать редактирование</p>
+                            <p>{uiText.selectSetHint}</p>
                         </div>
                     )}
                 </div>
@@ -680,21 +1245,76 @@ export function SetsTab() {
             <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Новый Глобальный Сет</DialogTitle>
-                        <DialogDescription>Создайте пустой сет, а затем настройте каждый день.</DialogDescription>
+                        <DialogTitle>{uiText.newSet}</DialogTitle>
+                        <DialogDescription>{uiText.subtitle}</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label>Название сета</Label>
+                            <Label>{uiText.setName}</Label>
                             <Input
                                 value={newSetForm.name}
                                 onChange={(e) => setNewSetForm(prev => ({ ...prev, name: e.target.value }))}
-                                placeholder="Например: Зима 2026 (Спорт)"
+                                placeholder={uiText.setName}
                             />
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button onClick={createSet}>Создать</Button>
+                        <Button onClick={createSet}>{uiText.create}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Group Modal */}
+            <Dialog
+                open={isGroupModalOpen}
+                onOpenChange={(open) => {
+                    setIsGroupModalOpen(open);
+                    if (!open) setEditingGroup(null);
+                }}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{editingGroup ? uiText.group : uiText.newGroup}</DialogTitle>
+                        <DialogDescription>{uiText.groups}</DialogDescription>
+                    </DialogHeader>
+
+                    <div className="grid gap-3 py-4">
+                        <div className="grid gap-2">
+                            <Label>{uiText.groupName}</Label>
+                            <Input
+                                value={groupForm.name}
+                                onChange={(e) => setGroupForm((prev) => ({ ...prev, name: e.target.value }))}
+                                placeholder={uiText.groupName}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="grid gap-2">
+                                <Label>{uiText.groupCalories}</Label>
+                                <Input
+                                    type="number"
+                                    value={groupForm.calories}
+                                    onChange={(e) => setGroupForm((prev) => ({ ...prev, calories: Number(e.target.value) }))}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>{uiText.groupPrice}</Label>
+                                <Input
+                                    inputMode="decimal"
+                                    value={groupForm.price}
+                                    onChange={(e) => setGroupForm((prev) => ({ ...prev, price: e.target.value }))}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsGroupModalOpen(false)}>
+                            {uiText.cancel}
+                        </Button>
+                        <Button onClick={() => void upsertGroup()}>
+                            {uiText.saveChanges}
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -702,34 +1322,77 @@ export function SetsTab() {
             {/* Add Dish Modal */}
             <Dialog open={isAddDishModalOpen} onOpenChange={setIsAddDishModalOpen}>
                 <DialogContent>
-                    <DialogHeader><DialogTitle>Добавить блюдо</DialogTitle></DialogHeader>
+                    <DialogHeader>
+                        <DialogTitle>{uiText.addMeal}</DialogTitle>
+                        <DialogDescription>{uiText.dish} / {uiText.meal}</DialogDescription>
+                    </DialogHeader>
+
                     <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label>Прием пищи</Label>
-                            <Select value={selectedMealTypeToAdd} onValueChange={setSelectedMealTypeToAdd}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    {Object.entries(MEAL_TYPES).map(([key, label]) => (
-                                        <SelectItem key={key} value={key}>{label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Блюдо</Label>
-                            <Select value={selectedDishToAdd} onValueChange={setSelectedDishToAdd}>
-                                <SelectTrigger><SelectValue placeholder="Поиск..." /></SelectTrigger>
-                                <SelectContent className="max-h-60">
-                                    {availableDishes.filter(d => d.mealType === selectedMealTypeToAdd).map(d => (
-                                        <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                                <Label>{uiText.meal}</Label>
+                                <Input
+                                    type="number"
+                                    min={1}
+                                    value={mealIndexToAdd}
+                                    onChange={(e) => setMealIndexToAdd(Number(e.target.value))}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>{uiText.dish}</Label>
+                                <Tabs value={addDishMode} onValueChange={(v) => setAddDishMode(v as any)}>
+                                    <TabsList className="grid grid-cols-2 w-full">
+                                        <TabsTrigger value="choose">{uiText.dish}</TabsTrigger>
+                                        <TabsTrigger value="create">{uiText.newDish}</TabsTrigger>
+                                    </TabsList>
+
+                                    <TabsContent value="choose" className="mt-3 space-y-3">
+                                        <SearchPanel
+                                            value={dishSearch}
+                                            onChange={setDishSearch}
+                                            placeholder={uiText.search}
+                                            className="max-w-none"
+                                        />
+                                        <Select value={selectedDishToAdd} onValueChange={setSelectedDishToAdd}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={uiText.search} />
+                                            </SelectTrigger>
+                                            <SelectContent className="max-h-60">
+                                                {availableDishes
+                                                    .filter((d) => (d.name || '').toLowerCase().includes(dishSearch.trim().toLowerCase()))
+                                                    .map((d) => (
+                                                        <SelectItem key={d.id} value={d.id.toString()}>
+                                                            {d.name}
+                                                        </SelectItem>
+                                                    ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </TabsContent>
+
+                                    <TabsContent value="create" className="mt-3 space-y-3">
+                                        <Input
+                                            value={newDishName}
+                                            onChange={(e) => setNewDishName(e.target.value)}
+                                            placeholder={uiText.newDish}
+                                        />
+                                        <div className="flex justify-end">
+                                            <IconButton
+                                                label={uiText.newDish}
+                                                onClick={() => void createDish()}
+                                                disabled={!newDishName.trim()}
+                                            >
+                                                <Plus className="h-4 w-4" />
+                                            </IconButton>
+                                        </div>
+                                    </TabsContent>
+                                </Tabs>
+                            </div>
                         </div>
                     </div>
+
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsAddDishModalOpen(false)}>Отмена</Button>
-                        <Button onClick={addDishToGroup} disabled={!selectedDishToAdd}>Добавить</Button>
+                        <Button variant="outline" onClick={() => setIsAddDishModalOpen(false)}>{uiText.cancel}</Button>
+                        <Button onClick={addDishToGroup} disabled={!selectedDishToAdd}>{uiText.addMeal}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -738,9 +1401,9 @@ export function SetsTab() {
             <Dialog open={isEditDishModalOpen} onOpenChange={setIsEditDishModalOpen}>
                 <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-hidden flex flex-col p-0">
                     <DialogHeader className="px-6 py-4 border-b">
-                        <DialogTitle>Ингредиенты: {editingDish?.dish.dishName}</DialogTitle>
+                        <DialogTitle>{uiText.ingredients}: {editingDish?.dish.dishName}</DialogTitle>
                         <DialogDescription>
-                            Настройте состав и вес ингредиентов для этого блюда в рамках сета.
+                            {uiText.ingredientsDesc}
                         </DialogDescription>
                     </DialogHeader>
                     {editingDish && (
@@ -748,9 +1411,9 @@ export function SetsTab() {
                             <Table>
                                 <TableHeader className="bg-muted/30 sticky top-0">
                                     <TableRow>
-                                        <TableHead className="pl-6">Название</TableHead>
-                                        <TableHead>Кол-во</TableHead>
-                                        <TableHead>Ед.</TableHead>
+                                        <TableHead className="pl-6">{uiText.tableName}</TableHead>
+                                        <TableHead>{uiText.tableAmount}</TableHead>
+                                        <TableHead>{uiText.tableUnit}</TableHead>
                                         <TableHead className="w-[50px]"></TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -790,7 +1453,7 @@ export function SetsTab() {
                                     {(editingDish.dish.customIngredients || getOriginalIngredients(editingDish.dish.dishId)).length === 0 && (
                                         <TableRow>
                                             <TableCell colSpan={4} className="h-24 text-center text-slate-400">
-                                                Нет ингредиентов
+                                                {uiText.noIngredients}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -801,14 +1464,14 @@ export function SetsTab() {
 
                     <div className="p-4 border-t border-border bg-muted/20 space-y-3">
                         <div className="space-y-2">
-                            <Label className="text-xs text-muted-foreground uppercase font-bold">Добавить ингредиент</Label>
+                            <Label className="text-xs text-muted-foreground uppercase font-bold">{uiText.addIngredient}</Label>
                             <Select onValueChange={(val) => {
                                 addIngredient(val);
                                 // Hack to reset select not needed if we want to add multiple? No, value stays.
                                 // It's fine for now.
                             }}>
                                 <SelectTrigger className="bg-card">
-                                    <SelectValue placeholder="Выберите ингредиент из списка..." />
+                                    <SelectValue placeholder={uiText.selectIngredient} />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-60">
                                     {getAllUniqueIngredients().map((ing) => (
@@ -823,8 +1486,8 @@ export function SetsTab() {
                             </Select>
                         </div>
                         <div className="flex justify-end gap-2 pt-2">
-                            <Button variant="outline" onClick={() => setIsEditDishModalOpen(false)}>Отмена</Button>
-                            <Button onClick={updateEditingDish}>Сохранить изменения</Button>
+                            <Button variant="outline" onClick={() => setIsEditDishModalOpen(false)}>{uiText.cancel}</Button>
+                            <Button onClick={updateEditingDish}>{uiText.saveChanges}</Button>
                         </div>
                     </div>
                 </DialogContent>

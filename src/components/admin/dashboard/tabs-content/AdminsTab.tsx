@@ -660,7 +660,8 @@ export function AdminsTab({
 
       <Dialog open={isFormModalOpen} onOpenChange={handleFormOpenChange}>
         <DialogContent
-          className="sm:max-w-[640px] max-h-[90dvh] overflow-hidden transition-transform duration-200"
+          // Fixed height + flex layout so the form body can scroll on small screens.
+          className="sm:max-w-[640px] h-[min(92svh,860px)] max-h-[92svh] flex flex-col overflow-hidden transition-transform duration-200"
           style={swipeOffset ? { transform: `translateY(${swipeOffset}px)` } : undefined}
         >
           <div
@@ -717,8 +718,8 @@ export function AdminsTab({
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="flex min-h-0 flex-col gap-4">
-            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+          <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col gap-4">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pr-1">
             <div className="grid gap-3 sm:grid-cols-2">
               <FormField label={t.admin.table.name} htmlFor="admin-form-name">
                 <Input

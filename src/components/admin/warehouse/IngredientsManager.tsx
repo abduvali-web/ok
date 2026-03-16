@@ -19,6 +19,7 @@ interface Ingredient {
     name: string;
     amount: number;
     unit: string;
+    kcalPerGram?: number | null;
     pricePerUnit?: number | null;
     priceUnit?: string;
 }
@@ -38,6 +39,8 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                 name: 'Название',
                 amountInStock: 'Количество (на складе)',
                 unit: 'Ед.',
+                kcalPerGram: 'ккал / гр',
+                kcalPerGramHint: 'Калории в 1 грамме',
                 price: 'Цена',
                 pricePerUnit: 'Цена за единицу (UZS)',
                 priceUnit: 'Ед. цены',
@@ -72,6 +75,8 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                 name: 'Nomi',
                 amountInStock: 'Miqdor (omborda)',
                 unit: "O'lchov",
+                kcalPerGram: 'kkal / g',
+                kcalPerGramHint: '1 grammdagi kaloriya',
                 price: 'Narx',
                 pricePerUnit: 'Birlik narxi (UZS)',
                 priceUnit: 'Narx birligi',
@@ -105,6 +110,8 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
             name: 'Name',
             amountInStock: 'Amount (In Stock)',
             unit: 'Unit',
+            kcalPerGram: 'kcal / g',
+            kcalPerGramHint: 'Calories per 1 gram',
             price: 'Price',
             pricePerUnit: 'Price per unit (UZS)',
             priceUnit: 'Price unit',
@@ -170,8 +177,14 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                 ? currentIngredient.pricePerUnit
                 : null;
 
+        const kcalPerGram =
+            typeof (currentIngredient as any).kcalPerGram === 'number' && Number.isFinite((currentIngredient as any).kcalPerGram)
+                ? (currentIngredient as any).kcalPerGram
+                : null;
+
         const payload: Partial<Ingredient> = {
             ...currentIngredient,
+            kcalPerGram,
             pricePerUnit,
             priceUnit: (currentIngredient.priceUnit || 'kg').trim() || 'kg',
         };
@@ -261,6 +274,7 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                             <TableHead>{uiText.name}</TableHead>
                             <TableHead>{uiText.amountInStock}</TableHead>
                             <TableHead>{uiText.unit}</TableHead>
+                            <TableHead>{uiText.kcalPerGram}</TableHead>
                             <TableHead>{uiText.price}</TableHead>
                             <TableHead className="text-right">{uiText.actions}</TableHead>
                         </TableRow>
@@ -268,27 +282,30 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8">
+                                <TableCell colSpan={6} className="text-center py-8">
                                     <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                                 </TableCell>
                             </TableRow>
                         ) : filteredIngredients.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 text-slate-500">
+                                <TableCell colSpan={6} className="text-center py-8 text-slate-500">
                                     {uiText.noIngredientsFound}
                                 </TableCell>
                             </TableRow>
                         ) : (
                             filteredIngredients.map((ing) => (
-                                <TableRow key={ing.id}>
-                                    <TableCell className="font-medium">{ing.name}</TableCell>
-                                    <TableCell>{ing.amount}</TableCell>
-                                    <TableCell>{ing.unit}</TableCell>
-                                    <TableCell className="text-sm text-muted-foreground">
-                                        {typeof ing.pricePerUnit === 'number' && Number.isFinite(ing.pricePerUnit)
-                                            ? `${ing.pricePerUnit.toLocaleString('ru-RU')} UZS/${ing.priceUnit || 'kg'}`
-                                            : '-'}
-                                    </TableCell>
+                                 <TableRow key={ing.id}>
+                                     <TableCell className="font-medium">{ing.name}</TableCell>
+                                     <TableCell>{ing.amount}</TableCell>
+                                     <TableCell>{ing.unit}</TableCell>
+                                     <TableCell className="text-xs text-muted-foreground">
+                                         {typeof ing.kcalPerGram === 'number' && Number.isFinite(ing.kcalPerGram) ? ing.kcalPerGram : '-'}
+                                     </TableCell>
+                                     <TableCell className="text-sm text-muted-foreground">
+                                         {typeof ing.pricePerUnit === 'number' && Number.isFinite(ing.pricePerUnit)
+                                             ? `${ing.pricePerUnit.toLocaleString('ru-RU')} UZS/${ing.priceUnit || 'kg'}`
+                                             : '-'}
+                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
                                             <Button variant="ghost" size="icon" onClick={() => { setCurrentIngredient(ing); setIsDialogOpen(true); }}>
@@ -337,6 +354,23 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                                     placeholder={uiText.unitExample}
                                 />
                             </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>
+                                {uiText.kcalPerGram}
+                                <span className="ml-2 text-xs font-normal text-muted-foreground">{uiText.kcalPerGramHint}</span>
+                            </Label>
+                            <Input
+                                inputMode="decimal"
+                                value={typeof currentIngredient.kcalPerGram === 'number' ? String(currentIngredient.kcalPerGram) : ''}
+                                onChange={(e) =>
+                                    setCurrentIngredient({
+                                        ...currentIngredient,
+                                        kcalPerGram: e.target.value.trim() === '' ? null : Number(e.target.value),
+                                    })
+                                }
+                                placeholder="0.0"
+                            />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">

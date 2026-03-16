@@ -1,14 +1,13 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Bot, MessageSquarePlus, Send, Users } from 'lucide-react'
+import { MessageSquarePlus, Send, Users } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { IconButton } from '@/components/ui/icon-button'
 import { Input } from '@/components/ui/input'
 import { SearchPanel } from '@/components/ui/search-panel'
 import { cn } from '@/lib/utils'
@@ -21,6 +20,13 @@ interface User {
   name: string
   email: string
   role: string
+}
+
+const TAMBO_AI_AGENT: User = {
+  id: 'tambo-ai',
+  name: 'Tambo AI',
+  email: '',
+  role: 'AI_AGENT',
 }
 
 interface Message {
@@ -66,6 +72,12 @@ function openTamboWithPrompt(prompt: string) {
 
 function buildAdminAgentPrompt(agent: User) {
   // Keep this short; the Tambo system prompt already enforces tool-based responses.
+  if (agent.id === TAMBO_AI_AGENT.id) {
+    return (
+      'You are Tambo AI: a manager assistant for operations and audits. ' +
+      'Answer with practical steps, tables/filters, and period-based summaries (day/week/month).'
+    )
+  }
   return (
     `Act as an AI agent representing admin "${agent.name}" (${agent.role}). ` +
     'Focus on operations, audit periods (day/week/month), and manager-friendly explanations. ' +
@@ -164,7 +176,9 @@ export function ChatUnifiedTab() {
 
       if (response.ok) {
         const data = await response.json()
-        setAvailableUsers(data.users)
+        const users = Array.isArray(data?.users) ? data.users : []
+        // Add Tambo AI as a first-class "admin-like" agent in the list (no separate AI button per user).
+        setAvailableUsers([TAMBO_AI_AGENT, ...users])
       }
     } catch {
       // ignore transient loading errors
@@ -266,6 +280,8 @@ export function ChatUnifiedTab() {
 
   function getRoleColor(role: string) {
     switch (role) {
+      case 'AI_AGENT':
+        return 'bg-slate-100 text-slate-800 dark:bg-white/10 dark:text-slate-100'
       case 'SUPER_ADMIN':
         return 'bg-violet-100 text-violet-800'
       case 'MIDDLE_ADMIN':
@@ -281,6 +297,8 @@ export function ChatUnifiedTab() {
 
   function getRoleLabel(role: string) {
     switch (role) {
+      case 'AI_AGENT':
+        return ui?.common?.ai ?? 'AI'
       case 'SUPER_ADMIN':
         return ui?.roles?.superAdmin ?? 'Super Admin'
       case 'MIDDLE_ADMIN':
@@ -310,13 +328,16 @@ export function ChatUnifiedTab() {
               </p>
             </div>
 
-            <IconButton
-              label={ui?.chat?.newConversation ?? 'New conversation'}
+            <Button
+              aria-label={ui?.chat?.newConversation ?? 'New conversation'}
+              title={ui?.chat?.newConversation ?? 'New conversation'}
               variant="outline"
+              size="icon"
+              className="h-9 w-9"
               onClick={() => setShowUserList((prev) => !prev)}
             >
               <MessageSquarePlus className="h-4 w-4" />
-            </IconButton>
+            </Button>
           </div>
 
           <div className="mt-3">
@@ -352,30 +373,23 @@ export function ChatUnifiedTab() {
                   >
                     <button
                       type="button"
-                      onClick={() => void startConversation(user.id)}
+                      onClick={() => (user.id === TAMBO_AI_AGENT.id ? selectAiAgent(user) : void startConversation(user.id))}
                       className="flex min-w-0 flex-1 items-center gap-3 text-left transition-colors hover:text-foreground"
                     >
                       <Avatar>
-                        <AvatarFallback>{user.name[0]}</AvatarFallback>
+                        <AvatarFallback>{user.id === TAMBO_AI_AGENT.id ? 'AI' : user.name[0]}</AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <div className="truncate font-medium">{user.name}</div>
-                        <div className="truncate text-xs text-muted-foreground">{user.email}</div>
+                        <div className="truncate text-xs text-muted-foreground">
+                          {user.id === TAMBO_AI_AGENT.id ? (ui?.chat?.aiHint ?? 'AI agent via Tambo') : user.email}
+                        </div>
                       </div>
-                    <Badge className={cn(getRoleColor(user.role), 'shrink-0 max-w-[140px] truncate')}>
-                      {getRoleLabel(user.role)}
-                    </Badge>
-                  </button>
-
-                  <IconButton
-                    label={(ui?.common?.ai ?? 'AI') + ' ' + user.name}
-                    variant="outline"
-                    className="shrink-0"
-                    onClick={() => selectAiAgent(user)}
-                  >
-                    <Bot className="h-4 w-4" />
-                  </IconButton>
-                </div>
+                      <Badge className={cn(getRoleColor(user.role), 'shrink-0 max-w-[140px] truncate')}>
+                        {getRoleLabel(user.role)}
+                      </Badge>
+                    </button>
+                  </div>
                 ))
               )}
             </div>
