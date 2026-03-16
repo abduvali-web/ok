@@ -5,6 +5,7 @@ import { Globe, Loader2, MessageSquare, Save, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+import { IconButton } from '@/components/ui/icon-button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -169,43 +170,37 @@ export function SiteBuilderCard() {
                 Host: {hostLabel}
               </div>
             </div>
-            <Button
+            <IconButton
+              label="Set subdomain URL"
               type="button"
-              size="icon"
+              iconSize="md"
               onClick={() => void handleSaveSubdomain()}
               disabled={isSavingSubdomain}
-              aria-label="Set subdomain URL"
-              title="Set subdomain URL"
             >
               {isSavingSubdomain ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              <span className="sr-only">Set subdomain URL</span>
-            </Button>
+            </IconButton>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button
+            <IconButton
+              label="Open path preview"
               type="button"
-              size="icon"
+              iconSize="md"
               variant="outline"
               disabled={!pathPreviewUrl}
               onClick={() => window.open(pathPreviewUrl, '_blank', 'noopener,noreferrer')}
-              aria-label="Open path preview"
-              title="Open path preview"
             >
               <Globe className="h-4 w-4" />
-              <span className="sr-only">Open path preview</span>
-            </Button>
-            <Button
+            </IconButton>
+            <IconButton
+              label="Go to subdomain URL"
               type="button"
-              size="icon"
+              iconSize="md"
               disabled={!hostPreviewUrl}
               onClick={() => window.open(hostPreviewUrl, '_blank', 'noopener,noreferrer')}
-              aria-label="Go to subdomain URL"
-              title="Go to subdomain URL"
             >
               <Globe className="h-4 w-4" />
-              <span className="sr-only">Go to subdomain URL</span>
-            </Button>
+            </IconButton>
           </div>
         </CardContent>
       </Card>
@@ -251,27 +246,23 @@ export function SiteBuilderCard() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button
+            <IconButton
+              label="Send to Tambo AI chat"
               type="button"
-              size="icon"
+              iconSize="md"
               onClick={handleSendPrompt}
-              aria-label="Send to Tambo AI chat"
-              title="Send to Tambo AI chat"
             >
               <Sparkles className="h-4 w-4" />
-              <span className="sr-only">Send to Tambo AI chat</span>
-            </Button>
-            <Button
+            </IconButton>
+            <IconButton
+              label="Open Tambo AI chat tab"
               type="button"
-              size="icon"
+              iconSize="md"
               variant="outline"
               onClick={() => openTamboChat()}
-              aria-label="Open Tambo AI chat tab"
-              title="Open Tambo AI chat tab"
             >
               <MessageSquare className="h-4 w-4" />
-              <span className="sr-only">Open Tambo AI chat tab</span>
-            </Button>
+            </IconButton>
           </div>
         </CardContent>
       </Card>

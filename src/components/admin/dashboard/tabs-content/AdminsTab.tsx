@@ -33,6 +33,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
+import { IconButton } from '@/components/ui/icon-button'
 import {
   Dialog,
   DialogContent,
@@ -537,17 +538,15 @@ export function AdminsTab({
                         </TableCell>
                         {!isLowAdminView && (
                           <TableCell className="py-1.5 text-right">
-                            <Button
+                            <IconButton
+                              label={t.admin.edit}
                               variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
+                              iconSize="sm"
                               onClick={() => openEditModal(admin)}
                               disabled={Boolean(pendingAction) || isBulkMutating}
-                              aria-label={t.admin.edit}
-                              title={t.admin.edit}
                             >
                               <Edit className="size-4" />
-                            </Button>
+                            </IconButton>
                           </TableCell>
                         )}
                       </TableRow>

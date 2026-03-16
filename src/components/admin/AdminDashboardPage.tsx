@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
+import { IconButton } from '@/components/ui/icon-button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -2128,18 +2129,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => {
-                  const next =
-                    adminSettings.theme === 'light' ? 'dark' : adminSettings.theme === 'dark' ? 'system' : 'light'
-                  updateAdminSettings({ theme: next })
-                }}
-                aria-label={t.admin.theme}
-                title={
+              <IconButton
+                label={
                   adminSettingsMounted
                     ? `${t.admin.theme}: ${
                         adminSettings.theme === 'system'
@@ -2150,6 +2141,14 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       }`
                     : t.admin.theme
                 }
+                type="button"
+                variant="outline"
+                iconSize="md"
+                onClick={() => {
+                  const next =
+                    adminSettings.theme === 'light' ? 'dark' : adminSettings.theme === 'dark' ? 'system' : 'light'
+                  updateAdminSettings({ theme: next })
+                }}
               >
                 {adminSettings.theme === 'dark' ? (
                   <Moon className="h-4 w-4" />
@@ -2158,7 +2157,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 ) : (
                   <Sun className="h-4 w-4" />
                 )}
-              </Button>
+              </IconButton>
               <LanguageSwitcher />
               <div className="hidden md:block">
                 <UserGuide guides={[
@@ -2198,7 +2197,14 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 <TrialStatus compact />
               </div>
               {isMiddleAdminView && (
-                <Button asChild variant="ghost" size="icon" className="h-9 w-9 md:hidden" aria-label={profileUiText.database}>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 md:hidden"
+                  aria-label={profileUiText.database}
+                  title={profileUiText.database}
+                >
                   <Link href="/middle-admin/database">
                     <Database className="w-4 h-4" />
                   </Link>
@@ -2220,15 +2226,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9"
-                    aria-label="Profile"
-                    title="Profile"
-                  >
+                  <IconButton label="Profile" variant="ghost" iconSize="md" className="h-9 w-9">
                     <CircleUser className="h-4 w-4" />
-                  </Button>
+                  </IconButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onSelect={() => setIsChatOpen(true)} className="gap-2">
@@ -2253,7 +2253,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}>
         <SheetContent side="right" className="w-full p-0 sm:max-w-md">
-          <SheetHeader className="border-b px-4 py-3">
+          <SheetHeader className="border-b bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
             <SheetTitle>{profileUiText.messages}</SheetTitle>
             <SheetDescription>{profileUiText.messagesDescription}</SheetDescription>
           </SheetHeader>
@@ -2265,24 +2265,23 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <SheetContent side="right" className="w-full sm:max-w-2xl">
-          <SheetHeader>
+          <SheetHeader className="border-b bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
             <SheetTitle>{t.admin.settings}</SheetTitle>
             <SheetDescription>
               {profileUiText.warehouseStartPoint} / {profileUiText.database}
             </SheetDescription>
           </SheetHeader>
 
-          <div className="mt-4 space-y-4 overflow-y-auto pb-6">
+          <div className="space-y-4 overflow-y-auto px-4 py-4 pb-6">
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <Button
-                variant="outline"
-                size="icon"
+              <IconButton
+                label={profileUiText.changePassword}
                 onClick={() => setIsChangePasswordOpen(true)}
-                aria-label={profileUiText.changePassword}
-                title={profileUiText.changePassword}
+                variant="outline"
+                iconSize="md"
               >
                 <User className="h-4 w-4" />
-              </Button>
+              </IconButton>
             </div>
 
             {!isLowAdminView && <SiteBuilderCard />}
@@ -2329,35 +2328,32 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <Button
+                  <IconButton
+                    label={profileUiText.refresh}
                     variant="outline"
-                    size="icon"
+                    iconSize="md"
                     onClick={() => void refreshWarehousePoint()}
                     disabled={isWarehouseLoading || isWarehouseSaving}
-                    aria-label={profileUiText.refresh}
-                    title={profileUiText.refresh}
                   >
                     <RefreshCw className={isWarehouseLoading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />
-                  </Button>
-                  <Button
+                  </IconButton>
+                  <IconButton
+                    label={profileUiText.useMyLocation}
                     variant="outline"
-                    size="icon"
+                    iconSize="md"
                     onClick={handleUseMyLocation}
                     disabled={isWarehouseReadOnly || isWarehouseSaving || isWarehouseLoading || isWarehouseGeoLocating}
-                    aria-label={profileUiText.useMyLocation}
-                    title={profileUiText.useMyLocation}
                   >
                     <LocateFixed className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="icon"
+                  </IconButton>
+                  <IconButton
+                    label={isWarehouseSaving ? profileUiText.saving : profileUiText.saveLocation}
+                    iconSize="md"
                     onClick={() => void handleSaveWarehousePoint()}
                     disabled={isWarehouseReadOnly || isWarehouseSaving || isWarehouseLoading || !warehouseInput.trim()}
-                    aria-label={isWarehouseSaving ? profileUiText.saving : profileUiText.saveLocation}
-                    title={isWarehouseSaving ? profileUiText.saving : profileUiText.saveLocation}
                   >
-                    {isWarehouseSaving ? <Save className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-                  </Button>
+                    <Save className="h-4 w-4" />
+                  </IconButton>
                 </div>
               </CardContent>
             </Card>

@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
+import { IconButton } from '@/components/ui/icon-button'
 import {
     Table,
     TableBody,
@@ -152,16 +153,14 @@ export function OrdersTable({
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="py-1.5 text-right">
-                                    <Button
+                                    <IconButton
+                                        label={t.admin.edit}
                                         variant="outline"
-                                        size="icon"
-                                        className="h-8 w-8"
+                                        iconSize="sm"
                                         onClick={() => onEditOrder?.(order)}
-                                        aria-label={t.admin.edit}
-                                        title={t.admin.edit}
                                     >
                                         <Edit className="size-4" />
-                                    </Button>
+                                    </IconButton>
                                 </TableCell>
                             </TableRow>
                         ))}

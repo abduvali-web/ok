@@ -28,6 +28,7 @@ import {
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+import { IconButton } from '@/components/ui/icon-button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -1322,13 +1323,7 @@ export default function DatabasePage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Button
-                asChild
-                variant="outline"
-                size="icon"
-                aria-label={uiText.backToMiddleAdmin}
-                title={uiText.backToMiddleAdmin}
-              >
+              <Button asChild variant="outline" size="icon" aria-label={uiText.backToMiddleAdmin} title={uiText.backToMiddleAdmin}>
                 <Link href="/middle-admin">
                   <ArrowLeft className="h-4 w-4" />
                   <span className="sr-only">{uiText.backToMiddleAdmin}</span>
@@ -1352,54 +1347,42 @@ export default function DatabasePage() {
                 locale={language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'}
               />
 
-              <Button
+              <IconButton
+                label={uiText.refresh}
                 variant="outline"
-                size="icon"
+                iconSize="md"
                 onClick={() => void loadSnapshot(true)}
                 disabled={isRefreshing}
-                aria-label={uiText.refresh}
-                title={uiText.refresh}
               >
                 <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                <span className="sr-only">{uiText.refresh}</span>
-              </Button>
-              <Button
+              </IconButton>
+              <IconButton
+                label={uiText.downloadAllSheets}
                 variant="outline"
-                size="icon"
+                iconSize="md"
                 onClick={handleDownloadUnifiedSnapshotClick}
-                aria-label={uiText.downloadAllSheets}
-                title={uiText.downloadAllSheets}
               >
                 <Download className="h-4 w-4" />
-                <span className="sr-only">{uiText.downloadAllSheets}</span>
-              </Button>
-              <Button
+              </IconButton>
+              <IconButton
+                label={isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}
                 variant="outline"
-                size="icon"
+                iconSize="md"
                 onClick={handleImportAllSheetsClick}
                 disabled={isImportingAllSheets}
-                aria-label={isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}
-                title={isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}
               >
                 {isImportingAllSheets ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                <span className="sr-only">{isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}</span>
-              </Button>
-              <Button
-                size="icon"
-                onClick={handleOpenTambo}
-                aria-label={uiText.askTambo}
-                title={uiText.askTambo}
-              >
+              </IconButton>
+              <IconButton label={uiText.askTambo} iconSize="md" onClick={handleOpenTambo}>
                 <Bot className="h-4 w-4" />
-                <span className="sr-only">{uiText.askTambo}</span>
-              </Button>
+              </IconButton>
               <LanguageSwitcher />
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" aria-label="Profile" title="Profile">
+                  <IconButton label="Profile" variant="ghost" iconSize="md">
                     <CircleUser className="h-4 w-4" />
-                  </Button>
+                  </IconButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild className="gap-2">
@@ -1518,31 +1501,23 @@ export default function DatabasePage() {
                     <div className="text-xs tabular-nums text-muted-foreground">
                       {filteredRows.length} / {table.rowCount} {uiText.rowsCount}
                     </div>
-                    <Button
+                    <IconButton
+                      label={uiText.downloadSheet}
                       variant="outline"
-                      size="icon"
+                      iconSize="md"
                       onClick={handleDownloadCurrentTableClick}
-                      aria-label={uiText.downloadSheet}
-                      title={uiText.downloadSheet}
                     >
                       <Download className="h-4 w-4" />
-                      <span className="sr-only">{uiText.downloadSheet}</span>
-                    </Button>
-                    <Button
+                    </IconButton>
+                    <IconButton
+                      label={isImportingSheet ? uiText.importingSheet : uiText.importSheet}
                       variant="outline"
-                      size="icon"
+                      iconSize="md"
                       onClick={() => handleImportSheetClick(table.id)}
                       disabled={isImportingSheet}
-                      aria-label={isImportingSheet ? uiText.importingSheet : uiText.importSheet}
-                      title={isImportingSheet ? uiText.importingSheet : uiText.importSheet}
                     >
-                      {isImportingSheet ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Upload className="h-4 w-4" />
-                      )}
-                      <span className="sr-only">{isImportingSheet ? uiText.importingSheet : uiText.importSheet}</span>
-                    </Button>
+                      {isImportingSheet ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    </IconButton>
                   </div>
                 </div>
 
@@ -1612,30 +1587,21 @@ export default function DatabasePage() {
                                 ))}
                                 <TableCell className="text-right">
                                   <div className="flex justify-end gap-2">
-                                    <Button
-                                      size="icon"
-                                      onClick={handleUpdateRow}
-                                      disabled={isSavingDraft}
-                                      aria-label={uiText.saveEdit}
-                                      title={uiText.saveEdit}
-                                    >
+                                    <IconButton label={uiText.saveEdit} iconSize="md" onClick={handleUpdateRow} disabled={isSavingDraft}>
                                       {isSavingDraft ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                                      <span className="sr-only">{uiText.saveEdit}</span>
-                                    </Button>
-                                    <Button
+                                    </IconButton>
+                                    <IconButton
+                                      label={uiText.cancelEdit}
                                       variant="outline"
-                                      size="icon"
+                                      iconSize="md"
                                       onClick={() => {
                                         setEditingRowId(null)
                                         setEditingRowData(null)
                                       }}
                                       disabled={isSavingDraft}
-                                      aria-label={uiText.cancelEdit}
-                                      title={uiText.cancelEdit}
                                     >
                                       <X className="h-4 w-4" />
-                                      <span className="sr-only">{uiText.cancelEdit}</span>
-                                    </Button>
+                                    </IconButton>
                                   </div>
                                 </TableCell>
                               </TableRow>
@@ -1650,19 +1616,17 @@ export default function DatabasePage() {
                                 ))}
                                 <TableCell className="text-right align-top">
                                   {row.id ? (
-                                    <Button
+                                    <IconButton
+                                      label={uiText.editRow}
                                       variant="ghost"
-                                      size="icon"
+                                      iconSize="md"
                                       onClick={() => {
                                         setEditingRowId(row.id as string)
                                         setEditingRowData(row as Record<string, string>)
                                       }}
-                                      aria-label={uiText.editRow}
-                                      title={uiText.editRow}
                                     >
                                       <Edit className="h-4 w-4" />
-                                      <span className="sr-only">{uiText.editRow}</span>
-                                    </Button>
+                                    </IconButton>
                                   ) : null}
                                 </TableCell>
                               </TableRow>
@@ -1720,11 +1684,10 @@ export default function DatabasePage() {
                       </div>
 
                       <div className="flex flex-wrap items-center justify-end gap-2">
-                        <Button
-                          type="button"
+                        <IconButton
+                          label={uiText.previous}
                           variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
+                          iconSize="sm"
                           onClick={() => setPageIndex((current) => Math.max(0, current - 1))}
                           disabled={
                             pageIndex === 0 ||
@@ -1732,17 +1695,13 @@ export default function DatabasePage() {
                             editingRowId !== null ||
                             (draftRowTableId === table.id && draftRow !== null)
                           }
-                          aria-label={uiText.previous}
-                          title={uiText.previous}
                         >
                           <ChevronLeft className="h-4 w-4" />
-                          <span className="sr-only">{uiText.previous}</span>
-                        </Button>
-                        <Button
-                          type="button"
+                        </IconButton>
+                        <IconButton
+                          label={uiText.next}
                           variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
+                          iconSize="sm"
                           onClick={() => setPageIndex((current) => Math.min(pageCount - 1, current + 1))}
                           disabled={
                             pageIndex >= pageCount - 1 ||
@@ -1750,58 +1709,46 @@ export default function DatabasePage() {
                             editingRowId !== null ||
                             (draftRowTableId === table.id && draftRow !== null)
                           }
-                          aria-label={uiText.next}
-                          title={uiText.next}
                         >
                           <ChevronRight className="h-4 w-4" />
-                          <span className="sr-only">{uiText.next}</span>
-                        </Button>
+                        </IconButton>
 
                         {draftRowTableId === table.id && draftRow !== null ? (
                           <>
-                            <Button
+                            <IconButton
+                              label={uiText.cancelRow}
                               variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
+                              iconSize="sm"
                               onClick={() => {
                                 setDraftRow(null)
                                 setDraftRowTableId(null)
                               }}
                               disabled={isSavingDraft}
-                              aria-label={uiText.cancelRow}
-                              title={uiText.cancelRow}
                             >
                               <X className="h-4 w-4" />
-                              <span className="sr-only">{uiText.cancelRow}</span>
-                            </Button>
-                            <Button
-                              size="icon"
-                              className="h-8 w-8"
+                            </IconButton>
+                            <IconButton
+                              label={uiText.saveRow}
+                              iconSize="sm"
                               onClick={() => void handleSaveDraftRow()}
                               disabled={isSavingDraft}
-                              aria-label={uiText.saveRow}
-                              title={uiText.saveRow}
                             >
                               {isSavingDraft ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                              <span className="sr-only">{uiText.saveRow}</span>
-                            </Button>
+                            </IconButton>
                           </>
                         ) : (
-                          <Button
+                          <IconButton
+                            label={uiText.addRow}
                             variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
+                            iconSize="sm"
                             onClick={() => {
                               setDraftRow({})
                               setDraftRowTableId(table.id)
                             }}
                             disabled={isSavingDraft || editingRowId !== null}
-                            aria-label={uiText.addRow}
-                            title={uiText.addRow}
                           >
                             <Plus className="h-4 w-4" />
-                            <span className="sr-only">{uiText.addRow}</span>
-                          </Button>
+                          </IconButton>
                         )}
                       </div>
                     </div>
