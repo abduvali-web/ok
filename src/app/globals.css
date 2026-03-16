@@ -337,6 +337,24 @@
     background-color: var(--background);
   }
 
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  /* Keep action rows right-aligned even when they overflow (scroll starts on the right). */
+  .scroll-right {
+    direction: rtl;
+  }
+
+  .scroll-right > * {
+    direction: ltr;
+  }
+
   /* —— Premium Glass Cards —— */
   .glass-card,
   .glass-card-light {

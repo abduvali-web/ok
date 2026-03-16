@@ -48,6 +48,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector';
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import { SearchPanel } from '@/components/ui/search-panel'
+import { RightActionLine } from '@/components/ui/right-action-line'
 import type { DateRange } from 'react-day-picker'
 
 interface FinanceTabProps {
@@ -546,17 +547,18 @@ export function FinanceTab({
                                 <CardDescription className="flex-1 min-w-0">
                                     {t.finance.historyDesc}
                                 </CardDescription>
-                                <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-hidden sm:w-auto">
-                                    <SearchPanel
-                                        value={historySearchQuery}
-                                        onChange={setHistorySearchQuery}
-                                        placeholder={t.admin.searchPlaceholder}
-                                        className="max-w-none flex-1 sm:flex-none"
+                                <RightActionLine className="sm:w-auto">
+                                    <RefreshIconButton
+                                        label={profileUiText?.refresh ?? 'Refresh'}
+                                        onClick={() => void handleRefreshFinance()}
+                                        isLoading={isFinanceRefreshing}
+                                        iconSize="md"
                                     />
 
-                                    {applySelectedDate && (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) && profileUiText && (
-                                        <div className="min-w-0 shrink">
-                                          <CalendarDateSelector
+                                    {applySelectedDate &&
+                                      (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) &&
+                                      profileUiText ? (
+                                        <CalendarDateSelector
                                             selectedDate={selectedDate || null}
                                             applySelectedDate={applySelectedDate}
                                             shiftSelectedDate={shiftSelectedDate}
@@ -565,19 +567,18 @@ export function FinanceTab({
                                             applySelectedPeriod={applySelectedPeriod}
                                             locale={calendarLocale}
                                             profileUiText={profileUiText}
-                                          />
-                                        </div>
-                                    )}
+                                        />
+                                      ) : null}
 
-                                    <RefreshIconButton
-                                        label={profileUiText?.refresh ?? 'Refresh'}
-                                        onClick={() => void handleRefreshFinance()}
-                                        isLoading={isFinanceRefreshing}
-                                        iconSize="md"
+                                    <SearchPanel
+                                        value={historySearchQuery}
+                                        onChange={setHistorySearchQuery}
+                                        placeholder={t.admin.searchPlaceholder}
+                                        className="w-[420px] max-w-none flex-none"
                                     />
 
                                     {/* Category filter removed: search + date period are the primary audit controls. */}
-                                </div>
+                                </RightActionLine>
                             </div>
                         </CardHeader>
                         <CardContent>

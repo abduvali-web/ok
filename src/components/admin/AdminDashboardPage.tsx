@@ -114,6 +114,7 @@ import {
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import { SearchPanel } from '@/components/ui/search-panel'
+import { RightActionLine } from '@/components/ui/right-action-line'
 import type { DateRange } from 'react-day-picker'
 
 const OrdersTable = dynamic(
@@ -2330,7 +2331,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       </header>
 
       <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
-        <DialogContent className="h-[min(96dvh,980px)] max-w-7xl gap-0 p-0">
+        <DialogContent className="h-[min(98dvh,1040px)] max-w-7xl gap-0 p-0">
           <div className="flex h-full min-h-0 flex-col">
             <div className="border-b bg-background/80 px-4 py-3 backdrop-blur">
               <DialogTitle>{profileUiText.messages}</DialogTitle>
@@ -2344,7 +2345,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       </Dialog>
 
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="h-[min(92dvh,920px)] max-w-6xl gap-0 p-0">
+        <DialogContent className="h-[min(98dvh,1040px)] max-w-7xl gap-0 p-0">
           <div className="flex h-full min-h-0 flex-col">
             <div className="border-b bg-background/80 px-4 py-3 backdrop-blur">
               <DialogTitle>{t.admin.settings}</DialogTitle>
@@ -3496,19 +3497,22 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               <TabsContent value="orders" className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-2xl font-bold tracking-tight">{profileUiText.ordersBin}</h2>
-                  <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
-                    <SearchPanel
-                      value={binOrdersSearch}
-                      onChange={setBinOrdersSearch}
-                      placeholder={t.admin.searchPlaceholder}
-                    />
-
-                    <RefreshIconButton
-                      label={profileUiText.refresh}
-                      onClick={() => void handleRefreshBinOrders()}
-                      isLoading={isBinOrdersRefreshing}
-                      iconSize="md"
-                    />
+                  <RightActionLine className="flex-1">
+                    <div className="relative">
+                      <IconButton
+                        label={`${t.admin.deleteSelected} (${selectedOrders.size})`}
+                        onClick={handlePermanentDeleteOrders}
+                        variant="destructive"
+                        disabled={selectedOrders.size === 0}
+                      >
+                        <Trash2 className="size-4" />
+                      </IconButton>
+                      {selectedOrders.size > 0 ? (
+                        <span className="pointer-events-none absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-background px-1 text-[11px] font-semibold text-foreground">
+                          {selectedOrders.size}
+                        </span>
+                      ) : null}
+                    </div>
 
                     <div className="relative">
                       <IconButton
@@ -3526,22 +3530,20 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       ) : null}
                     </div>
 
-                    <div className="relative">
-                      <IconButton
-                        label={`${t.admin.deleteSelected} (${selectedOrders.size})`}
-                        onClick={handlePermanentDeleteOrders}
-                        variant="destructive"
-                        disabled={selectedOrders.size === 0}
-                      >
-                        <Trash2 className="size-4" />
-                      </IconButton>
-                      {selectedOrders.size > 0 ? (
-                        <span className="pointer-events-none absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-background px-1 text-[11px] font-semibold text-foreground">
-                          {selectedOrders.size}
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
+                    <RefreshIconButton
+                      label={profileUiText.refresh}
+                      onClick={() => void handleRefreshBinOrders()}
+                      isLoading={isBinOrdersRefreshing}
+                      iconSize="md"
+                    />
+
+                    <SearchPanel
+                      value={binOrdersSearch}
+                      onChange={setBinOrdersSearch}
+                      placeholder={t.admin.searchPlaceholder}
+                      className="w-[420px] max-w-none flex-none"
+                    />
+                  </RightActionLine>
                 </div>
 
                 <div className="rounded-md border">
@@ -3562,19 +3564,22 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               <TabsContent value="clients" className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-2xl font-bold tracking-tight">{profileUiText.clientsBin}</h2>
-                  <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
-                    <SearchPanel
-                      value={binClientsSearch}
-                      onChange={setBinClientsSearch}
-                      placeholder={t.admin.searchPlaceholder}
-                    />
-
-                    <RefreshIconButton
-                      label={profileUiText.refresh}
-                      onClick={() => void handleRefreshBinClients()}
-                      isLoading={isBinClientsRefreshing}
-                      iconSize="md"
-                    />
+                  <RightActionLine className="flex-1">
+                    <div className="relative">
+                      <IconButton
+                        label={`${t.admin.deleteSelected} (${selectedBinClients.size})`}
+                        onClick={handlePermanentDeleteClients}
+                        variant="destructive"
+                        disabled={selectedBinClients.size === 0}
+                      >
+                        <Trash2 className="size-4" />
+                      </IconButton>
+                      {selectedBinClients.size > 0 ? (
+                        <span className="pointer-events-none absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-background px-1 text-[11px] font-semibold text-foreground">
+                          {selectedBinClients.size}
+                        </span>
+                      ) : null}
+                    </div>
 
                     <div className="relative">
                       <IconButton
@@ -3592,22 +3597,20 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       ) : null}
                     </div>
 
-                    <div className="relative">
-                      <IconButton
-                        label={`${t.admin.deleteSelected} (${selectedBinClients.size})`}
-                        onClick={handlePermanentDeleteClients}
-                        variant="destructive"
-                        disabled={selectedBinClients.size === 0}
-                      >
-                        <Trash2 className="size-4" />
-                      </IconButton>
-                      {selectedBinClients.size > 0 ? (
-                        <span className="pointer-events-none absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-background px-1 text-[11px] font-semibold text-foreground">
-                          {selectedBinClients.size}
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
+                    <RefreshIconButton
+                      label={profileUiText.refresh}
+                      onClick={() => void handleRefreshBinClients()}
+                      isLoading={isBinClientsRefreshing}
+                      iconSize="md"
+                    />
+
+                    <SearchPanel
+                      value={binClientsSearch}
+                      onChange={setBinClientsSearch}
+                      placeholder={t.admin.searchPlaceholder}
+                      className="w-[420px] max-w-none flex-none"
+                    />
+                  </RightActionLine>
                 </div>
 
                 <div className="rounded-md border">

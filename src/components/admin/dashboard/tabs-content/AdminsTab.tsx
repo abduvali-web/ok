@@ -1,6 +1,6 @@
 'use client'
 
-import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Edit, Pause, Play, Plus, Trash2, Users } from 'lucide-react'
 
@@ -129,6 +129,11 @@ export function AdminsTab({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
   const [formData, setFormData] = useState<EditAdminFormData>({ ...DEFAULT_EDIT_ADMIN_FORM })
+
+  // Mobile UX: allow a "swipe down to close" gesture on the admin create/edit dialog.
+  const swipeStartRef = useRef<{ y: number; x: number; at: number } | null>(null)
+  const swipeLockRef = useRef<'none' | 'close' | 'ignore'>('none')
+  const [swipeOffset, setSwipeOffset] = useState(0)
 
   useEffect(() => {
     setSelectedAdminIds(new Set())
@@ -654,7 +659,57 @@ export function AdminsTab({
       </TabsContent>
 
       <Dialog open={isFormModalOpen} onOpenChange={handleFormOpenChange}>
-        <DialogContent className="sm:max-w-[640px]">
+        <DialogContent
+          className="sm:max-w-[640px] max-h-[90dvh] overflow-hidden transition-transform duration-200"
+          style={swipeOffset ? { transform: `translateY(${swipeOffset}px)` } : undefined}
+        >
+          <div
+            className="mb-2 flex justify-center sm:hidden"
+            onTouchStart={(event) => {
+              const touch = event.touches[0]
+              if (!touch) return
+              swipeStartRef.current = { y: touch.clientY, x: touch.clientX, at: Date.now() }
+              swipeLockRef.current = 'none'
+              setSwipeOffset(0)
+            }}
+            onTouchMove={(event) => {
+              const start = swipeStartRef.current
+              const touch = event.touches[0]
+              if (!start || !touch) return
+
+              const dy = touch.clientY - start.y
+              const dx = Math.abs(touch.clientX - start.x)
+
+              if (swipeLockRef.current === 'none') {
+                if (dy > 8 && dy > dx) swipeLockRef.current = 'close'
+                else if (dx > 8 && dx > dy) swipeLockRef.current = 'ignore'
+              }
+
+              if (swipeLockRef.current !== 'close') return
+              if (dy <= 0) return
+              setSwipeOffset(Math.min(220, dy))
+            }}
+            onTouchEnd={() => {
+              const shouldClose = swipeLockRef.current === 'close' && swipeOffset >= 90
+              swipeStartRef.current = null
+              swipeLockRef.current = 'none'
+
+              if (shouldClose) {
+                setSwipeOffset(0)
+                handleFormOpenChange(false)
+                return
+              }
+
+              setSwipeOffset(0)
+            }}
+            onTouchCancel={() => {
+              swipeStartRef.current = null
+              swipeLockRef.current = 'none'
+              setSwipeOffset(0)
+            }}
+          >
+            <div className="h-1.5 w-10 rounded-full bg-muted-foreground/30" />
+          </div>
           <DialogHeader>
             <DialogTitle>{formMode === 'create' ? t.admin.createAdmin : t.admin.edit}</DialogTitle>
             <DialogDescription>
@@ -662,7 +717,8 @@ export function AdminsTab({
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="flex min-h-0 flex-col gap-4">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
             <div className="grid gap-3 sm:grid-cols-2">
               <FormField label={t.admin.table.name} htmlFor="admin-form-name">
                 <Input
@@ -769,8 +825,9 @@ export function AdminsTab({
                 <AlertDescription>{formError}</AlertDescription>
               </Alert>
             )}
+            </div>
 
-            <DialogFooter>
+            <DialogFooter className="shrink-0">
               <Button type="button" variant="outline" onClick={() => handleFormOpenChange(false)}>
                 {t.common.cancel}
               </Button>
