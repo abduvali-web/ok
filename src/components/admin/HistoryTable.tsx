@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { IconButton } from '@/components/ui/icon-button'
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import { SearchPanel } from '@/components/ui/search-panel'
+import { RightActionLine } from '@/components/ui/right-action-line'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Table,
@@ -214,27 +215,38 @@ export function HistoryTable({
           </div>
         </div>
 
-        <div className="grid gap-2 md:grid-cols-[minmax(0,220px)_auto_1fr_auto]">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           {users.length > 0 ? (
-            <Select value={selectedUser} onValueChange={setSelectedUser}>
-              <SelectTrigger className="border-border bg-background">
-                <SelectValue placeholder={t.admin.allUsers} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t.admin.allUsers}</SelectItem>
-                {users.map((user) => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.name} ({getRoleLabel(user.role)})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="min-w-0 md:max-w-[260px]">
+              <Select value={selectedUser} onValueChange={setSelectedUser}>
+                <SelectTrigger className="border-border bg-background">
+                  <SelectValue placeholder={t.admin.allUsers} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t.admin.allUsers}</SelectItem>
+                  {users.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.name} ({getRoleLabel(user.role)})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           ) : (
             <div />
           )}
 
-          {applySelectedDate && (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) && profileUiText ? (
-            <div className="flex items-center justify-start md:justify-end">
+          <RightActionLine className="md:w-auto">
+            <RefreshIconButton
+              label={profileUiText?.refresh ?? 'Refresh'}
+              onClick={() => void fetchLogs()}
+              isLoading={isLoading}
+              iconSize="sm"
+            />
+
+            {applySelectedDate &&
+            (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) &&
+            profileUiText ? (
               <CalendarDateSelector
                 selectedDate={selectedDate || null}
                 applySelectedDate={applySelectedDate}
@@ -245,25 +257,15 @@ export function HistoryTable({
                 locale={calendarLocale}
                 profileUiText={profileUiText}
               />
-            </div>
-          ) : (
-            <div />
-          )}
+            ) : null}
 
-          <SearchPanel
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder={t.admin.searchPlaceholder || 'Search logs'}
-          />
-
-          <div className="flex items-center justify-end">
-            <RefreshIconButton
-              label={profileUiText?.refresh ?? 'Refresh'}
-              onClick={() => void fetchLogs()}
-              isLoading={isLoading}
-              iconSize="sm"
+            <SearchPanel
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder={t.admin.searchPlaceholder || 'Search logs'}
+              className="w-[420px] max-w-none flex-none"
             />
-          </div>
+          </RightActionLine>
         </div>
       </CardHeader>
 

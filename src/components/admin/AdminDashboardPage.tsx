@@ -2331,7 +2331,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       </header>
 
       <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
-        <DialogContent className="h-[min(98dvh,1040px)] max-w-7xl gap-0 p-0">
+        <DialogContent className="h-[min(98dvh,1560px)] max-w-[min(96vw,1600px)] gap-0 p-0">
           <div className="flex h-full min-h-0 flex-col">
             <div className="border-b bg-background/80 px-4 py-3 backdrop-blur">
               <DialogTitle>{profileUiText.messages}</DialogTitle>
@@ -2345,7 +2345,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       </Dialog>
 
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="h-[min(98dvh,1040px)] max-w-7xl gap-0 p-0">
+        <DialogContent className="h-[min(98dvh,1560px)] max-w-[min(96vw,1600px)] gap-0 p-0">
           <div className="flex h-full min-h-0 flex-col">
             <div className="border-b bg-background/80 px-4 py-3 backdrop-blur">
               <DialogTitle>{t.admin.settings}</DialogTitle>
