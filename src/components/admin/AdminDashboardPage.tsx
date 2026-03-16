@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { signOut } from 'next-auth/react'
+import { useAdminSettingsContext } from '@/contexts/AdminSettingsContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -62,6 +63,9 @@ import {
   RefreshCw,
   Filter,
   Search,
+  Sun,
+  Moon,
+  Monitor,
   Route,
   CalendarDays,
   MapPin,
@@ -106,10 +110,6 @@ const OrdersTable = dynamic(
 )
 const HistoryTable = dynamic(
   () => import('@/components/admin/HistoryTable').then((mod) => mod.HistoryTable),
-  { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading...</div> }
-)
-const InterfaceSettings = dynamic(
-  () => import('@/components/admin/InterfaceSettings').then((mod) => mod.InterfaceSettings),
   { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading...</div> }
 )
 const ChatTab = dynamic(
@@ -167,6 +167,8 @@ const DEFAULT_ORDER_FILTERS = {
 
 export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const { t, language } = useLanguage()
+  const { settings: adminSettings, updateSettings: updateAdminSettings, mounted: adminSettingsMounted } =
+    useAdminSettingsContext()
   const searchInputRef = useRef<HTMLInputElement | null>(null)
   const [activeTab, setActiveTab] = useState(() => (mode === 'middle' ? 'orders' : 'statistics'))
   const [currentDate, setCurrentDate] = useState('')
@@ -340,7 +342,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       ? deriveVisibleTabs(allowedTabs)
       : [...(CANONICAL_TABS as unknown as string[])]
 
-    return isMiddleAdminView ? derivedTabs.filter((tab) => tab !== 'statistics') : derivedTabs
+    const withoutInterface = derivedTabs.filter((tab) => tab !== 'interface')
+    return isMiddleAdminView ? withoutInterface.filter((tab) => tab !== 'statistics') : withoutInterface
   }, [allowedTabs, isMiddleAdminView])
   const uiStateStorageKey = useMemo(() => `${DASHBOARD_UI_STORAGE_PREFIX}:${mode}`, [mode])
   const isWarehouseReadOnly = isLowAdminView
@@ -2032,6 +2035,37 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </span>
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-9 w-9"
+                onClick={() => {
+                  const next =
+                    adminSettings.theme === 'light' ? 'dark' : adminSettings.theme === 'dark' ? 'system' : 'light'
+                  updateAdminSettings({ theme: next })
+                }}
+                aria-label={t.admin.theme}
+                title={
+                  adminSettingsMounted
+                    ? `${t.admin.theme}: ${
+                        adminSettings.theme === 'system'
+                          ? t.admin.system
+                          : adminSettings.theme === 'dark'
+                            ? t.admin.dark
+                            : t.admin.light
+                      }`
+                    : t.admin.theme
+                }
+              >
+                {adminSettings.theme === 'dark' ? (
+                  <Moon className="h-4 w-4" />
+                ) : adminSettings.theme === 'system' ? (
+                  <Monitor className="h-4 w-4" />
+                ) : (
+                  <Sun className="h-4 w-4" />
+                )}
+              </Button>
               <LanguageSwitcher />
               <div className="hidden md:block">
                 <UserGuide guides={[
@@ -3148,12 +3182,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
             profileUiText={profileUiText}
           />
 
-          {/* Interface Tab */}
-
-          < TabsContent value="interface" className="space-y-6" >
-            <InterfaceSettings />
-          </TabsContent >
-
           {/* History Tab */}
           <TabsContent value="history" className="space-y-6">
             <HistoryTable 
@@ -3228,9 +3256,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       <Button variant="outline" size="sm" onClick={() => setActiveTab('orders')}>{t.admin.orders}</Button>
                       <Button variant="outline" size="sm" onClick={() => setActiveTab('clients')}>{t.admin.clients}</Button>
                       <Button variant="outline" size="sm" onClick={() => setActiveTab('history')}>{t.admin.history}</Button>
-                      {visibleTabs.includes('interface') && (
-                        <Button variant="outline" size="sm" onClick={() => setActiveTab('interface')}>{t.admin.interface}</Button>
-                      )}
                     </div>
                   </div>
                 </CardContent>

@@ -215,20 +215,6 @@ export function HistoryTable({
     })
   }, [actionFilter, logs, searchTerm])
 
-  const summary = useMemo(() => {
-    return filteredLogs.reduce(
-      (acc, log) => {
-        const kind = getActionKind(log.action)
-        if (kind === 'create') acc.create += 1
-        else if (kind === 'update') acc.update += 1
-        else if (kind === 'delete') acc.delete += 1
-        else acc.other += 1
-        return acc
-      },
-      { create: 0, update: 0, delete: 0, other: 0 }
-    )
-  }, [filteredLogs])
-
   const pageRangeLabel = useMemo(() => {
     if (total === 0 || logs.length === 0) return `0 / ${total}`
     const start = page * limit + 1
@@ -308,29 +294,6 @@ export function HistoryTable({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
-          <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
-            <p className="text-xs text-muted-foreground">{t.admin.all}</p>
-            <p className="mt-1 text-xl font-semibold">{filteredLogs.length}</p>
-          </div>
-          <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
-            <p className="text-xs text-muted-foreground">{t.admin.actionCreate}</p>
-            <p className="mt-1 text-xl font-semibold text-emerald-600">{summary.create}</p>
-          </div>
-          <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
-            <p className="text-xs text-muted-foreground">{t.admin.actionUpdate}</p>
-            <p className="mt-1 text-xl font-semibold text-sky-600">{summary.update}</p>
-          </div>
-          <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
-            <p className="text-xs text-muted-foreground">{t.admin.actionDelete}</p>
-            <p className="mt-1 text-xl font-semibold text-rose-600">{summary.delete}</p>
-          </div>
-          <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
-            <p className="text-xs text-muted-foreground">{t.admin.actionOther}</p>
-            <p className="mt-1 text-xl font-semibold">{summary.other}</p>
-          </div>
-        </div>
-
         <div className="hidden rounded-lg border border-border md:block">
           <Table>
             <TableHeader>
