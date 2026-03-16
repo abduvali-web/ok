@@ -282,7 +282,7 @@ export function OrderModal({
                   required
                 />
               </div>
-              {orderFormData.assignedSetId && groupOptions.length > 0 ? (
+              {!orderFormData.assignedSetId ? null : groupOptions.length > 0 ? (
                 <div className={rowClass}>
                   <Label className={labelClass}>Group</Label>
                   <div className={fieldSpanClass}>
