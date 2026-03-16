@@ -2331,7 +2331,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
         {/* Mobile PWA: full-screen dialog (like dispatch panel). Desktop: centered large modal. */}
-        <DialogContent className="!left-0 !top-0 !translate-x-0 !translate-y-0 !w-screen !max-w-none h-[100svh] !rounded-none !border-0 gap-0 !p-0 sm:!left-[50%] sm:!top-[50%] sm:!translate-x-[-50%] sm:!translate-y-[-50%] sm:h-[min(98dvh,1560px)] sm:max-w-[min(96vw,1600px)] sm:!rounded-3xl sm:!border">
+        <DialogContent className="!left-0 !top-0 !translate-x-0 !translate-y-0 !w-screen !max-w-none h-[100svh] !rounded-none !border-0 gap-0 !p-0 sm:!left-[50%] sm:!top-[50%] sm:!translate-x-[-50%] sm:!translate-y-[-50%] sm:h-[min(98dvh,1560px)] sm:max-w-[min(96vw,1600px)] md:h-[min(98dvh,1800px)] md:max-w-[min(98vw,1800px)] sm:!rounded-3xl sm:!border">
           <div className="flex h-full min-h-0 flex-col">
             <div className="border-b bg-background/80 px-4 py-3 backdrop-blur">
               <DialogTitle>{profileUiText.messages}</DialogTitle>
@@ -2346,7 +2346,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         {/* Mobile PWA: full-screen dialog. Desktop: centered large modal. */}
-        <DialogContent className="!left-0 !top-0 !translate-x-0 !translate-y-0 !w-screen !max-w-none h-[100svh] !rounded-none !border-0 gap-0 !p-0 sm:!left-[50%] sm:!top-[50%] sm:!translate-x-[-50%] sm:!translate-y-[-50%] sm:h-[min(98dvh,1560px)] sm:max-w-[min(96vw,1600px)] sm:!rounded-3xl sm:!border">
+        <DialogContent className="!left-0 !top-0 !translate-x-0 !translate-y-0 !w-screen !max-w-none h-[100svh] !rounded-none !border-0 gap-0 !p-0 sm:!left-[50%] sm:!top-[50%] sm:!translate-x-[-50%] sm:!translate-y-[-50%] sm:h-[min(98dvh,1560px)] sm:max-w-[min(96vw,1600px)] md:h-[min(98dvh,1800px)] md:max-w-[min(98vw,1800px)] sm:!rounded-3xl sm:!border">
           <div className="flex h-full min-h-0 flex-col">
             <div className="border-b bg-background/80 px-4 py-3 backdrop-blur">
               <DialogTitle>{t.admin.settings}</DialogTitle>
