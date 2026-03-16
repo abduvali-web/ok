@@ -106,6 +106,7 @@ import { ChatCenter } from '@/components/chat/ChatCenter'
 import {
   expandShortMapsUrl,
   extractCoordsFromText,
+  formatLatLng,
   isShortGoogleMapsUrl,
   parseGoogleMapsUrl,
   type LatLng,
@@ -113,6 +114,7 @@ import {
 
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
+import { MiniLocationPickerMap } from '@/components/admin/dashboard/shared/MiniLocationPickerMap'
 import { SearchPanel } from '@/components/ui/search-panel'
 import type { DateRange } from 'react-day-picker'
 
@@ -600,6 +602,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         nickname: 'ÐŸÑÐµÐ²Ð´Ð¾Ð½Ð¸Ð¼',
         nicknamePlaceholder: 'ÐŸÑ€Ð¸Ð¼ÐµÑ€: ÐžÑ„Ð¸Ñ, Ð”Ð¾Ð¼... (Ð½ÐµÐ¾Ð±ÑÐ·Ð°Ñ‚ÐµÐ»ÑŒÐ½Ð¾)',
         mapLink: 'Ð¡ÑÑ‹Ð»ÐºÐ° Ð½Ð° ÐºÐ°Ñ€Ñ‚Ñƒ',
+        map: 'ÐšÐ°Ñ€Ñ‚Ð°',
+        mapHint: 'ÐšÐ»Ð¸ÐºÐ½Ð¸Ñ‚Ðµ Ð¿Ð¾ ÐºÐ°Ñ€Ñ‚Ðµ, Ñ‡Ñ‚Ð¾Ð±Ñ‹ Ð²Ñ‹Ð±Ñ€Ð°Ñ‚ÑŒ Ñ‚Ð¾Ñ‡ÐºÑƒ (Ð¼Ð¾Ð¶Ð½Ð¾ Ñ‚Ð°ÐºÐ¶Ðµ Ð¿ÐµÑ€ÐµÑ‚Ð°ÑÐºÐ¸Ð²Ð°Ñ‚ÑŒ Ð¼Ð°Ñ€ÐºÐµÑ€).',
         phoneFormat: 'Ð¤Ð¾Ñ€Ð¼Ð°Ñ‚: +998 XX XXX XX XX',
         balance: 'Ð‘Ð°Ð»Ð°Ð½Ñ',
         days: 'Ð”Ð½Ð¸',
@@ -680,6 +684,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         nickname: 'Laqab',
         nicknamePlaceholder: 'Misol: Ofis, Uy... (ixtiyoriy)',
         mapLink: 'Xarita havolasi',
+        map: 'Xarita',
+        mapHint: 'Nuqtani tanlash uchun xaritaga bosing (marker-ni sudrab ham boâ€˜ladi).',
         phoneFormat: 'Format: +998 XX XXX XX XX',
         balance: 'Balans',
         days: 'Kunlar',
@@ -759,6 +765,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       nickname: 'Nickname',
       nicknamePlaceholder: 'Example: Office, Home... (optional)',
       mapLink: 'Map link',
+      map: 'Map',
+      mapHint: 'Click the map to pick a point (you can also drag the marker).',
       phoneFormat: 'Format: +998 XX XXX XX XX',
       balance: 'Balance',
       days: 'Days',
@@ -1401,6 +1409,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
     const parsed = await parseGoogleMapsUrl(value)
     setParsedCoords(parsed)
+    setOrderFormData(prev => ({
+      ...prev,
+      latitude: parsed?.lat ?? null,
+      longitude: parsed?.lng ?? null
+    }))
   }
 
   const handleClientAddressChange = async (value: string) => {
@@ -3061,6 +3074,27 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 className="col-span-3"
                               />
                             </div>
+
+                            <div className="grid grid-cols-4 items-start gap-2">
+                              <Label className="text-right">{profileUiText.map}</Label>
+                              <div className="col-span-3 space-y-2">
+                                <div className="rounded-xl border border-border overflow-hidden bg-card">
+                                  <div className="h-[190px] w-full">
+                                    <MiniLocationPickerMap
+                                      value={
+                                        typeof clientFormData.latitude === 'number' && typeof clientFormData.longitude === 'number'
+                                          ? { lat: clientFormData.latitude, lng: clientFormData.longitude }
+                                          : null
+                                      }
+                                      onChange={(point) => void handleClientAddressChange(formatLatLng(point))}
+                                    />
+                                  </div>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  {profileUiText.mapHint}
+                                </p>
+                              </div>
+                            </div>
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientPlanType" className="text-right">
                                 Plan
@@ -3982,6 +4016,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         setEditingOrderId={setEditingOrderId}
         orderFormData={orderFormData}
         setOrderFormData={setOrderFormData}
+        editingOrder={editingOrderId ? (orders.find(o => o.id === editingOrderId) || null) : null}
         clients={clients}
         couriers={couriers}
         availableSets={availableSets}

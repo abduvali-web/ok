@@ -80,6 +80,7 @@ export async function GET(request: NextRequest) {
       calories: dbClient.calories || 2000,
       planType: (dbClient as any).planType || 'CLASSIC',
       dailyPrice: (dbClient as any).dailyPrice || 84000,
+      balance: typeof (dbClient as any).balance === 'number' ? (dbClient as any).balance : 0,
       notes: (dbClient as any).notes || '',
       specialFeatures: dbClient.preferences || '',
       deliveryDays: (() => {
@@ -211,6 +212,7 @@ export async function POST(request: NextRequest) {
       calories: dbClient.calories || 2000,
       planType: (dbClient as any).planType || 'CLASSIC',
       dailyPrice: (dbClient as any).dailyPrice || 84000,
+      balance: typeof (dbClient as any).balance === 'number' ? (dbClient as any).balance : 0,
       notes: (dbClient as any).notes || '',
       specialFeatures: dbClient.preferences || '',
       deliveryDays: safeJsonParse<Record<string, boolean>>(dbClient.deliveryDays, {}),

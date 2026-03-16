@@ -20,7 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { Admin, Client } from '@/components/admin/dashboard/types'
+import type { Admin, Client, Order } from '@/components/admin/dashboard/types'
+import { formatLatLng } from '@/lib/geo'
+import { MiniLocationPickerMap } from '@/components/admin/dashboard/shared/MiniLocationPickerMap'
 
 export type OrderFormData = {
   customerName: string
@@ -47,6 +49,7 @@ export function OrderModal({
   setEditingOrderId,
   orderFormData,
   setOrderFormData,
+  editingOrder,
   clients,
   couriers,
   availableSets,
@@ -62,6 +65,7 @@ export function OrderModal({
   setEditingOrderId: (next: string | null) => void
   orderFormData: OrderFormData
   setOrderFormData: React.Dispatch<React.SetStateAction<OrderFormData>>
+  editingOrder: Order | null
   clients: Client[]
   couriers: Admin[]
   availableSets: any[]
@@ -71,6 +75,44 @@ export function OrderModal({
   onClientSelect: (clientId: string) => void
   onAddressChange: (value: string) => void
 }) {
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('ru-RU', {
+      style: 'currency',
+      currency: 'UZS',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(Number.isFinite(amount) ? amount : 0)
+
+  const matchedClient: Client | undefined = (() => {
+    if (orderFormData.selectedClientId && orderFormData.selectedClientId !== 'manual') {
+      return clients.find((c) => c.id === orderFormData.selectedClientId)
+    }
+    // Edit flow doesn't bind selectedClientId; fallback to phone match.
+    const phone = (orderFormData.customerPhone || '').trim()
+    if (!phone) return undefined
+    return clients.find((c) => (c.phone || '').trim() === phone)
+  })()
+
+  const clientBalance = typeof matchedClient?.balance === 'number' ? matchedClient.balance : 0
+  const dailyPrice = typeof matchedClient?.dailyPrice === 'number' ? matchedClient.dailyPrice : 0
+  const qty = Number.isFinite(orderFormData.quantity) && orderFormData.quantity > 0 ? orderFormData.quantity : 1
+  const orderCost = dailyPrice * qty
+
+  const isCashLike = orderFormData.paymentMethod === 'CASH' || orderFormData.paymentMethod === 'CARD'
+  const isDelivered = editingOrder?.orderStatus === 'DELIVERED'
+  const amountReceived = typeof editingOrder?.amountReceived === 'number' ? editingOrder.amountReceived : 0
+
+  const amountValue = (() => {
+    if (!isCashLike) return null
+    if (isDelivered) return amountReceived - orderCost
+    return clientBalance > 0 ? clientBalance : 0
+  })()
+
+  const orderPoint =
+    typeof orderFormData.latitude === 'number' && typeof orderFormData.longitude === 'number'
+      ? { lat: orderFormData.latitude, lng: orderFormData.longitude }
+      : null
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
@@ -270,6 +312,36 @@ export function OrderModal({
                 </select>
               </div>
 
+              {isCashLike && (
+                <div className="grid grid-cols-4 items-center gap-2">
+                  <Label className="text-right">Amount</Label>
+                  <div className="col-span-3">
+                    <div className="flex items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                      <span
+                        className={
+                          (amountValue ?? 0) > 0
+                            ? 'text-green-600 font-medium'
+                            : (amountValue ?? 0) < 0
+                              ? 'text-red-600 font-medium'
+                              : 'text-muted-foreground'
+                        }
+                      >
+                        {formatCurrency(amountValue ?? 0)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        Cost: {formatCurrency(orderCost)}
+                      </span>
+                    </div>
+                    {matchedClient ? (
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        Balance: {formatCurrency(clientBalance)}
+                        {isDelivered ? ` | Received: ${formatCurrency(amountReceived)}` : ''}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-4 items-center gap-2">
                 <Label htmlFor="specialFeatures" className="text-right">
                   Особенности
@@ -303,6 +375,41 @@ export function OrderModal({
                 </select>
               </div>
 
+              <div className="col-span-4">
+                <div className="rounded-xl border border-border overflow-hidden bg-card">
+                  <div className="px-3 py-2 border-b border-border flex items-center justify-between gap-2">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Map
+                    </span>
+                    {orderPoint ? (
+                      <span className="text-xs text-muted-foreground">
+                        {orderPoint.lat.toFixed(5)}, {orderPoint.lng.toFixed(5)}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        Click map to pick a point
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-3 border-b border-border">
+                    <Input
+                      value={orderFormData.deliveryAddress}
+                      onChange={(e) => onAddressChange(e.target.value)}
+                      placeholder="Google Maps link or coordinates (lat,lng)"
+                    />
+                  </div>
+                  <div className="h-[190px] w-full">
+                    <MiniLocationPickerMap
+                      value={orderPoint}
+                      onChange={(point) => {
+                        // Persist coordinates into the address field so AdminDashboardPage can include them on submit.
+                        onAddressChange(formatLatLng(point))
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
               {orderError && (
                 <div className="col-span-4">
                   <Alert variant="destructive">
@@ -334,4 +441,3 @@ export function OrderModal({
     </Dialog>
   )
 }
-

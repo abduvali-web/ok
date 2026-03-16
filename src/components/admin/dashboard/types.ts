@@ -68,6 +68,7 @@ export interface Order {
   courierName?: string
   assignedSetId?: string | null
   assignedSetName?: string | null
+  amountReceived?: number | null
 }
 
 export interface Client {
@@ -79,6 +80,7 @@ export interface Client {
   calories: number
   planType: 'CLASSIC' | 'INDIVIDUAL' | 'DIABETIC'
   dailyPrice: number
+  balance: number
   notes?: string
   specialFeatures: string
   deliveryDays: {
