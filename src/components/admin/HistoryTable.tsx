@@ -263,7 +263,7 @@ export function HistoryTable({
               value={searchTerm}
               onChange={setSearchTerm}
               placeholder={t.admin.searchPlaceholder || 'Search logs'}
-              className="w-[420px] max-w-none flex-none"
+              className="w-[200px] sm:w-[260px] md:w-[320px] flex-none"
             />
           </RightActionLine>
         </div>

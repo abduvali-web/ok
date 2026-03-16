@@ -20,10 +20,16 @@ export function RightActionLine({
   innerClassName?: string
 }) {
   return (
-    <div className={cn('no-scrollbar scroll-right ml-auto w-full overflow-x-auto', className)}>
+    <div
+      className={cn(
+        // `min-w-0` is critical when this sits in a flex row; otherwise the scroller can overflow the viewport on mobile.
+        'no-scrollbar scroll-right ml-auto w-full max-w-full min-w-0 overflow-x-auto touch-pan-x',
+        className
+      )}
+    >
       <div
         className={cn(
-          'flex flex-nowrap flex-row-reverse items-center justify-end gap-2',
+          'flex w-max flex-nowrap flex-row-reverse items-center justify-end gap-2',
           innerClassName
         )}
       >
@@ -32,4 +38,3 @@ export function RightActionLine({
     </div>
   )
 }
-

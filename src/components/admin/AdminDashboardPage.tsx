@@ -3541,7 +3541,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       value={binOrdersSearch}
                       onChange={setBinOrdersSearch}
                       placeholder={t.admin.searchPlaceholder}
-                      className="w-[420px] max-w-none flex-none"
+                      className="w-[200px] sm:w-[260px] md:w-[320px] flex-none"
                     />
                   </RightActionLine>
                 </div>
@@ -3608,7 +3608,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       value={binClientsSearch}
                       onChange={setBinClientsSearch}
                       placeholder={t.admin.searchPlaceholder}
-                      className="w-[420px] max-w-none flex-none"
+                      className="w-[200px] sm:w-[260px] md:w-[320px] flex-none"
                     />
                   </RightActionLine>
                 </div>

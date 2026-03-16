@@ -12,6 +12,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { IconButton } from '@/components/ui/icon-button';
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton';
 import { SearchPanel } from '@/components/ui/search-panel';
+import { RightActionLine } from '@/components/ui/right-action-line';
 
 interface Ingredient {
     id: string;
@@ -228,13 +229,14 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card p-3 shadow-sm">
-                <div className="flex flex-1 flex-wrap items-center gap-2">
-                    <SearchPanel
-                        value={searchTerm}
-                        onChange={setSearchTerm}
-                        placeholder={uiText.searchPlaceholder}
-                    />
+            <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+                <RightActionLine>
+                    <IconButton
+                        label={uiText.addIngredient}
+                        onClick={() => { setCurrentIngredient({ unit: 'gr', amount: 0 }); setIsDialogOpen(true); }}
+                    >
+                        <Plus className="size-4" />
+                    </IconButton>
 
                     <RefreshIconButton
                         label={language === 'ru' ? 'Обновить' : language === 'uz' ? 'Yangilash' : 'Refresh'}
@@ -242,14 +244,14 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                         isLoading={loading}
                         iconSize="md"
                     />
-                </div>
 
-                <IconButton
-                    label={uiText.addIngredient}
-                    onClick={() => { setCurrentIngredient({ unit: 'gr', amount: 0 }); setIsDialogOpen(true); }}
-                >
-                    <Plus className="size-4" />
-                </IconButton>
+                    <SearchPanel
+                        value={searchTerm}
+                        onChange={setSearchTerm}
+                        placeholder={uiText.searchPlaceholder}
+                        className="w-[200px] sm:w-[260px] md:w-[320px] flex-none"
+                    />
+                </RightActionLine>
             </div>
 
             <div className="bg-card rounded-lg border border-border max-h-[600px] overflow-y-auto relative">

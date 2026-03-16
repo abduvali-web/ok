@@ -46,6 +46,8 @@ const DispatchLeafletMap = dynamic(() => import('./DispatchLeafletMap'), {
 
 type ContainerId = string
 
+const ROUTE_REFRESH_COOLDOWN_MS = 60_000
+
 function haversineDistance(a: LatLng, b: LatLng) {
   const R = 6371
   const dLat = (b.lat - a.lat) * Math.PI / 180
@@ -107,6 +109,22 @@ function renumberInOrder(
     if (typeof n === 'number') next[id] = n
   }
   return next
+}
+
+function snapCoord(value: number) {
+  // ~11m precision to avoid route-key churn from tiny GPS jitter.
+  return Number.isFinite(value) ? value.toFixed(4) : 'NaN'
+}
+
+function makeRouteSignature(containerId: string, orderedOrderIds: string[]) {
+  // Exact "priority list" signature: same courier container + same ordered order ids.
+  return `${containerId}|${orderedOrderIds.join(',')}`
+}
+
+function makeRouteKey(signature: string, startPoint: LatLng | null, stops: Array<{ orderId: string; lat: number; lng: number }>) {
+  const start = startPoint ? `${snapCoord(startPoint.lat)},${snapCoord(startPoint.lng)}` : 'none'
+  const stopSig = stops.map((s) => `${s.orderId}@${snapCoord(s.lat)},${snapCoord(s.lng)}`).join(';')
+  return `${signature}|S:${start}|T:${stopSig}`
 }
 
 function SortableOrderItem({
@@ -218,6 +236,24 @@ export function DispatchMapPanel({
   const dirtyRouteContainersRef = useRef<Set<string>>(new Set())
   const dirtyRouteVersionByIdRef = useRef<Record<string, number>>({})
   const routeRequestSeqRef = useRef(0)
+  const deferredRoadRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const routeCacheRef = useRef(
+    new Map<
+      string,
+      {
+        polyline: LatLng[]
+        durationSec: number | null
+        source: 'ors' | 'fallback' | 'none'
+        fetchedAt: number
+      }
+    >()
+  )
+  const bestOrsRouteKeyBySignatureRef = useRef(new Map<string, string>())
+  const lastFetchAtByContainerRef = useRef<Record<string, number>>({})
+  const lastSignatureByContainerRef = useRef<Record<string, string>>({})
+  const routeStatsByContainerRef = useRef(routeStatsByContainer)
+  const initKeyRef = useRef<string | null>(null)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
 
@@ -228,22 +264,16 @@ export function DispatchMapPanel({
     }
   }, [])
 
-  const clearDirtyRoads = useCallback(() => {
-    const dirty = Array.from(dirtyRouteContainersRef.current)
-    if (dirty.length === 0) return
+  useEffect(() => {
+    routeStatsByContainerRef.current = routeStatsByContainer
+  }, [routeStatsByContainer])
 
-    setRoadPolylineByContainer((prev) => {
-      const next = { ...prev }
-      for (const id of dirty) delete next[id]
-      return next
-    })
-
-    setRouteStatsByContainer((prev) => {
-      const next = { ...prev }
-      for (const id of dirty) delete next[id]
-      return next
-    })
-  }, [])
+  useEffect(() => {
+    if (open) return
+    initKeyRef.current = null
+    if (deferredRoadRefreshTimerRef.current) clearTimeout(deferredRoadRefreshTimerRef.current)
+    deferredRoadRefreshTimerRef.current = null
+  }, [open])
 
   const uiText = useMemo(() => {
     if (language === 'uz') {
@@ -362,6 +392,9 @@ export function DispatchMapPanel({
   // Initialize container state + numbers when opening
   useEffect(() => {
     if (!open) return
+    const initKey = selectedDateISO ?? '__no_date__'
+    if (initKeyRef.current === initKey) return
+    initKeyRef.current = initKey
     const grouped: Record<ContainerId, string[]> = {}
     for (const id of allContainerIds) grouped[id] = []
 
@@ -383,7 +416,7 @@ export function DispatchMapPanel({
     setRouteStatsByContainer({})
     markContainersDirty(allContainerIds)
     setSearch('')
-  }, [allContainerIds, markContainersDirty, open, safeOrders])
+  }, [allContainerIds, markContainersDirty, open, safeOrders, selectedDateISO])
 
   // Resolve coordinates for orders
   useEffect(() => {
@@ -567,36 +600,105 @@ export function DispatchMapPanel({
   }, [activeId, buildMapData])
 
   const refreshRoadRoutes = useCallback(async (containerIds: string[]) => {
+    const now = Date.now()
     const versionsAtStart: Record<string, number> = {}
     for (const id of containerIds) versionsAtStart[id] = dirtyRouteVersionByIdRef.current[id] ?? 0
 
-    const routes = containerIds
-      .map((containerId) => {
-        const ids = containers[containerId] || []
-        const stops = ids
-          .map((id) => {
-            const coords = coordsById[id]
-            if (!coords) return null
-            return { orderId: id, lat: coords.lat, lng: coords.lng }
-          })
-          .filter((s): s is { orderId: string; lat: number; lng: number } => s !== null)
+    const polylineFromCache: Record<string, LatLng[]> = {}
+    const statsFromCache: Record<string, { durationSec: number | null; source: string }> = {}
+    const appliedFromCache = new Set<string>()
 
-        const startPoint = courierStartById.get(containerId) ?? warehousePoint ?? null
-        const pointCount = (startPoint ? 1 : 0) + stops.length
-        if (pointCount < 2) return null
+    const deferred: string[] = []
+    let minDeferredMs: number | null = null
 
-        return { containerId, startPoint, stops }
-      })
-      .filter((r): r is { containerId: string; startPoint: LatLng | null; stops: Array<{ orderId: string; lat: number; lng: number }> } => r !== null)
+    const routesToFetch: Array<{ containerId: string; startPoint: LatLng | null; stops: Array<{ orderId: string; lat: number; lng: number }> }> = []
+    const routeKeyByContainer = new Map<string, string>()
+    const signatureByContainer = new Map<string, string>()
 
-    if (routes.length === 0) return
+    for (const containerId of containerIds) {
+      const ids = containers[containerId] || []
+      const stops = ids
+        .map((id) => {
+          const coords = coordsById[id]
+          if (!coords) return null
+          return { orderId: id, lat: coords.lat, lng: coords.lng }
+        })
+        .filter((s): s is { orderId: string; lat: number; lng: number } => s !== null)
+
+      const startPoint = courierStartById.get(containerId) ?? warehousePoint ?? null
+      const pointCount = (startPoint ? 1 : 0) + stops.length
+      if (pointCount < 2) {
+        // Nothing to request; just clear dirty if it didn't change again.
+        const current = dirtyRouteVersionByIdRef.current[containerId] ?? 0
+        if (current === (versionsAtStart[containerId] ?? 0)) dirtyRouteContainersRef.current.delete(containerId)
+        continue
+      }
+
+      const signature = makeRouteSignature(containerId, ids)
+      const routeKey = makeRouteKey(signature, startPoint, stops)
+      signatureByContainer.set(containerId, signature)
+      routeKeyByContainer.set(containerId, routeKey)
+
+      const cached =
+        routeCacheRef.current.get(routeKey) ??
+        (() => {
+          const bestOrsKey = bestOrsRouteKeyBySignatureRef.current.get(signature)
+          return bestOrsKey ? routeCacheRef.current.get(bestOrsKey) ?? null : null
+        })()
+
+      if (cached && Array.isArray(cached.polyline) && cached.polyline.length >= 2) {
+        polylineFromCache[containerId] = cached.polyline
+        statsFromCache[containerId] = { durationSec: cached.durationSec, source: cached.source }
+        lastSignatureByContainerRef.current[containerId] = signature
+        lastFetchAtByContainerRef.current[containerId] = cached.fetchedAt
+        appliedFromCache.add(containerId)
+        continue
+      }
+
+      const lastSig = lastSignatureByContainerRef.current[containerId]
+      const sigChanged = typeof lastSig === 'string' && lastSig.length > 0 && lastSig !== signature
+      const lastFetchAt = lastFetchAtByContainerRef.current[containerId] ?? 0
+      const nextAllowedAt = sigChanged ? now : lastFetchAt + ROUTE_REFRESH_COOLDOWN_MS
+
+      if (now < nextAllowedAt) {
+        const waitMs = nextAllowedAt - now
+        deferred.push(containerId)
+        minDeferredMs = minDeferredMs === null ? waitMs : Math.min(minDeferredMs, waitMs)
+        continue
+      }
+
+      // Mark as "fetched recently" immediately to avoid spamming while in-flight.
+      lastSignatureByContainerRef.current[containerId] = signature
+      lastFetchAtByContainerRef.current[containerId] = now
+      routesToFetch.push({ containerId, startPoint, stops })
+    }
+
+    if (Object.keys(polylineFromCache).length > 0) {
+      setRoadPolylineByContainer((prev) => ({ ...prev, ...polylineFromCache }))
+      setRouteStatsByContainer((prev) => ({ ...prev, ...statsFromCache }))
+
+      for (const id of appliedFromCache) {
+        const current = dirtyRouteVersionByIdRef.current[id] ?? 0
+        if (current === (versionsAtStart[id] ?? 0)) dirtyRouteContainersRef.current.delete(id)
+      }
+    }
+
+    if (routesToFetch.length === 0) {
+      if (deferred.length > 0 && minDeferredMs !== null && open) {
+        if (deferredRoadRefreshTimerRef.current) clearTimeout(deferredRoadRefreshTimerRef.current)
+        deferredRoadRefreshTimerRef.current = setTimeout(() => {
+          void refreshRoadRoutes(Array.from(new Set(Array.from(dirtyRouteContainersRef.current))))
+        }, Math.max(250, minDeferredMs))
+      }
+      return
+    }
 
     const seq = ++routeRequestSeqRef.current
     try {
       const res = await fetch('/api/admin/dispatch/ors-polyline', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ routes }),
+        body: JSON.stringify({ routes: routesToFetch }),
       })
       if (!res.ok) return
 
@@ -636,6 +738,21 @@ export function DispatchMapPanel({
         const durationSec = typeof durationSecRaw === 'number' && Number.isFinite(durationSecRaw) ? durationSecRaw : null
         const source = typeof r.source === 'string' ? r.source : 'unknown'
 
+        const signature = signatureByContainer.get(containerId) ?? ''
+        const routeKey = routeKeyByContainer.get(containerId) ?? ''
+        if (signature && routeKey) {
+          const cacheSource = source === 'ors' || source === 'fallback' || source === 'none' ? source : 'fallback'
+          routeCacheRef.current.set(routeKey, { polyline, durationSec, source: cacheSource, fetchedAt: now })
+          if (cacheSource === 'ors') bestOrsRouteKeyBySignatureRef.current.set(signature, routeKey)
+        }
+
+        const existingSource = routeStatsByContainerRef.current[containerId]?.source
+        const hasOrsForSignature = signature ? bestOrsRouteKeyBySignatureRef.current.has(signature) : false
+        if (source === 'fallback' && (existingSource === 'ors' || hasOrsForSignature)) {
+          // Keep the best ORS line we already have (avoid flicker back to straight lines).
+          continue
+        }
+
         if (polyline.length >= 2) polylineNext[containerId] = polyline
         statsNext[containerId] = { durationSec, source }
       }
@@ -644,11 +761,19 @@ export function DispatchMapPanel({
       setRouteStatsByContainer((prev) => ({ ...prev, ...statsNext }))
     } finally {
       for (const id of containerIds) {
+        if (deferred.includes(id)) continue
         const current = dirtyRouteVersionByIdRef.current[id] ?? 0
         if (current === (versionsAtStart[id] ?? 0)) dirtyRouteContainersRef.current.delete(id)
       }
+
+      if (deferred.length > 0 && minDeferredMs !== null && open) {
+        if (deferredRoadRefreshTimerRef.current) clearTimeout(deferredRoadRefreshTimerRef.current)
+        deferredRoadRefreshTimerRef.current = setTimeout(() => {
+          void refreshRoadRoutes(Array.from(new Set(Array.from(dirtyRouteContainersRef.current))))
+        }, Math.max(250, minDeferredMs))
+      }
     }
-  }, [containers, coordsById, courierStartById, warehousePoint])
+  }, [containers, coordsById, courierStartById, open, warehousePoint])
 
   useEffect(() => {
     if (!open) return
@@ -946,8 +1071,6 @@ export function DispatchMapPanel({
       setOrderNumberById((numbersPrev) => (renumberInOrder(nextItems, numbersPrev) as Record<string, number>))
       return next
     })
-
-    clearDirtyRoads()
   }
 
   const swapOrderNumbers = (orderId: string, nextNumber: number) => {

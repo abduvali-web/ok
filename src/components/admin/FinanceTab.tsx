@@ -574,7 +574,7 @@ export function FinanceTab({
                                         value={historySearchQuery}
                                         onChange={setHistorySearchQuery}
                                         placeholder={t.admin.searchPlaceholder}
-                                        className="w-[420px] max-w-none flex-none"
+                                        className="w-[200px] sm:w-[260px] md:w-[320px] flex-none"
                                     />
 
                                     {/* Category filter removed: search + date period are the primary audit controls. */}
