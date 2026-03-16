@@ -114,7 +114,6 @@ import {
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import { SearchPanel } from '@/components/ui/search-panel'
-import { RightActionLine } from '@/components/ui/right-action-line'
 import type { DateRange } from 'react-day-picker'
 
 const OrdersTable = dynamic(
@@ -2331,7 +2330,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       </header>
 
       <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
-        <DialogContent className="h-[min(98dvh,1560px)] max-w-[min(96vw,1600px)] gap-0 p-0">
+        {/* Mobile PWA: full-screen dialog (like dispatch panel). Desktop: centered large modal. */}
+        <DialogContent className="!left-0 !top-0 !translate-x-0 !translate-y-0 !w-screen !max-w-none h-[100svh] !rounded-none !border-0 gap-0 !p-0 sm:!left-[50%] sm:!top-[50%] sm:!translate-x-[-50%] sm:!translate-y-[-50%] sm:h-[min(98dvh,1560px)] sm:max-w-[min(96vw,1600px)] sm:!rounded-3xl sm:!border">
           <div className="flex h-full min-h-0 flex-col">
             <div className="border-b bg-background/80 px-4 py-3 backdrop-blur">
               <DialogTitle>{profileUiText.messages}</DialogTitle>
@@ -2345,7 +2345,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       </Dialog>
 
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="h-[min(98dvh,1560px)] max-w-[min(96vw,1600px)] gap-0 p-0">
+        {/* Mobile PWA: full-screen dialog. Desktop: centered large modal. */}
+        <DialogContent className="!left-0 !top-0 !translate-x-0 !translate-y-0 !w-screen !max-w-none h-[100svh] !rounded-none !border-0 gap-0 !p-0 sm:!left-[50%] sm:!top-[50%] sm:!translate-x-[-50%] sm:!translate-y-[-50%] sm:h-[min(98dvh,1560px)] sm:max-w-[min(96vw,1600px)] sm:!rounded-3xl sm:!border">
           <div className="flex h-full min-h-0 flex-col">
             <div className="border-b bg-background/80 px-4 py-3 backdrop-blur">
               <DialogTitle>{t.admin.settings}</DialogTitle>
@@ -3497,7 +3498,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               <TabsContent value="orders" className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-2xl font-bold tracking-tight">{profileUiText.ordersBin}</h2>
-                  <RightActionLine className="flex-1">
+                  {/* Orders-tab style: wrap on mobile so actions never disappear off-screen. */}
+                  <div className="flex w-full flex-wrap items-center justify-end gap-2">
                     <div className="relative">
                       <IconButton
                         label={`${t.admin.deleteSelected} (${selectedOrders.size})`}
@@ -3541,9 +3543,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       value={binOrdersSearch}
                       onChange={setBinOrdersSearch}
                       placeholder={t.admin.searchPlaceholder}
-                      className="w-[200px] sm:w-[260px] md:w-[320px] flex-none"
+                      className="w-full sm:w-[260px] md:w-[320px] flex-none basis-full sm:basis-auto"
                     />
-                  </RightActionLine>
+                  </div>
                 </div>
 
                 <div className="rounded-md border">
@@ -3564,7 +3566,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               <TabsContent value="clients" className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-2xl font-bold tracking-tight">{profileUiText.clientsBin}</h2>
-                  <RightActionLine className="flex-1">
+                  {/* Orders-tab style: wrap on mobile so actions never disappear off-screen. */}
+                  <div className="flex w-full flex-wrap items-center justify-end gap-2">
                     <div className="relative">
                       <IconButton
                         label={`${t.admin.deleteSelected} (${selectedBinClients.size})`}
@@ -3608,9 +3611,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       value={binClientsSearch}
                       onChange={setBinClientsSearch}
                       placeholder={t.admin.searchPlaceholder}
-                      className="w-[200px] sm:w-[260px] md:w-[320px] flex-none"
+                      className="w-full sm:w-[260px] md:w-[320px] flex-none basis-full sm:basis-auto"
                     />
-                  </RightActionLine>
+                  </div>
                 </div>
 
                 <div className="rounded-md border">

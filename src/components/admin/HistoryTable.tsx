@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { IconButton } from '@/components/ui/icon-button'
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import { SearchPanel } from '@/components/ui/search-panel'
-import { RightActionLine } from '@/components/ui/right-action-line'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Table,
@@ -236,7 +235,8 @@ export function HistoryTable({
             <div />
           )}
 
-          <RightActionLine className="md:w-auto">
+          {/* Orders-tab style: wrap on mobile so actions never disappear off-screen. */}
+          <div className="flex w-full flex-wrap items-center justify-end gap-2 md:w-auto">
             <RefreshIconButton
               label={profileUiText?.refresh ?? 'Refresh'}
               onClick={() => void fetchLogs()}
@@ -263,9 +263,9 @@ export function HistoryTable({
               value={searchTerm}
               onChange={setSearchTerm}
               placeholder={t.admin.searchPlaceholder || 'Search logs'}
-              className="w-[200px] sm:w-[260px] md:w-[320px] flex-none"
+              className="w-full md:w-[320px] sm:w-[260px] flex-none basis-full sm:basis-auto"
             />
-          </RightActionLine>
+          </div>
         </div>
       </CardHeader>
 

@@ -362,17 +362,20 @@ export function ChatUnifiedTab() {
                         <div className="truncate font-medium">{user.name}</div>
                         <div className="truncate text-xs text-muted-foreground">{user.email}</div>
                       </div>
-                      <Badge className={getRoleColor(user.role)}>{getRoleLabel(user.role)}</Badge>
-                    </button>
+                    <Badge className={cn(getRoleColor(user.role), 'shrink-0 max-w-[140px] truncate')}>
+                      {getRoleLabel(user.role)}
+                    </Badge>
+                  </button>
 
-                    <IconButton
-                      label={(ui?.common?.ai ?? 'AI') + ' ' + user.name}
-                      variant="outline"
-                      onClick={() => selectAiAgent(user)}
-                    >
-                      <Bot className="h-4 w-4" />
-                    </IconButton>
-                  </div>
+                  <IconButton
+                    label={(ui?.common?.ai ?? 'AI') + ' ' + user.name}
+                    variant="outline"
+                    className="shrink-0"
+                    onClick={() => selectAiAgent(user)}
+                  >
+                    <Bot className="h-4 w-4" />
+                  </IconButton>
+                </div>
                 ))
               )}
             </div>
@@ -396,7 +399,7 @@ export function ChatUnifiedTab() {
                       {ui?.chat?.aiHint ?? 'AI agent via Tambo'}
                     </div>
                   </div>
-                  <Badge className="bg-slate-100 text-slate-800 dark:bg-white/10 dark:text-slate-100">
+                  <Badge className="shrink-0 bg-slate-100 text-slate-800 dark:bg-white/10 dark:text-slate-100">
                     {ui?.common?.ai ?? 'AI'}
                   </Badge>
                 </button>

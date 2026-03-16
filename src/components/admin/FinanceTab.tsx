@@ -48,7 +48,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector';
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import { SearchPanel } from '@/components/ui/search-panel'
-import { RightActionLine } from '@/components/ui/right-action-line'
 import type { DateRange } from 'react-day-picker'
 
 interface FinanceTabProps {
@@ -547,40 +546,41 @@ export function FinanceTab({
                                 <CardDescription className="flex-1 min-w-0">
                                     {t.finance.historyDesc}
                                 </CardDescription>
-                                <RightActionLine className="sm:w-auto">
-                                    <RefreshIconButton
-                                        label={profileUiText?.refresh ?? 'Refresh'}
-                                        onClick={() => void handleRefreshFinance()}
-                                        isLoading={isFinanceRefreshing}
-                                        iconSize="md"
-                                    />
+                                 {/* Orders-tab style: wrap on mobile so actions never disappear off-screen. */}
+                                 <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+                                     <RefreshIconButton
+                                         label={profileUiText?.refresh ?? 'Refresh'}
+                                         onClick={() => void handleRefreshFinance()}
+                                         isLoading={isFinanceRefreshing}
+                                         iconSize="md"
+                                     />
 
-                                    {applySelectedDate &&
-                                      (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) &&
-                                      profileUiText ? (
-                                        <CalendarDateSelector
-                                            selectedDate={selectedDate || null}
-                                            applySelectedDate={applySelectedDate}
-                                            shiftSelectedDate={shiftSelectedDate}
-                                            selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
-                                            selectedPeriod={selectedPeriod}
-                                            applySelectedPeriod={applySelectedPeriod}
-                                            locale={calendarLocale}
-                                            profileUiText={profileUiText}
-                                        />
-                                      ) : null}
+                                     {applySelectedDate &&
+                                       (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) &&
+                                       profileUiText ? (
+                                         <CalendarDateSelector
+                                             selectedDate={selectedDate || null}
+                                             applySelectedDate={applySelectedDate}
+                                             shiftSelectedDate={shiftSelectedDate}
+                                             selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
+                                             selectedPeriod={selectedPeriod}
+                                             applySelectedPeriod={applySelectedPeriod}
+                                             locale={calendarLocale}
+                                             profileUiText={profileUiText}
+                                         />
+                                       ) : null}
 
-                                    <SearchPanel
-                                        value={historySearchQuery}
-                                        onChange={setHistorySearchQuery}
-                                        placeholder={t.admin.searchPlaceholder}
-                                        className="w-[200px] sm:w-[260px] md:w-[320px] flex-none"
-                                    />
+                                     <SearchPanel
+                                         value={historySearchQuery}
+                                         onChange={setHistorySearchQuery}
+                                         placeholder={t.admin.searchPlaceholder}
+                                         className="w-full sm:w-[260px] md:w-[320px] flex-none basis-full sm:basis-auto"
+                                     />
 
-                                    {/* Category filter removed: search + date period are the primary audit controls. */}
-                                </RightActionLine>
-                            </div>
-                        </CardHeader>
+                                     {/* Category filter removed: search + date period are the primary audit controls. */}
+                                 </div>
+                             </div>
+                         </CardHeader>
                         <CardContent>
                             <div className="rounded-md border">
                                 <Table>
