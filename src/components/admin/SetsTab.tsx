@@ -111,13 +111,20 @@ export function SetsTab() {
                 copiedDay: (day: string) => `Kun ${day} menyusi nusxalandi`,
                 confirmDeleteSet: 'Ushbu setni o‘chirasizmi?',
                 deleted: 'O‘chirildi',
+                delete: 'O‘chirish',
                 saveError: 'Saqlashda xatolik',
                 loadSetsError: 'Setlarni yuklashda xatolik',
                 loadDishesError: 'Taomlarni yuklashda xatolik',
                 setNameRequired: 'Set nomini kiriting',
+                confirmDeleteDay: (day: string) => `Kun ${day} ni oâ€˜chirasizmi?`,
+                confirmDeleteGroup: 'Ushbu guruhni oâ€˜chirasizmi?',
+                cantDeleteLastDay: 'Oxirgi kunni oâ€˜chirib boâ€˜lmaydi',
                 create: 'Yaratish',
                 cancel: 'Bekor qilish',
                 setName: 'Set nomi',
+                mealName: 'Taom nomi',
+                mealNamePlaceholder: 'Taom nomini yozing...',
+                mealNameRequired: 'Taom nomini kiriting',
                 dish: 'Taom',
                 meal: 'Ovqat',
                 addMeal: 'Taom qo‘shish',
@@ -166,13 +173,20 @@ export function SetsTab() {
                 copiedDay: (day: string) => `Меню дня ${day} скопировано`,
                 confirmDeleteSet: 'Удалить этот сет?',
                 deleted: 'Удалено',
+                delete: 'Удалить',
                 saveError: 'Ошибка сохранения',
                 loadSetsError: 'Ошибка загрузки сетов',
                 loadDishesError: 'Ошибка загрузки блюд',
                 setNameRequired: 'Введите название сета',
+                confirmDeleteDay: (day: string) => `Удалить День ${day}?`,
+                confirmDeleteGroup: 'Удалить эту группу?',
+                cantDeleteLastDay: 'Нельзя удалить последний день',
                 create: 'Создать',
                 cancel: 'Отмена',
                 setName: 'Название сета',
+                mealName: 'Название блюда',
+                mealNamePlaceholder: 'Введите название блюда...',
+                mealNameRequired: 'Введите название блюда',
                 dish: 'Блюдо',
                 meal: 'Приём пищи',
                 addMeal: 'Добавить блюдо',
@@ -220,13 +234,20 @@ export function SetsTab() {
             copiedDay: (day: string) => `Copied menu for Day ${day}`,
             confirmDeleteSet: 'Delete this set?',
             deleted: 'Deleted',
+            delete: 'Delete',
             saveError: 'Save error',
             loadSetsError: 'Failed to load sets',
             loadDishesError: 'Failed to load dishes',
-            setNameRequired: 'Enter set name',
-            create: 'Create',
-            cancel: 'Cancel',
-            setName: 'Set name',
+             setNameRequired: 'Enter set name',
+             confirmDeleteDay: (day: string) => `Delete Day ${day}?`,
+             confirmDeleteGroup: 'Delete this group?',
+             cantDeleteLastDay: 'Cannot delete the last day',
+             create: 'Create',
+             cancel: 'Cancel',
+             setName: 'Set name',
+            mealName: 'Meal name',
+            mealNamePlaceholder: 'Type a meal name...',
+            mealNameRequired: 'Enter meal name',
             dish: 'Dish',
             meal: 'Meal',
             addMeal: 'Add meal',
@@ -275,10 +296,8 @@ export function SetsTab() {
     const [activeGroupTab, setActiveGroupTab] = useState('');
     const [addDishTarget, setAddDishTarget] = useState<{ calorieIndex: number } | null>(null);
     const [selectedDishToAdd, setSelectedDishToAdd] = useState<string>('');
-    const [mealIndexToAdd, setMealIndexToAdd] = useState<number>(1);
-    const [dishSearch, setDishSearch] = useState('');
-    const [addDishMode, setAddDishMode] = useState<'choose' | 'create'>('choose');
-    const [newDishName, setNewDishName] = useState('');
+    const [mealNameToAdd, setMealNameToAdd] = useState('');
+    const [draftMealIngredients, setDraftMealIngredients] = useState<Ingredient[]>([]);
     const [editingDish, setEditingDish] = useState<{ setId: string; calorieIndex: number; dishIndex: number; dish: SetDish } | null>(null);
     const [editingGroup, setEditingGroup] = useState<{ groupIndex: number; group: CalorieGroup } | null>(null);
 
@@ -386,36 +405,53 @@ export function SetsTab() {
         }
     };
 
-    const createDish = async () => {
-        const name = newDishName.trim();
-        if (!name) return;
+    const normalizeName = (v: string) => v.trim().replace(/\s+/g, ' ').toLowerCase();
 
-        try {
-            const response = await fetch('/api/admin/warehouse/dishes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name,
-                    description: '',
-                    mealType: 'CUSTOM',
-                    ingredients: [],
-                }),
-            });
+    const normalizeIngredients = (raw: any): Ingredient[] => {
+        if (!Array.isArray(raw)) return [];
+        return raw
+            .map((i) => ({
+                name: typeof i?.name === 'string' ? i.name : '',
+                amount: typeof i?.amount === 'number' && Number.isFinite(i.amount) ? i.amount : Number(i?.amount) || 0,
+                unit: typeof i?.unit === 'string' ? i.unit : 'gr',
+            }))
+            .filter((i) => i.name.trim().length > 0);
+    };
 
-            if (!response.ok) {
-                toast.error(uiText.saveError);
-                return;
-            }
+    const resetAddMealDraft = () => {
+        setSelectedDishToAdd('');
+        setMealNameToAdd('');
+        setDraftMealIngredients([]);
+    };
 
-            const created = await response.json().catch(() => null);
-            const id = created && typeof created.id === 'string' ? created.id : null;
-            await fetchDishes();
-            if (id) setSelectedDishToAdd(id);
-            setAddDishMode('choose');
-            toast.success(uiText.saveChanges);
-        } catch {
-            toast.error(uiText.saveError);
+    const selectDishForAdd = (dish: any) => {
+        setSelectedDishToAdd(String(dish?.id ?? ''));
+        setMealNameToAdd(String(dish?.name ?? ''));
+        setDraftMealIngredients(normalizeIngredients(dish?.ingredients));
+    };
+
+    const addDraftIngredient = (name: string) => {
+        const trimmed = String(name || '').trim();
+        if (!trimmed) return;
+        if (draftMealIngredients.find((i) => i.name === trimmed)) {
+            toast.error(uiText.ingredientAlreadyAdded);
+            return;
         }
+        const found = getAllUniqueIngredients().find((i) => i.name === trimmed);
+        setDraftMealIngredients((prev) => [
+            ...prev,
+            { name: trimmed, amount: 0, unit: found?.unit || 'gr' },
+        ]);
+    };
+
+    const removeDraftIngredient = (index: number) => {
+        setDraftMealIngredients((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const updateDraftIngredientAmount = (index: number, amount: number) => {
+        setDraftMealIngredients((prev) =>
+            prev.map((ing, i) => (i === index ? { ...ing, amount } : ing))
+        );
     };
 
     const createSet = async () => {
@@ -699,10 +735,56 @@ export function SetsTab() {
     };
 
     const addDishToGroup = async () => {
-        if (!selectedSet || !addDishTarget || !selectedDishToAdd) return;
+        if (!selectedSet || !addDishTarget) return;
 
-        const dishObj = availableDishes.find(d => d.id.toString() === selectedDishToAdd);
-        if (!dishObj) return;
+        const enteredName = mealNameToAdd.trim();
+        if (!enteredName) {
+            toast.error(uiText.mealNameRequired);
+            return;
+        }
+
+        // Prefer explicitly selected dish; fallback to exact-name match.
+        let dishObj: any =
+            selectedDishToAdd
+                ? availableDishes.find(d => String((d as any).id) === selectedDishToAdd)
+                : availableDishes.find(d => normalizeName(String((d as any).name || '')) === normalizeName(enteredName));
+
+        const ingredientsToUse =
+            draftMealIngredients.length > 0
+                ? draftMealIngredients
+                : (dishObj ? normalizeIngredients((dishObj as any).ingredients) : []);
+
+        if (!dishObj) {
+            try {
+                const response = await fetch('/api/admin/warehouse/dishes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: enteredName,
+                        description: '',
+                        mealType: 'CUSTOM',
+                        ingredients: ingredientsToUse,
+                        menuNumbers: [],
+                    }),
+                });
+
+                if (!response.ok) {
+                    toast.error(uiText.saveError);
+                    return;
+                }
+
+                dishObj = await response.json().catch(() => null);
+                await fetchDishes();
+            } catch {
+                toast.error(uiText.saveError);
+                return;
+            }
+        }
+
+        if (!dishObj) {
+            toast.error(uiText.saveError);
+            return;
+        }
 
         const currentData = getCurrentDayData();
 
@@ -721,15 +803,19 @@ export function SetsTab() {
             dishes: [...updatedDayData[addDishTarget.calorieIndex].dishes]
         };
 
-        const nextDishIndex = updatedDayData[addDishTarget.calorieIndex].dishes.length;
-        const mealIndex = Number.isFinite(mealIndexToAdd) && mealIndexToAdd > 0 ? Math.floor(mealIndexToAdd) : (getMealIndex(String(dishObj.mealType)) ?? 1);
+        const dishesArr = updatedDayData[addDishTarget.calorieIndex].dishes;
+        const maxMealIndex = dishesArr.reduce((acc, d) => {
+            const n = typeof (d as any).mealIndex === 'number' ? (d as any).mealIndex : 0;
+            return Math.max(acc, Number.isFinite(n) ? n : 0);
+        }, 0);
+        const mealIndex = maxMealIndex + 1;
 
-        updatedDayData[addDishTarget.calorieIndex].dishes.push({
-            dishId: dishObj.id,
-            dishName: dishObj.name,
-            mealType: String(dishObj.mealType || 'CUSTOM'),
+        dishesArr.push({
+            dishId: (dishObj as any).id,
+            dishName: String((dishObj as any).name || enteredName),
+            mealType: String((dishObj as any).mealType || 'CUSTOM'),
             mealIndex,
-            customIngredients: undefined
+            customIngredients: ingredientsToUse.length > 0 ? [...ingredientsToUse] : undefined
         });
 
         const updatedGroups = {
@@ -743,22 +829,10 @@ export function SetsTab() {
 
         setIsAddDishModalOpen(false);
         setAddDishTarget(null);
-        setSelectedDishToAdd('');
-        setDishSearch('');
-        setNewDishName('');
-        setAddDishMode('choose');
+        resetAddMealDraft();
 
         await saveSet(updatedSet);
         toast.success(uiText.addMeal);
-
-        // Immediately open ingredient editor for the newly added meal (manager flow).
-        setEditingDish({
-            setId: selectedSet.id,
-            calorieIndex: addDishTarget.calorieIndex,
-            dishIndex: nextDishIndex,
-            dish: { ...updatedDayData[addDishTarget.calorieIndex].dishes[nextDishIndex] },
-        });
-        setIsEditDishModalOpen(true);
     };
 
     const toggleSetStatus = async (set: MenuSet) => {
@@ -879,6 +953,65 @@ export function SetsTab() {
             .sort((a, b) => a - b);
         return keys.length > 0 ? keys : Array.from({ length: 21 }, (_, i) => i + 1);
     }, [selectedSet]);
+
+    const deleteDay = async (dayKey: string) => {
+        if (!selectedSet) return;
+        if (dayNumbers.length <= 1) {
+            toast.error(uiText.cantDeleteLastDay);
+            return;
+        }
+        if (!confirm(uiText.confirmDeleteDay(dayKey))) return;
+
+        const baseGroups =
+            (selectedSet.calorieGroups && !Array.isArray(selectedSet.calorieGroups))
+                ? (selectedSet.calorieGroups as any)
+                : {};
+
+        const nextGroups = { ...baseGroups };
+        delete nextGroups[String(dayKey)];
+
+        const updatedSet = { ...selectedSet, calorieGroups: nextGroups };
+        setSelectedSet(updatedSet);
+        setSets((prev) => prev.map((s) => (s.id === updatedSet.id ? updatedSet : s)));
+
+        const remainingDays = dayNumbers.filter((d) => String(d) !== String(dayKey));
+        const nextActive = remainingDays.length > 0 ? String(remainingDays[0]) : '1';
+        setActiveDay(nextActive);
+
+        await saveSet(updatedSet);
+        toast.success(uiText.deleted);
+    };
+
+    const deleteGroupById = async (groupId: string) => {
+        if (!selectedSet) return;
+        if (!groupId) return;
+        if (!confirm(uiText.confirmDeleteGroup)) return;
+
+        const baseGroups =
+            (selectedSet.calorieGroups && !Array.isArray(selectedSet.calorieGroups))
+                ? (selectedSet.calorieGroups as any)
+                : {};
+
+        const nextGroups: Record<string, CalorieGroup[]> = {};
+        for (const dayKey of Object.keys(baseGroups)) {
+            const dayArr: CalorieGroup[] = Array.isArray(baseGroups[dayKey]) ? baseGroups[dayKey] : [];
+            nextGroups[dayKey] = dayArr.filter((g) => (g.id || String(g.calories ?? '')) !== groupId);
+        }
+
+        const updatedSet = { ...selectedSet, calorieGroups: nextGroups };
+        setSelectedSet(updatedSet);
+        setSets((prev) => prev.map((s) => (s.id === updatedSet.id ? updatedSet : s)));
+
+        setActiveGroupTab((prev) => {
+            if (prev !== groupId) return prev;
+            const forActiveDay = nextGroups[String(activeDay)] || [];
+            const ensured = forActiveDay.map((g, idx) => ({ ...g, id: g.id || String(g.calories ?? idx) }));
+            return ensured[0]?.id || '';
+        });
+
+        await saveSet(updatedSet);
+        toast.success(uiText.deleted);
+    };
 
     useEffect(() => {
         if (!hasDataForDay) return;
@@ -1021,6 +1154,17 @@ export function SetsTab() {
                                         >
                                             <Plus className="h-4 w-4" />
                                         </IconButton>
+
+                                        <IconButton
+                                            label={uiText.delete}
+                                            variant="ghost"
+                                            iconSize="md"
+                                            className="h-9 w-9 text-red-200 hover:text-white hover:bg-red-600/30"
+                                            disabled={dayNumbers.length <= 1}
+                                            onClick={() => void deleteDay(activeDay)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </IconButton>
                                     </div>
                                 </div>
                             </Card>
@@ -1086,6 +1230,16 @@ export function SetsTab() {
                                                 >
                                                     <Plus className="h-4 w-4" />
                                                 </IconButton>
+
+                                                <IconButton
+                                                    label={uiText.delete}
+                                                    variant="outline"
+                                                    iconSize="md"
+                                                    disabled={!activeGroupTab}
+                                                    onClick={() => void deleteGroupById(activeGroupTab)}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </IconButton>
                                             </div>
 
                                             {currentDayData
@@ -1141,6 +1295,7 @@ export function SetsTab() {
                                                                         iconSize="md"
                                                                         onClick={() => {
                                                                             setAddDishTarget({ calorieIndex: groupIdx })
+                                                                            resetAddMealDraft()
                                                                             setIsAddDishModalOpen(true)
                                                                         }}
                                                                     >
@@ -1320,79 +1475,171 @@ export function SetsTab() {
             </Dialog>
 
             {/* Add Dish Modal */}
-            <Dialog open={isAddDishModalOpen} onOpenChange={setIsAddDishModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
+            <Dialog
+                open={isAddDishModalOpen}
+                onOpenChange={(open) => {
+                    setIsAddDishModalOpen(open);
+                    if (!open) {
+                        setAddDishTarget(null);
+                        resetAddMealDraft();
+                    }
+                }}
+            >
+                <DialogContent className="sm:max-w-[760px] max-h-[85vh] overflow-hidden flex flex-col p-0">
+                    <DialogHeader className="px-6 py-4 border-b">
                         <DialogTitle>{uiText.addMeal}</DialogTitle>
                         <DialogDescription>{uiText.dish} / {uiText.meal}</DialogDescription>
                     </DialogHeader>
 
-                    <div className="space-y-4 py-4">
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-2">
-                                <Label>{uiText.meal}</Label>
-                                <Input
-                                    type="number"
-                                    min={1}
-                                    value={mealIndexToAdd}
-                                    onChange={(e) => setMealIndexToAdd(Number(e.target.value))}
-                                />
+                    <div className="px-6 py-4 flex-1 overflow-auto space-y-4">
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                                <Label className="min-w-0">{uiText.mealName}</Label>
+                                <div className="flex items-center gap-2">
+                                    {selectedDishToAdd ? (
+                                        <Badge variant="secondary" className="text-[10px]">DB</Badge>
+                                    ) : (
+                                        <Badge variant="outline" className="text-[10px]">NEW</Badge>
+                                    )}
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label>{uiText.dish}</Label>
-                                <Tabs value={addDishMode} onValueChange={(v) => setAddDishMode(v as any)}>
-                                    <TabsList className="grid grid-cols-2 w-full">
-                                        <TabsTrigger value="choose">{uiText.dish}</TabsTrigger>
-                                        <TabsTrigger value="create">{uiText.newDish}</TabsTrigger>
-                                    </TabsList>
+                            <Input
+                                value={mealNameToAdd}
+                                onChange={(e) => {
+                                    const v = e.target.value;
+                                    setMealNameToAdd(v);
+                                    // If user starts typing a different name, treat it as a new dish draft.
+                                    if (selectedDishToAdd) {
+                                        const selected = availableDishes.find(d => String((d as any).id) === selectedDishToAdd);
+                                        if (selected && normalizeName(String((selected as any).name || '')) !== normalizeName(v)) {
+                                            setSelectedDishToAdd('');
+                                        }
+                                    }
+                                }}
+                                placeholder={uiText.mealNamePlaceholder}
+                            />
 
-                                    <TabsContent value="choose" className="mt-3 space-y-3">
-                                        <SearchPanel
-                                            value={dishSearch}
-                                            onChange={setDishSearch}
-                                            placeholder={uiText.search}
-                                            className="max-w-none"
-                                        />
-                                        <Select value={selectedDishToAdd} onValueChange={setSelectedDishToAdd}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder={uiText.search} />
-                                            </SelectTrigger>
-                                            <SelectContent className="max-h-60">
-                                                {availableDishes
-                                                    .filter((d) => (d.name || '').toLowerCase().includes(dishSearch.trim().toLowerCase()))
-                                                    .map((d) => (
-                                                        <SelectItem key={d.id} value={d.id.toString()}>
-                                                            {d.name}
-                                                        </SelectItem>
-                                                    ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </TabsContent>
-
-                                    <TabsContent value="create" className="mt-3 space-y-3">
-                                        <Input
-                                            value={newDishName}
-                                            onChange={(e) => setNewDishName(e.target.value)}
-                                            placeholder={uiText.newDish}
-                                        />
-                                        <div className="flex justify-end">
-                                            <IconButton
-                                                label={uiText.newDish}
-                                                onClick={() => void createDish()}
-                                                disabled={!newDishName.trim()}
-                                            >
-                                                <Plus className="h-4 w-4" />
-                                            </IconButton>
+                            {mealNameToAdd.trim().length > 0 ? (
+                                <div className="rounded-md border border-border bg-card">
+                                    <ScrollArea className="max-h-44">
+                                        <div className="p-2 space-y-1">
+                                            {availableDishes
+                                                .filter((d) => normalizeName(String((d as any).name || '')).includes(normalizeName(mealNameToAdd)))
+                                                .slice(0, 12)
+                                                .map((d) => {
+                                                    const isSelected = String((d as any).id) === selectedDishToAdd;
+                                                    return (
+                                                        <button
+                                                            key={String((d as any).id)}
+                                                            type="button"
+                                                            onClick={() => selectDishForAdd(d)}
+                                                            className={[
+                                                                'w-full text-left rounded-md px-2 py-2 flex items-center justify-between gap-2',
+                                                                'hover:bg-muted/60 transition-colors',
+                                                                isSelected ? 'bg-muted' : '',
+                                                            ].join(' ')}
+                                                        >
+                                                            <span className="truncate">{String((d as any).name || '')}</span>
+                                                            {isSelected ? (
+                                                                <Badge variant="secondary" className="text-[10px] shrink-0">Selected</Badge>
+                                                            ) : null}
+                                                        </button>
+                                                    );
+                                                })}
+                                            {availableDishes.filter((d) => normalizeName(String((d as any).name || '')).includes(normalizeName(mealNameToAdd))).length === 0 ? (
+                                                <div className="px-2 py-2 text-sm text-muted-foreground">
+                                                    {uiText.newDish}
+                                                </div>
+                                            ) : null}
                                         </div>
-                                    </TabsContent>
-                                </Tabs>
+                                    </ScrollArea>
+                                </div>
+                            ) : null}
+                        </div>
+
+                        <div className="rounded-xl border border-border overflow-hidden">
+                            <div className="px-4 py-3 border-b bg-muted/10 flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                    <div className="text-sm font-semibold">{uiText.ingredients}</div>
+                                    <div className="text-xs text-muted-foreground truncate">{uiText.ingredientsDesc}</div>
+                                </div>
+                            </div>
+
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="pl-4">{uiText.tableName}</TableHead>
+                                        <TableHead className="w-[110px]">{uiText.tableAmount}</TableHead>
+                                        <TableHead className="w-[90px]">{uiText.tableUnit}</TableHead>
+                                        <TableHead className="w-[48px]" />
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {draftMealIngredients.map((ing, idx) => (
+                                        <TableRow key={`${ing.name}-${idx}`}>
+                                            <TableCell className="pl-4 font-medium min-w-0">
+                                                <div className="truncate">{ing.name}</div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    type="number"
+                                                    className="h-8 w-24"
+                                                    value={ing.amount}
+                                                    onChange={(e) => {
+                                                        const newVal = parseFloat(e.target.value);
+                                                        updateDraftIngredientAmount(idx, Number.isFinite(newVal) ? newVal : 0);
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground text-sm">{ing.unit}</TableCell>
+                                            <TableCell>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => removeDraftIngredient(idx)}
+                                                    className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                    {draftMealIngredients.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-24 text-center text-slate-400">
+                                                {uiText.noIngredients}
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : null}
+                                </TableBody>
+                            </Table>
+
+                            <div className="p-4 border-t border-border bg-muted/20 space-y-3">
+                                <div className="space-y-2">
+                                    <Label className="text-xs text-muted-foreground uppercase font-bold">{uiText.addIngredient}</Label>
+                                    <Select onValueChange={(val) => addDraftIngredient(val)}>
+                                        <SelectTrigger className="bg-card">
+                                            <SelectValue placeholder={uiText.selectIngredient} />
+                                        </SelectTrigger>
+                                        <SelectContent className="max-h-60">
+                                            {getAllUniqueIngredients().map((ing) => (
+                                                <SelectItem key={ing.name} value={ing.name}>
+                                                    <div className="flex justify-between w-full min-w-[200px]">
+                                                        <span className="truncate">{ing.name}</span>
+                                                        <span className="text-muted-foreground text-xs">{ing.unit}</span>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <DialogFooter>
+                    <DialogFooter className="px-6 py-4 border-t">
                         <Button variant="outline" onClick={() => setIsAddDishModalOpen(false)}>{uiText.cancel}</Button>
-                        <Button onClick={addDishToGroup} disabled={!selectedDishToAdd}>{uiText.addMeal}</Button>
+                        <Button onClick={addDishToGroup} disabled={!mealNameToAdd.trim()}>{uiText.addMeal}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
