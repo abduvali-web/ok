@@ -71,7 +71,6 @@ import {
   Save,
   RefreshCw,
   Filter,
-  Search,
   Sun,
   Moon,
   Monitor,
@@ -116,6 +115,7 @@ import { MobileSidebar } from '@/components/MobileSidebar'
 import { MobileTabIndicator } from '@/components/MobileTabIndicator'
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
+import { SearchPanel } from '@/components/ui/search-panel'
 import type { DateRange } from 'react-day-picker'
 
 const OrdersTable = dynamic(
@@ -2338,7 +2338,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               <DialogTitle>{profileUiText.messages}</DialogTitle>
               <DialogDescription>{profileUiText.messagesDescription}</DialogDescription>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="min-h-0 flex-1 overflow-hidden">
               <ChatCenter />
             </div>
           </div>
@@ -2648,16 +2648,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 </div>
 
                 <div className="flex items-center">
-                  <div className="relative w-full md:max-w-md">
-                    <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      ref={searchInputRef}
-                      value={searchTerm}
-                      onChange={(event) => setSearchTerm(event.target.value)}
-                      placeholder={profileUiText.searchOrdersPlaceholder}
-                      className="h-9 pl-8"
-                    />
-                  </div>
+                  <SearchPanel
+                    inputRef={searchInputRef}
+                    value={searchTerm}
+                    onChange={setSearchTerm}
+                    placeholder={profileUiText.searchOrdersPlaceholder}
+                  />
                 </div>
               </CardHeader>
               <CardContent>
@@ -2994,15 +2990,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   </div>
                 </div>
                 <div className="flex items-center">
-                  <div className="relative w-full md:max-w-md">
-                    <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      value={clientSearchTerm}
-                      onChange={(event) => setClientSearchTerm(event.target.value)}
-                      placeholder={profileUiText.searchClientPlaceholder}
-                      className="h-9 pl-8"
-                    />
-                  </div>
+                  <SearchPanel
+                    value={clientSearchTerm}
+                    onChange={setClientSearchTerm}
+                    placeholder={profileUiText.searchClientPlaceholder}
+                  />
                 </div>
                     <Dialog open={isCreateClientModalOpen} onOpenChange={setIsCreateClientModalOpen}>
                       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
@@ -3349,8 +3341,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 onCheckedChange={() => handleToggleClientSelection(client.id)}
                               />
                             </TableCell>
-                            <TableCell className="py-1.5 font-medium">{client.name}</TableCell>
-                            <TableCell className="py-1.5 text-muted-foreground">{client.nickName || '-'}</TableCell>
+                            <TableCell className="max-w-[200px] truncate py-1.5 font-medium" title={client.name}>
+                              {client.name}
+                            </TableCell>
+                            <TableCell className="max-w-[200px] truncate py-1.5 text-muted-foreground" title={client.nickName || ''}>
+                              {client.nickName || '-'}
+                            </TableCell>
                             <TableCell className="py-1.5">{client.phone}</TableCell>
                             <TableCell className="py-1.5 text-right tabular-nums">
                               {(() => {
@@ -3378,7 +3374,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 )
                               })()}
                             </TableCell>
-                            <TableCell className="py-1.5">{client.address}</TableCell>
+                            <TableCell className="max-w-[320px] truncate py-1.5" title={client.address}>
+                              {client.address}
+                            </TableCell>
                             <TableCell className="py-1.5">{client.calories} kcal</TableCell>
                             <TableCell className="py-1.5 text-center">
                               {(() => {
@@ -3420,7 +3418,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 onClick={() => handleToggleClientStatus(client.id, client.isActive)}
                               />
                             </TableCell>
-                            <TableCell className="py-1.5">{client.specialFeatures || '-'}</TableCell>
+                            <TableCell className="max-w-[220px] truncate py-1.5" title={client.specialFeatures || ''}>
+                              {client.specialFeatures || '-'}
+                            </TableCell>
                             <TableCell className="py-1.5">{new Date(client.createdAt).toLocaleDateString('en-GB')}</TableCell>
                             <TableCell className="py-1.5 text-right">
                               <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleEditClient(client)}>
@@ -3456,14 +3456,18 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       <Card key={client.id} className="border bg-background">
                         <CardHeader className="pb-2">
                           <div className="flex justify-between items-start">
-                            <div className="flex items-center gap-2">
+                            <div className="flex min-w-0 items-center gap-2">
                               <Checkbox
                                 checked={selectedClients.has(client.id)}
                                 onCheckedChange={() => handleToggleClientSelection(client.id)}
                               />
-                              <div className="flex flex-col">
-                                <CardTitle className="text-base">{client.name}</CardTitle>
-                                <CardDescription>{client.phone}</CardDescription>
+                              <div className="flex min-w-0 flex-col">
+                                <CardTitle className="truncate text-base" title={client.name}>
+                                  {client.name}
+                                </CardTitle>
+                                <CardDescription className="truncate" title={client.phone}>
+                                  {client.phone}
+                                </CardDescription>
                               </div>
                             </div>
                             <EntityStatusBadge
@@ -3479,7 +3483,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         <CardContent className="pt-4 space-y-3">
                           <div className="flex items-start gap-3">
                             <MapPin className="mt-1 size-4 text-muted-foreground" />
-                            <div className="text-sm">{client.address}</div>
+                            <div className="line-clamp-2 break-words text-sm" title={client.address}>
+                              {client.address}
+                            </div>
                           </div>
 
                           <div className="grid grid-cols-2 gap-3 rounded-md border bg-muted/20 p-3">
@@ -3599,15 +3605,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-2xl font-bold tracking-tight">{profileUiText.ordersBin}</h2>
                   <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
-                    <div className="relative w-full max-w-[260px]">
-                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        value={binOrdersSearch}
-                        onChange={(event) => setBinOrdersSearch(event.target.value)}
-                        placeholder={t.admin.searchPlaceholder}
-                        className="pl-9"
-                      />
-                    </div>
+                    <SearchPanel
+                      value={binOrdersSearch}
+                      onChange={setBinOrdersSearch}
+                      placeholder={t.admin.searchPlaceholder}
+                    />
 
                     <RefreshIconButton
                       label={profileUiText.refresh}
@@ -3669,15 +3671,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-2xl font-bold tracking-tight">{profileUiText.clientsBin}</h2>
                   <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
-                    <div className="relative w-full max-w-[260px]">
-                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        value={binClientsSearch}
-                        onChange={(event) => setBinClientsSearch(event.target.value)}
-                        placeholder={t.admin.searchPlaceholder}
-                        className="pl-9"
-                      />
-                    </div>
+                    <SearchPanel
+                      value={binClientsSearch}
+                      onChange={setBinClientsSearch}
+                      placeholder={t.admin.searchPlaceholder}
+                    />
 
                     <RefreshIconButton
                       label={profileUiText.refresh}

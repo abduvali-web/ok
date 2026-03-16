@@ -337,14 +337,29 @@ export function TamboAgentWidget({ embedded = false }: { embedded?: boolean } = 
 
   useEffect(() => {
     const onOpenChat = (event: Event) => {
-      const custom = event as CustomEvent<{ prompt?: string }>
+      const custom = event as CustomEvent<{ prompt?: string; newThread?: boolean }>
       if (!embedded) {
         setIsOpen(true)
         setIsFullscreen(false)
       }
 
+      const wantsNewThread = Boolean(custom.detail?.newThread)
+      if (wantsNewThread) {
+        startNewThread()
+        setValue("")
+        clearImages()
+        setTextAttachments([])
+        setAttachmentError(null)
+        if (fileInputRef.current) fileInputRef.current.value = ""
+      }
+
       if (typeof custom.detail?.prompt === "string") {
-        setValue(custom.detail.prompt)
+        // If a new thread is requested, let the thread state settle before setting input.
+        if (wantsNewThread) {
+          requestAnimationFrame(() => setValue(custom.detail!.prompt as string))
+        } else {
+          setValue(custom.detail.prompt)
+        }
       }
 
       requestAnimationFrame(() => textareaRef.current?.focus())
@@ -352,7 +367,7 @@ export function TamboAgentWidget({ embedded = false }: { embedded?: boolean } = 
 
     window.addEventListener("tambo:open-chat", onOpenChat as EventListener)
     return () => window.removeEventListener("tambo:open-chat", onOpenChat as EventListener)
-  }, [embedded, setValue])
+  }, [clearImages, embedded, setAttachmentError, setTextAttachments, setValue, startNewThread])
 
 
   useEffect(() => {

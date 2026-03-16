@@ -19,7 +19,6 @@ import {
   Loader2,
   Plus,
   RefreshCw,
-  Search,
   Table2,
   Upload,
   ChevronLeft,
@@ -45,6 +44,8 @@ import { DateRange } from 'react-day-picker'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { CalendarRangeSelector } from '@/components/admin/dashboard/shared/CalendarRangeSelector'
+import { SearchPanel } from '@/components/ui/search-panel'
+import { getMenuNumber } from '@/lib/menuData'
 
 type DatabaseTable = {
   id: string
@@ -363,6 +364,13 @@ export default function DatabasePage() {
   const [tableQuery, setTableQuery] = useState('')
   const [pageSize, setPageSize] = useState<25 | 50 | 100>(50)
   const [pageIndex, setPageIndex] = useState(0)
+
+  const menuChip = useMemo(() => {
+    if (!date?.from) return 'Menu'
+    const fromNum = getMenuNumber(date.from)
+    const toNum = getMenuNumber(date.to ?? date.from)
+    return fromNum === toNum ? `Menu ${fromNum}` : `Menu ${fromNum}-${toNum}`
+  }, [date?.from, date?.to])
 
   const uiText = useMemo(() => {
     if (language === 'ru') {
@@ -1337,7 +1345,7 @@ export default function DatabasePage() {
                 value={date}
                 onChange={setDate}
                 uiText={{
-                  calendar: uiText.calendar,
+                  calendar: menuChip,
                   today: uiText.today,
                   thisWeek: uiText.thisWeek,
                   thisMonth: uiText.thisMonth,
@@ -1409,35 +1417,8 @@ export default function DatabasePage() {
         </CardHeader>
 
         <CardContent className="space-y-4 p-4">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-lg border bg-card p-4">
-              <p className="text-xs text-muted-foreground">{uiText.visibleSheets}</p>
-              <p className="mt-1 text-2xl font-semibold tabular-nums">{tables.length}</p>
-            </div>
-            <div className="rounded-lg border bg-card p-4">
-              <p className="text-xs text-muted-foreground">{uiText.totalRows}</p>
-              <p className="mt-1 text-2xl font-semibold tabular-nums">{totalRows}</p>
-            </div>
-            <div className="rounded-lg border bg-card p-4">
-              <p className="text-xs text-muted-foreground">{uiText.totalColumns}</p>
-              <p className="mt-1 text-2xl font-semibold tabular-nums">{totalColumns}</p>
-            </div>
-            <div className="rounded-lg border bg-card p-4">
-              <p className="text-xs text-muted-foreground">{uiText.database}</p>
-              <p className="mt-1 text-2xl font-semibold">Neon</p>
-            </div>
-          </div>
-
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <div className="relative max-w-sm">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={tableQuery}
-                onChange={(event) => setTableQuery(event.target.value)}
-                placeholder={uiText.searchTables}
-                className="pl-9"
-              />
-            </div>
+            <SearchPanel value={tableQuery} onChange={setTableQuery} placeholder={uiText.searchTables} />
 
             <TabsList className="w-full justify-start overflow-x-auto">
               <TabsTrigger value="summary" className="gap-1.5">
@@ -1446,7 +1427,7 @@ export default function DatabasePage() {
               </TabsTrigger>
               {visibleTables.map((table) => (
                 <TabsTrigger key={table.id} value={table.id}>
-                  {tDb(table.title)}
+                  <span className="max-w-[220px] truncate">{tDb(table.title)}</span>
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -1489,15 +1470,11 @@ export default function DatabasePage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    <div className="relative w-full min-w-[260px] max-w-sm">
-                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        value={activeTab === table.id ? searchTerm : ''}
-                        onChange={(event) => setSearchTerm(event.target.value)}
-                        placeholder={uiText.searchInTable(tDb(table.title))}
-                        className="pl-9"
-                      />
-                    </div>
+                    <SearchPanel
+                      value={activeTab === table.id ? searchTerm : ''}
+                      onChange={setSearchTerm}
+                      placeholder={uiText.searchInTable(tDb(table.title))}
+                    />
                     <div className="text-xs tabular-nums text-muted-foreground">
                       {filteredRows.length} / {table.rowCount} {uiText.rowsCount}
                     </div>

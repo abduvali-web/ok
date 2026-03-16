@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { format } from 'date-fns'
 import { enUS, ru, uz } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Loader2, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { IconButton } from '@/components/ui/icon-button'
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
+import { SearchPanel } from '@/components/ui/search-panel'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Table,
@@ -250,15 +250,11 @@ export function HistoryTable({
             <div />
           )}
 
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder={t.admin.searchPlaceholder || 'Search logs'}
-              className="border-border bg-background pl-9"
-            />
-          </div>
+          <SearchPanel
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder={t.admin.searchPlaceholder || 'Search logs'}
+          />
 
           <div className="flex items-center justify-end">
             <RefreshIconButton

@@ -105,9 +105,13 @@ export function OrdersTable({
                                     />
                                 </TableCell>
                                 <TableCell className="py-1.5 font-medium">#{order.orderNumber}</TableCell>
-                                <TableCell className="py-1.5">
-                                    <div>{order.customer.name}</div>
-                                    <div className="text-sm text-muted-foreground">{order.customer.phone}</div>
+                                <TableCell className="py-1.5 max-w-[200px]">
+                                    <div className="truncate" title={order.customer.name}>
+                                        {order.customer.name}
+                                    </div>
+                                    <div className="truncate text-sm text-muted-foreground" title={order.customer.phone}>
+                                        {order.customer.phone}
+                                    </div>
                                 </TableCell>
                                 <TableCell className="max-w-[200px] truncate py-1.5" title={order.deliveryAddress}>
                                     {order.deliveryAddress}
@@ -123,7 +127,7 @@ export function OrdersTable({
                                 <TableCell className="max-w-[150px] truncate py-1.5" title={order.specialFeatures}>
                                     {order.specialFeatures || '-'}
                                 </TableCell>
-                                <TableCell className="py-1.5">
+                                <TableCell className="max-w-[160px] truncate py-1.5" title={order.courierName || ''}>
                                     {order.courierName || '-'}
                                 </TableCell>
                                 <TableCell className="py-1.5">

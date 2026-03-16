@@ -3,6 +3,7 @@ import type { DateRange } from 'react-day-picker'
 
 import { Button } from '@/components/ui/button'
 import { CalendarRangeSelector } from '@/components/admin/dashboard/shared/CalendarRangeSelector'
+import { getMenuNumber } from '@/lib/menuData'
 
 interface CalendarDateSelectorProps {
   selectedDate: Date | null
@@ -56,6 +57,13 @@ export function CalendarDateSelector({
       ? { from: selectedDate, to: selectedDate }
       : undefined
 
+  const menuChip = (() => {
+    if (!value?.from) return 'Menu'
+    const fromNum = getMenuNumber(value.from)
+    const toNum = getMenuNumber(value.to ?? value.from)
+    return fromNum === toNum ? `Menu ${fromNum}` : `Menu ${fromNum}-${toNum}`
+  })()
+
   return (
     <div className="flex items-center gap-2">
       {showShiftButtons && shiftSelectedDate ? (
@@ -101,7 +109,7 @@ export function CalendarDateSelector({
           applySelectedDate(normalized)
         }}
         uiText={{
-          calendar: profileUiText.calendar,
+          calendar: menuChip,
           today: profileUiText.today,
           thisWeek: profileUiText.thisWeek ?? 'This week',
           thisMonth: profileUiText.thisMonth ?? 'This month',

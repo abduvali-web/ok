@@ -6,9 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Pencil, Trash2, Plus, Search, Loader2 } from 'lucide-react';
+import { Pencil, Trash2, Plus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { IconButton } from '@/components/ui/icon-button';
+import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton';
+import { SearchPanel } from '@/components/ui/search-panel';
 
 interface Ingredient {
     id: string;
@@ -225,19 +228,28 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center bg-card p-4 rounded-lg border border-border">
-                <div className="relative w-72">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
-                    <Input
-                        placeholder={uiText.searchPlaceholder}
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card p-3 shadow-sm">
+                <div className="flex flex-1 flex-wrap items-center gap-2">
+                    <SearchPanel
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-8"
+                        onChange={setSearchTerm}
+                        placeholder={uiText.searchPlaceholder}
+                    />
+
+                    <RefreshIconButton
+                        label={language === 'ru' ? 'Обновить' : language === 'uz' ? 'Yangilash' : 'Refresh'}
+                        onClick={() => void fetchIngredients()}
+                        isLoading={loading}
+                        iconSize="md"
                     />
                 </div>
-                <Button onClick={() => { setCurrentIngredient({ unit: 'gr', amount: 0 }); setIsDialogOpen(true); }}>
-                    <Plus className="mr-2 h-4 w-4" /> {uiText.addIngredient}
-                </Button>
+
+                <IconButton
+                    label={uiText.addIngredient}
+                    onClick={() => { setCurrentIngredient({ unit: 'gr', amount: 0 }); setIsDialogOpen(true); }}
+                >
+                    <Plus className="size-4" />
+                </IconButton>
             </div>
 
             <div className="bg-card rounded-lg border border-border max-h-[600px] overflow-y-auto relative">

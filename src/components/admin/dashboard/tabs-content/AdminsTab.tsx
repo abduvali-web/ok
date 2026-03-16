@@ -2,7 +2,7 @@
 
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { Edit, Pause, Play, Plus, Search, Trash2, Users } from 'lucide-react'
+import { Edit, Pause, Play, Plus, Trash2, Users } from 'lucide-react'
 
 import type { Admin } from '@/components/admin/dashboard/types'
 import {
@@ -16,6 +16,7 @@ import { FormField } from '@/components/admin/dashboard/shared/FormField'
 import { EntityStatusBadge } from '@/components/admin/dashboard/shared/EntityStatusBadge'
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
+import { SearchPanel } from '@/components/ui/search-panel'
 import type { DateRange } from 'react-day-picker'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { fetchApi } from '@/lib/api-client'
@@ -523,15 +524,11 @@ export function AdminsTab({
             </div>
 
             <div className="flex items-center">
-              <div className="relative w-full md:max-w-md">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder={t.admin.searchPlaceholder}
-                  className="h-9 pl-8"
-                />
-              </div>
+              <SearchPanel
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder={t.admin.searchPlaceholder}
+              />
             </div>
           </CardHeader>
 

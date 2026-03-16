@@ -12,7 +12,6 @@ import {
     ShoppingCart,
     ChefHat,
     Loader2,
-    RefreshCw,
     Users,
     UtensilsCrossed
 } from 'lucide-react';
@@ -913,13 +912,6 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 <ChefHat className="w-4 h-4" />
                                 <span>{t.warehouse.menuFor} {tomorrowMenuNumber}</span>
                             </Badge>
-                            <Button variant="outline" size="sm" onClick={fetchClientCalories} disabled={isLoadingClients}>
-                                {isLoadingClients ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                    <RefreshCw className="w-4 h-4" />
-                                )}
-                            </Button>
                         </div>
                     </div>
                 </CardHeader>
@@ -952,7 +944,15 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                     <CalendarRangeSelector
                                         value={cookingRange}
                                         onChange={setCookingRange}
-                                        uiText={calendarRangeUiText}
+                                        uiText={{
+                                            ...calendarRangeUiText,
+                                            calendar: (() => {
+                                                if (!cookingRange?.from) return 'Menu'
+                                                const fromNum = getMenuNumber(cookingRange.from)
+                                                const toNum = getMenuNumber(cookingRange.to ?? cookingRange.from)
+                                                return fromNum === toNum ? `Menu ${fromNum}` : `Menu ${fromNum}-${toNum}`
+                                            })(),
+                                        }}
                                         locale={dateLocale}
                                         className="w-[240px] max-w-full min-w-0"
                                     />
@@ -1066,7 +1066,15 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                     <CalendarRangeSelector
                                         value={calcRange}
                                         onChange={setCalcRange}
-                                        uiText={calendarRangeUiText}
+                                        uiText={{
+                                            ...calendarRangeUiText,
+                                            calendar: (() => {
+                                                if (!calcRange?.from) return 'Menu'
+                                                const fromNum = getMenuNumber(calcRange.from)
+                                                const toNum = getMenuNumber(calcRange.to ?? calcRange.from)
+                                                return fromNum === toNum ? `Menu ${fromNum}` : `Menu ${fromNum}-${toNum}`
+                                            })(),
+                                        }}
                                         locale={dateLocale}
                                         className="w-full min-w-0"
                                     />

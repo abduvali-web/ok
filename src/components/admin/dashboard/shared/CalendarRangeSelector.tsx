@@ -108,7 +108,9 @@ export function CalendarRangeSelector({
             <CalendarDays className="h-4 w-4 shrink-0 text-primary" />
             <span className="truncate text-sm font-medium">{label}</span>
           </span>
-          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{uiText.calendar}</span>
+          <span className="max-w-[110px] truncate text-[10px] uppercase tracking-wide text-muted-foreground">
+            {uiText.calendar}
+          </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">

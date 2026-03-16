@@ -10,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     TrendingUp,
     TrendingDown,
-    Search,
     Wallet,
     History,
     Plus,
@@ -48,6 +47,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector';
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
+import { SearchPanel } from '@/components/ui/search-panel'
 import type { DateRange } from 'react-day-picker'
 
 interface FinanceTabProps {
@@ -163,6 +163,13 @@ export function FinanceTab({
     }, []);
 
     useEffect(() => {
+        // Keep the client debt / prepaid widgets aligned with the selected audit period.
+        const asOf = selectedPeriod?.to ?? selectedPeriod?.from ?? selectedDate ?? null
+        void fetchClients(asOf)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedPeriod?.from, selectedPeriod?.to, selectedDate]);
+
+    useEffect(() => {
         fetchCompanyFinance(); // Refresh history
     }, [selectedDate]);
 
@@ -200,14 +207,18 @@ export function FinanceTab({
         setIsFinanceRefreshing(true)
         try {
             await Promise.resolve(fetchCompanyFinance())
+            const asOf = selectedPeriod?.to ?? selectedPeriod?.from ?? selectedDate ?? null
+            await Promise.resolve(fetchClients(asOf))
         } finally {
             setIsFinanceRefreshing(false)
         }
     }
 
-    const fetchClients = async () => {
+    const fetchClients = async (asOf: Date | null = null) => {
         try {
-            const response = await fetch(`/api/admin/finance/clients?filter=all`);
+            let url = `/api/admin/finance/clients?filter=all`
+            if (asOf) url += `&asOf=${encodeURIComponent(asOf.toISOString())}`
+            const response = await fetch(url);
             if (response.ok) {
                 const data = await response.json();
                 setClients(data);
@@ -536,15 +547,11 @@ export function FinanceTab({
                                     {t.finance.historyDesc}
                                 </CardDescription>
                                 <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                                    <div className="relative w-full sm:w-64">
-                                        <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
-                                        <Input
-                                            value={historySearchQuery}
-                                            onChange={(e) => setHistorySearchQuery(e.target.value)}
-                                            placeholder={t.admin.searchPlaceholder}
-                                            className="pl-9"
-                                        />
-                                    </div>
+                                    <SearchPanel
+                                        value={historySearchQuery}
+                                        onChange={setHistorySearchQuery}
+                                        placeholder={t.admin.searchPlaceholder}
+                                    />
 
                                     {applySelectedDate && (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) && profileUiText && (
                                         <CalendarDateSelector

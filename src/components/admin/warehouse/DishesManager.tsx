@@ -9,11 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Pencil, Trash2, Plus, Search, Loader2, X, Check, ChevronsUpDown } from 'lucide-react';
+import { Pencil, Trash2, Plus, Loader2, X, Check, ChevronsUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { MEAL_TYPES } from '@/lib/menuData';
 import { cn } from "@/lib/utils";
 import { useLanguage } from '@/contexts/LanguageContext';
+import { SearchPanel } from '@/components/ui/search-panel';
 
 interface IngredientRef {
     name: string;
@@ -389,15 +390,11 @@ export function DishesManager() {
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center bg-card p-4 rounded-lg border border-border">
-                <div className="relative w-72">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
-                    <Input
-                        placeholder={uiText.searchPlaceholder}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-8"
-                    />
-                </div>
+                <SearchPanel
+                    value={searchTerm}
+                    onChange={setSearchTerm}
+                    placeholder={uiText.searchPlaceholder}
+                />
                 <Button onClick={() => { setCurrentDish({ ingredients: [], unit: 'gr', menuNumbers: [] } as any); setIsDialogOpen(true); }}>
                     <Plus className="mr-2 h-4 w-4" /> {uiText.addDish}
                 </Button>

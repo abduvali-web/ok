@@ -1,9 +1,7 @@
 'use client'
 
 import type { ReactNode, Ref } from 'react'
-import { Search } from 'lucide-react'
-
-import { Input } from '@/components/ui/input'
+import { SearchPanel } from '@/components/ui/search-panel'
 
 export function FilterToolbar({
   searchValue,
@@ -22,17 +20,14 @@ export function FilterToolbar({
 }) {
   return (
     <div className="grid gap-3 rounded-xl border border-border bg-card p-3 shadow-sm lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          ref={inputRef}
-          value={searchValue}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder={searchPlaceholder}
-          className="border-border bg-background pl-9"
-          aria-label={searchAriaLabel || searchPlaceholder}
-        />
-      </div>
+      <SearchPanel
+        inputRef={inputRef}
+        value={searchValue}
+        onChange={onSearchChange}
+        placeholder={searchPlaceholder}
+        ariaLabel={searchAriaLabel || searchPlaceholder}
+        className="max-w-none"
+      />
       {children && <div className="flex flex-wrap items-center gap-2">{children}</div>}
     </div>
   )

@@ -1,15 +1,20 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Bot, MessageSquarePlus, Send, Users } from 'lucide-react'
+import { toast } from 'sonner'
+
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { IconButton } from '@/components/ui/icon-button'
 import { Input } from '@/components/ui/input'
-import { Loader2, MessageSquarePlus, Send, Users } from 'lucide-react'
-import { toast } from 'sonner'
-import { getJsonFromLocalStorage } from '@/lib/browser-storage'
 import { SearchPanel } from '@/components/ui/search-panel'
+import { cn } from '@/lib/utils'
+import { getJsonFromLocalStorage } from '@/lib/browser-storage'
+import { TamboAgentWidget } from '@/components/tambo/TamboAgentWidget'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface User {
   id: string
@@ -42,6 +47,11 @@ interface Conversation {
   unreadCount: number
 }
 
+type SelectedThread =
+  | { kind: 'conversation'; conversationId: string }
+  | { kind: 'ai'; agent: User }
+  | null
+
 function getStoredUserId() {
   if (typeof window === 'undefined') return null
   const user = getJsonFromLocalStorage<{ id?: string }>('user')
@@ -49,17 +59,39 @@ function getStoredUserId() {
   return user.id
 }
 
-export function ChatTab() {
+function openTamboWithPrompt(prompt: string) {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent('tambo:open-chat', { detail: { prompt, newThread: true } }))
+}
+
+function buildAdminAgentPrompt(agent: User) {
+  // Keep this short; the Tambo system prompt already enforces tool-based responses.
+  return (
+    `Act as an AI agent representing admin "${agent.name}" (${agent.role}). ` +
+    'Focus on operations, audit periods (day/week/month), and manager-friendly explanations. ' +
+    'Be concise and propose tables/filters when helpful.'
+  )
+}
+
+export function ChatUnifiedTab() {
+  const { t } = useLanguage()
+  const ui = (t as any)
+
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
-  const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
+  const [selectedThread, setSelectedThread] = useState<SelectedThread>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [showUserList, setShowUserList] = useState(false)
   const [isBootLoading, setIsBootLoading] = useState(true)
   const [search, setSearch] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
   const currentUserId = useMemo(() => getStoredUserId(), [])
+
+  const selectedConversationId =
+    selectedThread?.kind === 'conversation' ? selectedThread.conversationId : null
+  const selectedAiAgent = selectedThread?.kind === 'ai' ? selectedThread.agent : null
 
   useEffect(() => {
     const load = async () => {
@@ -72,13 +104,13 @@ export function ChatTab() {
 
     const interval = setInterval(() => {
       void fetchConversations()
-      if (selectedConversation) {
-        void fetchMessages(selectedConversation, true)
+      if (selectedConversationId) {
+        void fetchMessages(selectedConversationId, true)
       }
     }, 5000)
 
     return () => clearInterval(interval)
-  }, [selectedConversation])
+  }, [selectedConversationId])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -87,32 +119,31 @@ export function ChatTab() {
   const filteredConversations = useMemo(() => {
     const query = search.trim().toLowerCase()
     if (!query) return conversations
-    return conversations.filter((conversation) =>
-      conversation.otherParticipant.name.toLowerCase().includes(query) ||
-      conversation.otherParticipant.email.toLowerCase().includes(query)
+    return conversations.filter(
+      (conversation) =>
+        conversation.otherParticipant.name.toLowerCase().includes(query) ||
+        conversation.otherParticipant.email.toLowerCase().includes(query)
     )
   }, [conversations, search])
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase()
     if (!query) return availableUsers
-    return availableUsers.filter((user) =>
-      user.name.toLowerCase().includes(query) || user.email.toLowerCase().includes(query)
+    return availableUsers.filter(
+      (user) => user.name.toLowerCase().includes(query) || user.email.toLowerCase().includes(query)
     )
   }, [availableUsers, search])
 
-  const selectedConversationData = useMemo(
-    () => conversations.find((conversation) => conversation.id === selectedConversation) ?? null,
-    [conversations, selectedConversation]
-  )
+  const selectedConversationData = useMemo(() => {
+    if (!selectedConversationId) return null
+    return conversations.find((conversation) => conversation.id === selectedConversationId) ?? null
+  }, [conversations, selectedConversationId])
 
   async function fetchConversations() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch('/api/chat/conversations', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
 
       if (response.ok) {
@@ -128,9 +159,7 @@ export function ChatTab() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch('/api/chat/users', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
 
       if (response.ok) {
@@ -146,9 +175,7 @@ export function ChatTab() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/chat/messages?conversationId=${conversationId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
 
       if (!response.ok) {
@@ -167,9 +194,7 @@ export function ChatTab() {
         body: JSON.stringify({ conversationId }),
       })
     } catch {
-      if (!silent) {
-        toast.error('Could not load messages')
-      }
+      if (!silent) toast.error(ui?.common?.couldNotLoadMessages ?? 'Could not load messages')
     }
   }
 
@@ -190,17 +215,17 @@ export function ChatTab() {
       }
 
       const data = await response.json()
-      setSelectedConversation(data.conversation.id)
+      setSelectedThread({ kind: 'conversation', conversationId: data.conversation.id })
       setShowUserList(false)
       await fetchConversations()
       await fetchMessages(data.conversation.id)
     } catch {
-      toast.error('Could not start conversation')
+      toast.error(ui?.common?.couldNotStartConversation ?? 'Could not start conversation')
     }
   }
 
   async function sendMessage() {
-    if (!newMessage.trim() || !selectedConversation) return
+    if (!newMessage.trim() || !selectedConversationId) return
 
     try {
       const token = localStorage.getItem('token')
@@ -211,7 +236,7 @@ export function ChatTab() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          conversationId: selectedConversation,
+          conversationId: selectedConversationId,
           content: newMessage.trim(),
         }),
       })
@@ -221,11 +246,22 @@ export function ChatTab() {
       }
 
       setNewMessage('')
-      await fetchMessages(selectedConversation)
+      await fetchMessages(selectedConversationId)
       await fetchConversations()
     } catch {
-      toast.error('Could not send message')
+      toast.error(ui?.common?.couldNotSendMessage ?? 'Could not send message')
     }
+  }
+
+  function selectConversation(conversationId: string) {
+    setSelectedThread({ kind: 'conversation', conversationId })
+    void fetchMessages(conversationId)
+  }
+
+  function selectAiAgent(agent: User) {
+    setSelectedThread({ kind: 'ai', agent })
+    setShowUserList(false)
+    openTamboWithPrompt(buildAdminAgentPrompt(agent))
   }
 
   function getRoleColor(role: string) {
@@ -246,85 +282,140 @@ export function ChatTab() {
   function getRoleLabel(role: string) {
     switch (role) {
       case 'SUPER_ADMIN':
-        return 'Super Admin'
+        return ui?.roles?.superAdmin ?? 'Super Admin'
       case 'MIDDLE_ADMIN':
-        return 'Middle Admin'
+        return ui?.roles?.middleAdmin ?? 'Middle Admin'
       case 'LOW_ADMIN':
-        return 'Low Admin'
+        return ui?.roles?.lowAdmin ?? 'Low Admin'
       case 'COURIER':
-        return 'Courier'
+        return ui?.roles?.courier ?? 'Courier'
       default:
         return role
     }
   }
 
+  const aiConversationLabel = selectedAiAgent ? `${selectedAiAgent.name} (AI)` : null
+
   return (
-    <div className="grid h-[640px] grid-cols-1 gap-4 xl:grid-cols-[360px_1fr]">
-      <Card className="glass-card overflow-hidden">
+    <div className="grid h-full min-h-0 grid-cols-1 gap-4 p-4 xl:grid-cols-[360px_1fr]">
+      <Card className="glass-card min-h-0 overflow-hidden">
         <CardHeader className="border-b border-border/60 pb-4">
           <div className="flex items-center justify-between gap-3">
-            <div>
-              <CardTitle className="text-lg">Team chat</CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">Direct communication across admin and courier roles.</p>
+            <div className="min-w-0">
+              <CardTitle className="truncate text-lg">
+                {ui?.chat?.title ?? 'Chat'}
+              </CardTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {ui?.chat?.subtitle ?? 'Direct team chat + AI agents in one place.'}
+              </p>
             </div>
-            <Button size="sm" variant="outline" className="rounded-full" onClick={() => setShowUserList((prev) => !prev)}>
+
+            <IconButton
+              label={ui?.chat?.newConversation ?? 'New conversation'}
+              variant="outline"
+              onClick={() => setShowUserList((prev) => !prev)}
+            >
               <MessageSquarePlus className="h-4 w-4" />
-              New
-            </Button>
+            </IconButton>
           </div>
+
           <div className="mt-3">
             <SearchPanel
               value={search}
               onChange={setSearch}
-              placeholder={showUserList ? 'Search users' : 'Search conversations'}
+              placeholder={
+                showUserList
+                  ? ui?.chat?.searchUsers ?? 'Search users'
+                  : ui?.chat?.searchConversations ?? 'Search conversations'
+              }
               className="max-w-none"
             />
           </div>
         </CardHeader>
 
-        <CardContent className="p-0">
+        <CardContent className="flex min-h-0 flex-1 flex-col p-0">
           {isBootLoading ? (
-            <div className="flex h-[520px] items-center justify-center">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="flex flex-1 items-center justify-center">
+              <div className="text-sm text-muted-foreground">{ui?.common?.loading ?? 'Loading...'}</div>
             </div>
           ) : showUserList ? (
-            <div className="max-h-[520px] overflow-y-auto">
+            <div className="min-h-0 flex-1 overflow-y-auto">
               {filteredUsers.length === 0 ? (
-                <div className="p-6 text-center text-sm text-muted-foreground">No users available.</div>
+                <div className="p-6 text-center text-sm text-muted-foreground">
+                  {ui?.chat?.noUsers ?? 'No users available.'}
+                </div>
               ) : (
                 filteredUsers.map((user) => (
-                  <button
+                  <div
                     key={user.id}
-                    onClick={() => void startConversation(user.id)}
-                    className="flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+                    className="flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left"
                   >
-                    <Avatar>
-                      <AvatarFallback>{user.name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-medium">{user.name}</div>
-                      <div className="truncate text-xs text-muted-foreground">{user.email}</div>
-                    </div>
-                    <Badge className={getRoleColor(user.role)}>{getRoleLabel(user.role)}</Badge>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => void startConversation(user.id)}
+                      className="flex min-w-0 flex-1 items-center gap-3 text-left transition-colors hover:text-foreground"
+                    >
+                      <Avatar>
+                        <AvatarFallback>{user.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-medium">{user.name}</div>
+                        <div className="truncate text-xs text-muted-foreground">{user.email}</div>
+                      </div>
+                      <Badge className={getRoleColor(user.role)}>{getRoleLabel(user.role)}</Badge>
+                    </button>
+
+                    <IconButton
+                      label={(ui?.common?.ai ?? 'AI') + ' ' + user.name}
+                      variant="outline"
+                      onClick={() => selectAiAgent(user)}
+                    >
+                      <Bot className="h-4 w-4" />
+                    </IconButton>
+                  </div>
                 ))
               )}
             </div>
           ) : (
-            <div className="max-h-[520px] overflow-y-auto">
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {aiConversationLabel ? (
+                <button
+                  type="button"
+                  onClick={() => selectAiAgent(selectedAiAgent!)}
+                  className={cn(
+                    'flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors hover:bg-muted/40',
+                    selectedThread?.kind === 'ai' ? 'bg-muted/50' : ''
+                  )}
+                >
+                  <Avatar>
+                    <AvatarFallback>AI</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-medium">{aiConversationLabel}</div>
+                    <div className="truncate text-xs text-muted-foreground">
+                      {ui?.chat?.aiHint ?? 'AI agent via Tambo'}
+                    </div>
+                  </div>
+                  <Badge className="bg-slate-100 text-slate-800 dark:bg-white/10 dark:text-slate-100">
+                    {ui?.common?.ai ?? 'AI'}
+                  </Badge>
+                </button>
+              ) : null}
+
               {filteredConversations.length === 0 ? (
-                <div className="p-6 text-center text-sm text-muted-foreground">No conversations yet.</div>
+                <div className="p-6 text-center text-sm text-muted-foreground">
+                  {ui?.chat?.noConversations ?? 'No conversations yet.'}
+                </div>
               ) : (
                 filteredConversations.map((conversation) => (
                   <button
                     key={conversation.id}
-                    onClick={() => {
-                      setSelectedConversation(conversation.id)
-                      void fetchMessages(conversation.id)
-                    }}
-                    className={`flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors hover:bg-muted/40 ${
-                      selectedConversation === conversation.id ? 'bg-muted/50' : ''
-                    }`}
+                    type="button"
+                    onClick={() => selectConversation(conversation.id)}
+                    className={cn(
+                      'flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors hover:bg-muted/40',
+                      selectedConversationId === conversation.id ? 'bg-muted/50' : ''
+                    )}
                   >
                     <Avatar>
                       <AvatarFallback>{conversation.otherParticipant.name[0]}</AvatarFallback>
@@ -337,7 +428,7 @@ export function ChatTab() {
                         ) : null}
                       </div>
                       <div className="truncate text-xs text-muted-foreground">
-                        {conversation.lastMessage?.content || 'No messages yet.'}
+                        {conversation.lastMessage?.content || (ui?.chat?.noMessagesYet ?? 'No messages yet.')}
                       </div>
                     </div>
                   </button>
@@ -348,40 +439,53 @@ export function ChatTab() {
         </CardContent>
       </Card>
 
-      <Card className="glass-card overflow-hidden">
-        {selectedConversation ? (
+      <Card
+        className={cn(
+          'glass-card min-h-0 overflow-hidden',
+          selectedAiAgent ? 'gap-0 py-0' : ''
+        )}
+      >
+        {selectedAiAgent ? (
+          <CardContent className="h-full min-h-0 px-0">
+            <TamboAgentWidget embedded />
+          </CardContent>
+        ) : selectedConversationId ? (
           <>
             <CardHeader className="border-b border-border/60 pb-4">
               <div className="flex items-center gap-3">
                 <Avatar>
                   <AvatarFallback>{selectedConversationData?.otherParticipant.name?.[0] || 'U'}</AvatarFallback>
                 </Avatar>
-                <div>
-                  <CardTitle className="text-lg">{selectedConversationData?.otherParticipant.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground">
+                <div className="min-w-0">
+                  <CardTitle className="truncate text-lg">{selectedConversationData?.otherParticipant.name}</CardTitle>
+                  <p className="truncate text-sm text-muted-foreground">
                     {selectedConversationData?.otherParticipant.email}
                   </p>
                 </div>
               </div>
             </CardHeader>
 
-            <CardContent className="flex h-[560px] flex-col p-4">
+            <CardContent className="flex h-full min-h-0 flex-col p-4">
               <div className="flex-1 space-y-3 overflow-y-auto pr-1">
                 {messages.map((message) => (
                   <div
                     key={message.id}
-                    className={`flex ${message.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
+                    className={cn('flex', message.senderId === currentUserId ? 'justify-end' : 'justify-start')}
                   >
                     <div
-                      className={`max-w-[78%] rounded-2xl px-4 py-3 ${
+                      className={cn(
+                        'max-w-[78%] rounded-2xl px-4 py-3',
                         message.senderId === currentUserId
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted text-foreground'
-                      }`}
+                      )}
                     >
                       <div className="text-sm leading-6">{message.content}</div>
                       <div className="mt-1 text-[11px] opacity-70">
-                        {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(message.createdAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </div>
                     </div>
                   </div>
@@ -399,10 +503,10 @@ export function ChatTab() {
                       void sendMessage()
                     }
                   }}
-                  placeholder="Write a message..."
+                  placeholder={ui?.chat?.writeMessage ?? 'Write a message...'}
                   className="flex-1"
                 />
-                <Button onClick={() => void sendMessage()} disabled={!newMessage.trim()} className="rounded-full">
+                <Button onClick={() => void sendMessage()} disabled={!newMessage.trim()} size="icon">
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
@@ -412,9 +516,10 @@ export function ChatTab() {
           <CardContent className="flex h-full min-h-[640px] items-center justify-center">
             <div className="text-center">
               <Users className="mx-auto h-10 w-10 text-muted-foreground" />
-              <p className="mt-4 text-lg font-medium">Select a conversation</p>
+              <p className="mt-4 text-lg font-medium">{ui?.chat?.selectConversation ?? 'Select a conversation'}</p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Choose an existing thread or start a new one from the user list.
+                {ui?.chat?.selectConversationHint ??
+                  'Choose a thread or start a new one (you can also open an AI agent from the user list).'}
               </p>
             </div>
           </CardContent>
@@ -423,5 +528,3 @@ export function ChatTab() {
     </div>
   )
 }
-
-

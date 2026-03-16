@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import {
   currentTimeContextHelper,
   TamboProvider,
@@ -46,6 +47,8 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
   const { t } = useLanguage();
   const tamboT = t.tambo;
   const [userKey, setUserKey] = useState("anonymous");
+  const pathname = usePathname();
+  const shouldRenderFloatingLauncher = !pathname?.startsWith("/middle-admin");
 
   useEffect(() => {
     setUserKey(getUserKeyFromStorage());
@@ -105,7 +108,7 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
     >
       <TamboThreadInputProvider>
         {children}
-        <TamboAgentWidget />
+        {shouldRenderFloatingLauncher ? <TamboAgentWidget /> : null}
       </TamboThreadInputProvider>
     </TamboProvider>
   );
