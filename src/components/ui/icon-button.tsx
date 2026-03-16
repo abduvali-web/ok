@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 
-import { Button, type ButtonProps } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 const ICON_BUTTON_SIZE = {
@@ -16,6 +16,8 @@ export type IconButtonProps = Omit<ButtonProps, 'size' | 'children'> & {
   children: React.ReactNode
   iconSize?: keyof typeof ICON_BUTTON_SIZE
 }
+
+type ButtonProps = React.ComponentProps<typeof Button>
 
 export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
   { label, children, className, iconSize = 'md', ...props },
@@ -35,4 +37,3 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
     </Button>
   )
 })
-

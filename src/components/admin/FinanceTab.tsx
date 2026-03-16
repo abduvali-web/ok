@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,14 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-    DollarSign,
     TrendingUp,
     TrendingDown,
     Search,
     Filter,
     Wallet,
     History,
-    Users,
     Plus,
     Minus,
     Loader2,
@@ -104,17 +102,15 @@ export function FinanceTab({
 }: FinanceTabProps) {
     const { t, language } = useLanguage();
     const calendarLocale = language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'
-    const [activeSubTab, setActiveSubTab] = useState('clients');
+    const [activeSubTab, setActiveSubTab] = useState('history');
     const [companyBalance, setCompanyBalance] = useState(0);
     const [clients, setClients] = useState<Client[]>([]);
     const [history, setHistory] = useState<Transaction[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
     const [ingredientsList, setIngredientsList] = useState<string[]>([]);
     const [staff, setStaff] = useState<Staff[]>([]);
 
     // Filters
-    const [searchQuery, setSearchQuery] = useState('');
-    const [balanceFilter, setBalanceFilter] = useState<'all' | 'positive' | 'negative' | 'zero'>('all');
+    const [historySearchQuery, setHistorySearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [categories, setCategories] = useState<string[]>([]);
 
@@ -133,11 +129,9 @@ export function FinanceTab({
 
     // Modals
     const [isCompanyFundsModalOpen, setIsCompanyFundsModalOpen] = useState(false);
-    const [isClientBalanceModalOpen, setIsClientBalanceModalOpen] = useState(false);
     const [isBuyIngredientsModalOpen, setIsBuyIngredientsModalOpen] = useState(false);
 
     // Form Data
-    const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [transactionAmount, setTransactionAmount] = useState('');
     const [transactionDescription, setTransactionDescription] = useState('');
     const [transactionCategory, setTransactionCategory] = useState('');
@@ -163,12 +157,8 @@ export function FinanceTab({
     }, []);
 
     useEffect(() => {
-        if (activeSubTab === 'clients') {
-            fetchClients();
-        } else if (activeSubTab === 'history') {
-            fetchCompanyFinance(); // Refresh history
-        }
-    }, [activeSubTab, balanceFilter, categoryFilter, selectedDate]); // Re-fetch when filter or date changes
+        fetchCompanyFinance(); // Refresh history
+    }, [categoryFilter, selectedDate]);
 
     const fetchCompanyFinance = async () => {
         try {
@@ -194,13 +184,8 @@ export function FinanceTab({
     };
 
     const fetchClients = async () => {
-        setIsLoading(true);
         try {
-            const params = new URLSearchParams();
-            if (searchQuery) params.append('search', searchQuery);
-            if (balanceFilter !== 'all') params.append('filter', balanceFilter);
-
-            const response = await fetch(`/api/admin/finance/clients?${params.toString()}`);
+            const response = await fetch(`/api/admin/finance/clients?filter=all`);
             if (response.ok) {
                 const data = await response.json();
                 setClients(data);
@@ -208,8 +193,6 @@ export function FinanceTab({
         } catch (error) {
             console.error('Error fetching clients:', error);
             toast.error('Ошибка загрузки списка клиентов');
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -238,12 +221,7 @@ export function FinanceTab({
         }
     };
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        fetchClients();
-    };
-
-    const handleTransactionSubmit = async (isCompany: boolean) => {
+    const handleTransactionSubmit = async () => {
         if (!transactionAmount || parseFloat(transactionAmount) <= 0) {
             toast.error(t.finance.enterAmount);
             return;
@@ -259,8 +237,7 @@ export function FinanceTab({
                 amount: parseFloat(transactionAmount),
                 type: transactionType,
                 description: transactionDescription,
-                customerId: isCompany ? undefined : selectedClient?.id,
-                category: isCompany ? (transactionCategory || 'COMPANY_FUNDS') : 'MANUAL_ADJUSTMENT'
+                category: transactionCategory || 'COMPANY_FUNDS'
             };
 
             const response = await fetch('/api/admin/finance/transaction', {
@@ -272,14 +249,12 @@ export function FinanceTab({
             if (response.ok) {
                 toast.success(t.finance.transactionSuccess);
                 setIsCompanyFundsModalOpen(false);
-                setIsClientBalanceModalOpen(false);
 
                 // Reset form
                 setTransactionAmount('');
                 setTransactionDescription('');
                 setTransactionCategory('');
                 setTransactionType('INCOME');
-                setSelectedClient(null);
 
                 // Refresh data
                 fetchCompanyFinance();
@@ -293,14 +268,6 @@ export function FinanceTab({
         } finally {
             setIsSubmitting(false);
         }
-    };
-
-    const openClientBalanceModal = (client: Client) => {
-        setSelectedClient(client);
-        setTransactionAmount('');
-        setTransactionDescription('');
-        setTransactionType('INCOME'); // Default to Add
-        setIsClientBalanceModalOpen(true);
     };
 
     const handleAddPurchaseItem = () => {
@@ -416,7 +383,7 @@ export function FinanceTab({
         }).format(amount);
     };
 
-    const formatDate = (dateString: string) => {
+    const formatDate = useCallback((dateString: string) => {
         return new Date(dateString).toLocaleString('ru-RU', {
             day: '2-digit',
             month: '2-digit',
@@ -424,7 +391,33 @@ export function FinanceTab({
             hour: '2-digit',
             minute: '2-digit'
         });
-    };
+    }, []);
+
+    const visibleHistoryRows = useMemo(() => {
+        const categoryFiltered =
+            categoryFilter === 'all' ? visibleHistory : visibleHistory.filter((tx) => tx.category === categoryFilter)
+
+        const q = historySearchQuery.trim().toLowerCase()
+        if (!q) return categoryFiltered
+
+        return categoryFiltered.filter((tx) => {
+            const hay = [
+                tx.type,
+                tx.category,
+                tx.description,
+                String(tx.amount ?? ''),
+                tx.customer?.name,
+                tx.customer?.phone,
+                tx.customer ? 'client' : 'company',
+                formatDate(tx.createdAt),
+            ]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase()
+
+            return hay.includes(q)
+        })
+    }, [categoryFilter, formatDate, historySearchQuery, visibleHistory])
 
     return (
         <div className={`space-y-6 ${className}`}>
@@ -507,113 +500,11 @@ export function FinanceTab({
 
             <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-4">
                 <TabsList>
-                    <TabsTrigger value="clients" className="flex items-center gap-2">
-                        <Users className="w-4 h-4" />
-                        {t.finance.clientsBalance}
-                    </TabsTrigger>
                     <TabsTrigger value="history" className="flex items-center gap-2">
                         <History className="w-4 h-4" />
                         {t.finance.history}
                     </TabsTrigger>
                 </TabsList>
-
-                {/* CLIENTS TAB */}
-                <TabsContent value="clients" className="space-y-4">
-                    <Card className="border-none shadow-sm">
-                        <CardHeader className="pb-3">
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                <CardTitle className="text-lg font-medium">{t.finance.clientList}</CardTitle>
-                                <div className="flex items-center gap-2 w-full sm:w-auto">
-                                    <form onSubmit={handleSearch} className="relative flex-1 sm:w-64">
-                                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
-                                        <Input
-                                            placeholder={t.admin.searchPlaceholder}
-                                            className="pl-9"
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                        />
-                                    </form>
-                                    <Select
-                                        value={balanceFilter}
-                                        onValueChange={(val: any) => setBalanceFilter(val)}
-                                    >
-                                        <SelectTrigger className="w-[180px]">
-                                            <Filter className="w-4 h-4 mr-2" />
-                                            <SelectValue placeholder={t.admin.filters} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">{t.finance.filters.all}</SelectItem>
-                                            <SelectItem value="positive">{t.finance.filters.positive}</SelectItem>
-                                            <SelectItem value="negative">{t.finance.filters.negative}</SelectItem>
-                                            <SelectItem value="zero">{t.finance.filters.zero}</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="rounded-md border">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>{t.admin.clients}</TableHead>
-                                            <TableHead>{t.common.phone}</TableHead>
-                                            <TableHead className="text-right">{t.finance.balance}</TableHead>
-                                            <TableHead className="text-right">{t.warehouse.days}</TableHead>
-                                            <TableHead className="text-right">{t.admin.actions}</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {isLoading ? (
-                                            <TableRow>
-                                                <TableCell colSpan={4} className="h-24 text-center">
-                                                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-slate-400" />
-                                                </TableCell>
-                                            </TableRow>
-                                        ) : clients.length === 0 ? (
-                                            <TableRow>
-                                                <TableCell colSpan={4} className="h-24 text-center text-slate-500">
-                                                    {t.finance.noClients}
-                                                </TableCell>
-                                            </TableRow>
-                                        ) : (
-                                            clients.map((client) => (
-                                                <TableRow key={client.id}>
-                                                    <TableCell className="font-medium">{client.name}</TableCell>
-                                                    <TableCell>{client.phone}</TableCell>
-                                                    <TableCell className="text-right">
-                                                        <span className={`font-semibold ${client.balance > 0 ? 'text-green-600' :
-                                                            client.balance < 0 ? 'text-red-600' : 'text-slate-600'
-                                                            }`}>
-                                                            {formatCurrency(client.balance)}
-                                                        </span>
-                                                    </TableCell>
-                                                    <TableCell className="text-right text-sm">
-                                                        {client.dailyPrice ? (
-                                                            <span className={client.balance < 0 ? 'text-red-600' : 'text-slate-600'}>
-                                                                {Math.floor(client.balance / client.dailyPrice)} дн.
-                                                            </span>
-                                                        ) : '-'}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => openClientBalanceModal(client)}
-                                                        >
-                                                            <DollarSign className="w-4 h-4 mr-2" />
-                                                            {t.finance.edit}
-                                                        </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
 
                 {/* HISTORY TAB */}
                 <TabsContent value="history">
@@ -624,35 +515,45 @@ export function FinanceTab({
                                 <CardDescription className="flex-1">
                                     {t.finance.historyDesc}
                                 </CardDescription>
-                                {applySelectedDate && (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) && profileUiText && (
-                                    <CalendarDateSelector
-                                        selectedDate={selectedDate || null}
-                                        applySelectedDate={applySelectedDate}
-                                        shiftSelectedDate={shiftSelectedDate}
-                                        selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
-                                        selectedPeriod={selectedPeriod}
-                                        applySelectedPeriod={applySelectedPeriod}
-                                        locale={calendarLocale}
-                                        profileUiText={profileUiText}
-                                    />
-                                )}
-                                <Select
-                                    value={categoryFilter}
-                                    onValueChange={setCategoryFilter}
-                                >
-                                    <SelectTrigger className="w-[200px]">
-                                        <Filter className="w-4 h-4 mr-2" />
-                                        <SelectValue placeholder={t.finance.category} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">{t.admin.all}</SelectItem>
-                                        {categories.map((cat) => (
-                                            <SelectItem key={cat} value={cat}>
-                                                {cat}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                                    <div className="relative w-full sm:w-64">
+                                        <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
+                                        <Input
+                                            value={historySearchQuery}
+                                            onChange={(e) => setHistorySearchQuery(e.target.value)}
+                                            placeholder={t.admin.searchPlaceholder}
+                                            className="pl-9"
+                                        />
+                                    </div>
+
+                                    {applySelectedDate && (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) && profileUiText && (
+                                        <CalendarDateSelector
+                                            selectedDate={selectedDate || null}
+                                            applySelectedDate={applySelectedDate}
+                                            shiftSelectedDate={shiftSelectedDate}
+                                            selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
+                                            selectedPeriod={selectedPeriod}
+                                            applySelectedPeriod={applySelectedPeriod}
+                                            locale={calendarLocale}
+                                            profileUiText={profileUiText}
+                                        />
+                                    )}
+
+                                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                                        <SelectTrigger className="w-[200px]">
+                                            <Filter className="w-4 h-4 mr-2" />
+                                            <SelectValue placeholder={t.finance.category} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">{t.admin.all}</SelectItem>
+                                            {categories.map((cat) => (
+                                                <SelectItem key={cat} value={cat}>
+                                                    {cat}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -669,16 +570,14 @@ export function FinanceTab({
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {visibleHistory.length === 0 ? (
+                                        {visibleHistoryRows.length === 0 ? (
                                             <TableRow>
                                                 <TableCell colSpan={6} className="h-24 text-center text-slate-500">
                                                     {t.finance.emptyHistory}
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
-                                            visibleHistory
-                                                .filter(tx => categoryFilter === 'all' || tx.category === categoryFilter)
-                                                .map((tx) => (
+                                            visibleHistoryRows.map((tx) => (
                                                     <TableRow key={tx.id}>
                                                         <TableCell className="text-xs text-slate-500">
                                                             {formatDate(tx.createdAt)}
@@ -873,7 +772,7 @@ export function FinanceTab({
                             if (transactionCategory === 'SALARY') {
                                 handlePaySalarySubmit();
                             } else {
-                                handleTransactionSubmit(true);
+                                handleTransactionSubmit();
                             }
                         }} disabled={isSubmitting}>
                             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
@@ -882,76 +781,6 @@ export function FinanceTab({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
-            {/* CLIENT BALANCE MODAL */}
-            <Dialog open={isClientBalanceModalOpen} onOpenChange={setIsClientBalanceModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{t.finance.clientBalanceTitle}: {selectedClient?.name}</DialogTitle>
-                        <DialogDescription>
-                            {t.finance.currentBalance}: <span className="font-semibold text-slate-900">{selectedClient && formatCurrency(selectedClient.balance)}</span>
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">{t.common.actions}</Label>
-                            <div className="col-span-3 flex gap-2">
-                                <Button
-                                    type="button"
-                                    variant={transactionType === 'INCOME' ? 'default' : 'outline'}
-                                    onClick={() => setTransactionType('INCOME')}
-                                    className={transactionType === 'INCOME' ? 'bg-green-600 hover:bg-green-700' : ''}
-                                >
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    {t.finance.topUp}
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant={transactionType === 'EXPENSE' ? 'default' : 'outline'}
-                                    onClick={() => setTransactionType('EXPENSE')}
-                                    className={transactionType === 'EXPENSE' ? 'bg-red-600 hover:bg-red-700' : ''}
-                                >
-                                    <Minus className="w-4 h-4 mr-2" />
-                                    {t.finance.withdraw}
-                                </Button>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="c-amount" className="text-right">
-                                {t.finance.amount}
-                            </Label>
-                            <Input
-                                id="c-amount"
-                                type="number"
-                                min="0"
-                                value={transactionAmount}
-                                onChange={(e) => setTransactionAmount(e.target.value)}
-                                className="col-span-3"
-                                placeholder="0"
-                            />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="c-description" className="text-right">
-                                {t.finance.comment}
-                            </Label>
-                            <Input
-                                id="c-description"
-                                value={transactionDescription}
-                                onChange={(e) => setTransactionDescription(e.target.value)}
-                                className="col-span-3"
-                                placeholder={t.finance.commentPlaceholder}
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsClientBalanceModalOpen(false)}>{t.common.cancel}</Button>
-                        <Button onClick={() => handleTransactionSubmit(false)} disabled={isSubmitting}>
-                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                            {t.finance.confirmPurchase}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent >
-            </Dialog >
 
             {/* BUY INGREDIENTS MODAL */}
             < Dialog open={isBuyIngredientsModalOpen} onOpenChange={setIsBuyIngredientsModalOpen} >

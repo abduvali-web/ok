@@ -91,7 +91,6 @@ import {
 import { toast } from 'sonner'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { UserGuide } from '@/components/UserGuide'
 import { TrialStatus } from '@/components/admin/TrialStatus'
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal'
 import { SiteBuilderCard } from '@/components/admin/SiteBuilderCard'
@@ -206,6 +205,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set())
   const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set())
   const [clientSearchTerm, setClientSearchTerm] = useState('')
+  const [clientFinanceById, setClientFinanceById] = useState<Record<string, { balance: number; dailyPrice: number }>>(
+    {}
+  )
+  const [isClientFinanceLoading, setIsClientFinanceLoading] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
   const [isDeleteOrdersDialogOpen, setIsDeleteOrdersDialogOpen] = useState(false)
   const [isDeleteClientsDialogOpen, setIsDeleteClientsDialogOpen] = useState(false)
@@ -359,6 +362,43 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const fetchBinClients = () => refreshBinClients()
   const fetchBinOrders = () => refreshBinOrders()
 
+  useEffect(() => {
+    if (activeTab !== 'clients') return
+    if (typeof window === 'undefined') return
+
+    const controller = new AbortController()
+    setIsClientFinanceLoading(true)
+
+    void fetch('/api/admin/finance/clients?filter=all', { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (controller.signal.aborted) return
+        if (!Array.isArray(data)) return
+        const next: Record<string, { balance: number; dailyPrice: number }> = {}
+        for (const row of data) {
+          if (!row || typeof row !== 'object') continue
+          const id = (row as any).id
+          const balance = (row as any).balance
+          const dailyPrice = (row as any).dailyPrice
+          if (typeof id !== 'string') continue
+          if (typeof balance !== 'number' || !Number.isFinite(balance)) continue
+          next[id] = {
+            balance,
+            dailyPrice: typeof dailyPrice === 'number' && Number.isFinite(dailyPrice) ? dailyPrice : 0,
+          }
+        }
+        setClientFinanceById(next)
+      })
+      .catch(() => null)
+      .finally(() => {
+        if (!controller.signal.aborted) setIsClientFinanceLoading(false)
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [activeTab, clients.length])
+
   const isMiddleAdminView = mode === 'middle' || meRole === 'MIDDLE_ADMIN'
   const isLowAdminView = mode === 'low' || meRole === 'LOW_ADMIN'
 
@@ -506,6 +546,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         nicknamePlaceholder: 'Пример: Офис, Дом... (необязательно)',
         mapLink: 'Ссылка на карту',
         phoneFormat: 'Формат: +998 XX XXX XX XX',
+        balance: 'Баланс',
+        days: 'Дни',
+        daysShort: 'дн.',
       }
     }
 
@@ -583,6 +626,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         nicknamePlaceholder: 'Misol: Ofis, Uy... (ixtiyoriy)',
         mapLink: 'Xarita havolasi',
         phoneFormat: 'Format: +998 XX XXX XX XX',
+        balance: 'Balans',
+        days: 'Kunlar',
+        daysShort: 'kun',
       }
     }
 
@@ -659,6 +705,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       nicknamePlaceholder: 'Example: Office, Home... (optional)',
       mapLink: 'Map link',
       phoneFormat: 'Format: +998 XX XXX XX XX',
+      balance: 'Balance',
+      days: 'Days',
+      daysShort: 'd',
     }
   }, [language])
   const selectedDateISO = selectedDate ? toLocalIsoDate(selectedDate) : ''
@@ -2160,40 +2209,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </IconButton>
               <LanguageSwitcher />
               <div className="hidden md:block">
-                <UserGuide guides={[
-                  {
-                    title: t.admin.createOrder,
-                    description: t.admin.manageOrdersDesc,
-                    buttonName: "+ " + t.admin.createOrder,
-                    icon: <Plus className="w-5 h-5 text-primary" />
-                  },
-                  {
-                    title: t.admin.createClient,
-                    description: t.admin.manageClientsDesc,
-                    buttonName: "+ " + t.admin.createClient,
-                    icon: <User className="w-5 h-5 text-primary" />
-                  },
-                  {
-                    title: t.admin.createAutoOrders,
-                    description: t.admin.manageOrdersDesc,
-                    buttonName: t.admin.auto,
-                    icon: <Route className="w-5 h-5 text-primary" />
-                  },
-                  {
-                    title: t.admin.delete,
-                    description: t.admin.bin,
-                    buttonName: t.admin.bin,
-                    icon: <Trash2 className="w-5 h-5 text-primary" />
-                  },
-                  {
-                    title: t.admin.history,
-                    description: t.admin.history,
-                    buttonName: t.admin.history,
-                    icon: <History className="w-5 h-5 text-primary" />
-                  }
-                ]} />
-              </div>
-              <div className="hidden md:block">
                 <TrialStatus compact />
               </div>
               {isMiddleAdminView && (
@@ -2252,19 +2267,19 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       </header>
 
       <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}>
-        <SheetContent side="right" className="w-full p-0 sm:max-w-md">
+        <SheetContent side="right" className="h-dvh w-screen max-w-none p-0">
           <SheetHeader className="border-b bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
             <SheetTitle>{profileUiText.messages}</SheetTitle>
             <SheetDescription>{profileUiText.messagesDescription}</SheetDescription>
           </SheetHeader>
-          <div className="h-[calc(100vh-84px)] overflow-y-auto p-4">
+          <div className="h-[calc(100dvh-84px)] overflow-y-auto p-4">
             <ChatTab />
           </div>
         </SheetContent>
       </Sheet>
 
       <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-2xl">
+        <SheetContent side="right" className="h-dvh w-screen max-w-none p-0">
           <SheetHeader className="border-b bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
             <SheetTitle>{t.admin.settings}</SheetTitle>
             <SheetDescription>
@@ -2272,7 +2287,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
             </SheetDescription>
           </SheetHeader>
 
-          <div className="space-y-4 overflow-y-auto px-4 py-4 pb-6">
+          <div className="h-[calc(100dvh-84px)] space-y-4 overflow-y-auto px-4 py-4 pb-6">
             <div className="flex flex-wrap items-center justify-end gap-2">
               <IconButton
                 label={profileUiText.changePassword}
@@ -3230,6 +3245,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           <TableHead>{t.common.name}</TableHead>
                           <TableHead>{profileUiText.nickname}</TableHead>
                           <TableHead>{t.common.phone}</TableHead>
+                          <TableHead className="text-right">{profileUiText.balance}</TableHead>
+                          <TableHead className="text-right">{profileUiText.days}</TableHead>
                           <TableHead>{t.common.address}</TableHead>
                           <TableHead>Calories</TableHead>
                           <TableHead className="text-center">Orders</TableHead>
@@ -3254,6 +3271,32 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             <TableCell className="py-1.5 font-medium">{client.name}</TableCell>
                             <TableCell className="py-1.5 text-muted-foreground">{client.nickName || '-'}</TableCell>
                             <TableCell className="py-1.5">{client.phone}</TableCell>
+                            <TableCell className="py-1.5 text-right tabular-nums">
+                              {(() => {
+                                const finance = clientFinanceById[client.id]
+                                if (!finance || !Number.isFinite(finance.balance)) return isClientFinanceLoading ? '...' : '-'
+                                const balance = Math.round(finance.balance)
+                                return (
+                                  <span className={balance < 0 ? 'font-medium text-rose-600' : 'font-medium text-emerald-600'}>
+                                    {balance.toLocaleString(dateLocale)} UZS
+                                  </span>
+                                )
+                              })()}
+                            </TableCell>
+                            <TableCell className="py-1.5 text-right tabular-nums">
+                              {(() => {
+                                const finance = clientFinanceById[client.id]
+                                if (!finance || !Number.isFinite(finance.balance)) return isClientFinanceLoading ? '...' : '-'
+                                const daily = finance.dailyPrice || client.dailyPrice || 0
+                                if (!daily || daily <= 0) return '-'
+                                const days = Math.floor(finance.balance / daily)
+                                return (
+                                  <span className={days < 0 ? 'font-medium text-rose-600' : 'font-medium text-muted-foreground'}>
+                                    {days}
+                                  </span>
+                                )
+                              })()}
+                            </TableCell>
                             <TableCell className="py-1.5">{client.address}</TableCell>
                             <TableCell className="py-1.5">{client.calories} kcal</TableCell>
                             <TableCell className="py-1.5 text-center">
@@ -3308,7 +3351,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
                         {filteredClients.length === 0 && (
                           <TableRow>
-                            <TableCell colSpan={12} className="h-24 text-center text-muted-foreground">
+                            <TableCell colSpan={14} className="h-24 text-center text-muted-foreground">
                               <TabEmptyState
                                 title="Клиенты не найдены"
                                 description="Измените фильтры или поисковый запрос."
@@ -3356,6 +3399,37 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           <div className="flex items-start gap-3">
                             <MapPin className="mt-1 size-4 text-muted-foreground" />
                             <div className="text-sm">{client.address}</div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3 rounded-md border bg-muted/20 p-3">
+                            <div>
+                              <div className="text-xs text-muted-foreground">{profileUiText.balance}</div>
+                              <div className="mt-1 text-sm font-semibold tabular-nums">
+                                {(() => {
+                                  const finance = clientFinanceById[client.id]
+                                  if (!finance || !Number.isFinite(finance.balance)) return isClientFinanceLoading ? '...' : '-'
+                                  const balance = Math.round(finance.balance)
+                                  return (
+                                    <span className={balance < 0 ? 'text-rose-600' : 'text-emerald-600'}>
+                                      {balance.toLocaleString(dateLocale)} UZS
+                                    </span>
+                                  )
+                                })()}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-muted-foreground">{profileUiText.days}</div>
+                              <div className="mt-1 text-sm font-semibold tabular-nums text-muted-foreground">
+                                {(() => {
+                                  const finance = clientFinanceById[client.id]
+                                  if (!finance || !Number.isFinite(finance.balance)) return isClientFinanceLoading ? '...' : '-'
+                                  const daily = finance.dailyPrice || client.dailyPrice || 0
+                                  if (!daily || daily <= 0) return '-'
+                                  const days = Math.floor(finance.balance / daily)
+                                  return <span className={days < 0 ? 'text-rose-600' : undefined}>{days}</span>
+                                })()}
+                              </div>
+                            </div>
                           </div>
 
                           <div className="flex items-center gap-3">

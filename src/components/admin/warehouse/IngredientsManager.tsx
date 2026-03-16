@@ -15,6 +15,8 @@ interface Ingredient {
     name: string;
     amount: number;
     unit: string;
+    pricePerUnit?: number | null;
+    priceUnit?: string;
 }
 
 interface IngredientsManagerProps {
@@ -32,11 +34,16 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                 name: 'Название',
                 amountInStock: 'Количество (на складе)',
                 unit: 'Ед.',
+                price: 'Цена',
+                pricePerUnit: 'Цена за единицу (UZS)',
+                priceUnit: 'Ед. цены',
                 actions: 'Действия',
                 noIngredientsFound: 'Ингредиенты не найдены',
                 editIngredient: 'Редактировать ингредиент',
                 addIngredientTitle: 'Добавить ингредиент',
                 amountInitial: 'Количество (начальное)',
+                priceExample: 'Например: 35000',
+                priceUnitExample: 'kg, gr, ml, шт',
                 cancel: 'Отмена',
                 save: 'Сохранить',
                 exampleName: 'например: Рис',
@@ -61,11 +68,16 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                 name: 'Nomi',
                 amountInStock: 'Miqdor (omborda)',
                 unit: "O'lchov",
+                price: 'Narx',
+                pricePerUnit: 'Birlik narxi (UZS)',
+                priceUnit: 'Narx birligi',
                 actions: 'Amallar',
                 noIngredientsFound: 'Ingredient topilmadi',
                 editIngredient: 'Ingredientni tahrirlash',
                 addIngredientTitle: "Ingredient qo'shish",
                 amountInitial: "Miqdor (boshlang'ich)",
+                priceExample: 'Masalan: 35000',
+                priceUnitExample: 'kg, gr, ml, dona',
                 cancel: 'Bekor qilish',
                 save: 'Saqlash',
                 exampleName: 'masalan: Guruch',
@@ -89,11 +101,16 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
             name: 'Name',
             amountInStock: 'Amount (In Stock)',
             unit: 'Unit',
+            price: 'Price',
+            pricePerUnit: 'Price per unit (UZS)',
+            priceUnit: 'Price unit',
             actions: 'Actions',
             noIngredientsFound: 'No ingredients found',
             editIngredient: 'Edit Ingredient',
             addIngredientTitle: 'Add Ingredient',
             amountInitial: 'Amount (Initial)',
+            priceExample: 'Example: 35000',
+            priceUnitExample: 'kg, gr, ml, pcs',
             cancel: 'Cancel',
             save: 'Save',
             exampleName: 'e.g. Rice',
@@ -144,13 +161,24 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
             return;
         }
 
+        const pricePerUnit =
+            typeof currentIngredient.pricePerUnit === 'number' && Number.isFinite(currentIngredient.pricePerUnit)
+                ? currentIngredient.pricePerUnit
+                : null;
+
+        const payload: Partial<Ingredient> = {
+            ...currentIngredient,
+            pricePerUnit,
+            priceUnit: (currentIngredient.priceUnit || 'kg').trim() || 'kg',
+        };
+
         setIsSaving(true);
         try {
             const method = currentIngredient.id ? 'PUT' : 'POST';
             const res = await fetch('/api/admin/warehouse/ingredients', {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(currentIngredient),
+                body: JSON.stringify(payload),
             });
 
             if (res.ok) {
@@ -219,19 +247,20 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                             <TableHead>{uiText.name}</TableHead>
                             <TableHead>{uiText.amountInStock}</TableHead>
                             <TableHead>{uiText.unit}</TableHead>
+                            <TableHead>{uiText.price}</TableHead>
                             <TableHead className="text-right">{uiText.actions}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={4} className="text-center py-8">
+                                <TableCell colSpan={5} className="text-center py-8">
                                     <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                                 </TableCell>
                             </TableRow>
                         ) : filteredIngredients.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={4} className="text-center py-8 text-slate-500">
+                                <TableCell colSpan={5} className="text-center py-8 text-slate-500">
                                     {uiText.noIngredientsFound}
                                 </TableCell>
                             </TableRow>
@@ -241,6 +270,11 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                                     <TableCell className="font-medium">{ing.name}</TableCell>
                                     <TableCell>{ing.amount}</TableCell>
                                     <TableCell>{ing.unit}</TableCell>
+                                    <TableCell className="text-sm text-muted-foreground">
+                                        {typeof ing.pricePerUnit === 'number' && Number.isFinite(ing.pricePerUnit)
+                                            ? `${ing.pricePerUnit.toLocaleString('ru-RU')} UZS/${ing.priceUnit || 'kg'}`
+                                            : '-'}
+                                    </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
                                             <Button variant="ghost" size="icon" onClick={() => { setCurrentIngredient(ing); setIsDialogOpen(true); }}>
@@ -287,6 +321,30 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                                     value={currentIngredient.unit || 'gr'}
                                     onChange={(e) => setCurrentIngredient({ ...currentIngredient, unit: e.target.value })}
                                     placeholder={uiText.unitExample}
+                                />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>{uiText.pricePerUnit}</Label>
+                                <Input
+                                    inputMode="decimal"
+                                    value={typeof currentIngredient.pricePerUnit === 'number' ? String(currentIngredient.pricePerUnit) : ''}
+                                    onChange={(e) =>
+                                        setCurrentIngredient({
+                                            ...currentIngredient,
+                                            pricePerUnit: e.target.value.trim() === '' ? null : Number(e.target.value),
+                                        })
+                                    }
+                                    placeholder={uiText.priceExample}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>{uiText.priceUnit}</Label>
+                                <Input
+                                    value={currentIngredient.priceUnit || 'kg'}
+                                    onChange={(e) => setCurrentIngredient({ ...currentIngredient, priceUnit: e.target.value })}
+                                    placeholder={uiText.priceUnitExample}
                                 />
                             </div>
                         </div>

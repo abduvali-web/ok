@@ -7,6 +7,8 @@ interface IngredientInput {
     name: string
     amount: number
     unit: string
+    pricePerUnit?: number | null
+    priceUnit?: string
 }
 
 export async function GET(request: NextRequest) {
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body: IngredientInput = await request.json()
-        const { name, amount, unit } = body
+        const { name, amount, unit, pricePerUnit, priceUnit } = body
 
         if (!name) {
             return NextResponse.json({ error: 'Missing Name' }, { status: 400 })
@@ -45,7 +47,9 @@ export async function POST(request: NextRequest) {
             data: {
                 name,
                 amount: amount || 0,
-                unit: unit || 'gr'
+                unit: unit || 'gr',
+                pricePerUnit: typeof pricePerUnit === 'number' ? pricePerUnit : null,
+                priceUnit: priceUnit || 'kg',
             }
         })
 
@@ -64,7 +68,7 @@ export async function PUT(request: NextRequest) {
         }
 
         const body: IngredientInput = await request.json()
-        const { id, name, amount, unit } = body
+        const { id, name, amount, unit, pricePerUnit, priceUnit } = body
 
         if (!id) {
             return NextResponse.json({ error: 'Missing ID' }, { status: 400 })
@@ -75,7 +79,9 @@ export async function PUT(request: NextRequest) {
             data: {
                 name,
                 amount,
-                unit
+                unit,
+                pricePerUnit: typeof pricePerUnit === 'number' ? pricePerUnit : null,
+                priceUnit: priceUnit || 'kg',
             }
         })
 

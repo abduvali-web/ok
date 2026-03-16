@@ -354,6 +354,10 @@ model WarehouseItem {
   name      String   @unique
   amount    Float    @default(0)
   unit      String   @default("gr")
+  // Last known purchase price for this item (used for audit + inventory economics).
+  // `pricePerUnit` is in UZS per `priceUnit` (typically "kg").
+  pricePerUnit Float?
+  priceUnit    String  @default("kg")
   updatedAt DateTime @updatedAt
   
   @@map("warehouse_items")

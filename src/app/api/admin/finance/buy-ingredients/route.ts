@@ -81,15 +81,20 @@ export async function POST(request: Request) {
 
             // 3. Update Warehouse Stock
             for (const [name, amountToAdd] of Object.entries(inventoryUpdates)) {
+                const purchased = items.find((item) => item.name === name)
                 await tx.warehouseItem.upsert({
                     where: { name },
                     update: {
                         amount: { increment: amountToAdd },
+                        pricePerUnit: purchased ? purchased.costPerUnit : undefined,
+                        priceUnit: purchased ? purchased.unit : undefined,
                         updatedAt: new Date()
                     },
                     create: {
                         name,
                         amount: amountToAdd,
+                        pricePerUnit: purchased ? purchased.costPerUnit : null,
+                        priceUnit: purchased ? purchased.unit : 'kg',
                         unit: 'gr' // Default storing unit
                     }
                 });
