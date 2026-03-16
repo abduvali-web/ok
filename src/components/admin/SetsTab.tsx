@@ -33,6 +33,7 @@ import {
     Copy,
     Scale,
     Calendar,
+    ArrowLeft,
     ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -283,6 +284,11 @@ export function SetsTab() {
     const rowIconBtnGhostClass = `${rowIconBtnClass} text-slate-200 hover:text-white hover:bg-slate-700`;
     const rowIconBtnDeleteClass = `${rowIconBtnClass} text-red-200 hover:text-white hover:bg-red-600/30`;
 
+    type CalorieGroupsMeta = {
+        dayOrder?: string[];
+        groupOrder?: string[];
+    };
+
     const [sets, setSets] = useState<MenuSet[]>([]);
     const [selectedSet, setSelectedSet] = useState<MenuSet | null>(null);
     const [activeDay, setActiveDay] = useState<string>("1"); // Current day being edited (1-21)
@@ -312,11 +318,12 @@ export function SetsTab() {
         description: ''
     });
 
-    const [groupForm, setGroupForm] = useState<{ name: string; calories: number; price: string }>({
+    const [groupForm, setGroupForm] = useState<{ name: string; price: string }>({
         name: '',
-        calories: 2000,
         price: '',
     });
+
+    const [setsOrder, setSetsOrder] = useState<string[]>([]);
 
     // Load sets and dishes
     useEffect(() => {
@@ -327,6 +334,69 @@ export function SetsTab() {
         };
         init();
     }, []);
+
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem('warehouse_sets_order_v1');
+            if (!raw) return;
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+                setSetsOrder(parsed.filter((v) => typeof v === 'string'));
+            }
+        } catch {
+            // ignore
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!sets || sets.length === 0) return;
+        setSetsOrder((prev) => {
+            const known = new Set(prev);
+            const next = [...prev];
+            for (const s of sets) {
+                if (!known.has(s.id)) next.push(s.id);
+            }
+            try {
+                localStorage.setItem('warehouse_sets_order_v1', JSON.stringify(next));
+            } catch {
+                // ignore
+            }
+            return next;
+        });
+    }, [sets]);
+
+    const getMeta = (set: MenuSet | null): CalorieGroupsMeta => {
+        const base = set?.calorieGroups as any;
+        if (!base || typeof base !== 'object' || Array.isArray(base)) return {};
+        const meta = base._meta;
+        if (!meta || typeof meta !== 'object' || Array.isArray(meta)) return {};
+        return meta as CalorieGroupsMeta;
+    };
+
+    const getBaseGroups = (set: MenuSet | null) => {
+        const base =
+            set?.calorieGroups && !Array.isArray(set.calorieGroups)
+                ? (set.calorieGroups as any)
+                : {};
+        return base;
+    };
+
+    const getDayKeysFromGroups = (groups: any) => {
+        return Object.keys(groups || {})
+            .filter((k) => /^\d+$/.test(k))
+            .map((k) => String(parseInt(k, 10)))
+            .filter((k) => k !== 'NaN' && Number(k) > 0);
+    };
+
+    const moveInArray = <T,>(arr: T[], from: number, to: number) => {
+        if (from === to) return arr;
+        if (from < 0 || from >= arr.length) return arr;
+        if (to < 0 || to >= arr.length) return arr;
+        const next = [...arr];
+        const [item] = next.splice(from, 1);
+        next.splice(to, 0, item);
+        return next;
+    };
 
     const fetchSets = async () => {
         try {
@@ -571,13 +641,12 @@ export function SetsTab() {
         if (editingGroup) {
             setGroupForm({
                 name: editingGroup.group.name || '',
-                calories: typeof editingGroup.group.calories === 'number' ? editingGroup.group.calories : 2000,
                 price: typeof editingGroup.group.price === 'number' ? String(editingGroup.group.price) : '',
             });
             return;
         }
 
-        setGroupForm({ name: '', calories: 2000, price: '' });
+        setGroupForm({ name: '', price: '' });
     }, [editingGroup, isGroupModalOpen]);
 
     const makeGroupId = () => {
@@ -593,18 +662,19 @@ export function SetsTab() {
     const upsertGroup = async () => {
         if (!selectedSet) return;
 
-        const baseGroups =
-            selectedSet.calorieGroups && !Array.isArray(selectedSet.calorieGroups)
-                ? (selectedSet.calorieGroups as any)
-                : {};
+        const baseGroups = getBaseGroups(selectedSet);
+        const meta = getMeta(selectedSet);
 
         const name = (groupForm.name || '').trim();
-        const calories = Number(groupForm.calories);
         const price = groupForm.price.trim() === '' ? null : Number(groupForm.price);
+        const calories =
+            typeof editingGroup?.group?.calories === 'number' && Number.isFinite(editingGroup.group.calories)
+                ? editingGroup.group.calories
+                : 0;
 
         const nextId = editingGroup?.group?.id || makeGroupId();
 
-        const dayKeys = Object.keys(baseGroups);
+        const dayKeys = getDayKeysFromGroups(baseGroups);
         const ensuredKeys = dayKeys.length > 0 ? dayKeys : Array.from({ length: 21 }, (_, i) => String(i + 1));
 
         const nextGroups: Record<string, CalorieGroup[]> = {};
@@ -620,6 +690,14 @@ export function SetsTab() {
                 ];
             }
         }
+        nextGroups._meta = {
+            ...meta,
+            groupOrder: (() => {
+                const existing = Array.isArray(meta.groupOrder) ? meta.groupOrder.map(String) : [];
+                if (existing.includes(String(nextId))) return existing;
+                return [...existing, String(nextId)];
+            })(),
+        } as any;
 
         const updatedSet = { ...selectedSet, calorieGroups: nextGroups };
         setSelectedSet(updatedSet);
@@ -941,9 +1019,19 @@ export function SetsTab() {
 
     const visibleSets = useMemo(() => {
         const q = setSearch.trim().toLowerCase();
-        if (!q) return sets;
-        return sets.filter((s) => (s.name || '').toLowerCase().includes(q));
-    }, [setSearch, sets]);
+        const filtered = !q ? sets : sets.filter((s) => (s.name || '').toLowerCase().includes(q));
+
+        if (!setsOrder || setsOrder.length === 0) return filtered;
+        const idx = new Map<string, number>();
+        setsOrder.forEach((id, i) => idx.set(id, i));
+        return filtered.slice().sort((a, b) => {
+            const aI = idx.has(a.id) ? (idx.get(a.id) as number) : Number.MAX_SAFE_INTEGER;
+            const bI = idx.has(b.id) ? (idx.get(b.id) as number) : Number.MAX_SAFE_INTEGER;
+            if (aI !== bI) return aI - bI;
+            // Stable fallback: keep API order (createdAt desc)
+            return 0;
+        });
+    }, [setSearch, sets, setsOrder]);
 
     const currentDayDataRaw = getCurrentDayData();
     const currentDayData = useMemo(() => {
@@ -955,38 +1043,52 @@ export function SetsTab() {
     }, [currentDayDataRaw]);
     const hasDataForDay = currentDayData.length > 0;
 
-    const dayNumbers = useMemo(() => {
+    const dayKeys = useMemo(() => {
         if (!selectedSet || !selectedSet.calorieGroups || Array.isArray(selectedSet.calorieGroups)) {
-            return Array.from({ length: 21 }, (_, i) => i + 1);
+            return Array.from({ length: 21 }, (_, i) => String(i + 1));
         }
-        const keys = Object.keys(selectedSet.calorieGroups as any)
-            .map((k) => parseInt(k, 10))
-            .filter((n) => Number.isFinite(n) && n > 0)
-            .sort((a, b) => a - b);
-        return keys.length > 0 ? keys : Array.from({ length: 21 }, (_, i) => i + 1);
+
+        const base = getBaseGroups(selectedSet);
+        const meta = getMeta(selectedSet);
+        const existing = getDayKeysFromGroups(base).sort((a, b) => Number(a) - Number(b));
+        if (existing.length === 0) return Array.from({ length: 21 }, (_, i) => String(i + 1));
+
+        const order = Array.isArray(meta.dayOrder) ? meta.dayOrder.map(String) : [];
+        if (order.length === 0) return existing;
+
+        // Keep only existing keys, preserve order, then append any missing.
+        const existingSet = new Set(existing);
+        const next: string[] = [];
+        for (const k of order) if (existingSet.has(k)) next.push(k);
+        for (const k of existing) if (!next.includes(k)) next.push(k);
+        return next;
     }, [selectedSet]);
 
     const deleteDay = async (dayKey: string) => {
         if (!selectedSet) return;
-        if (dayNumbers.length <= 1) {
+        if (dayKeys.length <= 1) {
             toast.error(uiText.cantDeleteLastDay);
             return;
         }
         if (!confirm(uiText.confirmDeleteDay(dayKey))) return;
 
-        const baseGroups =
-            (selectedSet.calorieGroups && !Array.isArray(selectedSet.calorieGroups))
-                ? (selectedSet.calorieGroups as any)
-                : {};
+        const baseGroups = getBaseGroups(selectedSet);
+        const meta = getMeta(selectedSet);
 
         const nextGroups = { ...baseGroups };
         delete nextGroups[String(dayKey)];
+        // Keep meta consistent.
+        const nextMeta: CalorieGroupsMeta = {
+            ...meta,
+            dayOrder: Array.isArray(meta.dayOrder) ? meta.dayOrder.filter((k) => String(k) !== String(dayKey)) : undefined,
+        };
+        nextGroups._meta = nextMeta;
 
         const updatedSet = { ...selectedSet, calorieGroups: nextGroups };
         setSelectedSet(updatedSet);
         setSets((prev) => prev.map((s) => (s.id === updatedSet.id ? updatedSet : s)));
 
-        const remainingDays = dayNumbers.filter((d) => String(d) !== String(dayKey));
+        const remainingDays = dayKeys.filter((d) => String(d) !== String(dayKey));
         const nextActive = remainingDays.length > 0 ? String(remainingDays[0]) : '1';
         setActiveDay(nextActive);
 
@@ -999,16 +1101,18 @@ export function SetsTab() {
         if (!groupId) return;
         if (!confirm(uiText.confirmDeleteGroup)) return;
 
-        const baseGroups =
-            (selectedSet.calorieGroups && !Array.isArray(selectedSet.calorieGroups))
-                ? (selectedSet.calorieGroups as any)
-                : {};
+        const baseGroups = getBaseGroups(selectedSet);
+        const meta = getMeta(selectedSet);
 
         const nextGroups: Record<string, CalorieGroup[]> = {};
-        for (const dayKey of Object.keys(baseGroups)) {
+        for (const dayKey of getDayKeysFromGroups(baseGroups)) {
             const dayArr: CalorieGroup[] = Array.isArray(baseGroups[dayKey]) ? baseGroups[dayKey] : [];
             nextGroups[dayKey] = dayArr.filter((g) => (g.id || String(g.calories ?? '')) !== groupId);
         }
+        nextGroups._meta = {
+            ...meta,
+            groupOrder: Array.isArray(meta.groupOrder) ? meta.groupOrder.filter((id) => String(id) !== String(groupId)) : undefined,
+        } as any;
 
         const updatedSet = { ...selectedSet, calorieGroups: nextGroups };
         setSelectedSet(updatedSet);
@@ -1023,6 +1127,80 @@ export function SetsTab() {
 
         await saveSet(updatedSet);
         toast.success(uiText.deleted);
+    };
+
+    const moveSelectedSet = (dir: -1 | 1) => {
+        if (!selectedSet) return;
+        setSetsOrder((prev) => {
+            const order = prev.length > 0 ? [...prev] : sets.map((s) => s.id);
+            const idx = order.indexOf(selectedSet.id);
+            if (idx === -1) return prev;
+            const next = moveInArray(order, idx, idx + dir);
+            try {
+                localStorage.setItem('warehouse_sets_order_v1', JSON.stringify(next));
+            } catch {
+                // ignore
+            }
+            return next;
+        });
+    };
+
+    const moveSelectedDay = async (dir: -1 | 1) => {
+        if (!selectedSet) return;
+        const baseGroups = getBaseGroups(selectedSet);
+        const meta = getMeta(selectedSet);
+        const existing = getDayKeysFromGroups(baseGroups);
+        const order = Array.isArray(meta.dayOrder) && meta.dayOrder.length > 0 ? meta.dayOrder.map(String) : dayKeys.slice();
+        const cleaned = order.filter((k) => existing.includes(String(k)));
+        const idx = cleaned.indexOf(String(activeDay));
+        if (idx === -1) return;
+        const nextOrder = moveInArray(cleaned, idx, idx + dir);
+
+        const nextGroups = { ...baseGroups, _meta: { ...meta, dayOrder: nextOrder } };
+        const updatedSet = { ...selectedSet, calorieGroups: nextGroups as any };
+        setSelectedSet(updatedSet);
+        setSets((prev) => prev.map((s) => (s.id === updatedSet.id ? updatedSet : s)));
+        await saveSet(updatedSet);
+    };
+
+    const moveSelectedGroup = async (dir: -1 | 1) => {
+        if (!selectedSet) return;
+        if (!activeGroupTab) return;
+        const baseGroups = getBaseGroups(selectedSet);
+        const meta = getMeta(selectedSet);
+
+        const existingDayKeys = getDayKeysFromGroups(baseGroups);
+        const current = currentDayData.map((g) => String(g.id));
+        const order = Array.isArray(meta.groupOrder) && meta.groupOrder.length > 0 ? meta.groupOrder.map(String) : current;
+        const cleaned = order.filter((id) => current.includes(String(id)));
+        const idx = cleaned.indexOf(String(activeGroupTab));
+        if (idx === -1) return;
+        const nextOrder = moveInArray(cleaned, idx, idx + dir);
+
+        const reorderDay = (arr: CalorieGroup[]) => {
+            const withIds = (arr || []).map((g, idx) => ({ ...g, id: g.id || String(g.calories ?? idx) }));
+            const map = new Map(withIds.map((g) => [String(g.id), g]));
+            const next: CalorieGroup[] = [];
+            for (const id of nextOrder) {
+                const g = map.get(String(id));
+                if (g) next.push(g);
+            }
+            for (const g of withIds) {
+                if (!next.find((x) => String((x as any).id) === String((g as any).id))) next.push(g);
+            }
+            return next;
+        };
+
+        const nextGroups: any = {};
+        for (const dayKey of existingDayKeys) {
+            nextGroups[dayKey] = reorderDay(Array.isArray(baseGroups[dayKey]) ? baseGroups[dayKey] : []);
+        }
+        nextGroups._meta = { ...meta, groupOrder: nextOrder };
+
+        const updatedSet = { ...selectedSet, calorieGroups: nextGroups };
+        setSelectedSet(updatedSet);
+        setSets((prev) => prev.map((s) => (s.id === updatedSet.id ? updatedSet : s)));
+        await saveSet(updatedSet);
     };
 
     useEffect(() => {
@@ -1092,10 +1270,32 @@ export function SetsTab() {
                                 label={uiText.newSet}
                                 variant="ghost"
                                 iconSize="md"
-                                className={rowIconBtnGhostClass}
+                                className={`${rowIconBtnClass} bg-white text-slate-900 hover:bg-slate-100`}
                                 onClick={() => setIsCreateModalOpen(true)}
                             >
                                 <Plus className="h-4 w-4" />
+                            </IconButton>
+
+                            <IconButton
+                                label="Move left"
+                                variant="ghost"
+                                iconSize="md"
+                                className={rowIconBtnGhostClass}
+                                disabled={!selectedSet || visibleSets.findIndex((s) => s.id === selectedSet.id) <= 0}
+                                onClick={() => moveSelectedSet(-1)}
+                            >
+                                <ArrowLeft className="h-4 w-4" />
+                            </IconButton>
+
+                            <IconButton
+                                label="Move right"
+                                variant="ghost"
+                                iconSize="md"
+                                className={rowIconBtnGhostClass}
+                                disabled={!selectedSet || visibleSets.findIndex((s) => s.id === selectedSet.id) === -1 || visibleSets.findIndex((s) => s.id === selectedSet.id) >= visibleSets.length - 1}
+                                onClick={() => moveSelectedSet(1)}
+                            >
+                                <ArrowRight className="h-4 w-4" />
                             </IconButton>
 
                             <IconButton
@@ -1122,13 +1322,13 @@ export function SetsTab() {
                                         <Calendar className="w-4 h-4" />
                                         {uiText.days}:
                                     </span>
-                                    {dayNumbers.map(day => (
+                                    {dayKeys.map((day) => (
                                         <button
                                             key={day}
                                             onClick={() => setActiveDay(day.toString())}
                                             className={`
                                                 w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-all
-                                                ${activeDay === day.toString()
+                                                ${activeDay === String(day)
                                                     ? 'bg-primary text-white shadow-lg scale-110'
                                                     : 'hover:bg-slate-700 text-slate-300'}
                                             `}
@@ -1140,19 +1340,18 @@ export function SetsTab() {
                                         label={uiText.addDay}
                                         variant="ghost"
                                         iconSize="md"
-                                        className={rowIconBtnGhostClass}
+                                        className={`${rowIconBtnClass} bg-primary text-white hover:bg-primary/90`}
                                         onClick={() => void (async () => {
                                             if (!selectedSet) return
-                                            const maxDay = Math.max(...dayNumbers)
+                                            const maxDay = Math.max(...dayKeys.map((d) => Number(d)).filter((n) => Number.isFinite(n) && n > 0))
                                             const nextDay = maxDay + 1
                                             if (nextDay > DEFAULT_MAX_DAYS) {
                                                 toast.error(uiText.maxDaysReached(DEFAULT_MAX_DAYS))
                                                 return
                                             }
 
-                                            const baseGroups = (selectedSet.calorieGroups && !Array.isArray(selectedSet.calorieGroups))
-                                                ? (selectedSet.calorieGroups as any)
-                                                : {}
+                                            const baseGroups = getBaseGroups(selectedSet)
+                                            const meta = getMeta(selectedSet)
 
                                             const nextDayData =
                                                 buildStandardDayData(nextDay) ??
@@ -1163,6 +1362,14 @@ export function SetsTab() {
                                             const updatedGroups = {
                                                 ...baseGroups,
                                                 [String(nextDay)]: nextDayData,
+                                                _meta: {
+                                                    ...meta,
+                                                    dayOrder: (() => {
+                                                        const existing = Array.isArray(meta.dayOrder) ? meta.dayOrder.map(String) : dayKeys.slice();
+                                                        if (existing.includes(String(nextDay))) return existing;
+                                                        return [...existing, String(nextDay)];
+                                                    })(),
+                                                },
                                             }
 
                                             const updatedSet = { ...selectedSet, calorieGroups: updatedGroups }
@@ -1176,11 +1383,33 @@ export function SetsTab() {
                                     </IconButton>
 
                                     <IconButton
+                                        label="Move left"
+                                        variant="ghost"
+                                        iconSize="md"
+                                        className={rowIconBtnGhostClass}
+                                        disabled={dayKeys.indexOf(String(activeDay)) <= 0}
+                                        onClick={() => void moveSelectedDay(-1)}
+                                    >
+                                        <ArrowLeft className="h-4 w-4" />
+                                    </IconButton>
+
+                                    <IconButton
+                                        label="Move right"
+                                        variant="ghost"
+                                        iconSize="md"
+                                        className={rowIconBtnGhostClass}
+                                        disabled={dayKeys.indexOf(String(activeDay)) === -1 || dayKeys.indexOf(String(activeDay)) >= dayKeys.length - 1}
+                                        onClick={() => void moveSelectedDay(1)}
+                                    >
+                                        <ArrowRight className="h-4 w-4" />
+                                    </IconButton>
+
+                                    <IconButton
                                         label={uiText.delete}
                                         variant="ghost"
                                         iconSize="md"
                                         className={rowIconBtnDeleteClass}
-                                        disabled={dayNumbers.length <= 1}
+                                        disabled={dayKeys.length <= 1}
                                         onClick={() => void deleteDay(activeDay)}
                                     >
                                         <Trash2 className="h-4 w-4" />
@@ -1227,23 +1456,24 @@ export function SetsTab() {
                                         </div>
                                     ) : (
                                         <Tabs value={activeGroupTab} onValueChange={setActiveGroupTab} className="h-full flex flex-col">
-                                            <div className="px-6 py-2 border-b flex items-center gap-2">
-                                                <TabsList className="flex flex-wrap w-full justify-start gap-1">
-                                                    {currentDayData
-                                                        .slice()
-                                                        .sort((a, b) => (a.calories ?? 0) - (b.calories ?? 0))
-                                                        .map((g) => (
-                                                            <TabsTrigger key={g.id} value={g.id as string} className="px-3">
-                                                                {g.name || `${g.calories} kcal`}
-                                                            </TabsTrigger>
-                                                        ))}
+                                            <div className="px-6 py-2 border-b flex items-center gap-2 bg-slate-900 text-white">
+                                                <TabsList className="flex flex-wrap w-full justify-start gap-1 bg-transparent">
+                                                    {currentDayData.map((g, idx) => (
+                                                        <TabsTrigger
+                                                            key={g.id}
+                                                            value={g.id as string}
+                                                            className="px-3 data-[state=active]:bg-white data-[state=active]:text-slate-900"
+                                                        >
+                                                            {(g.name || '').trim() || `${uiText.group} ${idx + 1}`}
+                                                        </TabsTrigger>
+                                                    ))}
                                                 </TabsList>
 
                                                 <IconButton
                                                     label={uiText.newGroup}
                                                     variant="outline"
                                                     iconSize="md"
-                                                    className={rowIconBtnClass}
+                                                    className={`${rowIconBtnClass} bg-white text-slate-900 hover:bg-slate-100`}
                                                     onClick={() => {
                                                         setEditingGroup(null)
                                                         setIsGroupModalOpen(true)
@@ -1253,10 +1483,32 @@ export function SetsTab() {
                                                 </IconButton>
 
                                                 <IconButton
+                                                    label="Move left"
+                                                    variant="outline"
+                                                    iconSize="md"
+                                                    className={`${rowIconBtnClass} border-white/20 text-white hover:bg-white/10`}
+                                                    disabled={!activeGroupTab || currentDayData.findIndex((g) => String(g.id) === String(activeGroupTab)) <= 0}
+                                                    onClick={() => void moveSelectedGroup(-1)}
+                                                >
+                                                    <ArrowLeft className="h-4 w-4" />
+                                                </IconButton>
+
+                                                <IconButton
+                                                    label="Move right"
+                                                    variant="outline"
+                                                    iconSize="md"
+                                                    className={`${rowIconBtnClass} border-white/20 text-white hover:bg-white/10`}
+                                                    disabled={!activeGroupTab || currentDayData.findIndex((g) => String(g.id) === String(activeGroupTab)) === -1 || currentDayData.findIndex((g) => String(g.id) === String(activeGroupTab)) >= currentDayData.length - 1}
+                                                    onClick={() => void moveSelectedGroup(1)}
+                                                >
+                                                    <ArrowRight className="h-4 w-4" />
+                                                </IconButton>
+
+                                                <IconButton
                                                     label={uiText.delete}
                                                     variant="outline"
                                                     iconSize="md"
-                                                    className={rowIconBtnClass}
+                                                    className={`${rowIconBtnClass} border-red-300/30 text-red-100 hover:bg-red-600/30`}
                                                     disabled={!activeGroupTab}
                                                     onClick={() => void deleteGroupById(activeGroupTab)}
                                                 >
@@ -1264,10 +1516,7 @@ export function SetsTab() {
                                                 </IconButton>
                                             </div>
 
-                                            {currentDayData
-                                                .slice()
-                                                .sort((a, b) => (a.calories ?? 0) - (b.calories ?? 0))
-                                                .map((group) => {
+                                            {currentDayData.map((group) => {
                                                     const groupIdx = currentDayData.findIndex((g) => g.id === group.id)
                                                     const totalKcal = getGroupCaloriesTotal(group)
 
@@ -1464,23 +1713,13 @@ export function SetsTab() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="grid gap-2">
-                                <Label>{uiText.groupCalories}</Label>
-                                <Input
-                                    type="number"
-                                    value={groupForm.calories}
-                                    onChange={(e) => setGroupForm((prev) => ({ ...prev, calories: Number(e.target.value) }))}
-                                />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>{uiText.groupPrice}</Label>
-                                <Input
-                                    inputMode="decimal"
-                                    value={groupForm.price}
-                                    onChange={(e) => setGroupForm((prev) => ({ ...prev, price: e.target.value }))}
-                                />
-                            </div>
+                        <div className="grid gap-2">
+                            <Label>{uiText.groupPrice}</Label>
+                            <Input
+                                inputMode="decimal"
+                                value={groupForm.price}
+                                onChange={(e) => setGroupForm((prev) => ({ ...prev, price: e.target.value }))}
+                            />
                         </div>
                     </div>
 
