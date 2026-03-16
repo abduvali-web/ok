@@ -6,8 +6,18 @@ import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import {
   ArrowLeft,
-  Bot,
   CircleUser,
+  Users,
+  ShoppingCart,
+  Receipt,
+  Globe,
+  Layers,
+  CalendarDays,
+  UtensilsCrossed,
+  Warehouse,
+  ChefHat,
+  Activity,
+  ClipboardCheck,
   Settings,
   MessageSquare,
   LogOut,
@@ -104,6 +114,40 @@ type WorkbookLabels = {
 }
 
 const EXCEL_CELL_TEXT_LIMIT = 32767
+
+function SheetIcon({ id, className }: { id: string; className?: string }) {
+  const props = { className }
+  switch (id) {
+    case 'summary':
+      return <Table2 {...props} />
+    case 'admins':
+      return <CircleUser {...props} />
+    case 'customers':
+      return <Users {...props} />
+    case 'orders':
+      return <ShoppingCart {...props} />
+    case 'transactions':
+      return <Receipt {...props} />
+    case 'websites':
+      return <Globe {...props} />
+    case 'menuSets':
+      return <Layers {...props} />
+    case 'menus':
+      return <CalendarDays {...props} />
+    case 'dishes':
+      return <UtensilsCrossed {...props} />
+    case 'warehouse':
+      return <Warehouse {...props} />
+    case 'cookingPlans':
+      return <ChefHat {...props} />
+    case 'actionLogs':
+      return <Activity {...props} />
+    case 'orderAudit':
+      return <ClipboardCheck {...props} />
+    default:
+      return <Table2 {...props} />
+  }
+}
 
 type WorkbookOverflowRow = {
   sheet: string
@@ -392,7 +436,6 @@ export default function DatabasePage() {
         sheetsCount: 'листов',
         refresh: 'Обновить',
         downloadAllSheets: 'Скачать все листы',
-        askTambo: 'Спросить Tambo',
         visibleSheets: 'Видимые листы',
         totalRows: 'Всего строк',
         totalColumns: 'Всего колонок',
@@ -425,8 +468,6 @@ export default function DatabasePage() {
         overflowHeaderValue: 'Значение',
         overflowValueMarker: 'ПОЛНОЕ_ЗНАЧЕНИЕ_В_ЛИСТЕ_ПЕРЕПОЛНЕНИЯ',
         columnPrefix: 'колонка',
-        tamboPrompt: (targetLabel: string) =>
-          `Проанализируй ${targetLabel} в Neon DB среднего администратора и помоги с выгрузками, сводками или исправлениями.`,
         addRow: 'Добавить строку',
         saveRow: 'Сохранить',
         cancelRow: 'Отмена',
@@ -476,7 +517,6 @@ export default function DatabasePage() {
         sheetsCount: 'sahifa',
         refresh: 'Yangilash',
         downloadAllSheets: 'Barcha sahifalarni yuklash',
-        askTambo: 'Tambo’dan so‘rash',
         visibleSheets: 'Ko‘rinadigan sahifalar',
         totalRows: 'Jami qatorlar',
         totalColumns: 'Jami ustunlar',
@@ -509,8 +549,6 @@ export default function DatabasePage() {
         overflowHeaderValue: 'Qiymat',
         overflowValueMarker: 'TOʻLIQ_QIYMAT_TOSHISH_SAHIFASIDA',
         columnPrefix: 'ustun',
-        tamboPrompt: (targetLabel: string) =>
-          `O'rta administrator Neon DB'sida ${targetLabel} tahlil qiling va yuklab olish, sarhisob qilish yoki tuzatishlarda yordam bering.`,
         addRow: 'Qator qo\'shish',
         saveRow: 'Saqlash',
         cancelRow: 'Bekor qilish',
@@ -559,7 +597,6 @@ export default function DatabasePage() {
       sheetsCount: 'sheets',
       refresh: 'Refresh',
       downloadAllSheets: 'Download all sheets',
-      askTambo: 'Ask Tambo',
       visibleSheets: 'Visible sheets',
       totalRows: 'Total rows',
       totalColumns: 'Total columns',
@@ -592,8 +629,6 @@ export default function DatabasePage() {
       overflowHeaderValue: 'Value',
       overflowValueMarker: 'FULL_VALUE_IN_OVERFLOW_SHEET',
       columnPrefix: 'column',
-      tamboPrompt: (targetLabel: string) =>
-        `Analyze the ${targetLabel} in the middle admin Neon DB space and help with data extracts, summaries, or fixes.`,
       addRow: 'Add Row',
       saveRow: 'Save',
       cancelRow: 'Cancel',
@@ -1277,17 +1312,6 @@ export default function DatabasePage() {
     })
   }
 
-  const handleOpenTambo = () => {
-    const targetLabel = currentTable ? tDb(currentTable.title) : uiText.workspaceTitle
-    window.dispatchEvent(
-      new CustomEvent('tambo:open-chat', {
-        detail: {
-          prompt: uiText.tamboPrompt(targetLabel),
-        },
-      })
-    )
-  }
-
   if (isLoading) {
     return (
       <div className="mx-auto flex min-h-[60vh] w-full max-w-7xl items-center justify-center px-4">
@@ -1381,9 +1405,6 @@ export default function DatabasePage() {
               >
                 {isImportingAllSheets ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               </IconButton>
-              <IconButton label={uiText.askTambo} iconSize="md" onClick={handleOpenTambo}>
-                <Bot className="h-4 w-4" />
-              </IconButton>
               <LanguageSwitcher />
 
               <DropdownMenu>
@@ -1421,13 +1442,25 @@ export default function DatabasePage() {
             <SearchPanel value={tableQuery} onChange={setTableQuery} placeholder={uiText.searchTables} />
 
             <TabsList className="w-full justify-start overflow-x-auto">
-              <TabsTrigger value="summary" className="gap-1.5">
-                <Table2 className="h-4 w-4" />
-                {uiText.summary}
+              <TabsTrigger
+                value="summary"
+                title={uiText.summary}
+                aria-label={uiText.summary}
+                className="h-9 w-9 shrink-0 px-0"
+              >
+                <SheetIcon id="summary" className="h-4 w-4" />
+                <span className="sr-only">{uiText.summary}</span>
               </TabsTrigger>
               {visibleTables.map((table) => (
-                <TabsTrigger key={table.id} value={table.id}>
-                  <span className="max-w-[220px] truncate">{tDb(table.title)}</span>
+                <TabsTrigger
+                  key={table.id}
+                  value={table.id}
+                  title={tDb(table.title)}
+                  aria-label={tDb(table.title)}
+                  className="h-9 w-9 shrink-0 px-0"
+                >
+                  <SheetIcon id={table.id} className="h-4 w-4" />
+                  <span className="sr-only">{tDb(table.title)}</span>
                 </TabsTrigger>
               ))}
             </TabsList>

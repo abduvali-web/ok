@@ -998,6 +998,18 @@ export function SetsTab() {
         return a;
     };
 
+    const formatUzs = (value: number) => {
+        const v = typeof value === 'number' && Number.isFinite(value) ? value : 0;
+        return new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(Math.round(v));
+    };
+
+    // Compact format for tight labels (e.g. group tabs): 84000 -> "84k".
+    const formatUzsCompact = (value: number) => {
+        const v = typeof value === 'number' && Number.isFinite(value) ? value : 0;
+        if (Math.abs(v) >= 1000) return `${Math.round(v / 1000)}k`;
+        return String(Math.round(v));
+    };
+
     const getDishCalories = (dish: SetDish) => {
         const ingredients = dish.customIngredients ? dish.customIngredients : getOriginalIngredients(dish.dishId);
         let total = 0;
@@ -1041,6 +1053,11 @@ export function SetsTab() {
         }));
     }, [currentDayDataRaw]);
     const hasDataForDay = currentDayData.length > 0;
+
+    const activeDayGroup = useMemo(() => {
+        if (!activeGroupTab) return null;
+        return currentDayData.find((g) => String(g.id) === String(activeGroupTab)) ?? null;
+    }, [activeGroupTab, currentDayData]);
 
     const dayKeys = useMemo(() => {
         if (!selectedSet || !selectedSet.calorieGroups || Array.isArray(selectedSet.calorieGroups)) {
@@ -1386,6 +1403,18 @@ export function SetsTab() {
                                     </div>
 
                                     <div className="flex items-center gap-2">
+                                        {activeDayGroup ? (
+                                            <div className="hidden sm:flex items-center gap-2">
+                                                <Badge variant="outline" className="text-[10px] tabular-nums">
+                                                    {activeDayGroup.calories} kcal
+                                                </Badge>
+                                                {typeof activeDayGroup.price === 'number' && Number.isFinite(activeDayGroup.price) ? (
+                                                    <Badge variant="secondary" className="text-[10px] tabular-nums">
+                                                        {formatUzs(activeDayGroup.price)} UZS
+                                                    </Badge>
+                                                ) : null}
+                                            </div>
+                                        ) : null}
                                         <IconButton
                                             label={selectedSet.isActive ? 'Active' : 'Activate'}
                                             onClick={() => toggleSetStatus(selectedSet)}
@@ -1419,7 +1448,14 @@ export function SetsTab() {
                                                             value={g.id as string}
                                                             className="px-3 data-[state=active]:bg-white data-[state=active]:text-slate-900"
                                                         >
-                                                            {(g.name || '').trim() || `${uiText.group} ${idx + 1}`}
+                                                            <span className="max-w-[160px] truncate">
+                                                                {(g.name || '').trim() || `${uiText.group} ${idx + 1}`}
+                                                            </span>
+                                                            {typeof g.price === 'number' && Number.isFinite(g.price) ? (
+                                                                <span className="ml-1 text-[10px] tabular-nums opacity-80">
+                                                                    {formatUzsCompact(g.price)}
+                                                                </span>
+                                                            ) : null}
                                                         </TabsTrigger>
                                                     ))}
                                                 </TabsList>
@@ -1470,14 +1506,17 @@ export function SetsTab() {
                                                                         <span className="font-semibold text-lg truncate">
                                                                             {group.name || `${group.calories} kcal`}
                                                                         </span>
+                                                                        <Badge variant="outline" className="text-[10px] tabular-nums">
+                                                                            {group.calories} kcal
+                                                                        </Badge>
+                                                                        {typeof group.price === 'number' && Number.isFinite(group.price) ? (
+                                                                            <Badge variant="secondary" className="text-[10px] tabular-nums">
+                                                                                {formatUzs(group.price)} UZS
+                                                                            </Badge>
+                                                                        ) : null}
                                                                         <Badge variant="outline" className="text-[10px]">
                                                                             {Math.round(totalKcal)} kcal
                                                                         </Badge>
-                                                                        {typeof group.price === 'number' && Number.isFinite(group.price) ? (
-                                                                            <Badge variant="secondary" className="text-[10px]">
-                                                                                {group.price}
-                                                                            </Badge>
-                                                                        ) : null}
                                                                     </div>
                                                                 </div>
 
