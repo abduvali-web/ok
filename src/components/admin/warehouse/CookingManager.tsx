@@ -64,11 +64,33 @@ interface CookingManagerProps {
     orders?: OrderData[];
     onCook?: () => void;
     orderInfo?: { total: number; byCalorie: Record<number, number> };
+    availableSets?: MenuSet[];
+    selectedSetId?: string;
+    onSelectedSetIdChange?: (next: string) => void;
+    selectedCalorieGroup?: string;
+    onSelectedCalorieGroupChange?: (next: string) => void;
+    showHeader?: boolean;
+    showContextInfo?: boolean;
 }
 
 const CALORIE_GROUPS = [1200, 1600, 2000, 2500, 3000];
 
-export function CookingManager({ date, menuNumber, clientsByCalorie: globalClientsByCalorie, clients = [], orders = [], onCook, orderInfo: _orderInfo }: CookingManagerProps) {
+export function CookingManager({
+    date,
+    menuNumber,
+    clientsByCalorie: globalClientsByCalorie,
+    clients = [],
+    orders = [],
+    onCook,
+    orderInfo: _orderInfo,
+    availableSets: externalAvailableSets,
+    selectedSetId: controlledSelectedSetId,
+    onSelectedSetIdChange,
+    selectedCalorieGroup: controlledSelectedCalorieGroup,
+    onSelectedCalorieGroupChange,
+    showHeader = true,
+    showContextInfo = true,
+}: CookingManagerProps) {
     const { language } = useLanguage();
 
     const uiText = useMemo(() => {
@@ -155,14 +177,24 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
     const [dishes, setDishes] = useState<Dish[]>([]);
     const [loading, setLoading] = useState(true);
     const [cookingPlan, setCookingPlan] = useState<any>(null); // { cookedStats: { dishId: { 1200: 5 } } }
-    const [selectedCalorieGroup, setSelectedCalorieGroup] = useState<string>('all');
+    const [internalSelectedCalorieGroup, setInternalSelectedCalorieGroup] = useState<string>('all');
     const [cookingAmounts, setCookingAmounts] = useState<Record<string, Record<string, string>>>({});
     const [isCooking, setIsCooking] = useState(false);
 
     // Custom set integration
-    const [availableSets, setAvailableSets] = useState<MenuSet[]>([]);
-    const [selectedSetId, setSelectedSetId] = useState<string>('active');
-    const safeAvailableSets = Array.isArray(availableSets) ? availableSets : [];
+    const [availableSets, setAvailableSets] = useState<MenuSet[]>(() => (Array.isArray(externalAvailableSets) ? externalAvailableSets : []));
+    const [internalSelectedSetId, setInternalSelectedSetId] = useState<string>('active');
+    const safeAvailableSets = Array.isArray(externalAvailableSets) ? externalAvailableSets : availableSets;
+
+    const selectedSetId = controlledSelectedSetId ?? internalSelectedSetId;
+    const setSelectedSetId = onSelectedSetIdChange ?? setInternalSelectedSetId;
+
+    const selectedCalorieGroup = controlledSelectedCalorieGroup ?? internalSelectedCalorieGroup;
+    const setSelectedCalorieGroup = onSelectedCalorieGroupChange ?? setInternalSelectedCalorieGroup;
+
+    useEffect(() => {
+        if (Array.isArray(externalAvailableSets)) setAvailableSets(externalAvailableSets);
+    }, [externalAvailableSets]);
 
     // Memoize the effective caloric distribution based on selected set
     const clientsByCalorie = useMemo(() => {
@@ -228,29 +260,36 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
 
     useEffect(() => {
         fetchData();
-    }, [menuNumber, date, selectedSetId]);
+        // Do not depend on `safeAvailableSets` here: when we fetch sets internally it updates state,
+        // which would cause a fetch loop.
+    }, [menuNumber, date, selectedSetId, externalAvailableSets]);
 
     const fetchData = async () => {
         setLoading(true);
         try {
             // 1. Fetch Active Sets first
             let currentActiveSet: MenuSet | null = null;
-            try {
-                const setsRes = await fetch('/api/admin/sets');
-                if (setsRes.ok) {
-                    const raw = await setsRes.json().catch(() => null);
-                    const sets: MenuSet[] = Array.isArray(raw) ? (raw as MenuSet[]) : [];
-                    setAvailableSets(sets);
+            if (Array.isArray(externalAvailableSets)) {
+                if (selectedSetId === 'active') currentActiveSet = safeAvailableSets.find(s => s.isActive) || null;
+                else currentActiveSet = safeAvailableSets.find(s => s.id === selectedSetId) || null;
+            } else {
+                try {
+                    const setsRes = await fetch('/api/admin/sets');
+                    if (setsRes.ok) {
+                        const raw = await setsRes.json().catch(() => null);
+                        const sets: MenuSet[] = Array.isArray(raw) ? (raw as MenuSet[]) : [];
+                        setAvailableSets(sets);
 
-                    // Logic Update: determine active set based on selection or global status
-                    if (selectedSetId === 'active') {
-                        currentActiveSet = sets.find(s => s.isActive) || null;
-                    } else {
-                        currentActiveSet = sets.find(s => s.id === selectedSetId) || null;
+                        // Logic Update: determine active set based on selection or global status
+                        if (selectedSetId === 'active') {
+                            currentActiveSet = sets.find(s => s.isActive) || null;
+                        } else {
+                            currentActiveSet = sets.find(s => s.id === selectedSetId) || null;
+                        }
                     }
+                } catch (e) {
+                    console.warn('Failed to fetch sets', e);
                 }
-            } catch (e) {
-                console.warn('Failed to fetch sets', e);
             }
 
             // 2. Determine dishes based on Set or Standard Menu
@@ -486,89 +525,92 @@ export function CookingManager({ date, menuNumber, clientsByCalorie: globalClien
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h3 className="text-lg font-medium flex items-center gap-2">
-                        {uiText.title}
-                        {activeSet && (
-                            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
-                                <UtensilsCrossed className="w-3 h-3 mr-1" />
-                                {uiText.customSet}: {activeSet.name}
-                            </Badge>
-                        )}
-                    </h3>
-                    <p className="text-sm text-slate-500">
-                        {activeSet
-                            ? uiText.activeSetDescription
-                            : uiText.standardMenuDescription}
-                    </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto items-start sm:items-center">
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <span className="text-sm text-slate-500 whitespace-nowrap">{uiText.setLabel}</span>
-                        <Select value={selectedSetId} onValueChange={setSelectedSetId}>
-                            <SelectTrigger className="w-full sm:w-[180px]">
-                                <SelectValue placeholder={uiText.selectSet} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="active">{uiText.autoActiveGlobal}</SelectItem>
-                                {safeAvailableSets.map(s => (
-                                    <SelectItem key={s.id} value={s.id}>
-                                        {s.name} {s.isActive ? '✓' : ''}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+            {showHeader ? (
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 className="text-lg font-medium flex items-center gap-2">
+                            {uiText.title}
+                            {activeSet && (
+                                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                                    <UtensilsCrossed className="w-3 h-3 mr-1" />
+                                    {uiText.customSet}: {activeSet.name}
+                                </Badge>
+                            )}
+                        </h3>
+                        <p className="text-sm text-slate-500">
+                            {activeSet
+                                ? uiText.activeSetDescription
+                                : uiText.standardMenuDescription}
+                        </p>
                     </div>
 
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <span className="text-sm text-slate-500 whitespace-nowrap">{uiText.filterLabel}</span>
-                        <Select value={selectedCalorieGroup} onValueChange={setSelectedCalorieGroup}>
-                            <SelectTrigger className="w-full sm:w-[120px]">
-                                <SelectValue placeholder={uiText.all} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{uiText.allCalories}</SelectItem>
-                                {CALORIE_GROUPS.map(c => (
-                                    <SelectItem key={c} value={c.toString()}>{c} kcal</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-            </div>
-
-            {/* Order Context Info */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-2">
-                    <Users className="w-4 h-4 text-blue-600" />
-                    <span className="font-medium text-blue-800">{uiText.ordersForTomorrow}</span>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                        {Object.values(clientsByCalorie).reduce((a, b) => a + b, 0)} {uiText.portions}
-                    </Badge>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    {CALORIE_GROUPS.map(cal => {
-                        const count = clientsByCalorie[cal] || 0;
-                        if (count === 0) return null;
-                        return (
-                            <Badge key={cal} variant="outline" className="bg-card">
-                                {cal} ккал: <span className="font-bold ml-1">{count}</span>
-                            </Badge>
-                        );
-                    })}
-                    {Object.values(clientsByCalorie).every(v => v === 0) && (
-                        <span className="text-sm text-blue-600">{uiText.noOrdersGlobal}</span>
-                    )}
-                    {activeSet && selectedSetId !== 'active' && activeSet.id !== selectedSetId && (
-                        <div className="w-full text-xs text-amber-600 mt-1 flex items-center">
-                            <AlertTriangle className="w-3 h-3 mr-1" />
-                            Внимание: Выбранный сет отличается от активного. Заказы отображаются для Активного сета.
+                    <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto items-start sm:items-center">
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <span className="text-sm text-slate-500 whitespace-nowrap">{uiText.setLabel}</span>
+                            <Select value={selectedSetId} onValueChange={setSelectedSetId}>
+                                <SelectTrigger className="w-full sm:w-[180px]">
+                                    <SelectValue placeholder={uiText.selectSet} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="active">{uiText.autoActiveGlobal}</SelectItem>
+                                    {safeAvailableSets.map(s => (
+                                        <SelectItem key={s.id} value={s.id}>
+                                            {s.name} {s.isActive ? '✓' : ''}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
-                    )}
+
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <span className="text-sm text-slate-500 whitespace-nowrap">{uiText.filterLabel}</span>
+                            <Select value={selectedCalorieGroup} onValueChange={setSelectedCalorieGroup}>
+                                <SelectTrigger className="w-full sm:w-[120px]">
+                                    <SelectValue placeholder={uiText.all} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{uiText.allCalories}</SelectItem>
+                                    {CALORIE_GROUPS.map(c => (
+                                        <SelectItem key={c} value={c.toString()}>{c} kcal</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            ) : null}
+
+            {showContextInfo ? (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Users className="w-4 h-4 text-blue-600" />
+                        <span className="font-medium text-blue-800">{uiText.ordersForTomorrow}</span>
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                            {Object.values(clientsByCalorie).reduce((a, b) => a + b, 0)} {uiText.portions}
+                        </Badge>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {CALORIE_GROUPS.map(cal => {
+                            const count = clientsByCalorie[cal] || 0;
+                            if (count === 0) return null;
+                            return (
+                                <Badge key={cal} variant="outline" className="bg-card">
+                                    {cal} ккал: <span className="font-bold ml-1">{count}</span>
+                                </Badge>
+                            );
+                        })}
+                        {Object.values(clientsByCalorie).every(v => v === 0) && (
+                            <span className="text-sm text-blue-600">{uiText.noOrdersGlobal}</span>
+                        )}
+                        {activeSet && selectedSetId !== 'active' && activeSet.id !== selectedSetId && (
+                            <div className="w-full text-xs text-amber-600 mt-1 flex items-center">
+                                <AlertTriangle className="w-3 h-3 mr-1" />
+                                Внимание: Выбранный сет отличается от активного. Заказы отображаются для Активного сета.
+                            </div>
+                        )}
+                    </div>
+                </div>
+            ) : null}
 
             <div className="bg-card rounded-lg border border-border overflow-x-auto">
                 <Table>

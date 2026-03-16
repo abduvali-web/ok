@@ -35,8 +35,14 @@ import { CalendarRangeSelector } from '@/components/admin/dashboard/shared/Calen
 import type { DateRange } from 'react-day-picker'
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SetsTab } from './SetsTab';
-import { SectionMetrics } from '@/components/admin/dashboard/shared/SectionMetrics';
 import { TabEmptyState } from '@/components/admin/dashboard/shared/TabEmptyState';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
 
 interface WarehouseTabProps {
     className?: string;
@@ -86,6 +92,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         if (language === 'ru') {
             return {
                 setsTab: 'Сеты',
+                activeSet: 'Активный (авто)',
                 planned: 'Запланировано',
                 cooked: 'Приготовлено',
                 remaining: 'Осталось',
@@ -102,6 +109,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         if (language === 'uz') {
             return {
                 setsTab: 'Setlar',
+                activeSet: 'Faol (avto)',
                 planned: 'Reja',
                 cooked: 'Pishirildi',
                 remaining: 'Qoldi',
@@ -117,6 +125,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         }
         return {
             setsTab: 'Sets',
+            activeSet: 'Active (auto)',
             planned: 'Planned',
             cooked: 'Cooked',
             remaining: 'Remaining',
@@ -165,11 +174,16 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         const tomorrow = new Date()
         tomorrow.setDate(tomorrow.getDate() + 1)
         tomorrow.setHours(0, 0, 0, 0)
-        return tomorrow.toISOString().split('T')[0]
+        const yyyy = tomorrow.getFullYear()
+        const mm = String(tomorrow.getMonth() + 1).padStart(2, '0')
+        const dd = String(tomorrow.getDate()).padStart(2, '0')
+        return `${yyyy}-${mm}-${dd}`
     })
     const [cookingPlans, setCookingPlans] = useState<Array<{ date: string; menuNumber: number; dishes: any; cookedStats: any }>>([])
     const [isCookingPlansLoading, setIsCookingPlansLoading] = useState(false)
     const [cookingPlansError, setCookingPlansError] = useState<string>('')
+    const [cookingSelectedSetId, setCookingSelectedSetId] = useState<string>('active')
+    const [cookingSelectedCalorieGroup, setCookingSelectedCalorieGroup] = useState<string>('all')
 
     const toLocalIsoDate = useCallback((d: Date) => {
         const yyyy = d.getFullYear()
@@ -188,7 +202,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
 
         const limit = 45 // keep UI & calculations bounded
         while (cursor.getTime() <= end.getTime() && dates.length < limit) {
-            dates.push(cursor.toISOString().split('T')[0])
+            dates.push(toLocalIsoDate(cursor))
             cursor.setDate(cursor.getDate() + 1)
         }
 
@@ -205,11 +219,11 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
 
         const limit = 31 // keep the UI usable (month max)
         while (cursor.getTime() <= end.getTime() && dates.length < limit) {
-            dates.push(cursor.toISOString().split('T')[0])
+            dates.push(toLocalIsoDate(cursor))
             cursor.setDate(cursor.getDate() + 1)
         }
         return dates
-    }, [cookingRange])
+    }, [cookingRange, toLocalIsoDate])
 
     useEffect(() => {
         if (!cookingRangeDays.length) return
@@ -328,13 +342,13 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             3000: 0,
         };
 
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = toLocalIsoDate(date);
         const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
 
         // 1. Try to get distribution from ACTUAL ORDERS first (Source of Truth)
         const dayOrders = allOrders.filter(o => {
-            const oDate = o.deliveryDate ? new Date(o.deliveryDate).toISOString().split('T')[0] : '';
-            return oDate === dateStr;
+            const oDate = String(o.deliveryDate ?? '').slice(0, 10)
+            return oDate === dateStr
         });
 
         if (dayOrders.length > 0) {
@@ -375,7 +389,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         });
 
         return distribution;
-    }, [allClients, allOrders]);
+    }, [allClients, allOrders, toLocalIsoDate]);
 
     // Fetch client calorie distribution from database
     const fetchClientCalories = useCallback(async () => {
@@ -410,12 +424,12 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                 1200: 0, 1600: 0, 2000: 0, 2500: 0, 3000: 0,
             };
             const dayOfWeek = tomorrow.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-            const tomorrowDateStr = tomorrow.toISOString().split('T')[0];
+            const tomorrowDateStr = toLocalIsoDate(tomorrow);
 
             // Try using orders first (they're the source of truth)
             const tomorrowOrders = orders.filter((o: any) => {
-                const oDate = o.deliveryDate ? new Date(o.deliveryDate).toISOString().split('T')[0] : '';
-                return oDate === tomorrowDateStr;
+                const oDate = String(o.deliveryDate ?? '').slice(0, 10)
+                return oDate === tomorrowDateStr
             });
 
             if (tomorrowOrders.length > 0) {
@@ -499,7 +513,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             const today = new Date();
             const tomorrow = new Date(today);
             tomorrow.setDate(today.getDate() + 1);
-            const dateStr = tomorrow.toISOString().split('T')[0];
+            const dateStr = toLocalIsoDate(tomorrow);
 
             const planResponse = await fetch(`/api/admin/warehouse/cooking-plan?date=${dateStr}`);
             if (planResponse.ok) {
@@ -570,7 +584,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         // Determine target date (Tomorrow)
         const date = new Date();
         date.setDate(date.getDate() + 1);
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = toLocalIsoDate(date);
         const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
 
         // Filter valid orders
@@ -879,41 +893,6 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         [clientsByCalorie]
     );
 
-    const warehouseMetrics = useMemo(() => ([
-        {
-            id: 'clients',
-            label: t.admin.clients,
-            value: allClients.length,
-            helper: t.admin.activeClients,
-            icon: <Users className="size-4 text-primary" />,
-            tone: 'primary' as const,
-        },
-        {
-            id: 'orders',
-            label: t.admin.orders,
-            value: allOrders.length,
-            helper: t.warehouse.cooking,
-            icon: <ShoppingCart className="size-4 text-emerald-600" />,
-            tone: 'success' as const,
-        },
-        {
-            id: 'portions',
-            label: t.warehouse.clients,
-            value: totalPlannedPortions,
-            helper: `${t.warehouse.menuFor} ${tomorrowMenuNumber}`,
-            icon: <ChefHat className="size-4 text-amber-600" />,
-            tone: 'warning' as const,
-        },
-        {
-            id: 'ingredients',
-            label: t.warehouse.requiredIngredients,
-            value: calculatedIngredients.size,
-            helper: t.warehouse.calculator,
-            icon: <Package className="size-4 text-muted-foreground" />,
-            tone: 'neutral' as const,
-        },
-    ]), [allClients.length, allOrders.length, calculatedIngredients.size, t.admin.activeClients, t.admin.clients, t.admin.orders, t.warehouse.calculator, t.warehouse.clients, t.warehouse.cooking, t.warehouse.menuFor, t.warehouse.requiredIngredients, tomorrowMenuNumber, totalPlannedPortions]);
-
     return (
         <div className={`space-y-6 ${className}`}>
             <Card className="glass-card">
@@ -944,9 +923,6 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="mb-6">
-                        <SectionMetrics items={warehouseMetrics} />
-                    </div>
                     <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
                         <TabsList className="grid w-full grid-cols-5 mb-6">
                             <TabsTrigger value="cooking" className="flex items-center gap-2">
@@ -970,14 +946,44 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
 
                         {/* Cooking Tab - Dishes to prepare for tomorrow */}
                         <TabsContent value="cooking" className="space-y-4">
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                                <CalendarRangeSelector
-                                    value={cookingRange}
-                                    onChange={setCookingRange}
-                                    uiText={calendarRangeUiText}
-                                    locale={dateLocale}
-                                    className="min-w-[240px]"
-                                />
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <CalendarRangeSelector
+                                        value={cookingRange}
+                                        onChange={setCookingRange}
+                                        uiText={calendarRangeUiText}
+                                        locale={dateLocale}
+                                        className="w-[240px] max-w-full min-w-0"
+                                    />
+
+                                    <Select value={cookingSelectedSetId} onValueChange={setCookingSelectedSetId}>
+                                        <SelectTrigger className="h-9 w-[220px] max-w-full">
+                                            <SelectValue placeholder={auditUiText.setsTab} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="active">{auditUiText.activeSet}</SelectItem>
+                                            {availableSets.map((s) => (
+                                                <SelectItem key={String(s.id)} value={String(s.id)}>
+                                                    {s.name} {s.isActive ? '✓' : ''}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+
+                                    <Select value={cookingSelectedCalorieGroup} onValueChange={setCookingSelectedCalorieGroup}>
+                                        <SelectTrigger className="h-9 w-[140px]">
+                                            <SelectValue placeholder={t.warehouse.kcal} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">{t.admin.all}</SelectItem>
+                                            {[1200, 1600, 2000, 2500, 3000].map((c) => (
+                                                <SelectItem key={c} value={String(c)}>
+                                                    {c} {t.warehouse.kcal}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
 
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                     <span>{auditUiText.planned}: <span className="font-semibold text-foreground">{cookingTotals.planned}</span></span>
@@ -1015,21 +1021,6 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 </div>
                             ) : null}
 
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-                                <strong>{t.warehouse.cookingInfo.replace('{number}', selectedCookingMenuNumber.toString())}</strong>
-                            </div>
-
-                            {/* Client distribution info */}
-                            <div className="grid grid-cols-5 gap-2 p-3 bg-muted/30 rounded-lg">
-                                {Object.entries(clientsByCalorie).map(([cal, count]) => (
-                                    <div key={cal} className="text-center">
-                                        <div className="text-xs text-slate-500">{cal} {t.warehouse.kcal}</div>
-                                        <div className="font-semibold text-lg">{count}</div>
-                                        <div className="text-xs text-slate-400">{t.warehouse.clients}</div>
-                                    </div>
-                                ))}
-                            </div>
-
                             {/* NEW: Detailed Cooking Manager */}
                             <CookingManager
                                 date={selectedCookingDateISO}
@@ -1037,6 +1028,13 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 clientsByCalorie={clientsByCalorie}
                                 clients={allClients}
                                 orders={allOrders}
+                                availableSets={availableSets}
+                                selectedSetId={cookingSelectedSetId}
+                                onSelectedSetIdChange={setCookingSelectedSetId}
+                                selectedCalorieGroup={cookingSelectedCalorieGroup}
+                                onSelectedCalorieGroupChange={setCookingSelectedCalorieGroup}
+                                showHeader={false}
+                                showContextInfo={false}
                                 onCook={() => { fetchData(); void refreshCookingPlansForRange(); }} // Refresh inventory + audit summary on cook
                                 orderInfo={{
                                     total: Object.values(clientsByCalorie).reduce((a, b) => a + b, 0),
