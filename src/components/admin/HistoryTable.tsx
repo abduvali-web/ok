@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { format } from 'date-fns'
 import { enUS, ru, uz } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Loader2, RefreshCw, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, Search } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { IconButton } from '@/components/ui/icon-button'
+import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Table,
@@ -212,14 +212,9 @@ export function HistoryTable({
             <CardTitle>{t.admin.actionHistory}</CardTitle>
             <CardDescription>{t.admin.totalRecords}: {total}</CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => void fetchLogs()} disabled={isLoading}>
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </Button>
-          </div>
         </div>
 
-        <div className="grid gap-2 md:grid-cols-[minmax(0,220px)_auto_1fr]">
+        <div className="grid gap-2 md:grid-cols-[minmax(0,220px)_auto_1fr_auto]">
           {users.length > 0 ? (
             <Select value={selectedUser} onValueChange={setSelectedUser}>
               <SelectTrigger className="border-border bg-background">
@@ -262,6 +257,15 @@ export function HistoryTable({
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder={t.admin.searchPlaceholder || 'Search logs'}
               className="border-border bg-background pl-9"
+            />
+          </div>
+
+          <div className="flex items-center justify-end">
+            <RefreshIconButton
+              label={profileUiText?.refresh ?? 'Refresh'}
+              onClick={() => void fetchLogs()}
+              isLoading={isLoading}
+              iconSize="sm"
             />
           </div>
         </div>

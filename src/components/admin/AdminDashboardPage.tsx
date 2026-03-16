@@ -18,7 +18,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import {
   Dialog,
   DialogContent,
@@ -116,6 +115,7 @@ import {
 import { MobileSidebar } from '@/components/MobileSidebar'
 import { MobileTabIndicator } from '@/components/MobileTabIndicator'
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
+import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import type { DateRange } from 'react-day-picker'
 
 const OrdersTable = dynamic(
@@ -337,6 +337,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const [selectedBinClients, setSelectedBinClients] = useState<Set<string>>(new Set())
   const [binOrdersSearch, setBinOrdersSearch] = useState('')
   const [binClientsSearch, setBinClientsSearch] = useState('')
+  const [isBinOrdersRefreshing, setIsBinOrdersRefreshing] = useState(false)
+  const [isBinClientsRefreshing, setIsBinClientsRefreshing] = useState(false)
 
   const {
     meRole,
@@ -359,6 +361,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const fetchData = () => refreshAll()
   const fetchBinClients = () => refreshBinClients()
   const fetchBinOrders = () => refreshBinOrders()
+
+  const [isDashboardRefreshing, setIsDashboardRefreshing] = useState(false)
+  const handleRefreshAll = useCallback(async () => {
+    setIsDashboardRefreshing(true)
+    try {
+      await Promise.resolve(refreshAll())
+    } finally {
+      setIsDashboardRefreshing(false)
+    }
+  }, [refreshAll])
 
   const visibleBinOrders = useMemo(() => {
     const q = binOrdersSearch.trim().toLowerCase()
@@ -388,6 +400,24 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       return hay.includes(q)
     })
   }, [binClients, binClientsSearch])
+
+  const handleRefreshBinOrders = useCallback(async () => {
+    setIsBinOrdersRefreshing(true)
+    try {
+      await Promise.resolve(fetchBinOrders())
+    } finally {
+      setIsBinOrdersRefreshing(false)
+    }
+  }, [fetchBinOrders])
+
+  const handleRefreshBinClients = useCallback(async () => {
+    setIsBinClientsRefreshing(true)
+    try {
+      await Promise.resolve(fetchBinClients())
+    } finally {
+      setIsBinClientsRefreshing(false)
+    }
+  }, [fetchBinClients])
 
   useEffect(() => {
     if (activeTab !== 'clients') return
@@ -2301,115 +2331,119 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         </div>
       </header>
 
-      <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}>
-        <SheetContent side="right" className="h-dvh w-screen max-w-none p-0">
-          <SheetHeader className="border-b bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-            <SheetTitle>{profileUiText.messages}</SheetTitle>
-            <SheetDescription>{profileUiText.messagesDescription}</SheetDescription>
-          </SheetHeader>
-          <div className="h-[calc(100dvh-84px)] overflow-y-auto p-4">
-            <ChatCenter />
+      <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+        <DialogContent className="h-[min(92dvh,920px)] max-w-5xl gap-0 p-0">
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="border-b bg-background/80 px-4 py-3 backdrop-blur">
+              <DialogTitle>{profileUiText.messages}</DialogTitle>
+              <DialogDescription>{profileUiText.messagesDescription}</DialogDescription>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <ChatCenter />
+            </div>
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
-      <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <SheetContent side="right" className="h-dvh w-screen max-w-none p-0">
-          <SheetHeader className="border-b bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-            <SheetTitle>{t.admin.settings}</SheetTitle>
-            <SheetDescription>
-              {profileUiText.warehouseStartPoint} / {profileUiText.database}
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className="h-[calc(100dvh-84px)] space-y-4 overflow-y-auto px-4 py-4 pb-6">
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              <IconButton
-                label={profileUiText.changePassword}
-                onClick={() => setIsChangePasswordOpen(true)}
-                variant="outline"
-                iconSize="md"
-              >
-                <User className="h-4 w-4" />
-              </IconButton>
+      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <DialogContent className="h-[min(92dvh,920px)] max-w-6xl gap-0 p-0">
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="border-b bg-background/80 px-4 py-3 backdrop-blur">
+              <DialogTitle>{t.admin.settings}</DialogTitle>
+              <DialogDescription>
+                {profileUiText.warehouseStartPoint} / {profileUiText.database}
+              </DialogDescription>
             </div>
 
-            {!isLowAdminView && <SiteBuilderCard />}
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 pb-6">
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <IconButton
+                  label={profileUiText.changePassword}
+                  onClick={() => setIsChangePasswordOpen(true)}
+                  variant="outline"
+                  iconSize="md"
+                >
+                  <User className="h-4 w-4" />
+                </IconButton>
+              </div>
 
-            <Card className="border-border/70">
-              <CardHeader>
-                <CardTitle>{profileUiText.warehouseStartPoint}</CardTitle>
-                <CardDescription>{profileUiText.warehouseStartPointDescription}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid gap-2">
-                  <Label htmlFor="warehousePointSettings">
-                    {profileUiText.warehouseInputLabel}
-                    {isWarehouseReadOnly && (
-                      <span className="ml-2 text-xs text-muted-foreground">{profileUiText.readOnly}</span>
-                    )}
-                  </Label>
-                  <Input
-                    id="warehousePointSettings"
-                    value={warehouseInput}
-                    onChange={(event) => handleWarehouseInputChange(event.target.value)}
-                    onBlur={() => void handleWarehouseInputBlur()}
-                    placeholder={profileUiText.warehousePlaceholder}
-                    disabled={isWarehouseReadOnly || isWarehouseLoading || isWarehouseSaving}
-                  />
-                  <div className="text-xs text-muted-foreground">
-                    {warehousePoint
-                      ? `${profileUiText.current}: ${warehousePoint.lat.toFixed(6)}, ${warehousePoint.lng.toFixed(6)}`
-                      : `${profileUiText.current}: ${profileUiText.notConfigured}`}
-                    {warehousePreview && (
-                      <span className="ml-2 text-muted-foreground/80">
-                        {profileUiText.preview}: {warehousePreview.lat.toFixed(6)}, {warehousePreview.lng.toFixed(6)}
-                      </span>
-                    )}
+              {!isLowAdminView && <SiteBuilderCard />}
+
+              <Card className="border-border/70">
+                <CardHeader>
+                  <CardTitle>{profileUiText.warehouseStartPoint}</CardTitle>
+                  <CardDescription>{profileUiText.warehouseStartPointDescription}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid gap-2">
+                    <Label htmlFor="warehousePointSettings">
+                      {profileUiText.warehouseInputLabel}
+                      {isWarehouseReadOnly && (
+                        <span className="ml-2 text-xs text-muted-foreground">{profileUiText.readOnly}</span>
+                      )}
+                    </Label>
+                    <Input
+                      id="warehousePointSettings"
+                      value={warehouseInput}
+                      onChange={(event) => handleWarehouseInputChange(event.target.value)}
+                      onBlur={() => void handleWarehouseInputBlur()}
+                      placeholder={profileUiText.warehousePlaceholder}
+                      disabled={isWarehouseReadOnly || isWarehouseLoading || isWarehouseSaving}
+                    />
+                    <div className="text-xs text-muted-foreground">
+                      {warehousePoint
+                        ? `${profileUiText.current}: ${warehousePoint.lat.toFixed(6)}, ${warehousePoint.lng.toFixed(6)}`
+                        : `${profileUiText.current}: ${profileUiText.notConfigured}`}
+                      {warehousePreview && (
+                        <span className="ml-2 text-muted-foreground/80">
+                          {profileUiText.preview}: {warehousePreview.lat.toFixed(6)}, {warehousePreview.lng.toFixed(6)}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                <div className="h-48 w-full overflow-hidden rounded-md border bg-muted/20">
-                  <WarehouseStartPointPickerMap
-                    value={warehousePreview ?? warehousePoint}
-                    disabled={isWarehouseReadOnly || isWarehouseLoading || isWarehouseSaving}
-                    onChange={handleWarehouseMapPick}
-                  />
-                </div>
+                  <div className="h-48 w-full overflow-hidden rounded-md border bg-muted/20">
+                    <WarehouseStartPointPickerMap
+                      value={warehousePreview ?? warehousePoint}
+                      disabled={isWarehouseReadOnly || isWarehouseLoading || isWarehouseSaving}
+                      onChange={handleWarehouseMapPick}
+                    />
+                  </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <IconButton
-                    label={profileUiText.refresh}
-                    variant="outline"
-                    iconSize="md"
-                    onClick={() => void refreshWarehousePoint()}
-                    disabled={isWarehouseLoading || isWarehouseSaving}
-                  >
-                    <RefreshCw className={isWarehouseLoading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />
-                  </IconButton>
-                  <IconButton
-                    label={profileUiText.useMyLocation}
-                    variant="outline"
-                    iconSize="md"
-                    onClick={handleUseMyLocation}
-                    disabled={isWarehouseReadOnly || isWarehouseSaving || isWarehouseLoading || isWarehouseGeoLocating}
-                  >
-                    <LocateFixed className="h-4 w-4" />
-                  </IconButton>
-                  <IconButton
-                    label={isWarehouseSaving ? profileUiText.saving : profileUiText.saveLocation}
-                    iconSize="md"
-                    onClick={() => void handleSaveWarehousePoint()}
-                    disabled={isWarehouseReadOnly || isWarehouseSaving || isWarehouseLoading || !warehouseInput.trim()}
-                  >
-                    <Save className="h-4 w-4" />
-                  </IconButton>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="flex flex-wrap gap-2">
+                    <IconButton
+                      label={profileUiText.refresh}
+                      variant="outline"
+                      iconSize="md"
+                      onClick={() => void refreshWarehousePoint()}
+                      disabled={isWarehouseLoading || isWarehouseSaving}
+                    >
+                      <RefreshCw className={isWarehouseLoading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />
+                    </IconButton>
+                    <IconButton
+                      label={profileUiText.useMyLocation}
+                      variant="outline"
+                      iconSize="md"
+                      onClick={handleUseMyLocation}
+                      disabled={isWarehouseReadOnly || isWarehouseSaving || isWarehouseLoading || isWarehouseGeoLocating}
+                    >
+                      <LocateFixed className="h-4 w-4" />
+                    </IconButton>
+                    <IconButton
+                      label={isWarehouseSaving ? profileUiText.saving : profileUiText.saveLocation}
+                      iconSize="md"
+                      onClick={() => void handleSaveWarehousePoint()}
+                      disabled={isWarehouseReadOnly || isWarehouseSaving || isWarehouseLoading || !warehouseInput.trim()}
+                    >
+                      <Save className="h-4 w-4" />
+                    </IconButton>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       {/* Mobile Sidebar Navigation */}
       <MobileSidebar
@@ -2563,6 +2597,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       showShiftButtons={false}
                       locale={dateLocale}
                       profileUiText={profileUiText}
+                    />
+                    <RefreshIconButton
+                      label={profileUiText.refresh}
+                      onClick={() => void handleRefreshAll()}
+                      isLoading={isLoading || isDashboardRefreshing}
+                      iconSize="md"
                     />
                     <Button
                       onClick={() => setIsCreateOrderModalOpen(true)}
@@ -2869,6 +2909,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       applySelectedPeriod={applySelectedPeriod}
                       locale={dateLocale}
                       profileUiText={profileUiText}
+                    />
+                    <RefreshIconButton
+                      label={profileUiText.refresh}
+                      onClick={() => void handleRefreshAll()}
+                      isLoading={isLoading || isDashboardRefreshing}
+                      iconSize="md"
                     />
                     <Button
                       size="icon"
@@ -3563,6 +3609,13 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       />
                     </div>
 
+                    <RefreshIconButton
+                      label={profileUiText.refresh}
+                      onClick={() => void handleRefreshBinOrders()}
+                      isLoading={isBinOrdersRefreshing}
+                      iconSize="md"
+                    />
+
                     <div className="relative">
                       <IconButton
                         label={`${t.admin.restoreSelected} (${selectedOrders.size})`}
@@ -3625,6 +3678,13 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         className="pl-9"
                       />
                     </div>
+
+                    <RefreshIconButton
+                      label={profileUiText.refresh}
+                      onClick={() => void handleRefreshBinClients()}
+                      isLoading={isBinClientsRefreshing}
+                      iconSize="md"
+                    />
 
                     <div className="relative">
                       <IconButton

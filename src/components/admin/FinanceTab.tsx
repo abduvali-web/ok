@@ -47,6 +47,7 @@ import { getAllIngredients } from '@/lib/menuData';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector';
+import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import type { DateRange } from 'react-day-picker'
 
 interface FinanceTabProps {
@@ -121,6 +122,7 @@ export function FinanceTab({
     const [salaryAdmins, setSalaryAdmins] = useState<AdminSalaryBalanceRow[]>([])
     const [isSalaryAdminsLoading, setIsSalaryAdminsLoading] = useState(false)
     const [selectedSalaryAdminId, setSelectedSalaryAdminId] = useState('')
+    const [isFinanceRefreshing, setIsFinanceRefreshing] = useState(false)
 
     const visibleHistory = useMemo(() => {
         if (!selectedPeriod?.from) return history
@@ -193,6 +195,15 @@ export function FinanceTab({
             toast.error('Ошибка загрузки данных финансов');
         }
     };
+
+    const handleRefreshFinance = async () => {
+        setIsFinanceRefreshing(true)
+        try {
+            await Promise.resolve(fetchCompanyFinance())
+        } finally {
+            setIsFinanceRefreshing(false)
+        }
+    }
 
     const fetchClients = async () => {
         try {
@@ -547,6 +558,13 @@ export function FinanceTab({
                                             profileUiText={profileUiText}
                                         />
                                     )}
+
+                                    <RefreshIconButton
+                                        label={profileUiText?.refresh ?? 'Refresh'}
+                                        onClick={() => void handleRefreshFinance()}
+                                        isLoading={isFinanceRefreshing}
+                                        iconSize="md"
+                                    />
 
                                     {/* Category filter removed: search + date period are the primary audit controls. */}
                                 </div>

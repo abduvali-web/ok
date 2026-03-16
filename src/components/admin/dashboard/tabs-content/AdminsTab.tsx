@@ -15,6 +15,7 @@ import { AllowedTabsPicker } from '@/components/admin/dashboard/AllowedTabsPicke
 import { FormField } from '@/components/admin/dashboard/shared/FormField'
 import { EntityStatusBadge } from '@/components/admin/dashboard/shared/EntityStatusBadge'
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
+import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import type { DateRange } from 'react-day-picker'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { fetchApi } from '@/lib/api-client'
@@ -118,6 +119,7 @@ export function AdminsTab({
   const [pendingActions, setPendingActions] = useState<Record<string, PendingAction>>({})
   const [selectedAdminIds, setSelectedAdminIds] = useState<Set<string>>(() => new Set())
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [isBulkMutating, setIsBulkMutating] = useState(false)
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
@@ -424,6 +426,15 @@ export function AdminsTab({
     }
   }, [onRefresh, selectedAdminsSnapshot, setPendingAction, t.common.error])
 
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true)
+    try {
+      await Promise.resolve(onRefresh())
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [onRefresh])
+
   return (
     <>
       <TabsContent value="admins" className="space-y-4">
@@ -436,7 +447,7 @@ export function AdminsTab({
               </div>
               <div className="flex w-full flex-wrap items-center justify-end gap-2 lg:w-auto">
                 {applySelectedDate && (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) && profileUiText && (
-                  <div className="basis-full sm:basis-auto sm:mr-auto">
+                  <div className="flex basis-full items-center gap-2 sm:basis-auto sm:mr-auto">
                     <CalendarDateSelector
                       selectedDate={selectedDate || null}
                       applySelectedDate={applySelectedDate}
@@ -447,8 +458,22 @@ export function AdminsTab({
                       locale={calendarLocale}
                       profileUiText={profileUiText}
                     />
+                    <RefreshIconButton
+                      label={profileUiText?.refresh ?? 'Refresh'}
+                      onClick={() => void handleRefresh()}
+                      isLoading={isRefreshing}
+                      iconSize="md"
+                    />
                   </div>
                 )}
+                {!(applySelectedDate && (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) && profileUiText) ? (
+                  <RefreshIconButton
+                    label={profileUiText?.refresh ?? 'Refresh'}
+                    onClick={() => void handleRefresh()}
+                    isLoading={isRefreshing}
+                    iconSize="md"
+                  />
+                ) : null}
                 {!isLowAdminView && (
                   <>
                     <Button

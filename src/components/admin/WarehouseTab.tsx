@@ -32,6 +32,7 @@ import {
 import { IngredientsManager } from './warehouse/IngredientsManager';
 import { CookingManager } from './warehouse/CookingManager'; // Integrated
 import { CalendarRangeSelector } from '@/components/admin/dashboard/shared/CalendarRangeSelector'
+import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import type { DateRange } from 'react-day-picker'
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SetsTab } from './SetsTab';
@@ -93,6 +94,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             return {
                 setsTab: 'Сеты',
                 activeSet: 'Активный (авто)',
+                refreshCookingPlans: '????????',
                 planned: 'Запланировано',
                 cooked: 'Приготовлено',
                 remaining: 'Осталось',
@@ -183,7 +185,6 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     const [isCookingPlansLoading, setIsCookingPlansLoading] = useState(false)
     const [cookingPlansError, setCookingPlansError] = useState<string>('')
     const [cookingSelectedSetId, setCookingSelectedSetId] = useState<string>('active')
-    const [cookingSelectedCalorieGroup, setCookingSelectedCalorieGroup] = useState<string>('all')
 
     const toLocalIsoDate = useCallback((d: Date) => {
         const yyyy = d.getFullYear()
@@ -970,19 +971,15 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                         </SelectContent>
                                     </Select>
 
-                                    <Select value={cookingSelectedCalorieGroup} onValueChange={setCookingSelectedCalorieGroup}>
-                                        <SelectTrigger className="h-9 w-[140px]">
-                                            <SelectValue placeholder={t.warehouse.kcal} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">{t.admin.all}</SelectItem>
-                                            {[1200, 1600, 2000, 2500, 3000].map((c) => (
-                                                <SelectItem key={c} value={String(c)}>
-                                                    {c} {t.warehouse.kcal}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <RefreshIconButton
+                                        label={auditUiText.refreshCookingPlans ?? 'Refresh'}
+                                        onClick={() => {
+                                            fetchData()
+                                            void refreshCookingPlansForRange()
+                                        }}
+                                        isLoading={isCookingPlansLoading}
+                                        iconSize="md"
+                                    />
                                 </div>
 
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -1031,8 +1028,8 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 availableSets={availableSets}
                                 selectedSetId={cookingSelectedSetId}
                                 onSelectedSetIdChange={setCookingSelectedSetId}
-                                selectedCalorieGroup={cookingSelectedCalorieGroup}
-                                onSelectedCalorieGroupChange={setCookingSelectedCalorieGroup}
+                                selectedCalorieGroup="all"
+                                onSelectedCalorieGroupChange={() => {}}
                                 showHeader={false}
                                 showContextInfo={false}
                                 onCook={() => { fetchData(); void refreshCookingPlansForRange(); }} // Refresh inventory + audit summary on cook
