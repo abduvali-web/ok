@@ -152,8 +152,15 @@ export function OrdersTable({
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="py-1.5 text-right">
-                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditOrder?.(order)}>
-                                        <Edit className="w-4 h-4" />
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => onEditOrder?.(order)}
+                                        aria-label={t.admin.edit}
+                                        title={t.admin.edit}
+                                    >
+                                        <Edit className="size-4" />
                                     </Button>
                                 </TableCell>
                             </TableRow>

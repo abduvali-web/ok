@@ -3,12 +3,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { useAdminSettingsContext } from '@/contexts/AdminSettingsContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import {
   Dialog,
   DialogContent,
@@ -69,6 +78,10 @@ import {
   Route,
   CalendarDays,
   MapPin,
+  LocateFixed,
+  CircleUser,
+  Settings,
+  MessageSquare,
   Edit,
   Clock,
   Truck,
@@ -115,6 +128,13 @@ const HistoryTable = dynamic(
 const ChatTab = dynamic(
   () => import('@/components/chat/ChatTab').then((mod) => mod.ChatTab),
   { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading...</div> }
+)
+const WarehouseStartPointPickerMap = dynamic(
+  () =>
+    import('@/components/admin/dashboard/shared/WarehouseStartPointPickerMap').then(
+      (mod) => mod.WarehouseStartPointPickerMap
+    ),
+  { ssr: false, loading: () => <div className="h-full w-full animate-pulse border bg-muted/30" /> }
 )
 const TodaysMenu = dynamic(
   () => import('@/components/admin/TodaysMenu').then((mod) => mod.TodaysMenu),
@@ -292,11 +312,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const [editingClientId, setEditingClientId] = useState<string | null>(null)
   const [isCreatingClient, setIsCreatingClient] = useState(false)
   const [orderError, setOrderError] = useState('')
+  const [isChatOpen, setIsChatOpen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const handledDashboardQueryRef = useRef<string>('')
   const [warehousePoint, setWarehousePoint] = useState<LatLng | null>(null)
   const [warehouseInput, setWarehouseInput] = useState('')
   const [warehousePreview, setWarehousePreview] = useState<LatLng | null>(null)
   const [isWarehouseLoading, setIsWarehouseLoading] = useState(false)
   const [isWarehouseSaving, setIsWarehouseSaving] = useState(false)
+  const [isWarehouseGeoLocating, setIsWarehouseGeoLocating] = useState(false)
   // Set current date on client side to avoid hydration mismatch
   useEffect(() => {
     setCurrentDate(new Date().toLocaleDateString('ru-RU', {
@@ -351,6 +375,20 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     () => Object.values(filters).reduce((count, value) => count + (value ? 1 : 0), 0),
     [filters]
   )
+
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    if (!searchParams) return
+
+    // Allow other pages (e.g. /middle-admin/database) to deep-link into quick sheets.
+    const key = searchParams.toString()
+    if (!key || handledDashboardQueryRef.current === key) return
+    handledDashboardQueryRef.current = key
+
+    if (searchParams.get('settings') === '1') setIsSettingsOpen(true)
+    if (searchParams.get('chat') === '1') setIsChatOpen(true)
+  }, [searchParams])
 
   // Use local (calendar) dates for matching `deliveryDate` (stored as YYYY-MM-DD).
   // Avoid `toISOString()` here, because timezone offsets can shift the day.
@@ -421,6 +459,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         refresh: 'Обновить',
         saving: 'Сохранение...',
         saveLocation: 'Сохранить точку',
+        useMyLocation: 'Моё местоположение',
+        geolocationUnsupported: 'Геолокация не поддерживается в этом браузере.',
+        geolocationDenied: 'Доступ к геолокации запрещён.',
+        geolocationFailed: 'Не удалось получить текущее местоположение.',
+        geolocationSet: 'Точка установлена по геолокации.',
         messages: 'Сообщения',
         messagesDescription: 'Командные диалоги и быстрая координация.',
         ordersBin: 'Корзина заказов',
@@ -493,6 +536,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         refresh: 'Yangilash',
         saving: 'Saqlanmoqda...',
         saveLocation: 'Joylashuvni saqlash',
+        useMyLocation: 'Mening joylashuvim',
+        geolocationUnsupported: 'Geolokatsiya ushbu brauzerda qo‘llab-quvvatlanmaydi.',
+        geolocationDenied: 'Geolokatsiyaga ruxsat berilmadi.',
+        geolocationFailed: 'Joriy joylashuvni aniqlab bo‘lmadi.',
+        geolocationSet: 'Nuqta geolokatsiya orqali o‘rnatildi.',
         messages: 'Xabarlar',
         messagesDescription: 'Jamoa suhbatlari va tezkor muvofiqlashtirish.',
         ordersBin: 'Buyurtmalar savati',
@@ -564,6 +612,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       refresh: 'Refresh',
       saving: 'Saving...',
       saveLocation: 'Save location',
+      useMyLocation: 'Use my location',
+      geolocationUnsupported: 'Geolocation is not supported by this browser.',
+      geolocationDenied: 'Geolocation permission denied.',
+      geolocationFailed: 'Failed to get current location.',
+      geolocationSet: 'Location set from device.',
       messages: 'Messages',
       messagesDescription: 'Team conversations and quick coordination.',
       ordersBin: 'Orders bin',
@@ -1155,6 +1208,46 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       console.error('Error expanding warehouse url:', error)
     }
   }
+
+  const formatWarehousePoint = useCallback((point: LatLng) => {
+    return `${point.lat.toFixed(6)},${point.lng.toFixed(6)}`
+  }, [])
+
+  const handleWarehouseMapPick = useCallback(
+    (point: LatLng) => {
+      handleWarehouseInputChange(formatWarehousePoint(point))
+    },
+    [formatWarehousePoint, handleWarehouseInputChange]
+  )
+
+  const handleUseMyLocation = useCallback(() => {
+    if (isWarehouseReadOnly) return
+    if (typeof window === 'undefined') return
+
+    if (!navigator.geolocation) {
+      toast.error(profileUiText.geolocationUnsupported)
+      return
+    }
+
+    setIsWarehouseGeoLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const point = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        handleWarehouseInputChange(formatWarehousePoint(point))
+        toast.success(profileUiText.geolocationSet)
+        setIsWarehouseGeoLocating(false)
+      },
+      (err) => {
+        if (err && 'code' in err && err.code === 1) {
+          toast.error(profileUiText.geolocationDenied)
+        } else {
+          toast.error(profileUiText.geolocationFailed)
+        }
+        setIsWarehouseGeoLocating(false)
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    )
+  }, [formatWarehousePoint, handleWarehouseInputChange, isWarehouseReadOnly, profileUiText])
 
   const handleSaveWarehousePoint = async () => {
     if (isWarehouseReadOnly) return
@@ -2104,9 +2197,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               <div className="hidden md:block">
                 <TrialStatus compact />
               </div>
-              <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden" onClick={handleLogout} aria-label={t.common.logout}>
-                <LogOut className="w-4 h-4" />
-              </Button>
               {isMiddleAdminView && (
                 <Button asChild variant="ghost" size="icon" className="h-9 w-9 md:hidden" aria-label={profileUiText.database}>
                   <Link href="/middle-admin/database">
@@ -2115,21 +2205,165 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 </Button>
               )}
               {isMiddleAdminView && (
-                <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex gap-1.5 text-xs">
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="icon"
+                  className="hidden md:inline-flex h-9 w-9"
+                  aria-label={profileUiText.database}
+                  title={profileUiText.database}
+                >
                   <Link href="/middle-admin/database">
-                    <Database className="w-3.5 h-3.5" />
-                    {profileUiText.database}
+                    <Database className="w-4 h-4" />
                   </Link>
                 </Button>
               )}
-              <Button variant="ghost" size="sm" className="hidden md:inline-flex gap-1.5 text-xs" onClick={handleLogout}>
-                <LogOut className="w-3.5 h-3.5" />
-                {t.common.logout}
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9"
+                    aria-label="Profile"
+                    title="Profile"
+                  >
+                    <CircleUser className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={() => setIsChatOpen(true)} className="gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    <span>{profileUiText.messages}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setIsSettingsOpen(true)} className="gap-2">
+                    <Settings className="h-4 w-4" />
+                    <span>{t.admin.settings}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => void handleLogout()} className="gap-2 text-rose-600 focus:text-rose-600">
+                    <LogOut className="h-4 w-4" />
+                    <span>{t.common.logout}</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
       </header>
+
+      <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}>
+        <SheetContent side="right" className="w-full p-0 sm:max-w-md">
+          <SheetHeader className="border-b px-4 py-3">
+            <SheetTitle>{profileUiText.messages}</SheetTitle>
+            <SheetDescription>{profileUiText.messagesDescription}</SheetDescription>
+          </SheetHeader>
+          <div className="h-[calc(100vh-84px)] overflow-y-auto p-4">
+            <ChatTab />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-2xl">
+          <SheetHeader>
+            <SheetTitle>{t.admin.settings}</SheetTitle>
+            <SheetDescription>
+              {profileUiText.warehouseStartPoint} / {profileUiText.database}
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-4 space-y-4 overflow-y-auto pb-6">
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsChangePasswordOpen(true)}
+                aria-label={profileUiText.changePassword}
+                title={profileUiText.changePassword}
+              >
+                <User className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {!isLowAdminView && <SiteBuilderCard />}
+
+            <Card className="border-border/70">
+              <CardHeader>
+                <CardTitle>{profileUiText.warehouseStartPoint}</CardTitle>
+                <CardDescription>{profileUiText.warehouseStartPointDescription}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="warehousePointSettings">
+                    {profileUiText.warehouseInputLabel}
+                    {isWarehouseReadOnly && (
+                      <span className="ml-2 text-xs text-muted-foreground">{profileUiText.readOnly}</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="warehousePointSettings"
+                    value={warehouseInput}
+                    onChange={(event) => handleWarehouseInputChange(event.target.value)}
+                    onBlur={() => void handleWarehouseInputBlur()}
+                    placeholder={profileUiText.warehousePlaceholder}
+                    disabled={isWarehouseReadOnly || isWarehouseLoading || isWarehouseSaving}
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    {warehousePoint
+                      ? `${profileUiText.current}: ${warehousePoint.lat.toFixed(6)}, ${warehousePoint.lng.toFixed(6)}`
+                      : `${profileUiText.current}: ${profileUiText.notConfigured}`}
+                    {warehousePreview && (
+                      <span className="ml-2 text-muted-foreground/80">
+                        {profileUiText.preview}: {warehousePreview.lat.toFixed(6)}, {warehousePreview.lng.toFixed(6)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="h-48 w-full overflow-hidden rounded-md border bg-muted/20">
+                  <WarehouseStartPointPickerMap
+                    value={warehousePreview ?? warehousePoint}
+                    disabled={isWarehouseReadOnly || isWarehouseLoading || isWarehouseSaving}
+                    onChange={handleWarehouseMapPick}
+                  />
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => void refreshWarehousePoint()}
+                    disabled={isWarehouseLoading || isWarehouseSaving}
+                    aria-label={profileUiText.refresh}
+                    title={profileUiText.refresh}
+                  >
+                    <RefreshCw className={isWarehouseLoading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleUseMyLocation}
+                    disabled={isWarehouseReadOnly || isWarehouseSaving || isWarehouseLoading || isWarehouseGeoLocating}
+                    aria-label={profileUiText.useMyLocation}
+                    title={profileUiText.useMyLocation}
+                  >
+                    <LocateFixed className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    onClick={() => void handleSaveWarehousePoint()}
+                    disabled={isWarehouseReadOnly || isWarehouseSaving || isWarehouseLoading || !warehouseInput.trim()}
+                    aria-label={isWarehouseSaving ? profileUiText.saving : profileUiText.saveLocation}
+                    title={isWarehouseSaving ? profileUiText.saving : profileUiText.saveLocation}
+                  >
+                    {isWarehouseSaving ? <Save className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Mobile Sidebar Navigation */}
       <MobileSidebar
@@ -3204,114 +3438,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               isOpen={isChangePasswordOpen}
               onClose={() => setIsChangePasswordOpen(false)}
             />
-
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
-              <Card className="border-border/70">
-                <CardHeader>
-                  <CardTitle>{profileUiText.profileCenter}</CardTitle>
-                  <CardDescription>{profileUiText.profileCenterDescription}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-2 sm:grid-cols-3">
-                    <div className="rounded-md border bg-background p-3">
-                      <p className="text-xs text-muted-foreground">{profileUiText.role}</p>
-                      <p className="mt-1 text-sm font-semibold">{meRole || 'MIDDLE_ADMIN'}</p>
-                    </div>
-                    <div className="rounded-md border bg-background p-3">
-                      <p className="text-xs text-muted-foreground">{profileUiText.visibleTabs}</p>
-                      <p className="mt-1 text-sm font-semibold">{visibleTabs.length}</p>
-                    </div>
-                    <div className="rounded-md border bg-background p-3">
-                      <p className="text-xs text-muted-foreground">{profileUiText.dispatchDate}</p>
-                      <p className="mt-1 truncate text-sm font-semibold">{selectedDateLabel}</p>
-                    </div>
-                  </div>
-
-                  <div className="rounded-md border bg-muted/20 p-3">
-                    <p className="text-sm font-semibold">{profileUiText.security}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{profileUiText.securityDescription}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Button variant="outline" onClick={() => setIsChangePasswordOpen(true)} className="gap-2">
-                        <User className="h-4 w-4" />
-                        {profileUiText.changePassword}
-                      </Button>
-                      {isMiddleAdminView && (
-                        <Button asChild variant="outline" className="gap-2">
-                          <Link href="/middle-admin/database">
-                            <Database className="h-4 w-4" />
-                            {profileUiText.database}
-                          </Link>
-                        </Button>
-                      )}
-                      <Button variant="ghost" onClick={handleLogout} className="gap-2">
-                        <LogOut className="h-4 w-4" />
-                        {t.common.logout}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="rounded-md border bg-muted/20 p-3">
-                    <p className="text-sm font-semibold">{profileUiText.quickNavigation}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setActiveTab('orders')}>{t.admin.orders}</Button>
-                      <Button variant="outline" size="sm" onClick={() => setActiveTab('clients')}>{t.admin.clients}</Button>
-                      <Button variant="outline" size="sm" onClick={() => setActiveTab('history')}>{t.admin.history}</Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-border/70">
-                <CardHeader>
-                  <CardTitle>{profileUiText.warehouseStartPoint}</CardTitle>
-                  <CardDescription>{profileUiText.warehouseStartPointDescription}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="grid gap-2">
-                    <Label htmlFor="warehousePoint">
-                      {profileUiText.warehouseInputLabel}
-                      {isWarehouseReadOnly && <span className="ml-2 text-xs text-muted-foreground">{profileUiText.readOnly}</span>}
-                    </Label>
-                    <Input
-                      id="warehousePoint"
-                      value={warehouseInput}
-                      onChange={(event) => handleWarehouseInputChange(event.target.value)}
-                      onBlur={() => void handleWarehouseInputBlur()}
-                      placeholder={profileUiText.warehousePlaceholder}
-                      disabled={isWarehouseReadOnly || isWarehouseLoading || isWarehouseSaving}
-                    />
-                    <div className="text-xs text-muted-foreground">
-                      {warehousePoint
-                        ? `${profileUiText.current}: ${warehousePoint.lat.toFixed(6)}, ${warehousePoint.lng.toFixed(6)}`
-                        : `${profileUiText.current}: ${profileUiText.notConfigured}`}
-                      {warehousePreview && (
-                        <span className="ml-2 text-muted-foreground/80">
-                          {profileUiText.preview}: {warehousePreview.lat.toFixed(6)}, {warehousePreview.lng.toFixed(6)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => void refreshWarehousePoint()}
-                      disabled={isWarehouseLoading || isWarehouseSaving}
-                    >
-                      {profileUiText.refresh}
-                    </Button>
-                    <Button
-                      onClick={() => void handleSaveWarehousePoint()}
-                      disabled={isWarehouseReadOnly || isWarehouseSaving || isWarehouseLoading || !warehouseInput.trim()}
-                    >
-                      {isWarehouseSaving ? profileUiText.saving : profileUiText.saveLocation}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {!isLowAdminView && <SiteBuilderCard />}
 
             <Card className="border-border/70">
               <CardHeader>

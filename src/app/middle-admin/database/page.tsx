@@ -3,9 +3,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { signOut } from 'next-auth/react'
 import {
   ArrowLeft,
   Bot,
+  CircleUser,
+  Settings,
+  MessageSquare,
+  LogOut,
+  Check,
+  X,
   Database,
   Download,
   Edit,
@@ -25,6 +32,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { addDays } from 'date-fns'
 import { DateRange } from 'react-day-picker'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -323,6 +337,11 @@ async function downloadSingleTableXlsx(
 export default function DatabasePage() {
   const { language } = useLanguage()
   const router = useRouter()
+
+  const handleLogout = useCallback(async () => {
+    await signOut({ callbackUrl: '/', redirect: true })
+  }, [])
+
   const [snapshot, setSnapshot] = useState<SnapshotPayload | null>(null)
   const [activeTab, setActiveTab] = useState('summary')
   const [searchTerm, setSearchTerm] = useState('')
@@ -1303,10 +1322,16 @@ export default function DatabasePage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Button asChild variant="outline" size="sm">
+              <Button
+                asChild
+                variant="outline"
+                size="icon"
+                aria-label={uiText.backToMiddleAdmin}
+                title={uiText.backToMiddleAdmin}
+              >
                 <Link href="/middle-admin">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  {uiText.backToMiddleAdmin}
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="sr-only">{uiText.backToMiddleAdmin}</span>
                 </Link>
               </Button>
               <div className="hidden text-sm text-muted-foreground sm:block">
@@ -1327,27 +1352,75 @@ export default function DatabasePage() {
                 locale={language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'}
               />
 
-              <Button variant="outline" size="sm" onClick={() => void loadSnapshot(true)} disabled={isRefreshing}>
-                <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {uiText.refresh}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => void loadSnapshot(true)}
+                disabled={isRefreshing}
+                aria-label={uiText.refresh}
+                title={uiText.refresh}
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span className="sr-only">{uiText.refresh}</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={handleDownloadUnifiedSnapshotClick}>
-                <Download className="mr-2 h-4 w-4" />
-                {uiText.downloadAllSheets}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleDownloadUnifiedSnapshotClick}
+                aria-label={uiText.downloadAllSheets}
+                title={uiText.downloadAllSheets}
+              >
+                <Download className="h-4 w-4" />
+                <span className="sr-only">{uiText.downloadAllSheets}</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={handleImportAllSheetsClick} disabled={isImportingAllSheets}>
-                {isImportingAllSheets ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Upload className="mr-2 h-4 w-4" />
-                )}
-                {isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleImportAllSheetsClick}
+                disabled={isImportingAllSheets}
+                aria-label={isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}
+                title={isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}
+              >
+                {isImportingAllSheets ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                <span className="sr-only">{isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}</span>
               </Button>
-              <Button size="sm" onClick={handleOpenTambo}>
-                <Bot className="mr-2 h-4 w-4" />
-                {uiText.askTambo}
+              <Button
+                size="icon"
+                onClick={handleOpenTambo}
+                aria-label={uiText.askTambo}
+                title={uiText.askTambo}
+              >
+                <Bot className="h-4 w-4" />
+                <span className="sr-only">{uiText.askTambo}</span>
               </Button>
               <LanguageSwitcher />
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" aria-label="Profile" title="Profile">
+                    <CircleUser className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild className="gap-2">
+                    <Link href="/middle-admin?chat=1">
+                      <MessageSquare className="h-4 w-4" />
+                      <span>Chat</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="gap-2">
+                    <Link href="/middle-admin?settings=1">
+                      <Settings className="h-4 w-4" />
+                      <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => void handleLogout()} className="gap-2 text-rose-600 focus:text-rose-600">
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardHeader>
@@ -1445,22 +1518,30 @@ export default function DatabasePage() {
                     <div className="text-xs tabular-nums text-muted-foreground">
                       {filteredRows.length} / {table.rowCount} {uiText.rowsCount}
                     </div>
-                    <Button variant="outline" size="sm" onClick={handleDownloadCurrentTableClick}>
-                      <Download className="mr-2 h-4 w-4" />
-                      {uiText.downloadSheet}
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={handleDownloadCurrentTableClick}
+                      aria-label={uiText.downloadSheet}
+                      title={uiText.downloadSheet}
+                    >
+                      <Download className="h-4 w-4" />
+                      <span className="sr-only">{uiText.downloadSheet}</span>
                     </Button>
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="icon"
                       onClick={() => handleImportSheetClick(table.id)}
                       disabled={isImportingSheet}
+                      aria-label={isImportingSheet ? uiText.importingSheet : uiText.importSheet}
+                      title={isImportingSheet ? uiText.importingSheet : uiText.importSheet}
                     >
                       {isImportingSheet ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        <Upload className="mr-2 h-4 w-4" />
+                        <Upload className="h-4 w-4" />
                       )}
-                      {isImportingSheet ? uiText.importingSheet : uiText.importSheet}
+                      <span className="sr-only">{isImportingSheet ? uiText.importingSheet : uiText.importSheet}</span>
                     </Button>
                   </div>
                 </div>
@@ -1531,19 +1612,29 @@ export default function DatabasePage() {
                                 ))}
                                 <TableCell className="text-right">
                                   <div className="flex justify-end gap-2">
-                                    <Button size="sm" onClick={handleUpdateRow} disabled={isSavingDraft}>
-                                      {isSavingDraft ? <Loader2 className="h-4 w-4 animate-spin" /> : uiText.saveEdit}
+                                    <Button
+                                      size="icon"
+                                      onClick={handleUpdateRow}
+                                      disabled={isSavingDraft}
+                                      aria-label={uiText.saveEdit}
+                                      title={uiText.saveEdit}
+                                    >
+                                      {isSavingDraft ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                      <span className="sr-only">{uiText.saveEdit}</span>
                                     </Button>
                                     <Button
                                       variant="outline"
-                                      size="sm"
+                                      size="icon"
                                       onClick={() => {
                                         setEditingRowId(null)
                                         setEditingRowData(null)
                                       }}
                                       disabled={isSavingDraft}
+                                      aria-label={uiText.cancelEdit}
+                                      title={uiText.cancelEdit}
                                     >
-                                      {uiText.cancelEdit}
+                                      <X className="h-4 w-4" />
+                                      <span className="sr-only">{uiText.cancelEdit}</span>
                                     </Button>
                                   </div>
                                 </TableCell>
@@ -1561,14 +1652,16 @@ export default function DatabasePage() {
                                   {row.id ? (
                                     <Button
                                       variant="ghost"
-                                      size="sm"
+                                      size="icon"
                                       onClick={() => {
                                         setEditingRowId(row.id as string)
                                         setEditingRowData(row as Record<string, string>)
                                       }}
+                                      aria-label={uiText.editRow}
+                                      title={uiText.editRow}
                                     >
-                                      <Edit className="mr-2 h-4 w-4" />
-                                      {uiText.editRow}
+                                      <Edit className="h-4 w-4" />
+                                      <span className="sr-only">{uiText.editRow}</span>
                                     </Button>
                                   ) : null}
                                 </TableCell>
@@ -1630,8 +1723,8 @@ export default function DatabasePage() {
                         <Button
                           type="button"
                           variant="outline"
-                          size="sm"
-                          className="h-8"
+                          size="icon"
+                          className="h-8 w-8"
                           onClick={() => setPageIndex((current) => Math.max(0, current - 1))}
                           disabled={
                             pageIndex === 0 ||
@@ -1639,15 +1732,17 @@ export default function DatabasePage() {
                             editingRowId !== null ||
                             (draftRowTableId === table.id && draftRow !== null)
                           }
+                          aria-label={uiText.previous}
+                          title={uiText.previous}
                         >
-                          <ChevronLeft className="mr-2 h-4 w-4" />
-                          {uiText.previous}
+                          <ChevronLeft className="h-4 w-4" />
+                          <span className="sr-only">{uiText.previous}</span>
                         </Button>
                         <Button
                           type="button"
                           variant="outline"
-                          size="sm"
-                          className="h-8"
+                          size="icon"
+                          className="h-8 w-8"
                           onClick={() => setPageIndex((current) => Math.min(pageCount - 1, current + 1))}
                           disabled={
                             pageIndex >= pageCount - 1 ||
@@ -1655,48 +1750,57 @@ export default function DatabasePage() {
                             editingRowId !== null ||
                             (draftRowTableId === table.id && draftRow !== null)
                           }
+                          aria-label={uiText.next}
+                          title={uiText.next}
                         >
-                          {uiText.next}
-                          <ChevronRight className="ml-2 h-4 w-4" />
+                          <ChevronRight className="h-4 w-4" />
+                          <span className="sr-only">{uiText.next}</span>
                         </Button>
 
                         {draftRowTableId === table.id && draftRow !== null ? (
                           <>
                             <Button
                               variant="outline"
-                              size="sm"
-                              className="h-8"
+                              size="icon"
+                              className="h-8 w-8"
                               onClick={() => {
                                 setDraftRow(null)
                                 setDraftRowTableId(null)
                               }}
                               disabled={isSavingDraft}
+                              aria-label={uiText.cancelRow}
+                              title={uiText.cancelRow}
                             >
-                              {uiText.cancelRow}
+                              <X className="h-4 w-4" />
+                              <span className="sr-only">{uiText.cancelRow}</span>
                             </Button>
                             <Button
-                              size="sm"
-                              className="h-8"
+                              size="icon"
+                              className="h-8 w-8"
                               onClick={() => void handleSaveDraftRow()}
                               disabled={isSavingDraft}
+                              aria-label={uiText.saveRow}
+                              title={uiText.saveRow}
                             >
-                              {isSavingDraft ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                              {uiText.saveRow}
+                              {isSavingDraft ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                              <span className="sr-only">{uiText.saveRow}</span>
                             </Button>
                           </>
                         ) : (
                           <Button
                             variant="outline"
-                            size="sm"
-                            className="h-8"
+                            size="icon"
+                            className="h-8 w-8"
                             onClick={() => {
                               setDraftRow({})
                               setDraftRowTableId(table.id)
                             }}
                             disabled={isSavingDraft || editingRowId !== null}
+                            aria-label={uiText.addRow}
+                            title={uiText.addRow}
                           >
-                            <Plus className="mr-2 h-4 w-4" />
-                            {uiText.addRow}
+                            <Plus className="h-4 w-4" />
+                            <span className="sr-only">{uiText.addRow}</span>
                           </Button>
                         )}
                       </div>

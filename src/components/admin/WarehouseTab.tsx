@@ -1079,13 +1079,26 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                             if (calcRangeDays.length > 0) calculateForPeriod(calcRangeDays)
                                             else calculateForTomorrow()
                                         }}
-                                        className="w-full gap-2"
+                                        className="w-full justify-center"
                                         variant="default"
+                                        size="icon"
+                                        aria-label={
+                                            calcRangeDays.length > 0
+                                                ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
+                                                : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())
+                                        }
+                                        title={
+                                            calcRangeDays.length > 0
+                                                ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
+                                                : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())
+                                        }
                                     >
                                         <Calculator className="w-4 h-4" />
-                                        {calcRangeDays.length > 0
-                                            ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
-                                            : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())}
+                                        <span className="sr-only">
+                                            {calcRangeDays.length > 0
+                                                ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
+                                                : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())}
+                                        </span>
                                     </Button>
                                 </div>
 

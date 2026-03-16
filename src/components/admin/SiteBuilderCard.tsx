@@ -169,31 +169,42 @@ export function SiteBuilderCard() {
                 Host: {hostLabel}
               </div>
             </div>
-            <Button type="button" className="gap-2" onClick={() => void handleSaveSubdomain()} disabled={isSavingSubdomain}>
+            <Button
+              type="button"
+              size="icon"
+              onClick={() => void handleSaveSubdomain()}
+              disabled={isSavingSubdomain}
+              aria-label="Set subdomain URL"
+              title="Set subdomain URL"
+            >
               {isSavingSubdomain ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Set subdomain URL
+              <span className="sr-only">Set subdomain URL</span>
             </Button>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
-              size="sm"
+              size="icon"
               variant="outline"
-              className="gap-2"
               disabled={!pathPreviewUrl}
               onClick={() => window.open(pathPreviewUrl, '_blank', 'noopener,noreferrer')}
+              aria-label="Open path preview"
+              title="Open path preview"
             >
-              <Globe className="h-4 w-4" /> Open path preview
+              <Globe className="h-4 w-4" />
+              <span className="sr-only">Open path preview</span>
             </Button>
             <Button
               type="button"
-              size="sm"
-              className="gap-2"
+              size="icon"
               disabled={!hostPreviewUrl}
               onClick={() => window.open(hostPreviewUrl, '_blank', 'noopener,noreferrer')}
+              aria-label="Go to subdomain URL"
+              title="Go to subdomain URL"
             >
-              <Globe className="h-4 w-4" /> Go to subdomain URL
+              <Globe className="h-4 w-4" />
+              <span className="sr-only">Go to subdomain URL</span>
             </Button>
           </div>
         </CardContent>
@@ -240,11 +251,26 @@ export function SiteBuilderCard() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button type="button" className="gap-2" onClick={handleSendPrompt}>
-              <Sparkles className="h-4 w-4" /> Send to Tambo AI chat
+            <Button
+              type="button"
+              size="icon"
+              onClick={handleSendPrompt}
+              aria-label="Send to Tambo AI chat"
+              title="Send to Tambo AI chat"
+            >
+              <Sparkles className="h-4 w-4" />
+              <span className="sr-only">Send to Tambo AI chat</span>
             </Button>
-            <Button type="button" variant="outline" className="gap-2" onClick={() => openTamboChat()}>
-              <MessageSquare className="h-4 w-4" /> Open Tambo AI chat tab
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              onClick={() => openTamboChat()}
+              aria-label="Open Tambo AI chat tab"
+              title="Open Tambo AI chat tab"
+            >
+              <MessageSquare className="h-4 w-4" />
+              <span className="sr-only">Open Tambo AI chat tab</span>
             </Button>
           </div>
         </CardContent>
