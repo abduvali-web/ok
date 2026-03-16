@@ -11,7 +11,6 @@ type Copy = {
   bin: string
   statistics: string
   history: string
-  profile: string
   warehouse: string
   finance: string
   interface: string

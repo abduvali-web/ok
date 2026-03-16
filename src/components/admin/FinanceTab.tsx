@@ -11,7 +11,6 @@ import {
     TrendingUp,
     TrendingDown,
     Search,
-    Filter,
     Wallet,
     History,
     Plus,
@@ -71,11 +70,17 @@ interface Client {
     planType?: string;
 }
 
-interface Staff {
-    id: string;
-    name: string;
-    role: string;
-    salary: number;
+interface AdminSalaryBalanceRow {
+    id: string
+    name: string
+    role: string
+    isActive: boolean
+    createdAt: string
+    salaryPerDay: number
+    days: number
+    accrued: number
+    paid: number
+    balance: number
 }
 
 interface Transaction {
@@ -107,12 +112,15 @@ export function FinanceTab({
     const [clients, setClients] = useState<Client[]>([]);
     const [history, setHistory] = useState<Transaction[]>([]);
     const [ingredientsList, setIngredientsList] = useState<string[]>([]);
-    const [staff, setStaff] = useState<Staff[]>([]);
 
     // Filters
     const [historySearchQuery, setHistorySearchQuery] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState('all');
     const [categories, setCategories] = useState<string[]>([]);
+
+    // Salary payout (as an expense category inside the general withdraw flow)
+    const [salaryAdmins, setSalaryAdmins] = useState<AdminSalaryBalanceRow[]>([])
+    const [isSalaryAdminsLoading, setIsSalaryAdminsLoading] = useState(false)
+    const [selectedSalaryAdminId, setSelectedSalaryAdminId] = useState('')
 
     const visibleHistory = useMemo(() => {
         if (!selectedPeriod?.from) return history
@@ -138,9 +146,6 @@ export function FinanceTab({
     const [transactionType, setTransactionType] = useState<'INCOME' | 'EXPENSE'>('INCOME');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Salary Form
-    const [selectedStaffId, setSelectedStaffId] = useState('');
-
     // Buy Ingredients Form
     const [purchaseItems, setPurchaseItems] = useState<{ name: string; amount: string; costPerUnit: string }[]>([
         { name: '', amount: '', costPerUnit: '' }
@@ -153,16 +158,22 @@ export function FinanceTab({
     useEffect(() => {
         fetchCompanyFinance();
         fetchClients();
-        fetchStaff();
     }, []);
 
     useEffect(() => {
         fetchCompanyFinance(); // Refresh history
-    }, [categoryFilter, selectedDate]);
+    }, [selectedDate]);
+
+    useEffect(() => {
+        if (!isCompanyFundsModalOpen) return
+        if (!(transactionType === 'EXPENSE' && transactionCategory === 'SALARY')) return
+        void fetchSalaryAdmins()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isCompanyFundsModalOpen, transactionCategory, transactionType, selectedDate, selectedPeriod]);
 
     const fetchCompanyFinance = async () => {
         try {
-            let url = `/api/admin/finance/company?limit=50&type=all&category=${categoryFilter}`;
+            let url = `/api/admin/finance/company?limit=50&type=all&category=all`;
             if (activeSubTab === 'history' && selectedDate) {
                 // Only filter by date when viewing history, so total company balance isn't affected.
                 url += `&date=${selectedDate.toISOString()}`;
@@ -196,32 +207,71 @@ export function FinanceTab({
         }
     };
 
-    const fetchStaff = async () => {
+    const fetchSalaryAdmins = async () => {
+        setIsSalaryAdminsLoading(true);
         try {
-            const [lowAdminsRes, couriersRes] = await Promise.all([
-                fetch('/api/admin/low-admins'),
-                fetch('/api/admin/couriers')
-            ]);
-
-            const staffMap = new Map<string, Staff>();
-
-            if (lowAdminsRes.ok) {
-                const lowAdmins = await lowAdminsRes.json();
-                lowAdmins.forEach((admin: Staff) => staffMap.set(admin.id, admin));
+            const asOf = (selectedPeriod?.to ?? selectedPeriod?.from ?? selectedDate ?? new Date()).toISOString();
+            const response = await fetch(`/api/admin/finance/admin-balances?asOf=${encodeURIComponent(asOf)}`);
+            if (response.ok) {
+                const data = await response.json();
+                setSalaryAdmins(Array.isArray(data?.admins) ? data.admins : []);
             }
-
-            if (couriersRes.ok) {
-                const couriers = await couriersRes.json();
-                couriers.forEach((courier: Staff) => staffMap.set(courier.id, courier));
-            }
-
-            setStaff(Array.from(staffMap.values()));
         } catch (error) {
-            console.error('Error fetching staff:', error);
+            console.error('Error fetching salary admins:', error);
+        } finally {
+            setIsSalaryAdminsLoading(false);
         }
     };
 
     const handleTransactionSubmit = async () => {
+        const isSalaryPayout = transactionType === 'EXPENSE' && transactionCategory === 'SALARY';
+        if (isSalaryPayout) {
+            if (!selectedSalaryAdminId) {
+                toast.error(t.finance.selectStaff);
+                return;
+            }
+            if (!transactionAmount || parseFloat(transactionAmount) <= 0) {
+                toast.error(t.finance.enterAmount);
+                return;
+            }
+
+            setIsSubmitting(true);
+            try {
+                const response = await fetch('/api/admin/finance/salary', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        recipientAdminId: selectedSalaryAdminId,
+                        amount: parseFloat(transactionAmount),
+                    }),
+                });
+
+                if (response.ok) {
+                    toast.success(t.finance.salaryPaid);
+                    setIsCompanyFundsModalOpen(false);
+
+                    setSelectedSalaryAdminId('');
+                    setTransactionAmount('');
+                    setTransactionDescription('');
+                    setTransactionCategory('');
+                    setTransactionType('INCOME');
+
+                    fetchCompanyFinance();
+                    fetchSalaryAdmins();
+                } else {
+                    const data = await response.json();
+                    toast.error(data.error || t.finance.paymentError);
+                }
+            } catch (error) {
+                console.error('Error paying salary:', error);
+                toast.error(t.common.connectionError);
+            } finally {
+                setIsSubmitting(false);
+            }
+
+            return;
+        }
+
         if (!transactionAmount || parseFloat(transactionAmount) <= 0) {
             toast.error(t.finance.enterAmount);
             return;
@@ -337,43 +387,6 @@ export function FinanceTab({
         }
     };
 
-    const handlePaySalarySubmit = async () => {
-        if (!selectedStaffId || !transactionAmount) {
-            toast.error(t.finance.selectStaffAndAmount);
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            const response = await fetch('/api/admin/finance/salary', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    adminId: selectedStaffId,
-                    amount: parseFloat(transactionAmount)
-                })
-            });
-
-            if (response.ok) {
-                toast.success(t.finance.salaryPaid);
-                setIsCompanyFundsModalOpen(false); // Close the main modal instead
-                setSelectedStaffId('');
-                setTransactionAmount('');
-                setTransactionDescription('');
-                setTransactionCategory('');
-                setTransactionType('INCOME');
-                fetchCompanyFinance(); // Refresh balance
-            } else {
-                const data = await response.json();
-                toast.error(data.error || t.finance.paymentError);
-            }
-        } catch {
-            toast.error('Ошибка соединения');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('ru-RU', {
             style: 'currency',
@@ -394,13 +407,10 @@ export function FinanceTab({
     }, []);
 
     const visibleHistoryRows = useMemo(() => {
-        const categoryFiltered =
-            categoryFilter === 'all' ? visibleHistory : visibleHistory.filter((tx) => tx.category === categoryFilter)
-
         const q = historySearchQuery.trim().toLowerCase()
-        if (!q) return categoryFiltered
+        if (!q) return visibleHistory
 
-        return categoryFiltered.filter((tx) => {
+        return visibleHistory.filter((tx) => {
             const hay = [
                 tx.type,
                 tx.category,
@@ -417,7 +427,7 @@ export function FinanceTab({
 
             return hay.includes(q)
         })
-    }, [categoryFilter, formatDate, historySearchQuery, visibleHistory])
+    }, [formatDate, historySearchQuery, visibleHistory])
 
     return (
         <div className={`space-y-6 ${className}`}>
@@ -445,7 +455,6 @@ export function FinanceTab({
                                     setTransactionCategory('');
                                     setTransactionType('INCOME');
                                     setIsCompanyFundsModalOpen(true);
-                                    fetchStaff(); // Refresh staff list for salary options
                                 }}
                             >
                                 <Plus className="w-3 h-3 mr-1" />
@@ -539,20 +548,7 @@ export function FinanceTab({
                                         />
                                     )}
 
-                                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                                        <SelectTrigger className="w-[200px]">
-                                            <Filter className="w-4 h-4 mr-2" />
-                                            <SelectValue placeholder={t.finance.category} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">{t.admin.all}</SelectItem>
-                                            {categories.map((cat) => (
-                                                <SelectItem key={cat} value={cat}>
-                                                    {cat}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    {/* Category filter removed: search + date period are the primary audit controls. */}
                                 </div>
                             </div>
                         </CardHeader>
@@ -636,7 +632,13 @@ export function FinanceTab({
                                 <Button
                                     type="button"
                                     variant={transactionType === 'INCOME' ? 'default' : 'outline'}
-                                    onClick={() => setTransactionType('INCOME')}
+                                    onClick={() => {
+                                        setTransactionType('INCOME')
+                                        if (transactionCategory === 'SALARY') {
+                                            setTransactionCategory('')
+                                            setSelectedSalaryAdminId('')
+                                        }
+                                    }}
                                     className={transactionType === 'INCOME' ? 'bg-green-600 hover:bg-green-700' : ''}
                                 >
                                     <Plus className="w-4 h-4 mr-2" />
@@ -655,126 +657,98 @@ export function FinanceTab({
                         </div>
 
 
-                        {/* Transaction Mode Switch */}
-                        <div className="flex justify-end border-b pb-2 mb-2">
-                            <Tabs value={transactionCategory === 'SALARY' ? 'SALARY' : 'GENERAL'} onValueChange={(val) => {
-                                if (val === 'SALARY') {
-                                    setTransactionCategory('SALARY');
-                                    setTransactionType('EXPENSE');
-                                } else {
-                                    setTransactionCategory('');
-                                    setTransactionType('INCOME');
-                                }
-                            }} className="w-full">
-                                <TabsList className="w-full grid grid-cols-2">
-                                    <TabsTrigger value="GENERAL">{t.finance.general}</TabsTrigger>
-                                    <TabsTrigger value="SALARY">{t.finance.salary}</TabsTrigger>
-                                </TabsList>
-                            </Tabs>
+                        {/* Category + salary payout selection */}
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="category" className="text-right">{t.finance.category}</Label>
+                            <div className="col-span-3 relative">
+                                <Input
+                                    id="category"
+                                    value={transactionCategory}
+                                    onChange={(e) => {
+                                        const next = e.target.value
+                                        setTransactionCategory(next)
+                                        if (next === 'SALARY') {
+                                            setTransactionType('EXPENSE')
+                                        }
+                                    }}
+                                    placeholder={t.finance.category}
+                                    list="categories-datalist"
+                                />
+                                <datalist id="categories-datalist">
+                                    <option value="COMPANY_FUNDS" />
+                                    <option value="INVESTMENT" />
+                                    <option value="WITHDRAWAL" />
+                                    <option value="SALARY" />
+                                    <option value="INGREDIENTS" />
+                                    {categories.map(cat => (
+                                        <option key={cat} value={cat} />
+                                    ))}
+                                </datalist>
+                            </div>
                         </div>
 
-                        {transactionCategory === 'SALARY' ? (
-                            <>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="staff" className="text-right">{t.finance.staff}</Label>
-                                    <Select
-                                        value={selectedStaffId}
-                                        onValueChange={(val) => {
-                                            setSelectedStaffId(val);
-                                            const staffMember = staff.find(s => s.id === val);
-                                            if (staffMember) {
-                                                setTransactionAmount(staffMember.salary.toString());
-                                                setTransactionDescription(`${t.finance.salary}: ${staffMember.name}`);
+                        {transactionType === 'EXPENSE' && transactionCategory === 'SALARY' ? (
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="salary-recipient" className="text-right">{t.finance.staff}</Label>
+                                <Select
+                                    value={selectedSalaryAdminId}
+                                    onValueChange={(val) => {
+                                        setSelectedSalaryAdminId(val)
+                                        const row = salaryAdmins.find((a) => a.id === val)
+                                        if (row) {
+                                            const suggested = Math.max(0, Math.round(row.balance))
+                                            if (!Number.isNaN(suggested)) {
+                                                setTransactionAmount(String(suggested))
                                             }
-                                        }}
-                                    >
-                                        <SelectTrigger className="col-span-3">
-                                            <SelectValue placeholder={t.finance.selectStaff} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {staff.map((s) => (
-                                                <SelectItem key={s.id} value={s.id}>
-                                                    {s.name} ({s.role === 'COURIER' ? 'Курьер' : s.role === 'WORKER' ? 'Работник' : 'Админ'}) - {formatCurrency(s.salary)}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="salary-amount" className="text-right">{t.finance.amount}</Label>
-                                    <Input
-                                        id="salary-amount"
-                                        type="number"
-                                        value={transactionAmount}
-                                        onChange={(e) => setTransactionAmount(e.target.value)}
-                                        className="col-span-3"
-                                    />
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="amount" className="text-right">
-                                        {t.finance.amount} ({transactionType === 'INCOME' ? '+' : '-'})
-                                    </Label>
-                                    <Input
-                                        id="amount"
-                                        type="number"
-                                        min="0"
-                                        value={transactionAmount}
-                                        onChange={(e) => setTransactionAmount(e.target.value)}
-                                        className="col-span-3"
-                                        placeholder="0"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="description" className="text-right">
-                                        {t.finance.description}
-                                    </Label>
-                                    <Input
-                                        id="description"
-                                        value={transactionDescription}
-                                        onChange={(e) => setTransactionDescription(e.target.value)}
-                                        className="col-span-3"
-                                        placeholder={t.finance.description}
-                                    />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="category" className="text-right">
-                                        {t.finance.category}
-                                    </Label>
-                                    <div className="col-span-3 relative">
-                                        <Input
-                                            id="category"
-                                            value={transactionCategory}
-                                            onChange={(e) => setTransactionCategory(e.target.value)}
-                                            placeholder="Или выберите..."
-                                            list="categories-datalist"
-                                        />
-                                        <datalist id="categories-datalist">
-                                            <option value="COMPANY_FUNDS" />
-                                            <option value="INVESTMENT" />
-                                            <option value="WITHDRAWAL" />
-                                            <option value="SALARY" />
-                                            <option value="INGREDIENTS" />
-                                            {categories.map(cat => (
-                                                <option key={cat} value={cat} />
-                                            ))}
-                                        </datalist>
-                                    </div>
-                                </div>
-                            </>
-                        )}
+                                        }
+                                    }}
+                                >
+                                    <SelectTrigger id="salary-recipient" className="col-span-3">
+                                        <SelectValue placeholder={isSalaryAdminsLoading ? t.common.loading : t.finance.selectStaff} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {salaryAdmins.map((a) => (
+                                            <SelectItem key={a.id} value={a.id}>
+                                                {a.name} ({a.role}) - {formatCurrency(a.balance)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        ) : null}
+
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="amount" className="text-right">
+                                {t.finance.amount} ({transactionType === 'INCOME' ? '+' : '-'})
+                            </Label>
+                            <Input
+                                id="amount"
+                                type="number"
+                                min="0"
+                                value={transactionAmount}
+                                onChange={(e) => setTransactionAmount(e.target.value)}
+                                className="col-span-3"
+                                placeholder="0"
+                            />
+                        </div>
+
+                        {!(transactionType === 'EXPENSE' && transactionCategory === 'SALARY') ? (
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="description" className="text-right">{t.finance.description}</Label>
+                                <Input
+                                    id="description"
+                                    value={transactionDescription}
+                                    onChange={(e) => setTransactionDescription(e.target.value)}
+                                    className="col-span-3"
+                                    placeholder={t.finance.description}
+                                />
+                            </div>
+                        ) : null}
+
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsCompanyFundsModalOpen(false)}>Отмена</Button>
-                        <Button onClick={() => {
-                            if (transactionCategory === 'SALARY') {
-                                handlePaySalarySubmit();
-                            } else {
-                                handleTransactionSubmit();
-                            }
-                        }} disabled={isSubmitting}>
+                        <Button onClick={handleTransactionSubmit} disabled={isSubmitting}>
                             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                             Подтвердить
                         </Button>

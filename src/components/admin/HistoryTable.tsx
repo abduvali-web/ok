@@ -9,13 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { IconButton } from '@/components/ui/icon-button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -61,15 +56,6 @@ interface HistoryTableProps {
   profileUiText?: any
 }
 
-type ActionFilter = 'all' | 'create' | 'update' | 'delete' | 'other'
-
-function getActionKind(action: string): ActionFilter {
-  if (action.includes('CREATE')) return 'create'
-  if (action.includes('UPDATE')) return 'update'
-  if (action.includes('DELETE')) return 'delete'
-  return 'other'
-}
-
 export function HistoryTable({ 
   role: _role, 
   limit = 10, 
@@ -87,7 +73,6 @@ export function HistoryTable({
   const [logs, setLogs] = useState<ActionLog[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [selectedUser, setSelectedUser] = useState('all')
-  const [actionFilter, setActionFilter] = useState<ActionFilter>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [page, setPage] = useState(0)
@@ -196,9 +181,6 @@ export function HistoryTable({
     const query = searchTerm.trim().toLowerCase()
 
     return logs.filter((log) => {
-      const actionMatch = actionFilter === 'all' || getActionKind(log.action) === actionFilter
-      if (!actionMatch) return false
-
       if (!query) return true
 
       const haystack = [
@@ -213,7 +195,7 @@ export function HistoryTable({
 
       return haystack.includes(query)
     })
-  }, [actionFilter, logs, searchTerm])
+  }, [logs, searchTerm])
 
   const pageRangeLabel = useMemo(() => {
     if (total === 0 || logs.length === 0) return `0 / ${total}`
@@ -231,25 +213,13 @@ export function HistoryTable({
             <CardDescription>{t.admin.totalRecords}: {total}</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            {applySelectedDate && (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) && profileUiText && (
-              <CalendarDateSelector
-                selectedDate={selectedDate || null}
-                applySelectedDate={applySelectedDate}
-                shiftSelectedDate={shiftSelectedDate}
-                selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
-                selectedPeriod={selectedPeriod}
-                applySelectedPeriod={applySelectedPeriod}
-                locale={calendarLocale}
-                profileUiText={profileUiText}
-              />
-            )}
             <Button variant="outline" size="sm" onClick={() => void fetchLogs()} disabled={isLoading}>
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </Button>
           </div>
         </div>
 
-        <div className="grid gap-2 md:grid-cols-[minmax(0,220px)_minmax(0,220px)_1fr]">
+        <div className="grid gap-2 md:grid-cols-[minmax(0,220px)_auto_1fr]">
           {users.length > 0 ? (
             <Select value={selectedUser} onValueChange={setSelectedUser}>
               <SelectTrigger className="border-border bg-background">
@@ -268,18 +238,22 @@ export function HistoryTable({
             <div />
           )}
 
-          <Select value={actionFilter} onValueChange={(value) => setActionFilter(value as ActionFilter)}>
-            <SelectTrigger className="border-border bg-background">
-              <SelectValue placeholder={t.admin.actionFilter} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t.admin.allActions}</SelectItem>
-              <SelectItem value="create">{t.admin.actionCreate}</SelectItem>
-              <SelectItem value="update">{t.admin.actionUpdate}</SelectItem>
-              <SelectItem value="delete">{t.admin.actionDelete}</SelectItem>
-              <SelectItem value="other">{t.admin.actionOther}</SelectItem>
-            </SelectContent>
-          </Select>
+          {applySelectedDate && (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) && profileUiText ? (
+            <div className="flex items-center justify-start md:justify-end">
+              <CalendarDateSelector
+                selectedDate={selectedDate || null}
+                applySelectedDate={applySelectedDate}
+                shiftSelectedDate={shiftSelectedDate}
+                selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
+                selectedPeriod={selectedPeriod}
+                applySelectedPeriod={applySelectedPeriod}
+                locale={calendarLocale}
+                profileUiText={profileUiText}
+              />
+            </div>
+          ) : (
+            <div />
+          )}
 
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -315,7 +289,7 @@ export function HistoryTable({
               ) : filteredLogs.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                    {searchTerm || actionFilter !== 'all' ? t.admin.noMatches : t.admin.emptyHistory}
+                    {searchTerm ? t.admin.noMatches : t.admin.emptyHistory}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -355,7 +329,7 @@ export function HistoryTable({
             </div>
           ) : filteredLogs.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
-              {searchTerm || actionFilter !== 'all' ? t.admin.noMatches : t.admin.emptyHistory}
+              {searchTerm ? t.admin.noMatches : t.admin.emptyHistory}
             </div>
           ) : (
             filteredLogs.map((log) => (
@@ -386,27 +360,27 @@ export function HistoryTable({
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-1">
-          <Button
+          <IconButton
+            label={t.common.back}
             variant="outline"
-            size="sm"
+            iconSize="sm"
             onClick={() => setPage((current) => Math.max(0, current - 1))}
             disabled={page === 0 || isLoading}
           >
             <ChevronLeft className="h-4 w-4" />
-            {t.common.back}
-          </Button>
+          </IconButton>
           <div className="text-sm text-muted-foreground">
             {t.common.page} {page + 1} - {pageRangeLabel}
           </div>
-          <Button
+          <IconButton
+            label={t.common.next}
             variant="outline"
-            size="sm"
+            iconSize="sm"
             onClick={() => setPage((current) => current + 1)}
             disabled={!hasMore || isLoading}
           >
-            {t.common.next}
             <ChevronRight className="h-4 w-4" />
-          </Button>
+          </IconButton>
         </div>
       </CardContent>
     </Card>

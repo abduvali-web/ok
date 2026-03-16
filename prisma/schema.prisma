@@ -52,6 +52,7 @@ model Admin {
   companyBalance        Float          @default(0)
   salary                Int            @default(0)
   transactions          Transaction[]
+  salaryReceivedTransactions Transaction[] @relation("SalaryRecipient")
   menuSets              MenuSet[]
   orderAuditEvents      OrderAuditEvent[]
 
@@ -395,12 +396,17 @@ model Transaction {
   
   adminId     String?
   admin       Admin?   @relation(fields: [adminId], references: [id])
+
+  // For SALARY expense transactions: who receives the salary.
+  salaryRecipientAdminId String?
+  salaryRecipient        Admin? @relation("SalaryRecipient", fields: [salaryRecipientAdminId], references: [id])
   
   customerId  String?
   customer    Customer? @relation(fields: [customerId], references: [id])
   
   @@map("transactions")
   @@index([adminId])
+  @@index([salaryRecipientAdminId])
   @@index([customerId])
 }
 

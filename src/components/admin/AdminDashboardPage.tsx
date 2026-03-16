@@ -104,6 +104,7 @@ import { OrderModal } from '@/components/admin/dashboard/modals/OrderModal'
 import { DispatchMapPanel } from '@/components/admin/orders/DispatchMapPanel'
 import { TabEmptyState } from '@/components/admin/dashboard/shared/TabEmptyState'
 import { EntityStatusBadge } from '@/components/admin/dashboard/shared/EntityStatusBadge'
+import { ChatCenter } from '@/components/chat/ChatCenter'
 import {
   expandShortMapsUrl,
   extractCoordsFromText,
@@ -123,10 +124,6 @@ const OrdersTable = dynamic(
 )
 const HistoryTable = dynamic(
   () => import('@/components/admin/HistoryTable').then((mod) => mod.HistoryTable),
-  { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading...</div> }
-)
-const ChatTab = dynamic(
-  () => import('@/components/chat/ChatTab').then((mod) => mod.ChatTab),
   { ssr: false, loading: () => <div className="p-4 text-sm text-muted-foreground">Loading...</div> }
 )
 const WarehouseStartPointPickerMap = dynamic(
@@ -255,7 +252,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     bin: t.admin.bin,
     statistics: t.admin.statistics,
     history: t.admin.history,
-    profile: t.common.profile,
     warehouse: t.warehouse.title,
     finance: t.finance.title,
     interface: t.admin.interface,
@@ -339,6 +335,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const [filters, setFilters] = useState({ ...DEFAULT_ORDER_FILTERS })
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedBinClients, setSelectedBinClients] = useState<Set<string>>(new Set())
+  const [binOrdersSearch, setBinOrdersSearch] = useState('')
+  const [binClientsSearch, setBinClientsSearch] = useState('')
 
   const {
     meRole,
@@ -361,6 +359,35 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const fetchData = () => refreshAll()
   const fetchBinClients = () => refreshBinClients()
   const fetchBinOrders = () => refreshBinOrders()
+
+  const visibleBinOrders = useMemo(() => {
+    const q = binOrdersSearch.trim().toLowerCase()
+    if (!q) return binOrders
+    return binOrders.filter((order: any) => {
+      const hay = [
+        order?.id,
+        order?.status,
+        order?.customer?.name,
+        order?.customer?.phone,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return hay.includes(q)
+    })
+  }, [binOrders, binOrdersSearch])
+
+  const visibleBinClients = useMemo(() => {
+    const q = binClientsSearch.trim().toLowerCase()
+    if (!q) return binClients
+    return binClients.filter((client: any) => {
+      const hay = [client?.name, client?.phone, client?.address]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return hay.includes(q)
+    })
+  }, [binClients, binClientsSearch])
 
   useEffect(() => {
     if (activeTab !== 'clients') return
@@ -1188,11 +1215,19 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   }
 
   const handleSelectAllBinOrders = () => {
-    if (selectedOrders.size === binOrders.length) {
-      setSelectedOrders(new Set())
-    } else {
-      setSelectedOrders(new Set(binOrders.map(order => order.id)))
-    }
+    const visibleIds = visibleBinOrders.map((order: any) => order.id).filter(Boolean) as string[]
+    if (visibleIds.length === 0) return
+
+    const allVisibleSelected = visibleIds.every((id) => selectedOrders.has(id))
+    setSelectedOrders((current) => {
+      const next = new Set(current)
+      if (allVisibleSelected) {
+        visibleIds.forEach((id) => next.delete(id))
+      } else {
+        visibleIds.forEach((id) => next.add(id))
+      }
+      return next
+    })
   }
 
   const handlePermanentDeleteClients = async () => {
@@ -2273,7 +2308,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
             <SheetDescription>{profileUiText.messagesDescription}</SheetDescription>
           </SheetHeader>
           <div className="h-[calc(100dvh-84px)] overflow-y-auto p-4">
-            <ChatTab />
+            <ChatCenter />
           </div>
         </SheetContent>
       </Sheet>
@@ -3502,23 +3537,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
             />
           </TabsContent>
 
-          {/* Profile Tab */}
-          <TabsContent value="profile" className="space-y-6">
-            <ChangePasswordModal
-              isOpen={isChangePasswordOpen}
-              onClose={() => setIsChangePasswordOpen(false)}
-            />
+          <ChangePasswordModal
+            isOpen={isChangePasswordOpen}
+            onClose={() => setIsChangePasswordOpen(false)}
+          />
 
-            <Card className="border-border/70">
-              <CardHeader>
-                <CardTitle>{profileUiText.messages}</CardTitle>
-                <CardDescription>{profileUiText.messagesDescription}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChatTab />
-              </CardContent>
-            </Card>
-          </TabsContent>
           <TabsContent value="bin" className="space-y-4">
             <Tabs defaultValue="orders" className="w-full">
               <TabsList>
@@ -3529,33 +3552,54 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               <TabsContent value="orders" className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-2xl font-bold tracking-tight">{profileUiText.ordersBin}</h2>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      onClick={handleRestoreSelectedOrders}
-                      variant="outline"
-                      disabled={selectedOrders.size === 0}
-                    >
-                      <History className="mr-2 h-4 w-4" />
-                      {t.admin.restoreSelected} ({selectedOrders.size})
-                    </Button>
-                    <Button
-                      onClick={handlePermanentDeleteOrders}
-                      variant="destructive"
-                      disabled={selectedOrders.size === 0}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      {t.admin.deleteSelected} ({selectedOrders.size})
-                    </Button>
-                    <Button onClick={fetchBinOrders} variant="outline">
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      {profileUiText.refresh}
-                    </Button>
+                  <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+                    <div className="relative w-full max-w-[260px]">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        value={binOrdersSearch}
+                        onChange={(event) => setBinOrdersSearch(event.target.value)}
+                        placeholder={t.admin.searchPlaceholder}
+                        className="pl-9"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <IconButton
+                        label={`${t.admin.restoreSelected} (${selectedOrders.size})`}
+                        onClick={handleRestoreSelectedOrders}
+                        variant="outline"
+                        disabled={selectedOrders.size === 0}
+                      >
+                        <History className="size-4" />
+                      </IconButton>
+                      {selectedOrders.size > 0 ? (
+                        <span className="pointer-events-none absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-foreground px-1 text-[11px] font-semibold text-background">
+                          {selectedOrders.size}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div className="relative">
+                      <IconButton
+                        label={`${t.admin.deleteSelected} (${selectedOrders.size})`}
+                        onClick={handlePermanentDeleteOrders}
+                        variant="destructive"
+                        disabled={selectedOrders.size === 0}
+                      >
+                        <Trash2 className="size-4" />
+                      </IconButton>
+                      {selectedOrders.size > 0 ? (
+                        <span className="pointer-events-none absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-background px-1 text-[11px] font-semibold text-foreground">
+                          {selectedOrders.size}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
 
                 <div className="rounded-md border">
                   <OrdersTable
-                    orders={binOrders}
+                    orders={visibleBinOrders}
                     selectedOrders={selectedOrders}
                     onSelectOrder={handleOrderSelect}
                     onSelectAll={handleSelectAllBinOrders}
@@ -3571,23 +3615,48 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               <TabsContent value="clients" className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-2xl font-bold tracking-tight">{profileUiText.clientsBin}</h2>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      onClick={handleRestoreSelectedClients}
-                      variant="outline"
-                      disabled={selectedBinClients.size === 0}
-                    >
-                      <History className="mr-2 h-4 w-4" />
-                      {t.admin.restoreSelected} ({selectedBinClients.size})
-                    </Button>
-                    <Button
-                      onClick={handlePermanentDeleteClients}
-                      variant="destructive"
-                      disabled={selectedBinClients.size === 0}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      {t.admin.deleteSelected} ({selectedBinClients.size})
-                    </Button>
+                  <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+                    <div className="relative w-full max-w-[260px]">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        value={binClientsSearch}
+                        onChange={(event) => setBinClientsSearch(event.target.value)}
+                        placeholder={t.admin.searchPlaceholder}
+                        className="pl-9"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <IconButton
+                        label={`${t.admin.restoreSelected} (${selectedBinClients.size})`}
+                        onClick={handleRestoreSelectedClients}
+                        variant="outline"
+                        disabled={selectedBinClients.size === 0}
+                      >
+                        <History className="size-4" />
+                      </IconButton>
+                      {selectedBinClients.size > 0 ? (
+                        <span className="pointer-events-none absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-foreground px-1 text-[11px] font-semibold text-background">
+                          {selectedBinClients.size}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div className="relative">
+                      <IconButton
+                        label={`${t.admin.deleteSelected} (${selectedBinClients.size})`}
+                        onClick={handlePermanentDeleteClients}
+                        variant="destructive"
+                        disabled={selectedBinClients.size === 0}
+                      >
+                        <Trash2 className="size-4" />
+                      </IconButton>
+                      {selectedBinClients.size > 0 ? (
+                        <span className="pointer-events-none absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-background px-1 text-[11px] font-semibold text-foreground">
+                          {selectedBinClients.size}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
 
@@ -3598,12 +3667,22 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                           <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                             <Checkbox
-                              checked={binClients.length > 0 && selectedBinClients.size === binClients.length}
+                              checked={
+                                visibleBinClients.length > 0 &&
+                                visibleBinClients.every((c: any) => selectedBinClients.has(c.id))
+                              }
                               onCheckedChange={(checked) => {
                                 if (checked) {
-                                  setSelectedBinClients(new Set(binClients.map(c => c.id)))
+                                  setSelectedBinClients((current) => new Set([
+                                    ...Array.from(current),
+                                    ...visibleBinClients.map((c: any) => c.id),
+                                  ]))
                                 } else {
-                                  setSelectedBinClients(new Set())
+                                  setSelectedBinClients((current) => {
+                                    const next = new Set(current)
+                                    visibleBinClients.forEach((c: any) => next.delete(c.id))
+                                    return next
+                                  })
                                 }
                               }}
                             />
@@ -3616,7 +3695,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                         </tr>
                       </thead>
                       <tbody className="[&_tr:last-child]:border-0">
-                        {binClients.map((client) => (
+                        {visibleBinClients.map((client: any) => (
                           <tr key={client.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                             <td className="p-4 align-middle">
                               <Checkbox
@@ -3641,7 +3720,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             <td className="p-4 align-middle">{client.deletedBy || '-'}</td>
                           </tr>
                         ))}
-                        {binClients.length === 0 && (
+                        {visibleBinClients.length === 0 && (
                           <tr>
                             <td colSpan={6} className="p-4 text-center text-muted-foreground">
                               {t.finance.noClients}

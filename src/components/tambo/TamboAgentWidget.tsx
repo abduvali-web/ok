@@ -275,11 +275,11 @@ function TamboEmptyState({ title, copy }: { title: string; copy: string }) {
   );
 }
 
-export function TamboAgentWidget() {
+export function TamboAgentWidget({ embedded = false }: { embedded?: boolean } = {}) {
   const apiKey = process.env.NEXT_PUBLIC_TAMBO_API_KEY;
   const { t } = useLanguage();
   const tamboT = t.tambo;
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(embedded);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [textAttachments, setTextAttachments] = useState<StagedTextAttachment[]>([]);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
@@ -326,19 +326,22 @@ export function TamboAgentWidget() {
   }, [userFacingMessages.length, isStreaming, isOpen]);
 
   useEffect(() => {
+    if (embedded) return;
     if (!isOpen || !isFullscreen) return;
     const { overflow } = document.body.style;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = overflow;
     };
-  }, [isOpen, isFullscreen]);
+  }, [embedded, isOpen, isFullscreen]);
 
   useEffect(() => {
     const onOpenChat = (event: Event) => {
       const custom = event as CustomEvent<{ prompt?: string }>
-      setIsOpen(true)
-      setIsFullscreen(false)
+      if (!embedded) {
+        setIsOpen(true)
+        setIsFullscreen(false)
+      }
 
       if (typeof custom.detail?.prompt === "string") {
         setValue(custom.detail.prompt)
@@ -349,7 +352,7 @@ export function TamboAgentWidget() {
 
     window.addEventListener("tambo:open-chat", onOpenChat as EventListener)
     return () => window.removeEventListener("tambo:open-chat", onOpenChat as EventListener)
-  }, [setValue])
+  }, [embedded, setValue])
 
 
   useEffect(() => {
@@ -359,6 +362,7 @@ export function TamboAgentWidget() {
   }, [isOpen]);
 
   useEffect(() => {
+    if (embedded) return;
     if (!isOpen) return;
     const onEscape = (event: globalThis.KeyboardEvent) => {
       if (event.key !== "Escape") return;
@@ -371,7 +375,7 @@ export function TamboAgentWidget() {
 
     window.addEventListener("keydown", onEscape);
     return () => window.removeEventListener("keydown", onEscape);
-  }, [isOpen, isFullscreen]);
+  }, [embedded, isOpen, isFullscreen]);
 
   const syncTextareaHeight = useCallback(() => {
     const textarea = textareaRef.current;
@@ -833,9 +837,12 @@ export function TamboAgentWidget() {
 
   if (!apiKey) return null;
 
+  const effectiveOpen = embedded || isOpen;
+  const effectiveFullscreen = embedded ? false : isFullscreen;
+
   return (
     <>
-      {!isOpen ? (
+      {!embedded && !isOpen ? (
         <Button
           type="button"
           className={cn("fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-50 h-14 w-14 rounded-2xl max-sm:right-[5.25rem]", styles.launcher)}
@@ -850,21 +857,23 @@ export function TamboAgentWidget() {
         </Button>
       ) : null}
 
-      {isOpen ? (
+      {effectiveOpen ? (
         <section
           role="dialog"
           aria-label={widgetLabel}
-          aria-modal={isFullscreen || undefined}
+          aria-modal={effectiveFullscreen || undefined}
           className={
-            isFullscreen
-              ? "fixed inset-0 z-50 p-0 sm:p-2"
-              : "fixed bottom-3 right-3 z-50 h-[min(640px,calc(100vh-1.5rem))] w-[min(520px,calc(100vw-1.5rem))] max-sm:inset-x-3 max-sm:bottom-3 max-sm:top-[4.5rem] max-sm:h-auto max-sm:w-auto"
+            embedded
+              ? "relative h-full w-full"
+              : effectiveFullscreen
+                ? "fixed inset-0 z-50 p-0 sm:p-2"
+                : "fixed bottom-3 right-3 z-50 h-[min(640px,calc(100vh-1.5rem))] w-[min(520px,calc(100vw-1.5rem))] max-sm:inset-x-3 max-sm:bottom-3 max-sm:top-[4.5rem] max-sm:h-auto max-sm:w-auto"
           }
         >
           <div
             className={cn(
               "flex h-full w-full min-h-0 flex-col overflow-hidden",
-              isFullscreen ? "rounded-none sm:rounded-3xl" : "rounded-3xl",
+              embedded ? "rounded-none" : effectiveFullscreen ? "rounded-none sm:rounded-3xl" : "rounded-3xl",
               styles.widgetSurface
             )}
           >
@@ -903,32 +912,36 @@ export function TamboAgentWidget() {
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsFullscreen((current) => !current)}
-                  aria-label={
-                    isFullscreen ? tamboT.ariaExitFullscreen : tamboT.ariaEnterFullscreen
-                  }
-                  className="h-9 w-9 rounded-xl"
-                >
-                  {isFullscreen ? (
-                    <Minimize2 className="h-4 w-4" />
-                  ) : (
-                    <Maximize2 className="h-4 w-4" />
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsOpen(false)}
-                  aria-label={tamboT.ariaClose}
-                  className="h-9 w-9 rounded-xl"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                {!embedded ? (
+                  <>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setIsFullscreen((current) => !current)}
+                      aria-label={
+                        isFullscreen ? tamboT.ariaExitFullscreen : tamboT.ariaEnterFullscreen
+                      }
+                      className="h-9 w-9 rounded-xl"
+                    >
+                      {isFullscreen ? (
+                        <Minimize2 className="h-4 w-4" />
+                      ) : (
+                        <Maximize2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setIsOpen(false)}
+                      aria-label={tamboT.ariaClose}
+                      className="h-9 w-9 rounded-xl"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </>
+                ) : null}
               </div>
             </div>
 

@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { BarChart3, DollarSign, History, Package, Settings, Trash2, User, Users } from 'lucide-react'
+import { BarChart3, DollarSign, History, Package, Settings, Trash2, Users } from 'lucide-react'
 
 import type { CanonicalTabId } from '@/components/admin/dashboard/tabs'
 
@@ -12,9 +12,6 @@ type DashboardTabCopySource = {
     statistics: string
     history: string
     interface: string
-  }
-  common: {
-    profile: string
   }
   warehouse: {
     title: string
@@ -40,7 +37,6 @@ export const DASHBOARD_TAB_ORDER: CanonicalTabId[] = [
   'history',
   'bin',
   'interface',
-  'profile',
 ]
 
 export const DASHBOARD_TAB_META: Record<CanonicalTabId, DashboardTabMeta> = {
@@ -89,11 +85,6 @@ export const DASHBOARD_TAB_META: Record<CanonicalTabId, DashboardTabMeta> = {
     desktopAccent: 'data-[state=active]:text-slate-600',
     mobileAccent: 'bg-slate-500',
   },
-  profile: {
-    icon: User,
-    desktopAccent: 'data-[state=active]:text-sky-600',
-    mobileAccent: 'bg-sky-500',
-  },
 }
 
 export function getDashboardTabLabels(t: DashboardTabCopySource): Record<CanonicalTabId, string> {
@@ -107,7 +98,5 @@ export function getDashboardTabLabels(t: DashboardTabCopySource): Record<Canonic
     history: t.admin.history,
     bin: t.admin.bin,
     interface: t.admin.interface,
-    profile: t.common.profile,
   }
 }
-

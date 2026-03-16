@@ -146,6 +146,47 @@ export function AdminsTab({
     return new Intl.NumberFormat('ru-RU')
   }, [language])
 
+  const [salaryLedgerByAdminId, setSalaryLedgerByAdminId] = useState<
+    Record<string, { balance: number; paid: number; accrued: number; days: number }>
+  >({})
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const controller = new AbortController()
+    const asOf = (selectedPeriod?.to ?? selectedPeriod?.from ?? selectedDate ?? new Date()).toISOString()
+
+    void fetch(`/api/admin/finance/admin-balances?asOf=${encodeURIComponent(asOf)}`, {
+      signal: controller.signal,
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (controller.signal.aborted) return
+        const rows: any[] = Array.isArray(data?.admins) ? data.admins : []
+        const next: Record<string, { balance: number; paid: number; accrued: number; days: number }> = {}
+        for (const row of rows) {
+          if (!row || typeof row !== 'object') continue
+          const id = (row as any).id
+          if (typeof id !== 'string') continue
+          const balance = Number((row as any).balance ?? 0)
+          const paid = Number((row as any).paid ?? 0)
+          const accrued = Number((row as any).accrued ?? 0)
+          const days = Number((row as any).days ?? 0)
+          next[id] = {
+            balance: Number.isFinite(balance) ? balance : 0,
+            paid: Number.isFinite(paid) ? paid : 0,
+            accrued: Number.isFinite(accrued) ? accrued : 0,
+            days: Number.isFinite(days) ? days : 0,
+          }
+        }
+        setSalaryLedgerByAdminId(next)
+      })
+      .catch(() => {
+        // ignore transient loading failures
+      })
+
+    return () => controller.abort()
+  }, [selectedDate, selectedPeriod])
+
   const filteredAdmins = useMemo(() => {
     const query = searchTerm.trim().toLowerCase()
 
@@ -496,6 +537,7 @@ export function AdminsTab({
                     <TableHead className="w-[120px]">Not Delivered</TableHead>
                     <TableHead className="w-[130px]">{t.common.status}</TableHead>
                     <TableHead className="w-[130px]">{t.finance.salary}</TableHead>
+                    <TableHead className="w-[140px] text-right">{profileUiText.balance ?? 'Balance'}</TableHead>
                     {!isLowAdminView && <TableHead className="w-[140px] text-right">{t.admin.table.actions}</TableHead>}
                   </TableRow>
                 </TableHeader>
@@ -536,6 +578,25 @@ export function AdminsTab({
                         <TableCell className="py-1.5">
                           {admin.salary && admin.salary > 0 ? `${salaryFormatter.format(admin.salary)} UZS` : '-'}
                         </TableCell>
+                        <TableCell className="py-1.5 text-right tabular-nums">
+                          {salaryLedgerByAdminId[admin.id] ? (
+                            <span
+                              className={
+                                salaryLedgerByAdminId[admin.id].balance > 0
+                                  ? 'font-medium text-rose-600'
+                                  : salaryLedgerByAdminId[admin.id].balance < 0
+                                    ? 'font-medium text-emerald-600'
+                                    : 'text-muted-foreground'
+                              }
+                              title={`Days: ${salaryLedgerByAdminId[admin.id].days}; Accrued: ${salaryFormatter.format(salaryLedgerByAdminId[admin.id].accrued)} UZS; Paid: ${salaryFormatter.format(salaryLedgerByAdminId[admin.id].paid)} UZS`}
+                            >
+                              {salaryLedgerByAdminId[admin.id].balance > 0 ? '+' : ''}
+                              {salaryFormatter.format(Math.round(salaryLedgerByAdminId[admin.id].balance))} UZS
+                            </span>
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
                         {!isLowAdminView && (
                           <TableCell className="py-1.5 text-right">
                             <IconButton
@@ -555,7 +616,7 @@ export function AdminsTab({
 
                   {filteredAdmins.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={!isLowAdminView ? 9 : 7} className="h-20 text-center text-muted-foreground">
+                      <TableCell colSpan={!isLowAdminView ? 10 : 8} className="h-20 text-center text-muted-foreground">
                         <div className="inline-flex items-center gap-2 text-sm">
                           <Users className="size-4" />
                           {t.admin.noAdminsFound}

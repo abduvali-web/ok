@@ -10,9 +10,10 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const { adminId, amount } = await request.json()
+        const { adminId, recipientAdminId, amount } = await request.json()
+        const targetAdminId = recipientAdminId ?? adminId
 
-        if (!adminId || !amount || amount <= 0) {
+        if (!targetAdminId || !amount || amount <= 0) {
             return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
         }
 
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
 
         // Get the admin/courier details
         const staff = await prisma.admin.findUnique({
-            where: { id: adminId }
+            where: { id: targetAdminId }
         })
 
         if (!staff) {
@@ -69,6 +70,7 @@ export async function POST(request: Request) {
                 category: 'SALARY',
                 description: `Выплата зарплаты: ${staff.name} (${staff.role === 'COURIER' ? 'Курьер' : 'Админ'})`,
                 adminId: effectiveAdminId,
+                salaryRecipientAdminId: staff.id,
                 // We can optionally link to the staff member if there was a relation, 
                 // but currently Transaction only links to Admin (creator) and Customer.
                 // We'll store the staff name in description.

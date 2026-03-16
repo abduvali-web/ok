@@ -5,7 +5,6 @@ export const CANONICAL_TABS = [
   'bin',
   'statistics',
   'history',
-  'profile',
   'warehouse',
   'finance',
   'interface',
@@ -14,7 +13,6 @@ export const CANONICAL_TABS = [
 export type CanonicalTabId = (typeof CANONICAL_TABS)[number]
 
 export function mapLegacyAllowedTabId(tab: string): string {
-  if (tab === 'chat') return 'profile'
   if (tab === 'settings') return 'interface'
   return tab
 }
