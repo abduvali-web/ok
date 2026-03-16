@@ -102,7 +102,7 @@ export function SetsTab() {
                 setsList: 'Setlar ro‘yxati',
                 updatedAt: 'Yangilandi',
                 search: 'Qidirish',
-                selectSetHint: 'Tahrirlashni boshlash uchun chapdan setni tanlang',
+                selectSetHint: 'Tahrirlashni boshlash uchun setni tanlang',
                 days: 'Kunlar',
                 dayMenuTitle: (day: string) => `Kun ${day} menyusi`,
                 noDayDataTitle: 'Bu kun uchun menyu yo‘q',
@@ -164,7 +164,7 @@ export function SetsTab() {
                 setsList: 'Список сетов',
                 updatedAt: 'Обновлено',
                 search: 'Поиск',
-                selectSetHint: 'Выберите сет слева, чтобы начать редактирование',
+                selectSetHint: 'Выберите сет, чтобы начать редактирование',
                 days: 'Дни',
                 dayMenuTitle: (day: string) => `Меню на День ${day}`,
                 noDayDataTitle: 'Нет меню для этого дня',
@@ -225,7 +225,7 @@ export function SetsTab() {
             setsList: 'Sets list',
             updatedAt: 'Updated',
             search: 'Search',
-            selectSetHint: 'Select a set on the left to start editing',
+            selectSetHint: 'Select a set to start editing',
             days: 'Days',
             dayMenuTitle: (day: string) => `Day ${day} menu`,
             noDayDataTitle: 'No menu for this day',
@@ -277,6 +277,11 @@ export function SetsTab() {
             maxDaysReached: (n: number) => `Max days: ${n}`,
         };
     }, [language]);
+
+    // Keep Sets + Days selector rows visually consistent.
+    const rowIconBtnClass = "h-9 w-9";
+    const rowIconBtnGhostClass = `${rowIconBtnClass} text-slate-200 hover:text-white hover:bg-slate-700`;
+    const rowIconBtnDeleteClass = `${rowIconBtnClass} text-red-200 hover:text-white hover:bg-red-600/30`;
 
     const [sets, setSets] = useState<MenuSet[]>([]);
     const [selectedSet, setSelectedSet] = useState<MenuSet | null>(null);
@@ -864,8 +869,15 @@ export function SetsTab() {
     const deleteSet = async (id: string) => {
         if (!confirm(uiText.confirmDeleteSet)) return;
         await fetch(`/api/admin/sets/${id}`, { method: 'DELETE' });
-        setSets(prev => prev.filter(s => s.id !== id));
-        if (selectedSet?.id === id) setSelectedSet(null);
+        setSets((prev) => {
+            const next = prev.filter((s) => s.id !== id);
+            if (selectedSet?.id === id) {
+                setSelectedSet(next[0] || null);
+                setActiveDay('1');
+                setActiveGroupTab('');
+            }
+            return next;
+        });
         toast.success(uiText.deleted);
     };
 
@@ -1039,135 +1051,143 @@ export function SetsTab() {
                         placeholder={uiText.search}
                         className="w-full sm:w-[260px] md:w-[320px] flex-none basis-full sm:basis-auto"
                     />
-                    <IconButton
-                        label={uiText.newSet}
-                        onClick={() => setIsCreateModalOpen(true)}
-                        className="bg-green-600 hover:bg-green-700"
-                        iconSize="md"
-                    >
-                        <Plus className="h-4 w-4" />
-                    </IconButton>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Sidebar List */}
-                <div className="lg:col-span-3">
-                    <Card className="h-[calc(100vh-200px)] flex flex-col">
-                        <CardHeader className="bg-muted/30 border-b border-border py-3">
-                            <CardTitle className="text-sm">{uiText.setsList}</CardTitle>
-                        </CardHeader>
-                        <ScrollArea className="flex-1 p-2">
-                            <div className="space-y-2">
-                                {visibleSets.map(set => (
-                                    <div
+            <div className="space-y-4">
+                {/* Sets Selector Row (replaces sidebar) */}
+                <Card className="border-none shadow-sm bg-slate-900 text-white overflow-hidden">
+                    <div className="p-2 overflow-x-auto">
+                        <div className="flex items-center gap-1 min-w-max">
+                            <span className="text-xs font-medium px-2 text-slate-400 mr-2 flex items-center gap-1">
+                                <Scale className="w-4 h-4" />
+                                {uiText.setsList}:
+                            </span>
+
+                            {visibleSets.map((set) => {
+                                const isSelected = selectedSet?.id === set.id;
+                                return (
+                                    <button
                                         key={set.id}
-                                        className={`p-3 rounded-lg border transition-all cursor-pointer ${selectedSet?.id === set.id ? 'bg-primary/5 border-primary shadow-sm' : 'hover:bg-muted/30 border-transparent'}`}
+                                        type="button"
                                         onClick={() => setSelectedSet(set)}
+                                        className={[
+                                            "h-9 min-w-[140px] max-w-[220px] px-3 rounded-full flex items-center gap-2 transition-all",
+                                            isSelected ? "bg-primary text-white shadow-lg" : "hover:bg-slate-700 text-slate-200",
+                                        ].join(" ")}
+                                        title={set.name}
                                     >
-                                        <div className="flex justify-between items-center mb-1">
-                                            <h4 className={`font-semibold text-sm ${selectedSet?.id === set.id ? 'text-primary' : ''}`}>{set.name}</h4>
-                                            <div className={`w-2 h-2 rounded-full ${set.isActive ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-slate-200'}`} />
-                                        </div>
-                                        <div className="flex justify-between items-end">
-                                            <span className="text-[10px] text-slate-400">
-                                                {uiText.updatedAt}: {new Date(set.updatedAt).toLocaleDateString()}
-                                            </span>
-                                            <IconButton
-                                                label="Delete"
-                                                variant="ghost"
-                                                iconSize="sm"
-                                                className="h-6 w-6 -mr-2"
-                                                onClick={(e) => { e.stopPropagation(); deleteSet(set.id); }}
-                                            >
-                                                <Trash2 className="w-3 h-3 text-red-300 hover:text-red-500" />
-                                            </IconButton>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </ScrollArea>
-                    </Card>
-                </div>
+                                        <span className="truncate text-sm font-medium flex-1 text-left">{set.name}</span>
+                                        <span
+                                            className={[
+                                                "w-2 h-2 rounded-full shrink-0",
+                                                set.isActive ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-slate-400",
+                                            ].join(" ")}
+                                        />
+                                    </button>
+                                );
+                            })}
 
-                {/* Main Content */}
-                <div className="lg:col-span-9">
-                    {selectedSet ? (
-                        <div className="space-y-4">
-                            {/* Day Selector Bar */}
-                            <Card className="border-none shadow-sm bg-slate-900 text-white overflow-hidden">
-                                <div className="p-2 overflow-x-auto">
-                                    <div className="flex items-center gap-1 min-w-max">
-                                        <span className="text-xs font-medium px-2 text-slate-400 mr-2 flex items-center gap-1">
-                                            <Calendar className="w-4 h-4" />
-                                            {uiText.days}:
-                                        </span>
-                                        {dayNumbers.map(day => (
-                                            <button
-                                                key={day}
-                                                onClick={() => setActiveDay(day.toString())}
-                                                className={`
-                                                    w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-all
-                                                    ${activeDay === day.toString()
-                                                        ? 'bg-primary text-white shadow-lg scale-110'
-                                                        : 'hover:bg-slate-700 text-slate-300'}
-                                                `}
-                                            >
-                                                {day}
-                                            </button>
-                                        ))}
-                                        <IconButton
-                                            label={uiText.addDay}
-                                            variant="ghost"
-                                            iconSize="md"
-                                            className="h-9 w-9 text-slate-200 hover:text-white hover:bg-slate-700"
-                                            onClick={() => void (async () => {
-                                                if (!selectedSet) return
-                                                const maxDay = Math.max(...dayNumbers)
-                                                const nextDay = maxDay + 1
-                                                if (nextDay > DEFAULT_MAX_DAYS) {
-                                                    toast.error(uiText.maxDaysReached(DEFAULT_MAX_DAYS))
-                                                    return
-                                                }
+                            <IconButton
+                                label={uiText.newSet}
+                                variant="ghost"
+                                iconSize="md"
+                                className={rowIconBtnGhostClass}
+                                onClick={() => setIsCreateModalOpen(true)}
+                            >
+                                <Plus className="h-4 w-4" />
+                            </IconButton>
 
-                                                const baseGroups = (selectedSet.calorieGroups && !Array.isArray(selectedSet.calorieGroups))
-                                                    ? (selectedSet.calorieGroups as any)
-                                                    : {}
+                            <IconButton
+                                label={uiText.delete}
+                                variant="ghost"
+                                iconSize="md"
+                                className={rowIconBtnDeleteClass}
+                                disabled={!selectedSet}
+                                onClick={() => selectedSet ? void deleteSet(selectedSet.id) : undefined}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </IconButton>
+                        </div>
+                    </div>
+                </Card>
 
-                                                const nextDayData =
-                                                    buildStandardDayData(nextDay) ??
-                                                    (baseGroups[String(maxDay)]
-                                                        ? JSON.parse(JSON.stringify(baseGroups[String(maxDay)]))
-                                                        : CALORIE_OPTIONS.map((cal) => ({ id: String(cal), calories: cal, name: `${cal} kcal`, price: null, dishes: [] })))
-
-                                                const updatedGroups = {
-                                                    ...baseGroups,
-                                                    [String(nextDay)]: nextDayData,
-                                                }
-
-                                                const updatedSet = { ...selectedSet, calorieGroups: updatedGroups }
-                                                setSelectedSet(updatedSet)
-                                                setSets((prev) => prev.map((s) => (s.id === updatedSet.id ? updatedSet : s)))
-                                                setActiveDay(String(nextDay))
-                                                await saveSet(updatedSet)
-                                            })()}
+                {selectedSet ? (
+                    <div className="space-y-4">
+                        {/* Day Selector Row */}
+                        <Card className="border-none shadow-sm bg-slate-900 text-white overflow-hidden">
+                            <div className="p-2 overflow-x-auto">
+                                <div className="flex items-center gap-1 min-w-max">
+                                    <span className="text-xs font-medium px-2 text-slate-400 mr-2 flex items-center gap-1">
+                                        <Calendar className="w-4 h-4" />
+                                        {uiText.days}:
+                                    </span>
+                                    {dayNumbers.map(day => (
+                                        <button
+                                            key={day}
+                                            onClick={() => setActiveDay(day.toString())}
+                                            className={`
+                                                w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-all
+                                                ${activeDay === day.toString()
+                                                    ? 'bg-primary text-white shadow-lg scale-110'
+                                                    : 'hover:bg-slate-700 text-slate-300'}
+                                            `}
                                         >
-                                            <Plus className="h-4 w-4" />
-                                        </IconButton>
+                                            {day}
+                                        </button>
+                                    ))}
+                                    <IconButton
+                                        label={uiText.addDay}
+                                        variant="ghost"
+                                        iconSize="md"
+                                        className={rowIconBtnGhostClass}
+                                        onClick={() => void (async () => {
+                                            if (!selectedSet) return
+                                            const maxDay = Math.max(...dayNumbers)
+                                            const nextDay = maxDay + 1
+                                            if (nextDay > DEFAULT_MAX_DAYS) {
+                                                toast.error(uiText.maxDaysReached(DEFAULT_MAX_DAYS))
+                                                return
+                                            }
 
-                                        <IconButton
-                                            label={uiText.delete}
-                                            variant="ghost"
-                                            iconSize="md"
-                                            className="h-9 w-9 text-red-200 hover:text-white hover:bg-red-600/30"
-                                            disabled={dayNumbers.length <= 1}
-                                            onClick={() => void deleteDay(activeDay)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </IconButton>
-                                    </div>
+                                            const baseGroups = (selectedSet.calorieGroups && !Array.isArray(selectedSet.calorieGroups))
+                                                ? (selectedSet.calorieGroups as any)
+                                                : {}
+
+                                            const nextDayData =
+                                                buildStandardDayData(nextDay) ??
+                                                (baseGroups[String(maxDay)]
+                                                    ? JSON.parse(JSON.stringify(baseGroups[String(maxDay)]))
+                                                    : CALORIE_OPTIONS.map((cal) => ({ id: String(cal), calories: cal, name: `${cal} kcal`, price: null, dishes: [] })))
+
+                                            const updatedGroups = {
+                                                ...baseGroups,
+                                                [String(nextDay)]: nextDayData,
+                                            }
+
+                                            const updatedSet = { ...selectedSet, calorieGroups: updatedGroups }
+                                            setSelectedSet(updatedSet)
+                                            setSets((prev) => prev.map((s) => (s.id === updatedSet.id ? updatedSet : s)))
+                                            setActiveDay(String(nextDay))
+                                            await saveSet(updatedSet)
+                                        })()}
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                    </IconButton>
+
+                                    <IconButton
+                                        label={uiText.delete}
+                                        variant="ghost"
+                                        iconSize="md"
+                                        className={rowIconBtnDeleteClass}
+                                        disabled={dayNumbers.length <= 1}
+                                        onClick={() => void deleteDay(activeDay)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </IconButton>
                                 </div>
-                            </Card>
+                            </div>
+                        </Card>
 
                             <Card className="min-h-[600px] flex flex-col">
                                 <CardHeader className="border-b border-border bg-muted/30 flex flex-row items-center justify-between py-3">
@@ -1223,6 +1243,7 @@ export function SetsTab() {
                                                     label={uiText.newGroup}
                                                     variant="outline"
                                                     iconSize="md"
+                                                    className={rowIconBtnClass}
                                                     onClick={() => {
                                                         setEditingGroup(null)
                                                         setIsGroupModalOpen(true)
@@ -1235,6 +1256,7 @@ export function SetsTab() {
                                                     label={uiText.delete}
                                                     variant="outline"
                                                     iconSize="md"
+                                                    className={rowIconBtnClass}
                                                     disabled={!activeGroupTab}
                                                     onClick={() => void deleteGroupById(activeGroupTab)}
                                                 >
@@ -1384,16 +1406,15 @@ export function SetsTab() {
                                     )}
                                 </CardContent>
                             </Card>
+                    </div>
+                ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                            <ArrowRight className="w-8 h-8 text-slate-300" />
                         </div>
-                    ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                                <ArrowRight className="w-8 h-8 text-slate-300" />
-                            </div>
-                            <p>{uiText.selectSetHint}</p>
-                        </div>
-                    )}
-                </div>
+                        <p>{uiText.selectSetHint}</p>
+                    </div>
+                )}
             </div>
 
             {/* Create Modal */}
