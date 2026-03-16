@@ -21,12 +21,14 @@ interface Dish {
 
 // Types for custom sets
 interface SetDish {
-    dishId: number;
+    dishId: string | number;
     dishName: string;
     mealType: string;
 }
 
 interface CalorieGroup {
+    id?: string;
+    name?: string;
     calories: number;
     dishes: SetDish[];
 }
@@ -74,6 +76,7 @@ interface CookingManagerProps {
 }
 
 const CALORIE_GROUPS = [1200, 1600, 2000, 2500, 3000];
+const MEAL_TYPE_ORDER = ['BREAKFAST', 'SECOND_BREAKFAST', 'LUNCH', 'SNACK', 'DINNER', 'SIXTH_MEAL'] as const;
 
 export function CookingManager({
     date,
@@ -117,6 +120,12 @@ export function CookingManager({
                 enterValidAmount: 'Введите корректное количество',
                 cookFailed: 'Не удалось приготовить',
                 cookError: 'Ошибка приготовления',
+                selectedSetDiffersWarning:
+                    'Внимание: выбранный сет отличается от активного. Заказы отображаются для активного сета.',
+                mealLabel: (meal: number) => {
+                    const words = ['Первый', 'Второй', 'Третий', 'Четвертый', 'Пятый', 'Шестой'];
+                    return `${words[meal - 1] ?? `${meal}-й`} прием пищи`;
+                },
                 noDishes: (menu: number) => `Нет блюд для отображения (меню ${menu}). Проверьте настройки выбранного сета.`,
             }
         }
@@ -144,6 +153,12 @@ export function CookingManager({
                 enterValidAmount: "To'g'ri miqdor kiriting",
                 cookFailed: "Pishirib bo'lmadi",
                 cookError: 'Pishirishda xatolik',
+                selectedSetDiffersWarning:
+                    "Diqqat: tanlangan set aktiv setdan farq qiladi. Buyurtmalar aktiv set bo'yicha ko'rsatiladi.",
+                mealLabel: (meal: number) => {
+                    const words = ['Birinchi', 'Ikkinchi', 'Uchinchi', "To'rtinchi", 'Beshinchi', 'Oltinchi'];
+                    return `${words[meal - 1] ?? `Ovqat ${meal}`}`;
+                },
                 noDishes: (menu: number) => `Ko'rsatish uchun taom yo'q (menyu ${menu}). Tanlangan set sozlamalarini tekshiring.`,
             }
         }
@@ -170,6 +185,11 @@ export function CookingManager({
             enterValidAmount: 'Please enter a valid amount',
             cookFailed: 'Failed to cook',
             cookError: 'Error cooking',
+            selectedSetDiffersWarning: 'Warning: selected set differs from active. Orders are shown for the active set.',
+            mealLabel: (meal: number) => {
+                const words = ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth'];
+                return `${words[meal - 1] ?? `Meal ${meal}`} meal`;
+            },
             noDishes: (menu: number) => `No dishes to display (menu ${menu}). Check selected set settings.`,
         }
     }, [language]);
@@ -257,6 +277,43 @@ export function CookingManager({
         if (selectedSetId === 'active') return safeAvailableSets.find(s => s.isActive) || null;
         return safeAvailableSets.find(s => s.id === selectedSetId) || null;
     }, [safeAvailableSets, selectedSetId]);
+
+    const activeSetDayGroups = useMemo(() => {
+        if (!activeSet) return null;
+        const groups = activeSet.calorieGroups as unknown as Record<string, CalorieGroup[]>;
+        if (Array.isArray(groups as any)) return null;
+        const dayGroups = (groups as any)?.[menuNumber?.toString?.() ?? String(menuNumber)];
+        return Array.isArray(dayGroups) ? (dayGroups as CalorieGroup[]) : null;
+    }, [activeSet, menuNumber]);
+
+    const groupLabelByCalories = useMemo(() => {
+        const m = new Map<number, string>();
+        if (activeSetDayGroups) {
+            for (const g of activeSetDayGroups) {
+                const cal = typeof g?.calories === 'number' ? g.calories : Number((g as any)?.calories);
+                if (!Number.isFinite(cal)) continue;
+                const name = typeof (g as any)?.name === 'string' ? (g as any).name.trim() : '';
+                m.set(cal, name || `${cal} kcal`);
+            }
+        }
+        return m;
+    }, [activeSetDayGroups]);
+
+    const availableCalorieGroups = useMemo(() => {
+        const fromSet =
+            activeSetDayGroups
+                ?.map((g) => (typeof g?.calories === 'number' ? g.calories : Number((g as any)?.calories)))
+                .filter((n) => Number.isFinite(n)) ?? [];
+        const unique = Array.from(new Set(fromSet)).sort((a, b) => a - b);
+        return unique.length > 0 ? unique : CALORIE_GROUPS;
+    }, [activeSetDayGroups]);
+
+    useEffect(() => {
+        if (selectedCalorieGroup === 'all') return;
+        const cal = Number(selectedCalorieGroup);
+        if (!Number.isFinite(cal) || !availableCalorieGroups.includes(cal)) setSelectedCalorieGroup('all');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [availableCalorieGroups.join('|')]);
 
     useEffect(() => {
         fetchData();
@@ -516,8 +573,13 @@ export function CookingManager({
     };
 
     const filteredCalorieGroups = selectedCalorieGroup === 'all'
-        ? CALORIE_GROUPS
+        ? availableCalorieGroups
         : [parseInt(selectedCalorieGroup)];
+
+    const getMealIndex = (mealType: string) => {
+        const idx = MEAL_TYPE_ORDER.indexOf(String(mealType || '').toUpperCase().trim() as any);
+        return idx >= 0 ? idx + 1 : null;
+    };
 
     if (loading) {
         return <div className="text-center py-8"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" /></div>;
@@ -570,8 +632,10 @@ export function CookingManager({
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">{uiText.allCalories}</SelectItem>
-                                    {CALORIE_GROUPS.map(c => (
-                                        <SelectItem key={c} value={c.toString()}>{c} kcal</SelectItem>
+                                    {availableCalorieGroups.map(c => (
+                                        <SelectItem key={c} value={c.toString()}>
+                                            {groupLabelByCalories.get(c) ?? `${c} kcal`}
+                                        </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -590,12 +654,13 @@ export function CookingManager({
                         </Badge>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        {CALORIE_GROUPS.map(cal => {
+                        {availableCalorieGroups.map(cal => {
                             const count = clientsByCalorie[cal] || 0;
                             if (count === 0) return null;
                             return (
                                 <Badge key={cal} variant="outline" className="bg-card">
-                                    {cal} ккал: <span className="font-bold ml-1">{count}</span>
+                                    {groupLabelByCalories.get(cal) ?? `${cal} kcal`}:{' '}
+                                    <span className="font-bold ml-1">{count}</span>
                                 </Badge>
                             );
                         })}
@@ -605,7 +670,7 @@ export function CookingManager({
                         {activeSet && selectedSetId !== 'active' && activeSet.id !== selectedSetId && (
                             <div className="w-full text-xs text-amber-600 mt-1 flex items-center">
                                 <AlertTriangle className="w-3 h-3 mr-1" />
-                                Внимание: Выбранный сет отличается от активного. Заказы отображаются для Активного сета.
+                                {uiText.selectedSetDiffersWarning}
                             </div>
                         )}
                     </div>
@@ -619,9 +684,11 @@ export function CookingManager({
                             <TableHead className="w-[200px]">{uiText.dish}</TableHead>
                             {filteredCalorieGroups.map(cal => (
                                 <TableHead key={cal} className="text-center min-w-[150px]">
-                                    {cal} kcal
+                                    <div className="truncate font-medium">
+                                        {groupLabelByCalories.get(cal) ?? `${cal} kcal`}
+                                    </div>
                                     <div className="text-xs font-normal text-slate-500">
-                                        Need: {clientsByCalorie[cal] || 0}
+                                        {cal} kcal · Need: {clientsByCalorie[cal] || 0}
                                     </div>
                                 </TableHead>
                             ))}
@@ -639,7 +706,12 @@ export function CookingManager({
                                 <TableRow key={dish.id}>
                                     <TableCell className="font-medium">
                                         {dish.name}
-                                        <div className="text-xs text-slate-400">{dish.mealType}</div>
+                                        <div className="text-xs text-slate-400">
+                                            {(() => {
+                                                const meal = getMealIndex(dish.mealType);
+                                                return meal ? uiText.mealLabel(meal) : dish.mealType;
+                                            })()}
+                                        </div>
                                     </TableCell>
                                     {filteredCalorieGroups.map(cal => {
                                         const needed = getNeededAmount(dish.id, cal);
