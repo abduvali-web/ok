@@ -8,7 +8,7 @@ export type ScopedUser = {
 export async function getOwnerAdminId(user: ScopedUser): Promise<string | null> {
   if (user.role === 'SUPER_ADMIN') return null
   if (user.role === 'MIDDLE_ADMIN') return user.id
-  if (user.role === 'LOW_ADMIN') {
+  if (user.role === 'LOW_ADMIN' || user.role === 'COURIER') {
     const lowAdmin = await db.admin.findUnique({
       where: { id: user.id },
       select: { createdBy: true }

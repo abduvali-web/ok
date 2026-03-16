@@ -78,6 +78,24 @@ export async function PATCH(
     const previousStatus = order.orderStatus as OrderStatus
     const previousCourierId = order.courierId
 
+    // Finance scope (transactions + company balance) is tied to the "owner" middle-admin of the order's group.
+    // This keeps finance tabs consistent for LOW_ADMIN / COURIER flows.
+    const resolveFinanceAdminId = async () => {
+      if (user.role === 'MIDDLE_ADMIN' || user.role === 'LOW_ADMIN') {
+        return (await getOwnerAdminId(user)) ?? user.id
+      }
+      if (!order.adminId) return user.id
+
+      const admin = await db.admin.findUnique({
+        where: { id: order.adminId },
+        select: { id: true, role: true, createdBy: true },
+      })
+      if (!admin) return order.adminId
+      if (admin.role === 'MIDDLE_ADMIN') return admin.id
+      if (admin.role === 'LOW_ADMIN' || admin.role === 'COURIER') return admin.createdBy ?? admin.id
+      return admin.id
+    }
+
     switch (action) {
       case 'start_delivery':
         if (!hasRole(user, ['COURIER'])) {
@@ -126,12 +144,13 @@ export async function PATCH(
           return NextResponse.json({ error: 'Заказ уже доставлен' }, { status: 400 })
         }
 
-        const { amountReceived } = body
+        const { amountReceived: amountReceivedDelta } = body
         updateData.orderStatus = 'DELIVERED'
         Object.assign(updateData, getStatusTimestampPatch('DELIVERED'))
         eventType = OrderEventType.DELIVERY_COMPLETED
         eventMessage = 'Delivery completed'
 
+        const financeAdminId = await resolveFinanceAdminId()
         const transactionOps: Prisma.PrismaPromise<unknown>[] = []
 
         // 1. Deduct Daily Price (Expense)
@@ -143,7 +162,7 @@ export async function PATCH(
               type: 'EXPENSE',
               category: 'MEAL_DEDUCTION',
               description: `Списание за дневной рацион (Заказ #${order.orderNumber})`,
-              adminId: order.adminId,
+              adminId: financeAdminId,
               customerId: order.customerId
             }
           }),
@@ -155,40 +174,50 @@ export async function PATCH(
 
         // 2. Handle Payment (Income) if received
         const totalOrderCost = dailyPrice * (order.quantity || 1)
-        const parsedAmount = amountReceived !== undefined && amountReceived !== null ? parseFloat(amountReceived) : 0
+        const parsedDeltaRaw =
+          amountReceivedDelta !== undefined &&
+          amountReceivedDelta !== null &&
+          String(amountReceivedDelta).trim() !== ''
+            ? Number(amountReceivedDelta)
+            : 0
+        const parsedDelta = Number.isFinite(parsedDeltaRaw) ? parsedDeltaRaw : 0
+        const delta = parsedDelta > 0 ? parsedDelta : 0
 
-        if (!isNaN(parsedAmount) && parsedAmount > 0) {
-          updateData.amountReceived = parsedAmount
+        const previousAmountReceived = typeof order.amountReceived === 'number' ? order.amountReceived : 0
+        const nextAmountReceived = previousAmountReceived + delta
+
+        if (delta > 0) {
+          updateData.amountReceived = nextAmountReceived
 
           transactionOps.push(
             db.transaction.create({
               data: {
-                amount: parsedAmount,
+                amount: delta,
                 type: 'INCOME',
                 category: 'ORDER_PAYMENT',
                 description: `Оплата за заказ #${order.orderNumber} (Курьер: ${(user as any).name || 'Unknown'})`,
-                adminId: order.adminId,
+                adminId: financeAdminId,
                 customerId: order.customerId
               }
             }),
             db.customer.update({
               where: { id: order.customerId },
-              data: { balance: { increment: parsedAmount } }
+              data: { balance: { increment: delta } }
+            }),
+            db.admin.update({
+              where: { id: financeAdminId },
+              data: { companyBalance: { increment: delta } }
             })
           )
-
-          if (order.adminId) {
-            transactionOps.push(
-              db.admin.update({
-                where: { id: order.adminId },
-                data: { companyBalance: { increment: parsedAmount } }
-              })
-            )
-          }
+        } else if (previousAmountReceived > 0) {
+          // Keep cumulative value on the order if it was already recorded earlier.
+          updateData.amountReceived = previousAmountReceived
         }
 
         // 3. Update Payment Status based on received amount
-        if (parsedAmount >= totalOrderCost) {
+        const effectiveReceived =
+          typeof updateData.amountReceived === 'number' ? updateData.amountReceived : previousAmountReceived
+        if (effectiveReceived >= totalOrderCost) {
           updateData.paymentStatus = 'PAID'
         } else if (!order.isPrepaid) {
           updateData.paymentStatus = 'UNPAID'
@@ -218,6 +247,7 @@ export async function PATCH(
           paymentStatus,
           paymentMethod,
           isPrepaid,
+          amountReceived,
           date,
           courierId,
           latitude,
@@ -300,6 +330,49 @@ export async function PATCH(
 
         const nextCourierId = (courierId === 'null' || courierId === '') ? null : courierId
 
+        const hasAmountReceived = Object.prototype.hasOwnProperty.call(body, 'amountReceived')
+        let nextAmountReceivedOverride: number | null | undefined = undefined
+
+        if (hasAmountReceived) {
+          const parsedRaw =
+            amountReceived !== undefined && amountReceived !== null && String(amountReceived).trim() !== ''
+              ? Number(amountReceived)
+              : 0
+          const parsed = Number.isFinite(parsedRaw) ? parsedRaw : 0
+          nextAmountReceivedOverride = parsed > 0 ? parsed : null
+
+          const previousValue = typeof order.amountReceived === 'number' ? order.amountReceived : 0
+          const nextValue = typeof nextAmountReceivedOverride === 'number' ? nextAmountReceivedOverride : 0
+          const delta = nextValue - previousValue
+
+          if (delta !== 0) {
+            const financeAdminId = await resolveFinanceAdminId()
+            const txType = delta > 0 ? 'INCOME' : 'EXPENSE'
+            const txAmount = Math.abs(delta)
+
+            await db.$transaction([
+              db.transaction.create({
+                data: {
+                  amount: txAmount,
+                  type: txType,
+                  category: 'ORDER_PAYMENT',
+                  description: `Order payment adjustment (Order #${order.orderNumber})`,
+                  adminId: financeAdminId,
+                  customerId: order.customerId
+                }
+              }),
+              db.customer.update({
+                where: { id: order.customerId },
+                data: { balance: { increment: delta } }
+              }),
+              db.admin.update({
+                where: { id: financeAdminId },
+                data: { companyBalance: { increment: delta } }
+              })
+            ])
+          }
+        }
+
         updateData = {
           ...updateData,
           deliveryAddress,
@@ -312,11 +385,12 @@ export async function PATCH(
           isPrepaid,
           deliveryDate: date ? new Date(date) : undefined,
           courierId: nextCourierId,
+          ...(hasAmountReceived ? { amountReceived: nextAmountReceivedOverride } : {}),
           ...(hasLatitude ? { latitude: sanitizedLatitude } : {}),
           ...(hasLongitude ? { longitude: sanitizedLongitude } : {})
         }
         Object.assign(updateData, getCourierAssignmentPatch(order.courierId, nextCourierId))
-        if (paymentStatus || paymentMethod) {
+        if (paymentStatus || paymentMethod || hasAmountReceived) {
           eventType = OrderEventType.PAYMENT_UPDATED
           eventMessage = 'Payment details updated'
         } else {

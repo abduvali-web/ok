@@ -33,7 +33,6 @@ import {
     Copy,
     Scale,
     Calendar,
-    ArrowLeft,
     ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -1277,28 +1276,6 @@ export function SetsTab() {
                             </IconButton>
 
                             <IconButton
-                                label="Move left"
-                                variant="ghost"
-                                iconSize="md"
-                                className={rowIconBtnGhostClass}
-                                disabled={!selectedSet || visibleSets.findIndex((s) => s.id === selectedSet.id) <= 0}
-                                onClick={() => moveSelectedSet(-1)}
-                            >
-                                <ArrowLeft className="h-4 w-4" />
-                            </IconButton>
-
-                            <IconButton
-                                label="Move right"
-                                variant="ghost"
-                                iconSize="md"
-                                className={rowIconBtnGhostClass}
-                                disabled={!selectedSet || visibleSets.findIndex((s) => s.id === selectedSet.id) === -1 || visibleSets.findIndex((s) => s.id === selectedSet.id) >= visibleSets.length - 1}
-                                onClick={() => moveSelectedSet(1)}
-                            >
-                                <ArrowRight className="h-4 w-4" />
-                            </IconButton>
-
-                            <IconButton
                                 label={uiText.delete}
                                 variant="ghost"
                                 iconSize="md"
@@ -1383,28 +1360,6 @@ export function SetsTab() {
                                     </IconButton>
 
                                     <IconButton
-                                        label="Move left"
-                                        variant="ghost"
-                                        iconSize="md"
-                                        className={rowIconBtnGhostClass}
-                                        disabled={dayKeys.indexOf(String(activeDay)) <= 0}
-                                        onClick={() => void moveSelectedDay(-1)}
-                                    >
-                                        <ArrowLeft className="h-4 w-4" />
-                                    </IconButton>
-
-                                    <IconButton
-                                        label="Move right"
-                                        variant="ghost"
-                                        iconSize="md"
-                                        className={rowIconBtnGhostClass}
-                                        disabled={dayKeys.indexOf(String(activeDay)) === -1 || dayKeys.indexOf(String(activeDay)) >= dayKeys.length - 1}
-                                        onClick={() => void moveSelectedDay(1)}
-                                    >
-                                        <ArrowRight className="h-4 w-4" />
-                                    </IconButton>
-
-                                    <IconButton
                                         label={uiText.delete}
                                         variant="ghost"
                                         iconSize="md"
@@ -1480,28 +1435,6 @@ export function SetsTab() {
                                                     }}
                                                 >
                                                     <Plus className="h-4 w-4" />
-                                                </IconButton>
-
-                                                <IconButton
-                                                    label="Move left"
-                                                    variant="outline"
-                                                    iconSize="md"
-                                                    className={`${rowIconBtnClass} border-white/20 text-white hover:bg-white/10`}
-                                                    disabled={!activeGroupTab || currentDayData.findIndex((g) => String(g.id) === String(activeGroupTab)) <= 0}
-                                                    onClick={() => void moveSelectedGroup(-1)}
-                                                >
-                                                    <ArrowLeft className="h-4 w-4" />
-                                                </IconButton>
-
-                                                <IconButton
-                                                    label="Move right"
-                                                    variant="outline"
-                                                    iconSize="md"
-                                                    className={`${rowIconBtnClass} border-white/20 text-white hover:bg-white/10`}
-                                                    disabled={!activeGroupTab || currentDayData.findIndex((g) => String(g.id) === String(activeGroupTab)) === -1 || currentDayData.findIndex((g) => String(g.id) === String(activeGroupTab)) >= currentDayData.length - 1}
-                                                    onClick={() => void moveSelectedGroup(1)}
-                                                >
-                                                    <ArrowRight className="h-4 w-4" />
                                                 </IconButton>
 
                                                 <IconButton

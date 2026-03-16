@@ -213,6 +213,7 @@ export async function POST(request: NextRequest) {
       paymentStatus,
       paymentMethod,
       isPrepaid,
+      amountReceived,
       date,
       selectedClientId,
       courierId,
@@ -308,6 +309,7 @@ export async function POST(request: NextRequest) {
     }
 
     const ownerAdminId = await getOwnerAdminId(user)
+    const financeAdminId = ownerAdminId ?? user.id
     const groupAdminIds =
       user.role === 'MIDDLE_ADMIN' || user.role === 'LOW_ADMIN'
         ? await getGroupAdminIds(user)
@@ -374,6 +376,24 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    const parsedAmountReceivedRaw =
+      amountReceived !== undefined && amountReceived !== null && String(amountReceived).trim() !== ''
+        ? Number(amountReceived)
+        : 0
+    const parsedAmountReceived = Number.isFinite(parsedAmountReceivedRaw) ? parsedAmountReceivedRaw : 0
+    const normalizedAmountReceived = parsedAmountReceived > 0 ? parsedAmountReceived : 0
+
+    const customerDailyPrice = (customer as any)?.dailyPrice || 84000
+    const totalOrderCost = customerDailyPrice * parsedQuantity
+    const resolvedPaymentStatus: PaymentStatus =
+      paymentStatus
+        ? (String(paymentStatus) as PaymentStatus)
+        : normalizedAmountReceived >= totalOrderCost
+          ? PaymentStatus.PAID
+          : normalizedAmountReceived > 0
+            ? PaymentStatus.PARTIAL
+            : PaymentStatus.UNPAID
+
     const orderInclude = {
       customer: {
         select: {
@@ -412,9 +432,10 @@ export async function POST(request: NextRequest) {
             quantity: parsedQuantity,
             calories: parsedCalories,
             specialFeatures: specialFeatures || '',
-            paymentStatus: (paymentStatus ? String(paymentStatus) : PaymentStatus.UNPAID) as PaymentStatus,
+            paymentStatus: resolvedPaymentStatus,
             paymentMethod: (paymentMethod ? String(paymentMethod) : PaymentMethod.CASH) as PaymentMethod,
             isPrepaid: isPrepaid || false,
+            amountReceived: normalizedAmountReceived > 0 ? normalizedAmountReceived : null,
             orderStatus: OrderStatus.NEW,
             sourceChannel: sourceChannel ? String(sourceChannel) : 'ADMIN_PANEL',
             priority: parsedPriority,
@@ -455,6 +476,43 @@ export async function POST(request: NextRequest) {
       },
       message: 'Order created',
     })
+
+    if (normalizedAmountReceived > 0) {
+      try {
+        await db.$transaction([
+          db.transaction.create({
+            data: {
+              amount: normalizedAmountReceived,
+              type: 'INCOME',
+              category: 'ORDER_PAYMENT',
+              description: `Order payment (Order #${newOrder.orderNumber})`,
+              adminId: financeAdminId,
+              customerId: customer.id,
+            },
+          }),
+          db.customer.update({
+            where: { id: customer.id },
+            data: { balance: { increment: normalizedAmountReceived } },
+          }),
+          db.admin.update({
+            where: { id: financeAdminId },
+            data: { companyBalance: { increment: normalizedAmountReceived } },
+          }),
+        ])
+      } catch (error) {
+        console.error('Error recording order payment on create:', error)
+        // Keep system consistent: if we couldn't write finance changes, clear amountReceived.
+        try {
+          await db.order.update({
+            where: { id: newOrder.id },
+            data: { amountReceived: null, paymentStatus: PaymentStatus.UNPAID },
+          })
+        } catch {
+          // ignore rollback failures
+        }
+        return NextResponse.json({ error: 'Failed to record payment' }, { status: 500 })
+      }
+    }
 
     if (resolvedCourierId) {
       await appendOrderAudit(db, {

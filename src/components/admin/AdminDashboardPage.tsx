@@ -306,6 +306,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     paymentStatus: 'UNPAID',
     paymentMethod: 'CASH',
     isPrepaid: false,
+    amountReceived: null as number | null,
     selectedClientId: '',
     latitude: null as number | null,
     longitude: null as number | null,
@@ -367,6 +368,36 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const fetchData = () => refreshAll()
   const fetchBinClients = () => refreshBinClients()
   const fetchBinOrders = () => refreshBinOrders()
+
+  const clientAssignedSet = useMemo(() => {
+    const id = clientFormData.assignedSetId
+    if (!id) return null
+    return (availableSets || []).find((s: any) => s?.id === id) ?? null
+  }, [availableSets, clientFormData.assignedSetId])
+
+  const clientGroupOptions = useMemo(() => {
+    const groupsByDay = (clientAssignedSet as any)?.calorieGroups
+    if (!groupsByDay || typeof groupsByDay !== 'object') return [] as Array<{ id: string; name: string; calories: number; price: number | null }>
+
+    const dayKeys = Object.keys(groupsByDay)
+      .filter((k) => Array.isArray((groupsByDay as any)[k]))
+      .sort((a, b) => Number(a) - Number(b))
+
+    const firstDayKey = dayKeys[0]
+    const groups = firstDayKey ? (groupsByDay as any)[firstDayKey] : []
+    if (!Array.isArray(groups)) return []
+
+    return groups.map((g: any) => ({
+      id: String(g?.id ?? g?.calories ?? g?.name ?? 'group'),
+      name: String(g?.name ?? `${g?.calories ?? ''} kcal`).trim() || `${g?.calories ?? ''} kcal`,
+      calories: typeof g?.calories === 'number' ? g.calories : Number(g?.calories) || 0,
+      price: typeof g?.price === 'number' && Number.isFinite(g.price) ? g.price : null,
+    }))
+  }, [clientAssignedSet])
+
+  const clientSelectedGroup = useMemo(() => {
+    return clientGroupOptions.find((g) => g.calories === clientFormData.calories) ?? null
+  }, [clientGroupOptions, clientFormData.calories])
 
   const [isDashboardRefreshing, setIsDashboardRefreshing] = useState(false)
   const handleRefreshAll = useCallback(async () => {
@@ -1602,6 +1633,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
           paymentStatus: 'UNPAID',
           paymentMethod: 'CASH',
           isPrepaid: false,
+          amountReceived: null,
           selectedClientId: '',
           latitude: null,
           longitude: null,
@@ -1636,6 +1668,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       paymentStatus: order.paymentStatus as string,
       paymentMethod: order.paymentMethod as string,
       isPrepaid: order.isPrepaid,
+      amountReceived: typeof order.amountReceived === 'number' ? order.amountReceived : null,
       selectedClientId: '', // We don't link back to client selection for now to avoid overwriting
       latitude: order.latitude || null,
       longitude: order.longitude || null,
@@ -3113,7 +3146,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                   setClientFormData(prev => ({
                                     ...prev,
                                     planType: val,
-                                    dailyPrice: getDailyPrice(val, prev.calories)
+                                    dailyPrice: prev.assignedSetId ? prev.dailyPrice : getDailyPrice(val, prev.calories)
                                   }))
                                 }}
                                 className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -3125,27 +3158,58 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             </div>
 
                             <div className="grid grid-cols-4 items-center gap-2">
-                              <Label htmlFor="clientCalories" className="text-right">
-                                Calories
+                              <Label htmlFor="clientSet" className="text-right">
+                                Set
                               </Label>
                               <select
-                                id="clientCalories"
-                                value={clientFormData.calories}
-                                onChange={(e) => {
-                                  const val = parseInt(e.target.value)
-                                  setClientFormData(prev => ({
+                                id="clientSet"
+                                value={clientFormData.assignedSetId}
+                                onChange={(e) =>
+                                  setClientFormData((prev) => ({
                                     ...prev,
-                                    calories: val,
-                                    dailyPrice: getDailyPrice(prev.planType, val)
+                                    assignedSetId: e.target.value,
                                   }))
-                                }}
+                                }
                                 className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                               >
-                                <option value="1200">1200 kcal</option>
-                                <option value="1600">1600 kcal</option>
-                                <option value="2000">2000 kcal</option>
-                                <option value="2500">2500 kcal</option>
-                                <option value="3000">3000 kcal</option>
+                                <option value="">{profileUiText.autoSet}</option>
+                                {availableSets.map((set) => (
+                                  <option key={set.id} value={set.id}>
+                                    {set.name} {set.isActive ? profileUiText.active : ''}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="grid grid-cols-4 items-center gap-2">
+                              <Label htmlFor="clientGroup" className="text-right">
+                                Group
+                              </Label>
+                              <select
+                                id="clientGroup"
+                                value={clientSelectedGroup?.id ?? ''}
+                                onChange={(e) => {
+                                  const id = e.target.value
+                                  const g = clientGroupOptions.find((x) => x.id === id)
+                                  if (!g) return
+                                  setClientFormData((prev) => ({
+                                    ...prev,
+                                    calories: g.calories,
+                                    dailyPrice:
+                                      typeof g.price === 'number' && Number.isFinite(g.price) ? g.price : prev.dailyPrice,
+                                  }))
+                                }}
+                                disabled={!clientAssignedSet || clientGroupOptions.length === 0}
+                                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                <option value="">
+                                  {clientAssignedSet ? 'Select group' : 'Select set first'}
+                                </option>
+                                {clientGroupOptions.map((g) => (
+                                  <option key={g.id} value={g.id}>
+                                    {g.name}
+                                  </option>
+                                ))}
                               </select>
                             </div>
 
@@ -3156,9 +3220,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                               <Input
                                 id="clientPrice"
                                 type="number"
-                                value={clientFormData.dailyPrice}
+                                value={clientSelectedGroup ? clientFormData.dailyPrice : ''}
                                 onChange={(e) => setClientFormData(prev => ({ ...prev, dailyPrice: parseInt(e.target.value) }))}
                                 className="col-span-3"
+                                disabled={!clientSelectedGroup}
+                                placeholder={clientSelectedGroup ? undefined : 'Select group'}
                               />
                             </div>
 
@@ -3265,24 +3331,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                       {couriers.map((courier) => (
                                         <option key={courier.id} value={courier.id}>
                                           {courier.name}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </Label>
-                                </div>
-                                <div className="flex items-center space-x-2 pt-2">
-                                  <Label htmlFor="assignedSet" className="text-sm w-full">
-                                    Assigned set (menu):
-                                    <select
-                                      id="assignedSet"
-                                      value={clientFormData.assignedSetId}
-                                      onChange={(e) => setClientFormData(prev => ({ ...prev, assignedSetId: e.target.value }))}
-                                      className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                      <option value="">{profileUiText.autoSet}</option>
-                                      {availableSets.map((set) => (
-                                        <option key={set.id} value={set.id}>
-                                          {set.name} {set.isActive ? profileUiText.active : ''}
                                         </option>
                                       ))}
                                     </select>

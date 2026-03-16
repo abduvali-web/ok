@@ -43,6 +43,7 @@ export type OrderFormData = {
   paymentStatus: string
   paymentMethod: string
   isPrepaid: boolean
+  amountReceived: number | null
   selectedClientId: string
   latitude: number | null
   longitude: number | null
@@ -112,19 +113,42 @@ export function OrderModal({
   const orderCost = dailyPrice * qty
 
   const isCashLike = orderFormData.paymentMethod === 'CASH' || orderFormData.paymentMethod === 'CARD'
-  const isDelivered = editingOrder?.orderStatus === 'DELIVERED'
-  const amountReceived = typeof editingOrder?.amountReceived === 'number' ? editingOrder.amountReceived : 0
-
-  const amountValue = (() => {
-    if (!isCashLike) return null
-    if (isDelivered) return amountReceived - orderCost
-    return clientBalance > 0 ? clientBalance : 0
-  })()
+  const draftAmountReceived =
+    typeof orderFormData.amountReceived === 'number' && Number.isFinite(orderFormData.amountReceived)
+      ? orderFormData.amountReceived
+      : 0
 
   const orderPoint =
     typeof orderFormData.latitude === 'number' && typeof orderFormData.longitude === 'number'
       ? { lat: orderFormData.latitude, lng: orderFormData.longitude }
       : null
+
+  const selectedSet = orderFormData.assignedSetId
+    ? availableSets.find((s: any) => s?.id === orderFormData.assignedSetId)
+    : null
+
+  const groupOptions: Array<{ id: string; name: string; calories: number; price: number | null }> = (() => {
+    const groupsByDay = selectedSet?.calorieGroups
+    if (!groupsByDay || typeof groupsByDay !== 'object') return []
+
+    const dayKeys = Object.keys(groupsByDay)
+      .filter((k) => Array.isArray((groupsByDay as any)[k]))
+      .sort((a, b) => Number(a) - Number(b))
+
+    const firstDayKey = dayKeys[0]
+    const groups = firstDayKey ? (groupsByDay as any)[firstDayKey] : []
+    if (!Array.isArray(groups)) return []
+
+    return groups.map((g: any) => ({
+      id: String(g?.id ?? g?.calories ?? g?.name ?? 'group'),
+      name: String(g?.name ?? `${g?.calories ?? ''} kcal`).trim() || `${g?.calories ?? ''} kcal`,
+      calories: typeof g?.calories === 'number' ? g.calories : Number(g?.calories) || 0,
+      price: typeof g?.price === 'number' && Number.isFinite(g.price) ? g.price : null,
+    }))
+  })()
+
+  const selectedGroup =
+    groupOptions.find((g) => g.calories === orderFormData.calories) ?? null
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -231,38 +255,6 @@ export function OrderModal({
               </div>
 
               <div className={rowClass}>
-                <Label htmlFor="deliveryAddress" className={labelClass}>
-                  Адрес доставки
-                  {orderFormData.selectedClientId && <span className="text-xs text-green-600 ml-1">✓</span>}
-                </Label>
-                <div className={`${fieldSpanClass} space-y-2`}>
-                  <div className="relative">
-                    <Input
-                      id="deliveryAddress"
-                      value={orderFormData.deliveryAddress}
-                      onChange={(e) => onAddressChange(e.target.value)}
-                      placeholder="Адрес или Google Maps ссылка"
-                      className={`${orderFormData.latitude && orderFormData.longitude ? 'pr-10 border-green-500 focus:border-green-500' : ''} ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
-                      required
-                    />
-                    {orderFormData.latitude && orderFormData.longitude && (
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className="text-xs text-slate-400">Можно вставить Google Maps ссылку</p>
-                    {orderFormData.latitude && orderFormData.longitude && (
-                      <p className="text-xs text-green-600 font-medium">
-                        📍 {orderFormData.latitude.toFixed(4)}, {orderFormData.longitude.toFixed(4)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className={rowClass}>
                 <Label htmlFor="deliveryTime" className={labelClass}>
                   Время доставки
                 </Label>
@@ -290,25 +282,56 @@ export function OrderModal({
                   required
                 />
               </div>
-
-              <div className={rowClass}>
-                <Label htmlFor="calories" className={labelClass}>
-                  Калории
-                  {orderFormData.selectedClientId && <span className="text-xs text-green-600 ml-1">✓</span>}
-                </Label>
-                <select
-                  id="calories"
-                  value={orderFormData.calories}
-                  onChange={(e) => setOrderFormData((prev) => ({ ...prev, calories: parseInt(e.target.value) }))}
-                  className={`${fieldSpanClass} flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
-                >
-                  <option value="1200">1200 ккал</option>
-                  <option value="1600">1600 ккал</option>
-                  <option value="2000">2000 ккал</option>
-                  <option value="2500">2500 ккал</option>
-                  <option value="3000">3000 ккал</option>
-                </select>
-              </div>
+              {orderFormData.assignedSetId && groupOptions.length > 0 ? (
+                <div className={rowClass}>
+                  <Label className={labelClass}>Group</Label>
+                  <div className={fieldSpanClass}>
+                    <Select
+                      value={selectedGroup?.id ?? 'none'}
+                      onValueChange={(value) => {
+                        if (value === 'none') return
+                        const g = groupOptions.find((x) => x.id === value)
+                        if (!g) return
+                        setOrderFormData((prev) => ({ ...prev, calories: g.calories }))
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select group" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">--</SelectItem>
+                        {groupOptions.map((g) => (
+                          <SelectItem key={g.id} value={g.id}>
+                            {g.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      {selectedGroup?.price != null ? `Price: ${formatCurrency(selectedGroup.price)}` : 'Price not set'}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className={rowClass}>
+                  <Label htmlFor="calories" className={labelClass}>
+                    Калории
+                    {orderFormData.selectedClientId && <span className="text-xs text-green-600 ml-1">✓</span>}
+                  </Label>
+                  <select
+                    id="calories"
+                    value={orderFormData.calories}
+                    onChange={(e) => setOrderFormData((prev) => ({ ...prev, calories: parseInt(e.target.value) }))}
+                    className={`${fieldSpanClass} flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
+                  >
+                    <option value="1200">1200 ккал</option>
+                    <option value="1600">1600 ккал</option>
+                    <option value="2000">2000 ккал</option>
+                    <option value="2500">2500 ккал</option>
+                    <option value="3000">3000 ккал</option>
+                  </select>
+                </div>
+              )}
 
               <div className={rowClass}>
                 <Label htmlFor="paymentMethod" className={labelClass}>
@@ -327,28 +350,30 @@ export function OrderModal({
 
               {isCashLike && (
                 <div className={rowClass}>
-                  <Label className={labelClass}>Amount</Label>
+                  <Label htmlFor="amountReceived" className={labelClass}>
+                    Amount
+                  </Label>
                   <div className={fieldSpanClass}>
-                    <div className="flex items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                      <span
-                        className={
-                          (amountValue ?? 0) > 0
-                            ? 'text-green-600 font-medium'
-                            : (amountValue ?? 0) < 0
-                              ? 'text-red-600 font-medium'
-                              : 'text-muted-foreground'
-                        }
-                      >
-                        {formatCurrency(amountValue ?? 0)}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        Cost: {formatCurrency(orderCost)}
-                      </span>
-                    </div>
+                    <Input
+                      id="amountReceived"
+                      type="number"
+                      min="0"
+                      inputMode="numeric"
+                      value={orderFormData.amountReceived ?? ''}
+                      onChange={(e) => {
+                        const raw = e.target.value
+                        const next = raw.trim() === '' ? null : Number(raw)
+                        setOrderFormData((prev) => ({
+                          ...prev,
+                          amountReceived: typeof next === 'number' && Number.isFinite(next) ? next : null,
+                        }))
+                      }}
+                      placeholder="0"
+                    />
                     {matchedClient ? (
                       <p className="mt-1 text-[11px] text-muted-foreground">
-                        Balance: {formatCurrency(clientBalance)}
-                        {isDelivered ? ` | Received: ${formatCurrency(amountReceived)}` : ''}
+                        Cost: {formatCurrency(orderCost)} | Balance: {formatCurrency(clientBalance)} | Received:{' '}
+                        {formatCurrency(draftAmountReceived)}
                       </p>
                     ) : null}
                   </div>
@@ -409,6 +434,7 @@ export function OrderModal({
                       value={orderFormData.deliveryAddress}
                       onChange={(e) => onAddressChange(e.target.value)}
                       placeholder="Google Maps link or coordinates (lat,lng)"
+                      required
                     />
                   </div>
                   <div className="h-[190px] w-full">

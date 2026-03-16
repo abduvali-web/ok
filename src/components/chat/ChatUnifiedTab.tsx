@@ -95,6 +95,8 @@ export function ChatUnifiedTab() {
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [showUserList, setShowUserList] = useState(false)
+  const [isNarrowView, setIsNarrowView] = useState(false)
+  const [mobilePane, setMobilePane] = useState<'list' | 'chat'>('list')
   const [isBootLoading, setIsBootLoading] = useState(true)
   const [search, setSearch] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -104,6 +106,28 @@ export function ChatUnifiedTab() {
   const selectedConversationId =
     selectedThread?.kind === 'conversation' ? selectedThread.conversationId : null
   const selectedAiAgent = selectedThread?.kind === 'ai' ? selectedThread.agent : null
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const media = window.matchMedia('(max-width: 1279px)') // < xl
+    const apply = () => setIsNarrowView(media.matches)
+    apply()
+
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', apply)
+      return () => media.removeEventListener('change', apply)
+    }
+
+    // Safari fallback
+    media.addListener(apply)
+    return () => media.removeListener(apply)
+  }, [])
+
+  useEffect(() => {
+    if (!isNarrowView) return
+    setMobilePane(selectedThread ? 'chat' : 'list')
+  }, [isNarrowView, selectedThread])
 
   useEffect(() => {
     const load = async () => {
@@ -231,6 +255,7 @@ export function ChatUnifiedTab() {
       const data = await response.json()
       setSelectedThread({ kind: 'conversation', conversationId: data.conversation.id })
       setShowUserList(false)
+      setMobilePane('chat')
       await fetchConversations()
       await fetchMessages(data.conversation.id)
     } catch {
@@ -269,12 +294,15 @@ export function ChatUnifiedTab() {
 
   function selectConversation(conversationId: string) {
     setSelectedThread({ kind: 'conversation', conversationId })
+    setShowUserList(false)
+    setMobilePane('chat')
     void fetchMessages(conversationId)
   }
 
   function selectAiAgent(agent: User) {
     setSelectedThread({ kind: 'ai', agent })
     setShowUserList(false)
+    setMobilePane('chat')
     openTamboWithPrompt(buildAdminAgentPrompt(agent))
   }
 
@@ -316,7 +344,8 @@ export function ChatUnifiedTab() {
 
   return (
     <div className="grid h-full min-h-0 grid-cols-1 gap-4 p-4 xl:grid-cols-[360px_1fr]">
-      <Card className="glass-card min-h-0 overflow-hidden">
+      {!isNarrowView || mobilePane === 'list' ? (
+        <Card className="glass-card min-h-0 overflow-hidden">
         <CardHeader className="border-b border-border/60 pb-4">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -334,7 +363,10 @@ export function ChatUnifiedTab() {
               variant="outline"
               size="icon"
               className="h-9 w-9"
-              onClick={() => setShowUserList((prev) => !prev)}
+              onClick={() => {
+                setShowUserList((prev) => !prev)
+                setMobilePane('list')
+              }}
             >
               <MessageSquarePlus className="h-4 w-4" />
             </Button>
@@ -455,30 +487,75 @@ export function ChatUnifiedTab() {
           )}
         </CardContent>
       </Card>
+      ) : null}
 
-      <Card
-        className={cn(
-          'glass-card min-h-0 overflow-hidden',
-          selectedAiAgent ? 'gap-0 py-0' : ''
-        )}
-      >
+      {!isNarrowView || mobilePane === 'chat' ? (
+        <Card
+          className={cn(
+            'glass-card min-h-0 overflow-hidden',
+            selectedAiAgent ? 'gap-0 py-0' : ''
+          )}
+        >
         {selectedAiAgent ? (
-          <CardContent className="h-full min-h-0 px-0">
-            <TamboAgentWidget embedded />
-          </CardContent>
+          <>
+            {isNarrowView ? (
+              <CardHeader className="border-b border-border/60 pb-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <CardTitle className="truncate text-lg">{aiConversationLabel}</CardTitle>
+                    <p className="mt-1 text-sm text-muted-foreground">{ui?.chat?.aiHint ?? 'AI agent via Tambo'}</p>
+                  </div>
+                  <Button
+                    aria-label={ui?.chat?.newConversation ?? 'Select people'}
+                    title={ui?.chat?.newConversation ?? 'Select people'}
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9"
+                    onClick={() => {
+                      setShowUserList(true)
+                      setMobilePane('list')
+                    }}
+                  >
+                    <Users className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+            ) : null}
+            <CardContent className="h-full min-h-0 px-0">
+              <TamboAgentWidget embedded />
+            </CardContent>
+          </>
         ) : selectedConversationId ? (
           <>
             <CardHeader className="border-b border-border/60 pb-4">
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarFallback>{selectedConversationData?.otherParticipant.name?.[0] || 'U'}</AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
-                  <CardTitle className="truncate text-lg">{selectedConversationData?.otherParticipant.name}</CardTitle>
-                  <p className="truncate text-sm text-muted-foreground">
-                    {selectedConversationData?.otherParticipant.email}
-                  </p>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Avatar>
+                    <AvatarFallback>{selectedConversationData?.otherParticipant.name?.[0] || 'U'}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <CardTitle className="truncate text-lg">{selectedConversationData?.otherParticipant.name}</CardTitle>
+                    <p className="truncate text-sm text-muted-foreground">
+                      {selectedConversationData?.otherParticipant.email}
+                    </p>
+                  </div>
                 </div>
+
+                {isNarrowView ? (
+                  <Button
+                    aria-label={ui?.chat?.newConversation ?? 'Select people'}
+                    title={ui?.chat?.newConversation ?? 'Select people'}
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9"
+                    onClick={() => {
+                      setShowUserList(true)
+                      setMobilePane('list')
+                    }}
+                  >
+                    <Users className="h-4 w-4" />
+                  </Button>
+                ) : null}
               </div>
             </CardHeader>
 
@@ -538,10 +615,23 @@ export function ChatUnifiedTab() {
                 {ui?.chat?.selectConversationHint ??
                   'Choose a thread or start a new one (you can also open an AI agent from the user list).'}
               </p>
+              {isNarrowView ? (
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() => {
+                    setShowUserList(true)
+                    setMobilePane('list')
+                  }}
+                >
+                  {ui?.chat?.newConversation ?? 'Select people'}
+                </Button>
+              ) : null}
             </div>
           </CardContent>
         )}
       </Card>
+      ) : null}
     </div>
   )
 }

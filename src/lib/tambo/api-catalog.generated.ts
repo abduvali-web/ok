@@ -228,6 +228,13 @@ export const SITE_ENDPOINT_CATALOG = [
     "description": "features endpoint (GET/POST/DELETE)."
   },
   {
+    "path": "/api/admin/finance/admin-balances",
+    "methods": [
+      "GET"
+    ],
+    "description": "admin balances endpoint (GET)."
+  },
+  {
     "path": "/api/admin/finance/buy-ingredients",
     "methods": [
       "POST"

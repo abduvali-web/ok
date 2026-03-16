@@ -78,6 +78,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "source": "components/admin/dashboard/shared/CalendarDateSelector.tsx"
   },
   {
+    "name": "CalendarRangeSelector",
+    "purpose": "UI component from components admin dashboard shared CalendarRangeSelector",
+    "source": "components/admin/dashboard/shared/CalendarRangeSelector.tsx"
+  },
+  {
     "name": "card",
     "purpose": "UI component from components ui card",
     "source": "components/ui/card.tsx"
@@ -98,6 +103,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "source": "components/ui/chart.tsx"
   },
   {
+    "name": "ChatCenter",
+    "purpose": "UI component from components chat ChatCenter",
+    "source": "components/chat/ChatCenter.tsx"
+  },
+  {
     "name": "ChatInterface",
     "purpose": "UI component from components ai ChatInterface",
     "source": "components/ai/ChatInterface.tsx"
@@ -106,6 +116,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "name": "ChatTab",
     "purpose": "UI component from components chat ChatTab",
     "source": "components/chat/ChatTab.tsx"
+  },
+  {
+    "name": "ChatUnifiedTab",
+    "purpose": "UI component from components chat ChatUnifiedTab",
+    "source": "components/chat/ChatUnifiedTab.tsx"
   },
   {
     "name": "checkbox",
@@ -233,6 +248,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "source": "components/ui/hover-card.tsx"
   },
   {
+    "name": "icon-button",
+    "purpose": "UI component from components ui icon button",
+    "source": "components/ui/icon-button.tsx"
+  },
+  {
     "name": "IngredientsManager",
     "purpose": "UI component from components admin warehouse IngredientsManager",
     "source": "components/admin/warehouse/IngredientsManager.tsx"
@@ -271,6 +291,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "name": "MiddleLiveMap",
     "purpose": "UI component from components admin orders MiddleLiveMap",
     "source": "components/admin/orders/MiddleLiveMap.tsx"
+  },
+  {
+    "name": "MiniLocationPickerMap",
+    "purpose": "UI component from components admin dashboard shared MiniLocationPickerMap",
+    "source": "components/admin/dashboard/shared/MiniLocationPickerMap.tsx"
   },
   {
     "name": "MobileHeader",
@@ -338,9 +363,19 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "source": "components/ui/radio-group.tsx"
   },
   {
+    "name": "RefreshIconButton",
+    "purpose": "UI component from components admin dashboard shared RefreshIconButton",
+    "source": "components/admin/dashboard/shared/RefreshIconButton.tsx"
+  },
+  {
     "name": "resizable",
     "purpose": "UI component from components ui resizable",
     "source": "components/ui/resizable.tsx"
+  },
+  {
+    "name": "right-action-line",
+    "purpose": "UI component from components ui right action line",
+    "source": "components/ui/right-action-line.tsx"
   },
   {
     "name": "RouteOptimizeButton",
@@ -351,6 +386,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "name": "scroll-area",
     "purpose": "UI component from components ui scroll area",
     "source": "components/ui/scroll-area.tsx"
+  },
+  {
+    "name": "search-panel",
+    "purpose": "UI component from components ui search panel",
+    "source": "components/ui/search-panel.tsx"
   },
   {
     "name": "SectionMetrics",
@@ -551,6 +591,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "name": "UserList",
     "purpose": "UI component from components collaboration UserList",
     "source": "components/collaboration/UserList.tsx"
+  },
+  {
+    "name": "WarehouseStartPointPickerMap",
+    "purpose": "UI component from components admin dashboard shared WarehouseStartPointPickerMap",
+    "source": "components/admin/dashboard/shared/WarehouseStartPointPickerMap.tsx"
   },
   {
     "name": "WarehouseTab",

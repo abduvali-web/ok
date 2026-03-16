@@ -193,6 +193,7 @@ export type OrderFormData = {
   paymentStatus: string
   paymentMethod: string
   isPrepaid: boolean
+  amountReceived: number | null
   selectedClientId: string
   latitude: number | null
   longitude: number | null
@@ -211,6 +212,7 @@ export const DEFAULT_ORDER_FORM: OrderFormData = {
   paymentStatus: 'UNPAID',
   paymentMethod: 'CASH',
   isPrepaid: false,
+  amountReceived: null,
   selectedClientId: '',
   latitude: null,
   longitude: null,
