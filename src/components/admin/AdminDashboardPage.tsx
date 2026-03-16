@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
@@ -111,8 +111,6 @@ import {
   type LatLng,
 } from '@/lib/geo'
 
-import { MobileSidebar } from '@/components/MobileSidebar'
-import { MobileTabIndicator } from '@/components/MobileTabIndicator'
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import { SearchPanel } from '@/components/ui/search-panel'
@@ -531,122 +529,122 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const profileUiText = useMemo(() => {
     if (language === 'ru') {
       return {
-        database: 'База данных',
-        noDateSelected: 'Дата не выбрана',
-        allOrders: 'Все заказы',
-        profileCenter: 'Профиль',
-        profileCenterDescription: 'Безопасность, контекст аккаунта и быстрая навигация в одном месте',
-        role: 'Роль',
-        visibleTabs: 'Видимые вкладки',
-        dispatchDate: 'Дата распределения',
-        dispatchChooseDate: 'Выбрать дату',
-        dispatchSave: 'Сохранить',
-        dispatchStart: 'Начать',
-        security: 'Безопасность',
-        securityDescription: 'Защитите доступ к аккаунту и быстро завершайте сессии.',
-        changePassword: 'Сменить пароль',
-        quickNavigation: 'Быстрая навигация',
-        warehouseStartPoint: 'Стартовая точка склада',
-        warehouseStartPointDescription: 'Используется для построения и сортировки маршрутов всех курьеров.',
-        warehouseInputLabel: 'Ссылка Google Maps или координаты (lat,lng)',
-        readOnly: '(только чтение)',
-        warehousePlaceholder: 'Пример: 41.311081,69.240562',
-        current: 'Текущая',
-        notConfigured: 'не настроено',
-        preview: 'Предпросмотр',
-        refresh: 'Обновить',
-        saving: 'Сохранение...',
-        saveLocation: 'Сохранить точку',
-        useMyLocation: 'Моё местоположение',
-        geolocationUnsupported: 'Геолокация не поддерживается в этом браузере.',
-        geolocationDenied: 'Доступ к геолокации запрещён.',
-        geolocationFailed: 'Не удалось получить текущее местоположение.',
-        geolocationSet: 'Точка установлена по геолокации.',
-        messages: 'Сообщения',
-        messagesDescription: 'Командные диалоги и быстрая координация.',
-        ordersBin: 'Корзина заказов',
-        clientsBin: 'Корзина клиентов',
-        autoSet: 'Авто (активный глобальный набор)',
-        active: '(Активный)',
-        enableAutoOrderCreation: 'Включить автоматическое создание заказов',
-        searchClientPlaceholder: 'Поиск клиента...',
-        searchClientsAria: 'Поиск клиентов',
-        clear: 'Очистить',
-        calendar: 'Календарь',
-        today: 'Сегодня',
-        clearDate: 'Очистить дату',
-        allTime: 'За все время',
-        thisWeek: 'Эта неделя',
-        thisMonth: 'Этот месяц',
-        next: 'Далее',
-        yesterday: 'Вчера',
-        tomorrow: 'Завтра',
-        searchOrdersPlaceholder: 'Поиск по имени, адресу или номеру заказа...',
-        searchOrdersAria: 'Поиск заказов',
-        rows: 'строк',
-        filters: 'фильтров',
-        resetFilters: 'Сбросить фильтры',
-        noOrdersFound: 'Заказы не найдены',
-        noOrdersFoundDescription: 'Измените фильтры или поисковый запрос.',
-        showing: 'Показано',
-        of: 'из',
-        statusFilter: 'Фильтр статуса',
-        allClients: 'Все клиенты',
-        activeOnly: 'Только активные',
-        pausedOnly: 'Только приостановленные',
-        bin: 'Корзина',
-        createClient: 'Создать клиента',
-        editClient: 'Редактировать клиента',
-        updateClientDetails: 'Обновите данные клиента.',
-        createClientDescription: 'Создайте нового клиента в системе.',
-        nickname: 'Псевдоним',
-        nicknamePlaceholder: 'Пример: Офис, Дом... (необязательно)',
-        mapLink: 'Ссылка на карту',
-        phoneFormat: 'Формат: +998 XX XXX XX XX',
-        balance: 'Баланс',
-        days: 'Дни',
-        daysShort: 'дн.',
+        database: 'Ð‘Ð°Ð·Ð° Ð´Ð°Ð½Ð½Ñ‹Ñ…',
+        noDateSelected: 'Ð”Ð°Ñ‚Ð° Ð½Ðµ Ð²Ñ‹Ð±Ñ€Ð°Ð½Ð°',
+        allOrders: 'Ð’ÑÐµ Ð·Ð°ÐºÐ°Ð·Ñ‹',
+        profileCenter: 'ÐŸÑ€Ð¾Ñ„Ð¸Ð»ÑŒ',
+        profileCenterDescription: 'Ð‘ÐµÐ·Ð¾Ð¿Ð°ÑÐ½Ð¾ÑÑ‚ÑŒ, ÐºÐ¾Ð½Ñ‚ÐµÐºÑÑ‚ Ð°ÐºÐºÐ°ÑƒÐ½Ñ‚Ð° Ð¸ Ð±Ñ‹ÑÑ‚Ñ€Ð°Ñ Ð½Ð°Ð²Ð¸Ð³Ð°Ñ†Ð¸Ñ Ð² Ð¾Ð´Ð½Ð¾Ð¼ Ð¼ÐµÑÑ‚Ðµ',
+        role: 'Ð Ð¾Ð»ÑŒ',
+        visibleTabs: 'Ð’Ð¸Ð´Ð¸Ð¼Ñ‹Ðµ Ð²ÐºÐ»Ð°Ð´ÐºÐ¸',
+        dispatchDate: 'Ð”Ð°Ñ‚Ð° Ñ€Ð°ÑÐ¿Ñ€ÐµÐ´ÐµÐ»ÐµÐ½Ð¸Ñ',
+        dispatchChooseDate: 'Ð’Ñ‹Ð±Ñ€Ð°Ñ‚ÑŒ Ð´Ð°Ñ‚Ñƒ',
+        dispatchSave: 'Ð¡Ð¾Ñ…Ñ€Ð°Ð½Ð¸Ñ‚ÑŒ',
+        dispatchStart: 'ÐÐ°Ñ‡Ð°Ñ‚ÑŒ',
+        security: 'Ð‘ÐµÐ·Ð¾Ð¿Ð°ÑÐ½Ð¾ÑÑ‚ÑŒ',
+        securityDescription: 'Ð—Ð°Ñ‰Ð¸Ñ‚Ð¸Ñ‚Ðµ Ð´Ð¾ÑÑ‚ÑƒÐ¿ Ðº Ð°ÐºÐºÐ°ÑƒÐ½Ñ‚Ñƒ Ð¸ Ð±Ñ‹ÑÑ‚Ñ€Ð¾ Ð·Ð°Ð²ÐµÑ€ÑˆÐ°Ð¹Ñ‚Ðµ ÑÐµÑÑÐ¸Ð¸.',
+        changePassword: 'Ð¡Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ Ð¿Ð°Ñ€Ð¾Ð»ÑŒ',
+        quickNavigation: 'Ð‘Ñ‹ÑÑ‚Ñ€Ð°Ñ Ð½Ð°Ð²Ð¸Ð³Ð°Ñ†Ð¸Ñ',
+        warehouseStartPoint: 'Ð¡Ñ‚Ð°Ñ€Ñ‚Ð¾Ð²Ð°Ñ Ñ‚Ð¾Ñ‡ÐºÐ° ÑÐºÐ»Ð°Ð´Ð°',
+        warehouseStartPointDescription: 'Ð˜ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÐµÑ‚ÑÑ Ð´Ð»Ñ Ð¿Ð¾ÑÑ‚Ñ€Ð¾ÐµÐ½Ð¸Ñ Ð¸ ÑÐ¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²ÐºÐ¸ Ð¼Ð°Ñ€ÑˆÑ€ÑƒÑ‚Ð¾Ð² Ð²ÑÐµÑ… ÐºÑƒÑ€ÑŒÐµÑ€Ð¾Ð².',
+        warehouseInputLabel: 'Ð¡ÑÑ‹Ð»ÐºÐ° Google Maps Ð¸Ð»Ð¸ ÐºÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ñ‹ (lat,lng)',
+        readOnly: '(Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ñ‡Ñ‚ÐµÐ½Ð¸Ðµ)',
+        warehousePlaceholder: 'ÐŸÑ€Ð¸Ð¼ÐµÑ€: 41.311081,69.240562',
+        current: 'Ð¢ÐµÐºÑƒÑ‰Ð°Ñ',
+        notConfigured: 'Ð½Ðµ Ð½Ð°ÑÑ‚Ñ€Ð¾ÐµÐ½Ð¾',
+        preview: 'ÐŸÑ€ÐµÐ´Ð¿Ñ€Ð¾ÑÐ¼Ð¾Ñ‚Ñ€',
+        refresh: 'ÐžÐ±Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ',
+        saving: 'Ð¡Ð¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð¸Ðµ...',
+        saveLocation: 'Ð¡Ð¾Ñ…Ñ€Ð°Ð½Ð¸Ñ‚ÑŒ Ñ‚Ð¾Ñ‡ÐºÑƒ',
+        useMyLocation: 'ÐœÐ¾Ñ‘ Ð¼ÐµÑÑ‚Ð¾Ð¿Ð¾Ð»Ð¾Ð¶ÐµÐ½Ð¸Ðµ',
+        geolocationUnsupported: 'Ð“ÐµÐ¾Ð»Ð¾ÐºÐ°Ñ†Ð¸Ñ Ð½Ðµ Ð¿Ð¾Ð´Ð´ÐµÑ€Ð¶Ð¸Ð²Ð°ÐµÑ‚ÑÑ Ð² ÑÑ‚Ð¾Ð¼ Ð±Ñ€Ð°ÑƒÐ·ÐµÑ€Ðµ.',
+        geolocationDenied: 'Ð”Ð¾ÑÑ‚ÑƒÐ¿ Ðº Ð³ÐµÐ¾Ð»Ð¾ÐºÐ°Ñ†Ð¸Ð¸ Ð·Ð°Ð¿Ñ€ÐµÑ‰Ñ‘Ð½.',
+        geolocationFailed: 'ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð¿Ð¾Ð»ÑƒÑ‡Ð¸Ñ‚ÑŒ Ñ‚ÐµÐºÑƒÑ‰ÐµÐµ Ð¼ÐµÑÑ‚Ð¾Ð¿Ð¾Ð»Ð¾Ð¶ÐµÐ½Ð¸Ðµ.',
+        geolocationSet: 'Ð¢Ð¾Ñ‡ÐºÐ° ÑƒÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð° Ð¿Ð¾ Ð³ÐµÐ¾Ð»Ð¾ÐºÐ°Ñ†Ð¸Ð¸.',
+        messages: 'Ð¡Ð¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ñ',
+        messagesDescription: 'ÐšÐ¾Ð¼Ð°Ð½Ð´Ð½Ñ‹Ðµ Ð´Ð¸Ð°Ð»Ð¾Ð³Ð¸ Ð¸ Ð±Ñ‹ÑÑ‚Ñ€Ð°Ñ ÐºÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ†Ð¸Ñ.',
+        ordersBin: 'ÐšÐ¾Ñ€Ð·Ð¸Ð½Ð° Ð·Ð°ÐºÐ°Ð·Ð¾Ð²',
+        clientsBin: 'ÐšÐ¾Ñ€Ð·Ð¸Ð½Ð° ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²',
+        autoSet: 'ÐÐ²Ñ‚Ð¾ (Ð°ÐºÑ‚Ð¸Ð²Ð½Ñ‹Ð¹ Ð³Ð»Ð¾Ð±Ð°Ð»ÑŒÐ½Ñ‹Ð¹ Ð½Ð°Ð±Ð¾Ñ€)',
+        active: '(ÐÐºÑ‚Ð¸Ð²Ð½Ñ‹Ð¹)',
+        enableAutoOrderCreation: 'Ð’ÐºÐ»ÑŽÑ‡Ð¸Ñ‚ÑŒ Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¾Ðµ ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ðµ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²',
+        searchClientPlaceholder: 'ÐŸÐ¾Ð¸ÑÐº ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°...',
+        searchClientsAria: 'ÐŸÐ¾Ð¸ÑÐº ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²',
+        clear: 'ÐžÑ‡Ð¸ÑÑ‚Ð¸Ñ‚ÑŒ',
+        calendar: 'ÐšÐ°Ð»ÐµÐ½Ð´Ð°Ñ€ÑŒ',
+        today: 'Ð¡ÐµÐ³Ð¾Ð´Ð½Ñ',
+        clearDate: 'ÐžÑ‡Ð¸ÑÑ‚Ð¸Ñ‚ÑŒ Ð´Ð°Ñ‚Ñƒ',
+        allTime: 'Ð—Ð° Ð²ÑÐµ Ð²Ñ€ÐµÐ¼Ñ',
+        thisWeek: 'Ð­Ñ‚Ð° Ð½ÐµÐ´ÐµÐ»Ñ',
+        thisMonth: 'Ð­Ñ‚Ð¾Ñ‚ Ð¼ÐµÑÑÑ†',
+        next: 'Ð”Ð°Ð»ÐµÐµ',
+        yesterday: 'Ð’Ñ‡ÐµÑ€Ð°',
+        tomorrow: 'Ð—Ð°Ð²Ñ‚Ñ€Ð°',
+        searchOrdersPlaceholder: 'ÐŸÐ¾Ð¸ÑÐº Ð¿Ð¾ Ð¸Ð¼ÐµÐ½Ð¸, Ð°Ð´Ñ€ÐµÑÑƒ Ð¸Ð»Ð¸ Ð½Ð¾Ð¼ÐµÑ€Ñƒ Ð·Ð°ÐºÐ°Ð·Ð°...',
+        searchOrdersAria: 'ÐŸÐ¾Ð¸ÑÐº Ð·Ð°ÐºÐ°Ð·Ð¾Ð²',
+        rows: 'ÑÑ‚Ñ€Ð¾Ðº',
+        filters: 'Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ð¾Ð²',
+        resetFilters: 'Ð¡Ð±Ñ€Ð¾ÑÐ¸Ñ‚ÑŒ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ñ‹',
+        noOrdersFound: 'Ð—Ð°ÐºÐ°Ð·Ñ‹ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ñ‹',
+        noOrdersFoundDescription: 'Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚Ðµ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ñ‹ Ð¸Ð»Ð¸ Ð¿Ð¾Ð¸ÑÐºÐ¾Ð²Ñ‹Ð¹ Ð·Ð°Ð¿Ñ€Ð¾Ñ.',
+        showing: 'ÐŸÐ¾ÐºÐ°Ð·Ð°Ð½Ð¾',
+        of: 'Ð¸Ð·',
+        statusFilter: 'Ð¤Ð¸Ð»ÑŒÑ‚Ñ€ ÑÑ‚Ð°Ñ‚ÑƒÑÐ°',
+        allClients: 'Ð’ÑÐµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ñ‹',
+        activeOnly: 'Ð¢Ð¾Ð»ÑŒÐºÐ¾ Ð°ÐºÑ‚Ð¸Ð²Ð½Ñ‹Ðµ',
+        pausedOnly: 'Ð¢Ð¾Ð»ÑŒÐºÐ¾ Ð¿Ñ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð½Ñ‹Ðµ',
+        bin: 'ÐšÐ¾Ñ€Ð·Ð¸Ð½Ð°',
+        createClient: 'Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°',
+        editClient: 'Ð ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°',
+        updateClientDetails: 'ÐžÐ±Ð½Ð¾Ð²Ð¸Ñ‚Ðµ Ð´Ð°Ð½Ð½Ñ‹Ðµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°.',
+        createClientDescription: 'Ð¡Ð¾Ð·Ð´Ð°Ð¹Ñ‚Ðµ Ð½Ð¾Ð²Ð¾Ð³Ð¾ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð° Ð² ÑÐ¸ÑÑ‚ÐµÐ¼Ðµ.',
+        nickname: 'ÐŸÑÐµÐ²Ð´Ð¾Ð½Ð¸Ð¼',
+        nicknamePlaceholder: 'ÐŸÑ€Ð¸Ð¼ÐµÑ€: ÐžÑ„Ð¸Ñ, Ð”Ð¾Ð¼... (Ð½ÐµÐ¾Ð±ÑÐ·Ð°Ñ‚ÐµÐ»ÑŒÐ½Ð¾)',
+        mapLink: 'Ð¡ÑÑ‹Ð»ÐºÐ° Ð½Ð° ÐºÐ°Ñ€Ñ‚Ñƒ',
+        phoneFormat: 'Ð¤Ð¾Ñ€Ð¼Ð°Ñ‚: +998 XX XXX XX XX',
+        balance: 'Ð‘Ð°Ð»Ð°Ð½Ñ',
+        days: 'Ð”Ð½Ð¸',
+        daysShort: 'Ð´Ð½.',
       }
     }
 
     if (language === 'uz') {
       return {
-        database: 'Maʼlumotlar bazasi',
+        database: 'MaÊ¼lumotlar bazasi',
         noDateSelected: 'Sana tanlanmagan',
         allOrders: 'Barcha buyurtmalar',
         profileCenter: 'Profil markazi',
         profileCenterDescription: 'Xavfsizlik, akkaunt holati va tezkor navigatsiya bir joyda',
         role: 'Rol',
-        visibleTabs: 'Ko‘rinadigan tablar',
-        dispatchDate: 'Jo‘natish sanasi',
+        visibleTabs: 'Koâ€˜rinadigan tablar',
+        dispatchDate: 'Joâ€˜natish sanasi',
         dispatchChooseDate: 'Sanani tanlang',
         dispatchSave: 'Saqlash',
         dispatchStart: 'Boshlash',
         security: 'Xavfsizlik',
         securityDescription: 'Akkauntga kirishni himoya qiling va sessiyalarni tez yakunlang.',
-        changePassword: 'Parolni o‘zgartirish',
+        changePassword: 'Parolni oâ€˜zgartirish',
         quickNavigation: 'Tezkor navigatsiya',
-        warehouseStartPoint: 'Ombor boshlang‘ich nuqtasi',
+        warehouseStartPoint: 'Ombor boshlangâ€˜ich nuqtasi',
         warehouseStartPointDescription: 'Barcha kuryerlar uchun marshrut qurish va saralashda ishlatiladi.',
         warehouseInputLabel: 'Google Maps havolasi yoki koordinatalar (lat,lng)',
-        readOnly: '(faqat o‘qish)',
+        readOnly: '(faqat oâ€˜qish)',
         warehousePlaceholder: 'Misol: 41.311081,69.240562',
         current: 'Joriy',
         notConfigured: 'sozlanmagan',
-        preview: 'Ko‘rib chiqish',
+        preview: 'Koâ€˜rib chiqish',
         refresh: 'Yangilash',
         saving: 'Saqlanmoqda...',
         saveLocation: 'Joylashuvni saqlash',
         useMyLocation: 'Mening joylashuvim',
-        geolocationUnsupported: 'Geolokatsiya ushbu brauzerda qo‘llab-quvvatlanmaydi.',
+        geolocationUnsupported: 'Geolokatsiya ushbu brauzerda qoâ€˜llab-quvvatlanmaydi.',
         geolocationDenied: 'Geolokatsiyaga ruxsat berilmadi.',
-        geolocationFailed: 'Joriy joylashuvni aniqlab bo‘lmadi.',
-        geolocationSet: 'Nuqta geolokatsiya orqali o‘rnatildi.',
+        geolocationFailed: 'Joriy joylashuvni aniqlab boâ€˜lmadi.',
+        geolocationSet: 'Nuqta geolokatsiya orqali oâ€˜rnatildi.',
         messages: 'Xabarlar',
         messagesDescription: 'Jamoa suhbatlari va tezkor muvofiqlashtirish.',
         ordersBin: 'Buyurtmalar savati',
         clientsBin: 'Mijozlar savati',
-        autoSet: 'Avto (faol global to‘plam)',
+        autoSet: 'Avto (faol global toâ€˜plam)',
         active: '(Faol)',
         enableAutoOrderCreation: 'Buyurtmalarni avtomatik yaratishni yoqish',
         searchClientPlaceholder: 'Mijozni qidirish...',
@@ -661,23 +659,23 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         next: 'Keyingi',
         yesterday: 'Kecha',
         tomorrow: 'Ertaga',
-        searchOrdersPlaceholder: 'Ism, manzil yoki buyurtma raqami bo‘yicha qidirish...',
+        searchOrdersPlaceholder: 'Ism, manzil yoki buyurtma raqami boâ€˜yicha qidirish...',
         searchOrdersAria: 'Buyurtmalarni qidirish',
         rows: 'qator',
         filters: 'filtr',
         resetFilters: 'Filtrlarni tozalash',
         noOrdersFound: 'Buyurtmalar topilmadi',
-        noOrdersFoundDescription: 'Filtrlar yoki qidiruv so‘rovini o‘zgartiring.',
-        showing: 'Ko‘rsatilmoqda',
+        noOrdersFoundDescription: 'Filtrlar yoki qidiruv soâ€˜rovini oâ€˜zgartiring.',
+        showing: 'Koâ€˜rsatilmoqda',
         of: 'dan',
         statusFilter: 'Holat filtri',
         allClients: 'Barcha mijozlar',
         activeOnly: 'Faqat faol',
-        pausedOnly: 'Faqat to‘xtatilgan',
+        pausedOnly: 'Faqat toâ€˜xtatilgan',
         bin: 'Savat',
         createClient: 'Mijoz yaratish',
         editClient: 'Mijozni tahrirlash',
-        updateClientDetails: 'Mijoz maʼlumotlarini yangilang.',
+        updateClientDetails: 'Mijoz maÊ¼lumotlarini yangilang.',
         createClientDescription: 'Tizimda yangi mijoz yarating.',
         nickname: 'Laqab',
         nicknamePlaceholder: 'Misol: Ofis, Uy... (ixtiyoriy)',
@@ -1128,7 +1126,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   const handleDeleteSelectedOrders = async ({ skipConfirm = false }: { skipConfirm?: boolean } = {}) => {
     if (selectedOrders.size === 0) {
-      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ Ð·Ð°ÐºÐ°Ð·Ñ‹ Ð´Ð»Ñ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ')
+      toast.error('ÃÅ¸ÃÂ¾ÃÂ¶ÃÂ°ÃÂ»Ã‘Æ’ÃÂ¹Ã‘ÂÃ‘â€šÃÂ°, ÃÂ²Ã‘â€¹ÃÂ±ÃÂµÃ‘â‚¬ÃÂ¸Ã‘â€šÃÂµ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·Ã‘â€¹ ÃÂ´ÃÂ»Ã‘Â Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â')
       return
     }
 
@@ -1149,17 +1147,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(`Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¾ ${data.deletedCount} Ð·Ð°ÐºÐ°Ð·(Ð¾Ð²)`)
+        toast.success(`ÃÂ£Ã‘ÂÃÂ¿ÃÂµÃ‘Ë†ÃÂ½ÃÂ¾ Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½ÃÂ¾ ${data.deletedCount} ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·(ÃÂ¾ÃÂ²)`)
         setSelectedOrders(new Set())
         setIsDeleteOrdersDialogOpen(false)
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²'}`)
+        toast.error(`ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ°: ${data.error || 'ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·ÃÂ¾ÃÂ²'}`)
       }
     } catch (error) {
       console.error('Delete orders error:', error)
-      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
+      toast.error('ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â Ã‘ÂÃÂµÃ‘â‚¬ÃÂ²ÃÂµÃ‘â‚¬ÃÂ¾ÃÂ¼')
     } finally {
       setIsDeletingOrders(false)
     }
@@ -1171,16 +1169,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       return
     }
     if (selectedOrders.size === 0) {
-      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ Ð·Ð°ÐºÐ°Ð·Ñ‹ Ð´Ð»Ñ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ')
+      toast.error('ÃÅ¸ÃÂ¾ÃÂ¶ÃÂ°ÃÂ»Ã‘Æ’ÃÂ¹Ã‘ÂÃ‘â€šÃÂ°, ÃÂ²Ã‘â€¹ÃÂ±ÃÂµÃ‘â‚¬ÃÂ¸Ã‘â€šÃÂµ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·Ã‘â€¹ ÃÂ´ÃÂ»Ã‘Â Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â')
       return
     }
 
-    const confirmMessage = `âš ï¸ Ð’ÐÐ˜ÐœÐÐÐ˜Ð•! Ð’Ñ‹ ÑƒÐ²ÐµÑ€ÐµÐ½Ñ‹, Ñ‡Ñ‚Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ ÐÐÐ’Ð¡Ð•Ð“Ð”Ð ÑƒÐ´Ð°Ð»Ð¸Ñ‚ÑŒ ${selectedOrders.size} Ð·Ð°ÐºÐ°Ð·(Ð¾Ð²)?\n\nÐ­Ñ‚Ð¾ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ðµ ÐÐ•Ð›Ð¬Ð—Ð¯ Ð¾Ñ‚Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ!`
+    const confirmMessage = `Ã¢Å¡Â Ã¯Â¸Â Ãâ€™ÃÂÃËœÃÅ“ÃÂÃÂÃËœÃâ€¢! Ãâ€™Ã‘â€¹ Ã‘Æ’ÃÂ²ÃÂµÃ‘â‚¬ÃÂµÃÂ½Ã‘â€¹, Ã‘â€¡Ã‘â€šÃÂ¾ Ã‘â€¦ÃÂ¾Ã‘â€šÃÂ¸Ã‘â€šÃÂµ ÃÂÃÂÃâ€™ÃÂ¡Ãâ€¢Ãâ€œÃâ€ÃÂ Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂ¸Ã‘â€šÃ‘Å’ ${selectedOrders.size} ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·(ÃÂ¾ÃÂ²)?\n\nÃÂ­Ã‘â€šÃÂ¾ ÃÂ´ÃÂµÃÂ¹Ã‘ÂÃ‘â€šÃÂ²ÃÂ¸ÃÂµ ÃÂÃâ€¢Ãâ€ºÃÂ¬Ãâ€”ÃÂ¯ ÃÂ¾Ã‘â€šÃÂ¼ÃÂµÃÂ½ÃÂ¸Ã‘â€šÃ‘Å’!`
     if (!confirm(confirmMessage)) {
       return
     }
 
-    const doubleConfirm = confirm('ÐŸÐ¾Ð´Ñ‚Ð²ÐµÑ€Ð´Ð¸Ñ‚Ðµ ÐµÑ‰Ðµ Ñ€Ð°Ð·: Ð²Ñ‹ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ñ‚ÐµÐ»ÑŒÐ½Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ ÑƒÐ´Ð°Ð»Ð¸Ñ‚ÑŒ ÑÑ‚Ð¸ Ð·Ð°ÐºÐ°Ð·Ñ‹ Ð½Ð°Ð²ÑÐµÐ³Ð´Ð°?')
+    const doubleConfirm = confirm('ÃÅ¸ÃÂ¾ÃÂ´Ã‘â€šÃÂ²ÃÂµÃ‘â‚¬ÃÂ´ÃÂ¸Ã‘â€šÃÂµ ÃÂµÃ‘â€°ÃÂµ Ã‘â‚¬ÃÂ°ÃÂ·: ÃÂ²Ã‘â€¹ ÃÂ´ÃÂµÃÂ¹Ã‘ÂÃ‘â€šÃÂ²ÃÂ¸Ã‘â€šÃÂµÃÂ»Ã‘Å’ÃÂ½ÃÂ¾ Ã‘â€¦ÃÂ¾Ã‘â€šÃÂ¸Ã‘â€šÃÂµ Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂ¸Ã‘â€šÃ‘Å’ Ã‘ÂÃ‘â€šÃÂ¸ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·Ã‘â€¹ ÃÂ½ÃÂ°ÃÂ²Ã‘ÂÃÂµÃÂ³ÃÂ´ÃÂ°?')
     if (!doubleConfirm) {
       return
     }
@@ -1196,26 +1194,26 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(`Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¾ Ð½Ð°Ð²ÑÐµÐ³Ð´Ð° ${data.deletedCount} Ð·Ð°ÐºÐ°Ð·(Ð¾Ð²)`)
+        toast.success(`ÃÂ£Ã‘ÂÃÂ¿ÃÂµÃ‘Ë†ÃÂ½ÃÂ¾ Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½ÃÂ¾ ÃÂ½ÃÂ°ÃÂ²Ã‘ÂÃÂµÃÂ³ÃÂ´ÃÂ° ${data.deletedCount} ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·(ÃÂ¾ÃÂ²)`)
         setSelectedOrders(new Set())
         fetchBinOrders()
       } else {
         const data = await response.json()
-        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²'}`)
+        toast.error(`ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ°: ${data.error || 'ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·ÃÂ¾ÃÂ²'}`)
       }
     } catch (error) {
       console.error('Permanent delete orders error:', error)
-      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
+      toast.error('ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â Ã‘ÂÃÂµÃ‘â‚¬ÃÂ²ÃÂµÃ‘â‚¬ÃÂ¾ÃÂ¼')
     }
   }
 
   const handleRestoreSelectedOrders = async () => {
     if (selectedOrders.size === 0) {
-      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ Ð·Ð°ÐºÐ°Ð·Ñ‹ Ð´Ð»Ñ Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ')
+      toast.error('ÃÅ¸ÃÂ¾ÃÂ¶ÃÂ°ÃÂ»Ã‘Æ’ÃÂ¹Ã‘ÂÃ‘â€šÃÂ°, ÃÂ²Ã‘â€¹ÃÂ±ÃÂµÃ‘â‚¬ÃÂ¸Ã‘â€šÃÂµ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·Ã‘â€¹ ÃÂ´ÃÂ»Ã‘Â ÃÂ²ÃÂ¾Ã‘ÂÃ‘ÂÃ‘â€šÃÂ°ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â')
       return
     }
 
-    if (!confirm(`Ð’Ñ‹ ÑƒÐ²ÐµÑ€ÐµÐ½Ñ‹, Ñ‡Ñ‚Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ ${selectedOrders.size} Ð·Ð°ÐºÐ°Ð·(Ð¾Ð²)?`)) {
+    if (!confirm(`Ãâ€™Ã‘â€¹ Ã‘Æ’ÃÂ²ÃÂµÃ‘â‚¬ÃÂµÃÂ½Ã‘â€¹, Ã‘â€¡Ã‘â€šÃÂ¾ Ã‘â€¦ÃÂ¾Ã‘â€šÃÂ¸Ã‘â€šÃÂµ ÃÂ²ÃÂ¾Ã‘ÂÃ‘ÂÃ‘â€šÃÂ°ÃÂ½ÃÂ¾ÃÂ²ÃÂ¸Ã‘â€šÃ‘Å’ ${selectedOrders.size} ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·(ÃÂ¾ÃÂ²)?`)) {
       return
     }
 
@@ -1230,17 +1228,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(data.message || `Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð¾ ${data.updatedCount} Ð·Ð°ÐºÐ°Ð·(Ð¾Ð²)`)
+        toast.success(data.message || `ÃÂ£Ã‘ÂÃÂ¿ÃÂµÃ‘Ë†ÃÂ½ÃÂ¾ ÃÂ²ÃÂ¾Ã‘ÂÃ‘ÂÃ‘â€šÃÂ°ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½ÃÂ¾ ${data.updatedCount} ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·(ÃÂ¾ÃÂ²)`)
         setSelectedOrders(new Set())
         fetchBinOrders()
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²'}`)
+        toast.error(`ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ°: ${data.error || 'ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° ÃÂ²ÃÂ¾Ã‘ÂÃ‘ÂÃ‘â€šÃÂ°ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·ÃÂ¾ÃÂ²'}`)
       }
     } catch (error) {
       console.error('Restore orders error:', error)
-      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
+      toast.error('ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â Ã‘ÂÃÂµÃ‘â‚¬ÃÂ²ÃÂµÃ‘â‚¬ÃÂ¾ÃÂ¼')
     }
   }
 
@@ -1266,16 +1264,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       return
     }
     if (selectedBinClients.size === 0) {
-      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð² Ð´Ð»Ñ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ')
+      toast.error('ÃÅ¸ÃÂ¾ÃÂ¶ÃÂ°ÃÂ»Ã‘Æ’ÃÂ¹Ã‘ÂÃ‘â€šÃÂ°, ÃÂ²Ã‘â€¹ÃÂ±ÃÂµÃ‘â‚¬ÃÂ¸Ã‘â€šÃÂµ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ² ÃÂ´ÃÂ»Ã‘Â Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â')
       return
     }
 
-    const confirmMessage = `âš ï¸ Ð’ÐÐ˜ÐœÐÐÐ˜Ð•! Ð’Ñ‹ ÑƒÐ²ÐµÑ€ÐµÐ½Ñ‹, Ñ‡Ñ‚Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ ÐÐÐ’Ð¡Ð•Ð“Ð”Ð ÑƒÐ´Ð°Ð»Ð¸Ñ‚ÑŒ ${selectedBinClients.size} ÐºÐ»Ð¸ÐµÐ½Ñ‚(Ð¾Ð²)?\n\nÐ’Ð¼ÐµÑÑ‚Ðµ Ñ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°Ð¼Ð¸ Ð±ÑƒÐ´ÑƒÑ‚ ÑƒÐ´Ð°Ð»ÐµÐ½Ñ‹ Ð’Ð¡Ð• Ð¸Ñ… Ð·Ð°ÐºÐ°Ð·Ñ‹ Ð¸ Ð¸ÑÑ‚Ð¾Ñ€Ð¸Ñ.\n\nÐ­Ñ‚Ð¾ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ðµ ÐÐ•Ð›Ð¬Ð—Ð¯ Ð¾Ñ‚Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ!`
+    const confirmMessage = `Ã¢Å¡Â Ã¯Â¸Â Ãâ€™ÃÂÃËœÃÅ“ÃÂÃÂÃËœÃâ€¢! Ãâ€™Ã‘â€¹ Ã‘Æ’ÃÂ²ÃÂµÃ‘â‚¬ÃÂµÃÂ½Ã‘â€¹, Ã‘â€¡Ã‘â€šÃÂ¾ Ã‘â€¦ÃÂ¾Ã‘â€šÃÂ¸Ã‘â€šÃÂµ ÃÂÃÂÃâ€™ÃÂ¡Ãâ€¢Ãâ€œÃâ€ÃÂ Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂ¸Ã‘â€šÃ‘Å’ ${selectedBinClients.size} ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€š(ÃÂ¾ÃÂ²)?\n\nÃâ€™ÃÂ¼ÃÂµÃ‘ÂÃ‘â€šÃÂµ Ã‘Â ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ°ÃÂ¼ÃÂ¸ ÃÂ±Ã‘Æ’ÃÂ´Ã‘Æ’Ã‘â€š Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½Ã‘â€¹ Ãâ€™ÃÂ¡Ãâ€¢ ÃÂ¸Ã‘â€¦ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·Ã‘â€¹ ÃÂ¸ ÃÂ¸Ã‘ÂÃ‘â€šÃÂ¾Ã‘â‚¬ÃÂ¸Ã‘Â.\n\nÃÂ­Ã‘â€šÃÂ¾ ÃÂ´ÃÂµÃÂ¹Ã‘ÂÃ‘â€šÃÂ²ÃÂ¸ÃÂµ ÃÂÃâ€¢Ãâ€ºÃÂ¬Ãâ€”ÃÂ¯ ÃÂ¾Ã‘â€šÃÂ¼ÃÂµÃÂ½ÃÂ¸Ã‘â€šÃ‘Å’!`
     if (!confirm(confirmMessage)) {
       return
     }
 
-    const doubleConfirm = confirm('ÐŸÐ¾Ð´Ñ‚Ð²ÐµÑ€Ð´Ð¸Ñ‚Ðµ ÐµÑ‰Ðµ Ñ€Ð°Ð·: Ð²Ñ‹ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ñ‚ÐµÐ»ÑŒÐ½Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ ÑƒÐ´Ð°Ð»Ð¸Ñ‚ÑŒ ÑÑ‚Ð¸Ñ… ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð² Ð½Ð°Ð²ÑÐµÐ³Ð´Ð°?')
+    const doubleConfirm = confirm('ÃÅ¸ÃÂ¾ÃÂ´Ã‘â€šÃÂ²ÃÂµÃ‘â‚¬ÃÂ´ÃÂ¸Ã‘â€šÃÂµ ÃÂµÃ‘â€°ÃÂµ Ã‘â‚¬ÃÂ°ÃÂ·: ÃÂ²Ã‘â€¹ ÃÂ´ÃÂµÃÂ¹Ã‘ÂÃ‘â€šÃÂ²ÃÂ¸Ã‘â€šÃÂµÃÂ»Ã‘Å’ÃÂ½ÃÂ¾ Ã‘â€¦ÃÂ¾Ã‘â€šÃÂ¸Ã‘â€šÃÂµ Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂ¸Ã‘â€šÃ‘Å’ Ã‘ÂÃ‘â€šÃÂ¸Ã‘â€¦ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ² ÃÂ½ÃÂ°ÃÂ²Ã‘ÂÃÂµÃÂ³ÃÂ´ÃÂ°?')
     if (!doubleConfirm) {
       return
     }
@@ -1291,16 +1289,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(data.message || `Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¾ Ð½Ð°Ð²ÑÐµÐ³Ð´Ð° ${data.deletedClients} ÐºÐ»Ð¸ÐµÐ½Ñ‚(Ð¾Ð²)`)
+        toast.success(data.message || `ÃÂ£Ã‘ÂÃÂ¿ÃÂµÃ‘Ë†ÃÂ½ÃÂ¾ Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½ÃÂ¾ ÃÂ½ÃÂ°ÃÂ²Ã‘ÂÃÂµÃÂ³ÃÂ´ÃÂ° ${data.deletedClients} ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€š(ÃÂ¾ÃÂ²)`)
         setSelectedBinClients(new Set())
         fetchBinClients()
       } else {
         const data = await response.json()
-        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²'}`)
+        toast.error(`ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ°: ${data.error || 'ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²'}`)
       }
     } catch (error) {
       console.error('Permanent delete clients error:', error)
-      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
+      toast.error('ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â Ã‘ÂÃÂµÃ‘â‚¬ÃÂ²ÃÂµÃ‘â‚¬ÃÂ¾ÃÂ¼')
     }
   }
 
@@ -1367,7 +1365,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   const handleSaveWarehousePoint = async () => {
     if (isWarehouseReadOnly) return
     if (!warehouseInput.trim()) {
-      toast.error('Ð£ÐºÐ°Ð¶Ð¸Ñ‚Ðµ ÑÑÑ‹Ð»ÐºÑƒ Google Maps Ð¸Ð»Ð¸ ÐºÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ñ‹')
+      toast.error('ÃÂ£ÃÂºÃÂ°ÃÂ¶ÃÂ¸Ã‘â€šÃÂµ Ã‘ÂÃ‘ÂÃ‘â€¹ÃÂ»ÃÂºÃ‘Æ’ Google Maps ÃÂ¸ÃÂ»ÃÂ¸ ÃÂºÃÂ¾ÃÂ¾Ã‘â‚¬ÃÂ´ÃÂ¸ÃÂ½ÃÂ°Ã‘â€šÃ‘â€¹')
       return
     }
 
@@ -1380,7 +1378,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) {
-        throw new Error((data && data.error) || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð¸Ñ ÑÐºÐ»Ð°Ð´Ð°')
+        throw new Error((data && data.error) || 'ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾Ã‘â€¦Ã‘â‚¬ÃÂ°ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘ÂÃÂºÃÂ»ÃÂ°ÃÂ´ÃÂ°')
       }
 
       const lat = data && typeof data.lat === 'number' ? data.lat : null
@@ -1390,9 +1388,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       setWarehousePreview(point)
       setWarehouseInput(point ? `${lat},${lng}` : '')
 
-      toast.success('Ð¡ÐºÐ»Ð°Ð´ ÑÐ¾Ñ…Ñ€Ð°Ð½Ñ‘Ð½')
+      toast.success('ÃÂ¡ÃÂºÃÂ»ÃÂ°ÃÂ´ Ã‘ÂÃÂ¾Ã‘â€¦Ã‘â‚¬ÃÂ°ÃÂ½Ã‘â€˜ÃÂ½')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð¸Ñ ÑÐºÐ»Ð°Ð´Ð°')
+      toast.error(error instanceof Error ? error.message : 'ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾Ã‘â€¦Ã‘â‚¬ÃÂ°ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘ÂÃÂºÃÂ»ÃÂ°ÃÂ´ÃÂ°')
     } finally {
       setIsWarehouseSaving(false)
     }
@@ -1437,7 +1435,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   const handleDeleteSelectedClients = async ({ skipConfirm = false }: { skipConfirm?: boolean } = {}) => {
     if (selectedClients.size === 0) {
-      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð² Ð´Ð»Ñ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ')
+      toast.error('ÃÅ¸ÃÂ¾ÃÂ¶ÃÂ°ÃÂ»Ã‘Æ’ÃÂ¹Ã‘ÂÃ‘â€šÃÂ°, ÃÂ²Ã‘â€¹ÃÂ±ÃÂµÃ‘â‚¬ÃÂ¸Ã‘â€šÃÂµ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ² ÃÂ´ÃÂ»Ã‘Â Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â')
       return
     }
 
@@ -1462,17 +1460,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(`Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¾:\n- ${data.deletedClients} ÐºÐ»Ð¸ÐµÐ½Ñ‚(Ð¾Ð²)\n- ${data.deletedOrders} Ð·Ð°ÐºÐ°Ð·(Ð¾Ð²)`)
+        toast.success(`ÃÂ£Ã‘ÂÃÂ¿ÃÂµÃ‘Ë†ÃÂ½ÃÂ¾ Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½ÃÂ¾:\n- ${data.deletedClients} ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€š(ÃÂ¾ÃÂ²)\n- ${data.deletedOrders} ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·(ÃÂ¾ÃÂ²)`)
         setSelectedClients(new Set())
         setIsDeleteClientsDialogOpen(false)
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²'}`)
+        toast.error(`ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ°: ${data.error || 'ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²'}`)
       }
     } catch (error) {
       console.error('Delete clients error:', error)
-      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
+      toast.error('ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â Ã‘ÂÃÂµÃ‘â‚¬ÃÂ²ÃÂµÃ‘â‚¬ÃÂ¾ÃÂ¼')
     } finally {
       setIsMutatingClients(false)
     }
@@ -1498,7 +1496,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         })
       }
     } else {
-      // Ð•ÑÐ»Ð¸ ÐºÐ»Ð¸ÐµÐ½Ñ‚ Ð½Ðµ Ð²Ñ‹Ð±Ñ€Ð°Ð½ Ð¸Ð»Ð¸ Ð²Ñ‹Ð±Ñ€Ð°Ð½ Ñ€ÑƒÑ‡Ð½Ð¾Ð¹ Ð²Ð²Ð¾Ð´, Ð¾Ñ‡Ð¸Ñ‰Ð°ÐµÐ¼ Ð¿Ð¾Ð»Ñ Ð½Ð¾ Ð¾ÑÑ‚Ð°Ð²Ð»ÑÐµÐ¼ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ñ Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ
+      // Ãâ€¢Ã‘ÂÃÂ»ÃÂ¸ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€š ÃÂ½ÃÂµ ÃÂ²Ã‘â€¹ÃÂ±Ã‘â‚¬ÃÂ°ÃÂ½ ÃÂ¸ÃÂ»ÃÂ¸ ÃÂ²Ã‘â€¹ÃÂ±Ã‘â‚¬ÃÂ°ÃÂ½ Ã‘â‚¬Ã‘Æ’Ã‘â€¡ÃÂ½ÃÂ¾ÃÂ¹ ÃÂ²ÃÂ²ÃÂ¾ÃÂ´, ÃÂ¾Ã‘â€¡ÃÂ¸Ã‘â€°ÃÂ°ÃÂµÃÂ¼ ÃÂ¿ÃÂ¾ÃÂ»Ã‘Â ÃÂ½ÃÂ¾ ÃÂ¾Ã‘ÂÃ‘â€šÃÂ°ÃÂ²ÃÂ»Ã‘ÂÃÂµÃÂ¼ ÃÂ·ÃÂ½ÃÂ°Ã‘â€¡ÃÂµÃÂ½ÃÂ¸Ã‘Â ÃÂ¿ÃÂ¾ Ã‘Æ’ÃÂ¼ÃÂ¾ÃÂ»Ã‘â€¡ÃÂ°ÃÂ½ÃÂ¸Ã‘Å½
       setOrderFormData(prev => ({
         ...prev,
         selectedClientId: clientId === "manual" ? "manual" : '',
@@ -1594,10 +1592,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         setEditingOrderId(null)
         fetchData()
       } else {
-        setOrderError(data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð¸Ñ Ð·Ð°ÐºÐ°Ð·Ð°')
+        setOrderError(data.error || 'ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾Ã‘â€¦Ã‘â‚¬ÃÂ°ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·ÃÂ°')
       }
     } catch {
-      setOrderError('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
+      setOrderError('ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â Ã‘ÂÃÂµÃ‘â‚¬ÃÂ²ÃÂµÃ‘â‚¬ÃÂ¾ÃÂ¼')
     } finally {
       setIsCreatingOrder(false)
     }
@@ -1651,12 +1649,12 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         setIsCreateCourierModalOpen(false)
         setCourierFormData({ name: '', email: '', password: '', salary: '' })
         fetchData()
-        toast.success('ÐšÑƒÑ€ÑŒÐµÑ€ ÑƒÑÐ¿ÐµÑˆÐ½Ð¾ ÑÐ¾Ð·Ð´Ð°Ð½')
+        toast.success('ÃÅ¡Ã‘Æ’Ã‘â‚¬Ã‘Å’ÃÂµÃ‘â‚¬ Ã‘Æ’Ã‘ÂÃÂ¿ÃÂµÃ‘Ë†ÃÂ½ÃÂ¾ Ã‘ÂÃÂ¾ÃÂ·ÃÂ´ÃÂ°ÃÂ½')
       } else {
-        setCourierError(data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ ÐºÑƒÑ€ÑŒÐµÑ€Ð°')
+        setCourierError(data.error || 'ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂ·ÃÂ´ÃÂ°ÃÂ½ÃÂ¸Ã‘Â ÃÂºÃ‘Æ’Ã‘â‚¬Ã‘Å’ÃÂµÃ‘â‚¬ÃÂ°')
       }
     } catch {
-      setCourierError('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
+      setCourierError('ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â Ã‘ÂÃÂµÃ‘â‚¬ÃÂ²ÃÂµÃ‘â‚¬ÃÂ¾ÃÂ¼')
     } finally {
       setIsCreatingCourier(false)
     }
@@ -1716,23 +1714,23 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         setEditingClientId(null)
 
         // Show success message
-        const action = editingClientId ? 'Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½' : 'ÑÐ¾Ð·Ð´Ð°Ð½'
-        const message = `ÐšÐ»Ð¸ÐµÐ½Ñ‚ "${data.client?.name || clientFormData.name}" ÑƒÑÐ¿ÐµÑˆÐ½Ð¾ ${action}!`
+        const action = editingClientId ? 'ÃÂ¾ÃÂ±ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½' : 'Ã‘ÂÃÂ¾ÃÂ·ÃÂ´ÃÂ°ÃÂ½'
+        const message = `ÃÅ¡ÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€š "${data.client?.name || clientFormData.name}" Ã‘Æ’Ã‘ÂÃÂ¿ÃÂµÃ‘Ë†ÃÂ½ÃÂ¾ ${action}!`
         let description = ''
         if (!editingClientId && data.autoOrdersCreated && data.autoOrdersCreated > 0) {
-          description = `ÐÐ²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸ ÑÐ¾Ð·Ð´Ð°Ð½Ð¾ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²: ${data.autoOrdersCreated} (Ð½Ð° ÑÐ»ÐµÐ´ÑƒÑŽÑ‰Ð¸Ðµ 30 Ð´Ð½ÐµÐ¹)`
+          description = `ÃÂÃÂ²Ã‘â€šÃÂ¾ÃÂ¼ÃÂ°Ã‘â€šÃÂ¸Ã‘â€¡ÃÂµÃ‘ÂÃÂºÃÂ¸ Ã‘ÂÃÂ¾ÃÂ·ÃÂ´ÃÂ°ÃÂ½ÃÂ¾ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·ÃÂ¾ÃÂ²: ${data.autoOrdersCreated} (ÃÂ½ÃÂ° Ã‘ÂÃÂ»ÃÂµÃÂ´Ã‘Æ’Ã‘Å½Ã‘â€°ÃÂ¸ÃÂµ 30 ÃÂ´ÃÂ½ÃÂµÃÂ¹)`
         }
 
         toast.success(message, { description })
         fetchData()
       } else {
-        const errorMessage = data.error || `ÐžÑˆÐ¸Ð±ÐºÐ° ${editingClientId ? 'Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ' : 'ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ'} клиента`
+        const errorMessage = data.error || `ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° ${editingClientId ? 'ÃÂ¾ÃÂ±ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â' : 'Ã‘ÂÃÂ¾ÃÂ·ÃÂ´ÃÂ°ÃÂ½ÃÂ¸Ã‘Â'} ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°`
         const errorDetails = data.details ? `\n${data.details}` : ''
         setClientError(`${errorMessage}${errorDetails}`)
         toast.error(errorMessage, { description: data.details })
       }
     } catch {
-      setClientError('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
+      setClientError('ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â Ã‘ÂÃÂµÃ‘â‚¬ÃÂ²ÃÂµÃ‘â‚¬ÃÂ¾ÃÂ¼')
     } finally {
       setIsCreatingClient(false)
     }
@@ -1787,14 +1785,14 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       })
 
       if (response.ok) {
-        toast.success(`Клиент ${!currentStatus ? 'Ð°ÐºÑ‚Ð¸Ð²Ð¸Ñ€Ð¾Ð²Ð°Ð½' : 'Ð¿Ñ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½'}`)
+        toast.success(`ÐšÐ»Ð¸ÐµÐ½Ñ‚ ${!currentStatus ? 'ÃÂ°ÃÂºÃ‘â€šÃÂ¸ÃÂ²ÃÂ¸Ã‘â‚¬ÃÂ¾ÃÂ²ÃÂ°ÃÂ½' : 'ÃÂ¿Ã‘â‚¬ÃÂ¸ÃÂ¾Ã‘ÂÃ‘â€šÃÂ°ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½'}`)
         fetchData()
       } else {
-        toast.error('ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð¸Ð·Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ ÑÑ‚Ð°Ñ‚ÑƒÑ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°')
+        toast.error('ÃÂÃÂµ Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂ¾Ã‘ÂÃ‘Å’ ÃÂ¸ÃÂ·ÃÂ¼ÃÂµÃÂ½ÃÂ¸Ã‘â€šÃ‘Å’ Ã‘ÂÃ‘â€šÃÂ°Ã‘â€šÃ‘Æ’Ã‘Â ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ°')
       }
     } catch (error) {
       console.error('Error toggling client status:', error)
-      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
+      toast.error('ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â Ã‘ÂÃÂµÃ‘â‚¬ÃÂ²ÃÂµÃ‘â‚¬ÃÂ¾ÃÂ¼')
     }
   }
 
@@ -1831,7 +1829,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   const handlePauseSelectedClients = async ({ skipConfirm = false }: { skipConfirm?: boolean } = {}) => {
     if (selectedClients.size === 0) {
-      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð² Ð´Ð»Ñ Ð¿Ñ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²ÐºÐ¸')
+      toast.error('ÃÅ¸ÃÂ¾ÃÂ¶ÃÂ°ÃÂ»Ã‘Æ’ÃÂ¹Ã‘ÂÃ‘â€šÃÂ°, ÃÂ²Ã‘â€¹ÃÂ±ÃÂµÃ‘â‚¬ÃÂ¸Ã‘â€šÃÂµ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ² ÃÂ´ÃÂ»Ã‘Â ÃÂ¿Ã‘â‚¬ÃÂ¸ÃÂ¾Ã‘ÂÃ‘â€šÃÂ°ÃÂ½ÃÂ¾ÃÂ²ÃÂºÃÂ¸')
       return
     }
 
@@ -1855,17 +1853,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(`Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ Ð¿Ñ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð¾ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²: ${data.updatedCount}`)
+        toast.success(`ÃÂ£Ã‘ÂÃÂ¿ÃÂµÃ‘Ë†ÃÂ½ÃÂ¾ ÃÂ¿Ã‘â‚¬ÃÂ¸ÃÂ¾Ã‘ÂÃ‘â€šÃÂ°ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½ÃÂ¾ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²: ${data.updatedCount}`)
         setSelectedClients(new Set())
         setIsPauseClientsDialogOpen(false)
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð¿Ñ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²ÐºÐ¸ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²'}`)
+        toast.error(`ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ°: ${data.error || 'ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° ÃÂ¿Ã‘â‚¬ÃÂ¸ÃÂ¾Ã‘ÂÃ‘â€šÃÂ°ÃÂ½ÃÂ¾ÃÂ²ÃÂºÃÂ¸ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²'}`)
       }
     } catch (error) {
       console.error('Error pausing clients:', error)
-      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼. ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð¿Ð¾Ð¿Ñ€Ð¾Ð±ÑƒÐ¹Ñ‚Ðµ ÐµÑ‰Ðµ Ñ€Ð°Ð·.')
+      toast.error('ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â Ã‘ÂÃÂµÃ‘â‚¬ÃÂ²ÃÂµÃ‘â‚¬ÃÂ¾ÃÂ¼. ÃÅ¸ÃÂ¾ÃÂ¶ÃÂ°ÃÂ»Ã‘Æ’ÃÂ¹Ã‘ÂÃ‘â€šÃÂ°, ÃÂ¿ÃÂ¾ÃÂ¿Ã‘â‚¬ÃÂ¾ÃÂ±Ã‘Æ’ÃÂ¹Ã‘â€šÃÂµ ÃÂµÃ‘â€°ÃÂµ Ã‘â‚¬ÃÂ°ÃÂ·.')
     } finally {
       setIsMutatingClients(false)
     }
@@ -1873,7 +1871,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   const handleResumeSelectedClients = async ({ skipConfirm = false }: { skipConfirm?: boolean } = {}) => {
     if (selectedClients.size === 0) {
-      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð² Ð´Ð»Ñ Ð²Ð¾Ð·Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ')
+      toast.error('ÃÅ¸ÃÂ¾ÃÂ¶ÃÂ°ÃÂ»Ã‘Æ’ÃÂ¹Ã‘ÂÃ‘â€šÃÂ°, ÃÂ²Ã‘â€¹ÃÂ±ÃÂµÃ‘â‚¬ÃÂ¸Ã‘â€šÃÂµ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ² ÃÂ´ÃÂ»Ã‘Â ÃÂ²ÃÂ¾ÃÂ·ÃÂ¾ÃÂ±ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â')
       return
     }
 
@@ -1897,17 +1895,17 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(`Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ Ð²Ð¾Ð·Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¾ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²: ${data.updatedCount}`)
+        toast.success(`ÃÂ£Ã‘ÂÃÂ¿ÃÂµÃ‘Ë†ÃÂ½ÃÂ¾ ÃÂ²ÃÂ¾ÃÂ·ÃÂ¾ÃÂ±ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½ÃÂ¾ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²: ${data.updatedCount}`)
         setSelectedClients(new Set())
         setIsResumeClientsDialogOpen(false)
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð²Ð¾Ð·Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²'}`)
+        toast.error(`ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ°: ${data.error || 'ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° ÃÂ²ÃÂ¾ÃÂ·ÃÂ¾ÃÂ±ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²'}`)
       }
     } catch (error) {
       console.error('Error resuming clients:', error)
-      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼. ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð¿Ð¾Ð¿Ñ€Ð¾Ð±ÑƒÐ¹Ñ‚Ðµ ÐµÑ‰Ðµ Ñ€Ð°Ð·.')
+      toast.error('ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â Ã‘ÂÃÂµÃ‘â‚¬ÃÂ²ÃÂµÃ‘â‚¬ÃÂ¾ÃÂ¼. ÃÅ¸ÃÂ¾ÃÂ¶ÃÂ°ÃÂ»Ã‘Æ’ÃÂ¹Ã‘ÂÃ‘â€šÃÂ°, ÃÂ¿ÃÂ¾ÃÂ¿Ã‘â‚¬ÃÂ¾ÃÂ±Ã‘Æ’ÃÂ¹Ã‘â€šÃÂµ ÃÂµÃ‘â€°ÃÂµ Ã‘â‚¬ÃÂ°ÃÂ·.')
     } finally {
       setIsMutatingClients(false)
     }
@@ -1937,7 +1935,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(`ÐžÐ±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¾ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²: ${data.updatedCount}`)
+        toast.success(`ÃÅ¾ÃÂ±ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½ÃÂ¾ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·ÃÂ¾ÃÂ²: ${data.updatedCount}`)
         setIsBulkEditOrdersModalOpen(false)
         setSelectedOrders(new Set())
         setBulkOrderUpdates({
@@ -1949,13 +1947,13 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²', {
+        toast.error(data.error || 'ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° ÃÂ¾ÃÂ±ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·ÃÂ¾ÃÂ²', {
           description: data.details || undefined
         })
       }
     } catch (error) {
       console.error('Error bulk updating orders:', error)
-      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
+      toast.error('ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â Ã‘ÂÃÂµÃ‘â‚¬ÃÂ²ÃÂµÃ‘â‚¬ÃÂ¾ÃÂ¼')
     } finally {
       setIsUpdatingBulk(false)
     }
@@ -1985,7 +1983,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(`ÐžÐ±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¾ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²: ${data.updatedCount}`)
+        toast.success(`ÃÅ¾ÃÂ±ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½ÃÂ¾ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²: ${data.updatedCount}`)
         setIsBulkEditClientsModalOpen(false)
         setSelectedClients(new Set())
         setBulkClientUpdates({
@@ -1995,11 +1993,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²')
+        toast.error(data.error || 'ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° ÃÂ¾ÃÂ±ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²')
       }
     } catch (error) {
       console.error('Error bulk updating clients:', error)
-      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
+      toast.error('ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â Ã‘ÂÃÂµÃ‘â‚¬ÃÂ²ÃÂµÃ‘â‚¬ÃÂ¾ÃÂ¼')
     } finally {
       setIsUpdatingBulk(false)
     }
@@ -2007,16 +2005,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   const handleRestoreSelectedClients = async () => {
     if (selectedBinClients.size === 0) {
-      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð² Ð´Ð»Ñ Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ')
+      toast.error('ÃÅ¸ÃÂ¾ÃÂ¶ÃÂ°ÃÂ»Ã‘Æ’ÃÂ¹Ã‘ÂÃ‘â€šÃÂ°, ÃÂ²Ã‘â€¹ÃÂ±ÃÂµÃ‘â‚¬ÃÂ¸Ã‘â€šÃÂµ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ² ÃÂ´ÃÂ»Ã‘Â ÃÂ²ÃÂ¾Ã‘ÂÃ‘ÂÃ‘â€šÃÂ°ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â')
       return
     }
 
     const selectedClientsList = Array.from(selectedBinClients).map(id =>
-      binClients.find(c => c.id === id)?.name || 'ÐÐµÐ¸Ð·Ð²ÐµÑÑ‚Ð½Ñ‹Ð¹ ÐºÐ»Ð¸ÐµÐ½Ñ‚'
+      binClients.find(c => c.id === id)?.name || 'ÃÂÃÂµÃÂ¸ÃÂ·ÃÂ²ÃÂµÃ‘ÂÃ‘â€šÃÂ½Ã‘â€¹ÃÂ¹ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€š'
     ).join(', ')
 
     const hasActiveClients = binClients.some(c => selectedBinClients.has(c.id) && c.isActive)
-    const confirmMessage = `Ð’Ñ‹ ÑƒÐ²ÐµÑ€ÐµÐ½Ñ‹, Ñ‡Ñ‚Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ ÑÐ»ÐµÐ´ÑƒÑŽÑ‰Ð¸Ñ… ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²:\n\n${selectedClientsList}\n\n${hasActiveClients ? 'ÐÐ²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸Ðµ Ð·Ð°ÐºÐ°Ð·Ñ‹ Ð±ÑƒÐ´ÑƒÑ‚ ÑÐ¾Ð·Ð´Ð°Ð½Ñ‹ Ð´Ð»Ñ Ð°ÐºÑ‚Ð¸Ð²Ð½Ñ‹Ñ… ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð².' : ''}`
+    const confirmMessage = `Ãâ€™Ã‘â€¹ Ã‘Æ’ÃÂ²ÃÂµÃ‘â‚¬ÃÂµÃÂ½Ã‘â€¹, Ã‘â€¡Ã‘â€šÃÂ¾ Ã‘â€¦ÃÂ¾Ã‘â€šÃÂ¸Ã‘â€šÃÂµ ÃÂ²ÃÂ¾Ã‘ÂÃ‘ÂÃ‘â€šÃÂ°ÃÂ½ÃÂ¾ÃÂ²ÃÂ¸Ã‘â€šÃ‘Å’ Ã‘ÂÃÂ»ÃÂµÃÂ´Ã‘Æ’Ã‘Å½Ã‘â€°ÃÂ¸Ã‘â€¦ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²:\n\n${selectedClientsList}\n\n${hasActiveClients ? 'ÃÂÃÂ²Ã‘â€šÃÂ¾ÃÂ¼ÃÂ°Ã‘â€šÃÂ¸Ã‘â€¡ÃÂµÃ‘ÂÃÂºÃÂ¸ÃÂµ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·Ã‘â€¹ ÃÂ±Ã‘Æ’ÃÂ´Ã‘Æ’Ã‘â€š Ã‘ÂÃÂ¾ÃÂ·ÃÂ´ÃÂ°ÃÂ½Ã‘â€¹ ÃÂ´ÃÂ»Ã‘Â ÃÂ°ÃÂºÃ‘â€šÃÂ¸ÃÂ²ÃÂ½Ã‘â€¹Ã‘â€¦ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ².' : ''}`
 
     if (!confirm(confirmMessage)) {
       return
@@ -2035,36 +2033,36 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(data.message || `Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð¾: ${data.restoredClients} ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²`)
+        toast.success(data.message || `ÃÂ£Ã‘ÂÃÂ¿ÃÂµÃ‘Ë†ÃÂ½ÃÂ¾ ÃÂ²ÃÂ¾Ã‘ÂÃ‘ÂÃ‘â€šÃÂ°ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½ÃÂ¾: ${data.restoredClients} ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²`)
         setSelectedBinClients(new Set())
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²'}`)
+        toast.error(`ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ°: ${data.error || 'ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° ÃÂ²ÃÂ¾Ã‘ÂÃ‘ÂÃ‘â€šÃÂ°ÃÂ½ÃÂ¾ÃÂ²ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²'}`)
       }
     } catch (error) {
       console.error('Restore clients error:', error)
-      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
+      toast.error('ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â Ã‘ÂÃÂµÃ‘â‚¬ÃÂ²ÃÂµÃ‘â‚¬ÃÂ¾ÃÂ¼')
     }
   }
 
   const _handlePermanentDeleteSelected = async () => {
     if (selectedBinClients.size === 0) {
-      toast.error('ÐŸÐ¾Ð¶Ð°Ð»ÑƒÐ¹ÑÑ‚Ð°, Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð² Ð´Ð»Ñ Ð¾ÐºÐ¾Ð½Ñ‡Ð°Ñ‚ÐµÐ»ÑŒÐ½Ð¾Ð³Ð¾ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ')
+      toast.error('ÃÅ¸ÃÂ¾ÃÂ¶ÃÂ°ÃÂ»Ã‘Æ’ÃÂ¹Ã‘ÂÃ‘â€šÃÂ°, ÃÂ²Ã‘â€¹ÃÂ±ÃÂµÃ‘â‚¬ÃÂ¸Ã‘â€šÃÂµ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ² ÃÂ´ÃÂ»Ã‘Â ÃÂ¾ÃÂºÃÂ¾ÃÂ½Ã‘â€¡ÃÂ°Ã‘â€šÃÂµÃÂ»Ã‘Å’ÃÂ½ÃÂ¾ÃÂ³ÃÂ¾ Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â')
       return
     }
 
     const selectedClientsList = Array.from(selectedBinClients).map(id =>
-      binClients.find(c => c.id === id)?.name || 'ÐÐµÐ¸Ð·Ð²ÐµÑÑ‚Ð½Ñ‹Ð¹ ÐºÐ»Ð¸ÐµÐ½Ñ‚'
+      binClients.find(c => c.id === id)?.name || 'ÃÂÃÂµÃÂ¸ÃÂ·ÃÂ²ÃÂµÃ‘ÂÃ‘â€šÃÂ½Ã‘â€¹ÃÂ¹ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€š'
     ).join(', ')
 
-    const confirmMessage = `âš ï¸ Ð’ÐÐ˜ÐœÐÐÐ˜Ð•! Ð’Ñ‹ ÑƒÐ²ÐµÑ€ÐµÐ½Ñ‹, Ñ‡Ñ‚Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ ÐÐÐ’Ð¡Ð•Ð“Ð”Ð ÑƒÐ´Ð°Ð»Ð¸Ñ‚ÑŒ ÑÐ»ÐµÐ´ÑƒÑŽÑ‰Ð¸Ñ… ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²:\n\n${selectedClientsList}\n\nÐ’ÑÐµ Ð´Ð°Ð½Ð½Ñ‹Ðµ Ð¸ Ð·Ð°ÐºÐ°Ð·Ñ‹ ÑÑ‚Ð¸Ñ… ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð² Ð±ÑƒÐ´ÑƒÑ‚ ÑƒÐ´Ð°Ð»ÐµÐ½Ñ‹ Ð±ÐµÐ·Ð²Ð¾Ð·Ð²Ñ€Ð°Ñ‚Ð½Ð¾.\n\nÐ­Ñ‚Ð¾ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ðµ ÐÐ•Ð›Ð¬Ð—Ð¯ Ð¾Ñ‚Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ!`
+    const confirmMessage = `Ã¢Å¡Â Ã¯Â¸Â Ãâ€™ÃÂÃËœÃÅ“ÃÂÃÂÃËœÃâ€¢! Ãâ€™Ã‘â€¹ Ã‘Æ’ÃÂ²ÃÂµÃ‘â‚¬ÃÂµÃÂ½Ã‘â€¹, Ã‘â€¡Ã‘â€šÃÂ¾ Ã‘â€¦ÃÂ¾Ã‘â€šÃÂ¸Ã‘â€šÃÂµ ÃÂÃÂÃâ€™ÃÂ¡Ãâ€¢Ãâ€œÃâ€ÃÂ Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂ¸Ã‘â€šÃ‘Å’ Ã‘ÂÃÂ»ÃÂµÃÂ´Ã‘Æ’Ã‘Å½Ã‘â€°ÃÂ¸Ã‘â€¦ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²:\n\n${selectedClientsList}\n\nÃâ€™Ã‘ÂÃÂµ ÃÂ´ÃÂ°ÃÂ½ÃÂ½Ã‘â€¹ÃÂµ ÃÂ¸ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·Ã‘â€¹ Ã‘ÂÃ‘â€šÃÂ¸Ã‘â€¦ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ² ÃÂ±Ã‘Æ’ÃÂ´Ã‘Æ’Ã‘â€š Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½Ã‘â€¹ ÃÂ±ÃÂµÃÂ·ÃÂ²ÃÂ¾ÃÂ·ÃÂ²Ã‘â‚¬ÃÂ°Ã‘â€šÃÂ½ÃÂ¾.\n\nÃÂ­Ã‘â€šÃÂ¾ ÃÂ´ÃÂµÃÂ¹Ã‘ÂÃ‘â€šÃÂ²ÃÂ¸ÃÂµ ÃÂÃâ€¢Ãâ€ºÃÂ¬Ãâ€”ÃÂ¯ ÃÂ¾Ã‘â€šÃÂ¼ÃÂµÃÂ½ÃÂ¸Ã‘â€šÃ‘Å’!`
 
     if (!confirm(confirmMessage)) {
       return
     }
 
-    const doubleConfirm = confirm('ÐŸÐ¾Ð´Ñ‚Ð²ÐµÑ€Ð´Ð¸Ñ‚Ðµ ÐµÑ‰Ðµ Ñ€Ð°Ð·: Ð²Ñ‹ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ñ‚ÐµÐ»ÑŒÐ½Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ ÑƒÐ´Ð°Ð»Ð¸Ñ‚ÑŒ Ð½Ð°Ð²ÑÐµÐ³Ð´Ð°?')
+    const doubleConfirm = confirm('ÃÅ¸ÃÂ¾ÃÂ´Ã‘â€šÃÂ²ÃÂµÃ‘â‚¬ÃÂ´ÃÂ¸Ã‘â€šÃÂµ ÃÂµÃ‘â€°ÃÂµ Ã‘â‚¬ÃÂ°ÃÂ·: ÃÂ²Ã‘â€¹ ÃÂ´ÃÂµÃÂ¹Ã‘ÂÃ‘â€šÃÂ²ÃÂ¸Ã‘â€šÃÂµÃÂ»Ã‘Å’ÃÂ½ÃÂ¾ Ã‘â€¦ÃÂ¾Ã‘â€šÃÂ¸Ã‘â€šÃÂµ Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂ¸Ã‘â€šÃ‘Å’ ÃÂ½ÃÂ°ÃÂ²Ã‘ÂÃÂµÃÂ³ÃÂ´ÃÂ°?')
     if (!doubleConfirm) {
       return
     }
@@ -2082,22 +2080,22 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(data.message || `Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¾ Ð½Ð°Ð²ÑÐµÐ³Ð´Ð°: ${data.deletedClients} ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²`)
+        toast.success(data.message || `ÃÂ£Ã‘ÂÃÂ¿ÃÂµÃ‘Ë†ÃÂ½ÃÂ¾ Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½ÃÂ¾ ÃÂ½ÃÂ°ÃÂ²Ã‘ÂÃÂµÃÂ³ÃÂ´ÃÂ°: ${data.deletedClients} ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²`)
         setSelectedBinClients(new Set())
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²'}`)
+        toast.error(`ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ°: ${data.error || 'ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²'}`)
       }
     } catch (error) {
       console.error('Permanent delete error:', error)
-      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
+      toast.error('ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â Ã‘ÂÃÂµÃ‘â‚¬ÃÂ²ÃÂµÃ‘â‚¬ÃÂ¾ÃÂ¼')
     }
   }
 
   const handleRunAutoOrders = async () => {
     try {
-      toast.info('Ð—Ð°Ð¿ÑƒÑÐº ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸Ñ… Ð·Ð°ÐºÐ°Ð·Ð¾Ð²...')
+      toast.info('Ãâ€”ÃÂ°ÃÂ¿Ã‘Æ’Ã‘ÂÃÂº Ã‘ÂÃÂ¾ÃÂ·ÃÂ´ÃÂ°ÃÂ½ÃÂ¸Ã‘Â ÃÂ°ÃÂ²Ã‘â€šÃÂ¾ÃÂ¼ÃÂ°Ã‘â€šÃÂ¸Ã‘â€¡ÃÂµÃ‘ÂÃÂºÃÂ¸Ã‘â€¦ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·ÃÂ¾ÃÂ²...')
 
       const response = await fetch('/api/admin/auto-orders/create', {
         method: 'POST',
@@ -2109,15 +2107,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(data.message || `Ð¡Ð¾Ð·Ð´Ð°Ð½Ð¾ ${data.ordersCreated} Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸Ñ… Ð·Ð°ÐºÐ°Ð·Ð¾Ð²`)
+        toast.success(data.message || `ÃÂ¡ÃÂ¾ÃÂ·ÃÂ´ÃÂ°ÃÂ½ÃÂ¾ ${data.ordersCreated} ÃÂ°ÃÂ²Ã‘â€šÃÂ¾ÃÂ¼ÃÂ°Ã‘â€šÃÂ¸Ã‘â€¡ÃÂµÃ‘ÂÃÂºÃÂ¸Ã‘â€¦ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·ÃÂ¾ÃÂ²`)
         fetchData()
       } else {
         const data = await response.json()
-        toast.error(`ÐžÑˆÐ¸Ð±ÐºÐ°: ${data.error || 'ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²'}`)
+        toast.error(`ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ°: ${data.error || 'ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂ·ÃÂ´ÃÂ°ÃÂ½ÃÂ¸Ã‘Â ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·ÃÂ¾ÃÂ²'}`)
       }
     } catch (error) {
       console.error('Run auto orders error:', error)
-      toast.error('ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼')
+      toast.error('ÃÅ¾Ã‘Ë†ÃÂ¸ÃÂ±ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â Ã‘ÂÃÂµÃ‘â‚¬ÃÂ²ÃÂµÃ‘â‚¬ÃÂ¾ÃÂ¼')
     }
   }
 
@@ -2188,15 +2186,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     try {
       let destination = order.deliveryAddress
 
-      // Ð•ÑÐ»Ð¸ ÐµÑÑ‚ÑŒ ÐºÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ñ‹, Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÐµÐ¼ Ð¸Ñ… Ð´Ð»Ñ Ñ‚Ð¾Ñ‡Ð½Ð¾Ð¹ Ð½Ð°Ð²Ð¸Ð³Ð°Ñ†Ð¸Ð¸
+      // Ãâ€¢Ã‘ÂÃÂ»ÃÂ¸ ÃÂµÃ‘ÂÃ‘â€šÃ‘Å’ ÃÂºÃÂ¾ÃÂ¾Ã‘â‚¬ÃÂ´ÃÂ¸ÃÂ½ÃÂ°Ã‘â€šÃ‘â€¹, ÃÂ¸Ã‘ÂÃÂ¿ÃÂ¾ÃÂ»Ã‘Å’ÃÂ·Ã‘Æ’ÃÂµÃÂ¼ ÃÂ¸Ã‘â€¦ ÃÂ´ÃÂ»Ã‘Â Ã‘â€šÃÂ¾Ã‘â€¡ÃÂ½ÃÂ¾ÃÂ¹ ÃÂ½ÃÂ°ÃÂ²ÃÂ¸ÃÂ³ÃÂ°Ã‘â€ ÃÂ¸ÃÂ¸
       if (order.latitude && order.longitude) {
         destination = `${order.latitude},${order.longitude}`
       }
 
-      // Ð¡Ð¾Ð·Ð´Ð°ÐµÐ¼ ÑÑÑ‹Ð»ÐºÑƒ Ð´Ð»Ñ Ð½Ð°Ð²Ð¸Ð³Ð°Ñ†Ð¸Ð¸ Ð¾Ñ‚ Ñ‚ÐµÐºÑƒÑ‰ÐµÐ³Ð¾ Ð¼ÐµÑÑ‚Ð¾Ð¿Ð¾Ð»Ð¾Ð¶ÐµÐ½Ð¸Ñ Ðº Ñ‚Ð¾Ñ‡ÐºÐµ Ð½Ð°Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ñ
+      // ÃÂ¡ÃÂ¾ÃÂ·ÃÂ´ÃÂ°ÃÂµÃÂ¼ Ã‘ÂÃ‘ÂÃ‘â€¹ÃÂ»ÃÂºÃ‘Æ’ ÃÂ´ÃÂ»Ã‘Â ÃÂ½ÃÂ°ÃÂ²ÃÂ¸ÃÂ³ÃÂ°Ã‘â€ ÃÂ¸ÃÂ¸ ÃÂ¾Ã‘â€š Ã‘â€šÃÂµÃÂºÃ‘Æ’Ã‘â€°ÃÂµÃÂ³ÃÂ¾ ÃÂ¼ÃÂµÃ‘ÂÃ‘â€šÃÂ¾ÃÂ¿ÃÂ¾ÃÂ»ÃÂ¾ÃÂ¶ÃÂµÃÂ½ÃÂ¸Ã‘Â ÃÂº Ã‘â€šÃÂ¾Ã‘â€¡ÃÂºÃÂµ ÃÂ½ÃÂ°ÃÂ·ÃÂ½ÃÂ°Ã‘â€¡ÃÂµÃÂ½ÃÂ¸Ã‘Â
       const navigationUrl = `https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=${destination}&travelmode=driving&dir_action=navigate`
 
-      // ÐžÑ‚ÐºÑ€Ñ‹Ð²Ð°ÐµÐ¼ ÑÑÑ‹Ð»ÐºÑƒ Ð² Ð½Ð¾Ð²Ð¾Ð¹ Ð²ÐºÐ»Ð°Ð´ÐºÐµ
+      // ÃÅ¾Ã‘â€šÃÂºÃ‘â‚¬Ã‘â€¹ÃÂ²ÃÂ°ÃÂµÃÂ¼ Ã‘ÂÃ‘ÂÃ‘â€¹ÃÂ»ÃÂºÃ‘Æ’ ÃÂ² ÃÂ½ÃÂ¾ÃÂ²ÃÂ¾ÃÂ¹ ÃÂ²ÃÂºÃÂ»ÃÂ°ÃÂ´ÃÂºÃÂµ
       window.open(navigationUrl, '_blank')
     } catch (error) {
       console.error('Error getting route:', error)
@@ -2332,7 +2330,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       </header>
 
       <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
-        <DialogContent className="h-[min(92dvh,920px)] max-w-5xl gap-0 p-0">
+        <DialogContent className="h-[min(96dvh,980px)] max-w-7xl gap-0 p-0">
           <div className="flex h-full min-h-0 flex-col">
             <div className="border-b bg-background/80 px-4 py-3 backdrop-blur">
               <DialogTitle>{profileUiText.messages}</DialogTitle>
@@ -2445,17 +2443,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         </DialogContent>
       </Dialog>
 
-      {/* Mobile Sidebar Navigation */}
-      <MobileSidebar
-        activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab)}
-        visibleTabs={visibleTabs}
-      />
-
-      {/* Mobile Tab Indicator */}
-      <MobileTabIndicator activeTab={activeTab} />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6 mobile-bottom-space">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <DesktopTabsNav
             visibleTabs={visibleTabs}
@@ -2466,15 +2454,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
             <>
               {/* Statistics Tab */}
               <TabsContent value="statistics" className="space-y-5 animate-fade-in">
-            {/* â”€â”€ Order Status â”€â”€ */}
+            {/* Ã¢â€â‚¬Ã¢â€â‚¬ Order Status Ã¢â€â‚¬Ã¢â€â‚¬ */}
             <div>
               <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.admin.stats.successful} / {t.admin.stats.failed}</h3>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { label: t.admin.stats.successful, value: stats?.successfulOrders || 0, sub: 'Ð”Ð¾ÑÑ‚Ð°Ð²Ð»ÐµÐ½Ð¾', color: 'text-emerald-600', dot: 'bg-emerald-500' },
-                  { label: t.admin.stats.failed, value: stats?.failedOrders || 0, sub: 'ÐžÑ‚Ð¼ÐµÐ½ÐµÐ½Ð¾', color: 'text-rose-600', dot: 'bg-rose-500' },
-                  { label: t.admin.stats.inDelivery, value: stats?.inDeliveryOrders || 0, sub: 'Ð’ Ð¿Ñ€Ð¾Ñ†ÐµÑÑÐµ', color: 'text-blue-600', dot: 'bg-blue-500' },
-                  { label: t.admin.stats.pending, value: stats?.pendingOrders || 0, sub: 'Ð’ Ð¾Ñ‡ÐµÑ€ÐµÐ´Ð¸', color: 'text-amber-600', dot: 'bg-amber-500' },
+                  { label: t.admin.stats.successful, value: stats?.successfulOrders || 0, sub: 'Ãâ€ÃÂ¾Ã‘ÂÃ‘â€šÃÂ°ÃÂ²ÃÂ»ÃÂµÃÂ½ÃÂ¾', color: 'text-emerald-600', dot: 'bg-emerald-500' },
+                  { label: t.admin.stats.failed, value: stats?.failedOrders || 0, sub: 'ÃÅ¾Ã‘â€šÃÂ¼ÃÂµÃÂ½ÃÂµÃÂ½ÃÂ¾', color: 'text-rose-600', dot: 'bg-rose-500' },
+                  { label: t.admin.stats.inDelivery, value: stats?.inDeliveryOrders || 0, sub: 'Ãâ€™ ÃÂ¿Ã‘â‚¬ÃÂ¾Ã‘â€ ÃÂµÃ‘ÂÃ‘ÂÃÂµ', color: 'text-blue-600', dot: 'bg-blue-500' },
+                  { label: t.admin.stats.pending, value: stats?.pendingOrders || 0, sub: 'Ãâ€™ ÃÂ¾Ã‘â€¡ÃÂµÃ‘â‚¬ÃÂµÃÂ´ÃÂ¸', color: 'text-amber-600', dot: 'bg-amber-500' },
                 ].map((s) => (
                   <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
                     <div className="flex items-center gap-2 mb-2">
@@ -2488,15 +2476,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </div>
             </div>
 
-            {/* â”€â”€ Payment Stats â”€â”€ */}
+            {/* Ã¢â€â‚¬Ã¢â€â‚¬ Payment Stats Ã¢â€â‚¬Ã¢â€â‚¬ */}
             <div>
               <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.admin.stats.prepaid} / {t.admin.stats.unpaid}</h3>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { label: t.admin.stats.prepaid, value: stats?.prepaidOrders || 0, sub: 'ÐžÐ¿Ð»Ð°Ñ‡ÐµÐ½Ð¾', color: 'text-emerald-600', dot: 'bg-emerald-500' },
-                  { label: t.admin.stats.unpaid, value: stats?.unpaidOrders || 0, sub: 'ÐŸÑ€Ð¸ Ð¿Ð¾Ð»ÑƒÑ‡ÐµÐ½Ð¸Ð¸', color: 'text-rose-600', dot: 'bg-rose-500' },
-                  { label: t.admin.stats.card, value: stats?.cardOrders || 0, sub: 'ÐžÐ½Ð»Ð°Ð¹Ð½', color: 'text-blue-600', dot: 'bg-blue-500' },
-                  { label: t.admin.stats.cash, value: stats?.cashOrders || 0, sub: 'ÐÐ°Ð»Ð¸Ñ‡Ð½Ñ‹Ðµ', color: 'text-teal-600', dot: 'bg-teal-500' },
+                  { label: t.admin.stats.prepaid, value: stats?.prepaidOrders || 0, sub: 'ÃÅ¾ÃÂ¿ÃÂ»ÃÂ°Ã‘â€¡ÃÂµÃÂ½ÃÂ¾', color: 'text-emerald-600', dot: 'bg-emerald-500' },
+                  { label: t.admin.stats.unpaid, value: stats?.unpaidOrders || 0, sub: 'ÃÅ¸Ã‘â‚¬ÃÂ¸ ÃÂ¿ÃÂ¾ÃÂ»Ã‘Æ’Ã‘â€¡ÃÂµÃÂ½ÃÂ¸ÃÂ¸', color: 'text-rose-600', dot: 'bg-rose-500' },
+                  { label: t.admin.stats.card, value: stats?.cardOrders || 0, sub: 'ÃÅ¾ÃÂ½ÃÂ»ÃÂ°ÃÂ¹ÃÂ½', color: 'text-blue-600', dot: 'bg-blue-500' },
+                  { label: t.admin.stats.cash, value: stats?.cashOrders || 0, sub: 'ÃÂÃÂ°ÃÂ»ÃÂ¸Ã‘â€¡ÃÂ½Ã‘â€¹ÃÂµ', color: 'text-teal-600', dot: 'bg-teal-500' },
                 ].map((s) => (
                   <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
                     <div className="flex items-center gap-2 mb-2">
@@ -2510,15 +2498,15 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </div>
             </div>
 
-            {/* â”€â”€ Customer Stats â”€â”€ */}
+            {/* Ã¢â€â‚¬Ã¢â€â‚¬ Customer Stats Ã¢â€â‚¬Ã¢â€â‚¬ */}
             <div>
               <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.admin.stats.daily}</h3>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { label: t.admin.stats.daily, value: stats?.dailyCustomers || 0, sub: 'ÐšÐ°Ð¶Ð´Ñ‹Ð¹ Ð´ÐµÐ½ÑŒ', color: 'text-violet-600', dot: 'bg-violet-500' },
-                  { label: t.admin.stats.evenDay, value: stats?.evenDayCustomers || 0, sub: 'Ð§Ñ‘Ñ‚Ð½Ñ‹Ðµ Ð´Ð½Ð¸', color: 'text-indigo-600', dot: 'bg-indigo-500' },
-                  { label: t.admin.stats.oddDay, value: stats?.oddDayCustomers || 0, sub: 'ÐÐµÑ‡Ñ‘Ñ‚Ð½Ñ‹Ðµ Ð´Ð½Ð¸', color: 'text-pink-600', dot: 'bg-pink-500' },
-                  { label: t.admin.stats.special, value: stats?.specialPreferenceCustomers || 0, sub: 'Ð¡ Ð¾ÑÐ¾Ð±ÐµÐ½Ð½Ð¾ÑÑ‚ÑÐ¼Ð¸', color: 'text-orange-600', dot: 'bg-orange-500' },
+                  { label: t.admin.stats.daily, value: stats?.dailyCustomers || 0, sub: 'ÃÅ¡ÃÂ°ÃÂ¶ÃÂ´Ã‘â€¹ÃÂ¹ ÃÂ´ÃÂµÃÂ½Ã‘Å’', color: 'text-violet-600', dot: 'bg-violet-500' },
+                  { label: t.admin.stats.evenDay, value: stats?.evenDayCustomers || 0, sub: 'ÃÂ§Ã‘â€˜Ã‘â€šÃÂ½Ã‘â€¹ÃÂµ ÃÂ´ÃÂ½ÃÂ¸', color: 'text-indigo-600', dot: 'bg-indigo-500' },
+                  { label: t.admin.stats.oddDay, value: stats?.oddDayCustomers || 0, sub: 'ÃÂÃÂµÃ‘â€¡Ã‘â€˜Ã‘â€šÃÂ½Ã‘â€¹ÃÂµ ÃÂ´ÃÂ½ÃÂ¸', color: 'text-pink-600', dot: 'bg-pink-500' },
+                  { label: t.admin.stats.special, value: stats?.specialPreferenceCustomers || 0, sub: 'ÃÂ¡ ÃÂ¾Ã‘ÂÃÂ¾ÃÂ±ÃÂµÃÂ½ÃÂ½ÃÂ¾Ã‘ÂÃ‘â€šÃ‘ÂÃÂ¼ÃÂ¸', color: 'text-orange-600', dot: 'bg-orange-500' },
                 ].map((s) => (
                   <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
                     <div className="flex items-center gap-2 mb-2">
@@ -2532,16 +2520,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </div>
             </div>
 
-            {/* â”€â”€ Calories â”€â”€ */}
+            {/* Ã¢â€â‚¬Ã¢â€â‚¬ Calories Ã¢â€â‚¬Ã¢â€â‚¬ */}
             <div>
               <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.admin.stats.lowCal}</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                 {[
-                  { label: t.admin.stats.lowCal, value: stats?.orders1200 || 0, sub: '1200 ÐºÐºÐ°Ð»', color: 'text-rose-600', dot: 'bg-rose-500' },
-                  { label: t.admin.stats.standard, value: stats?.orders1600 || 0, sub: '1600 ÐºÐºÐ°Ð»', color: 'text-orange-600', dot: 'bg-orange-500' },
-                  { label: t.admin.stats.medium, value: stats?.orders2000 || 0, sub: '2000 ÐºÐºÐ°Ð»', color: 'text-yellow-600', dot: 'bg-yellow-500' },
-                  { label: t.admin.stats.high, value: stats?.orders2500 || 0, sub: '2500 ÐºÐºÐ°Ð»', color: 'text-emerald-600', dot: 'bg-emerald-500' },
-                  { label: t.admin.stats.max, value: stats?.orders3000 || 0, sub: '3000 ÐºÐºÐ°Ð»', color: 'text-blue-600', dot: 'bg-blue-500' },
+                  { label: t.admin.stats.lowCal, value: stats?.orders1200 || 0, sub: '1200 ÃÂºÃÂºÃÂ°ÃÂ»', color: 'text-rose-600', dot: 'bg-rose-500' },
+                  { label: t.admin.stats.standard, value: stats?.orders1600 || 0, sub: '1600 ÃÂºÃÂºÃÂ°ÃÂ»', color: 'text-orange-600', dot: 'bg-orange-500' },
+                  { label: t.admin.stats.medium, value: stats?.orders2000 || 0, sub: '2000 ÃÂºÃÂºÃÂ°ÃÂ»', color: 'text-yellow-600', dot: 'bg-yellow-500' },
+                  { label: t.admin.stats.high, value: stats?.orders2500 || 0, sub: '2500 ÃÂºÃÂºÃÂ°ÃÂ»', color: 'text-emerald-600', dot: 'bg-emerald-500' },
+                  { label: t.admin.stats.max, value: stats?.orders3000 || 0, sub: '3000 ÃÂºÃÂºÃÂ°ÃÂ»', color: 'text-blue-600', dot: 'bg-blue-500' },
                 ].map((s) => (
                   <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
                     <div className="flex items-center gap-2 mb-2">
@@ -2555,11 +2543,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </div>
             </div>
 
-            {/* â”€â”€ Item Count â”€â”€ */}
+            {/* Ã¢â€â‚¬Ã¢â€â‚¬ Item Count Ã¢â€â‚¬Ã¢â€â‚¬ */}
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: t.admin.stats.single, value: stats?.singleItemOrders || 0, sub: '1 Ð¿Ð¾Ñ€Ñ†Ð¸Ñ', color: 'text-indigo-600', dot: 'bg-indigo-500' },
-                { label: t.admin.stats.multi, value: stats?.multiItemOrders || 0, sub: 'Ð”Ð²Ð° Ð¸ Ð±Ð¾Ð»ÐµÐµ Ñ€Ð°Ñ†Ð¸Ð¾Ð½Ð¾Ð²', color: 'text-violet-600', dot: 'bg-violet-500' },
+                { label: t.admin.stats.single, value: stats?.singleItemOrders || 0, sub: '1 ÃÂ¿ÃÂ¾Ã‘â‚¬Ã‘â€ ÃÂ¸Ã‘Â', color: 'text-indigo-600', dot: 'bg-indigo-500' },
+                { label: t.admin.stats.multi, value: stats?.multiItemOrders || 0, sub: 'Ãâ€ÃÂ²ÃÂ° ÃÂ¸ ÃÂ±ÃÂ¾ÃÂ»ÃÂµÃÂµ Ã‘â‚¬ÃÂ°Ã‘â€ ÃÂ¸ÃÂ¾ÃÂ½ÃÂ¾ÃÂ²', color: 'text-violet-600', dot: 'bg-violet-500' },
               ].map((s) => (
                 <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
                   <div className="flex items-center gap-2 mb-2">
@@ -2736,7 +2724,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 onChange={(e) => setFilters({ ...filters, prepaid: e.target.checked })}
                                 className="rounded"
                               />
-                              <span className="text-sm">{t.admin.filterGroups.prepaid} (â­)</span>
+                              <span className="text-sm">{t.admin.filterGroups.prepaid} (Ã¢Â­Â)</span>
                             </label>
                             <div className="hidden md:block"></div>
                             <label className="flex items-center space-x-2">
@@ -3290,9 +3278,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </CardHeader>
               <CardContent>
  {/* Clients Table */}
-                {/* Desktop View */}
-                <div className="hidden md:block rounded-md border">
-                  <div className="max-h-96 overflow-auto">
+                 <div className="rounded-md border">
+                   <div className="max-h-96 overflow-auto">
                     <Table>
                       <TableHeader>
                         <TableRow className="h-9">
@@ -3434,8 +3421,8 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           <TableRow>
                             <TableCell colSpan={14} className="h-24 text-center text-muted-foreground">
                               <TabEmptyState
-                                title="Клиенты не найдены"
-                                description="Измените фильтры или поисковый запрос."
+                                title="ÐšÐ»Ð¸ÐµÐ½Ñ‚Ñ‹ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ñ‹"
+                                description="Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚Ðµ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ñ‹ Ð¸Ð»Ð¸ Ð¿Ð¾Ð¸ÑÐºÐ¾Ð²Ñ‹Ð¹ Ð·Ð°Ð¿Ñ€Ð¾Ñ."
                               />
                             </TableCell>
                           </TableRow>
@@ -3443,101 +3430,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       </TableBody>
                     </Table>
                   </div>
-                </div>
-{/* Mobile View */}
-                <div className="md:hidden space-y-4">
-                  {filteredClients.length === 0 && (
-                    <TabEmptyState
-                      title="ÐšÐ»Ð¸ÐµÐ½Ñ‚Ñ‹ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ñ‹"
-                      description="Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚Ðµ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ñ‹ Ð¸Ð»Ð¸ Ð¿Ð¾Ð¸ÑÐºÐ¾Ð²Ñ‹Ð¹ Ð·Ð°Ð¿Ñ€Ð¾Ñ."
-                    />
-                  )}
-                  {filteredClients.map((client) => (
-                      <Card key={client.id} className="border bg-background">
-                        <CardHeader className="pb-2">
-                          <div className="flex justify-between items-start">
-                            <div className="flex min-w-0 items-center gap-2">
-                              <Checkbox
-                                checked={selectedClients.has(client.id)}
-                                onCheckedChange={() => handleToggleClientSelection(client.id)}
-                              />
-                              <div className="flex min-w-0 flex-col">
-                                <CardTitle className="truncate text-base" title={client.name}>
-                                  {client.name}
-                                </CardTitle>
-                                <CardDescription className="truncate" title={client.phone}>
-                                  {client.phone}
-                                </CardDescription>
-                              </div>
-                            </div>
-                            <EntityStatusBadge
-                              isActive={client.isActive}
-                              activeLabel={t.admin.table.active}
-                              inactiveLabel={t.admin.table.paused}
-                              inactiveTone="danger"
-                              showDot
-                              onClick={() => handleToggleClientStatus(client.id, client.isActive)}
-                            />
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-4 space-y-3">
-                          <div className="flex items-start gap-3">
-                            <MapPin className="mt-1 size-4 text-muted-foreground" />
-                            <div className="line-clamp-2 break-words text-sm" title={client.address}>
-                              {client.address}
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-3 rounded-md border bg-muted/20 p-3">
-                            <div>
-                              <div className="text-xs text-muted-foreground">{profileUiText.balance}</div>
-                              <div className="mt-1 text-sm font-semibold tabular-nums">
-                                {(() => {
-                                  const finance = clientFinanceById[client.id]
-                                  if (!finance || !Number.isFinite(finance.balance)) return isClientFinanceLoading ? '...' : '-'
-                                  const balance = Math.round(finance.balance)
-                                  return (
-                                    <span className={balance < 0 ? 'text-rose-600' : 'text-emerald-600'}>
-                                      {balance.toLocaleString(dateLocale)} UZS
-                                    </span>
-                                  )
-                                })()}
-                              </div>
-                            </div>
-                            <div>
-                              <div className="text-xs text-muted-foreground">{profileUiText.days}</div>
-                              <div className="mt-1 text-sm font-semibold tabular-nums text-muted-foreground">
-                                {(() => {
-                                  const finance = clientFinanceById[client.id]
-                                  if (!finance || !Number.isFinite(finance.balance)) return isClientFinanceLoading ? '...' : '-'
-                                  const daily = finance.dailyPrice || client.dailyPrice || 0
-                                  if (!daily || daily <= 0) return '-'
-                                  const days = Math.floor(finance.balance / daily)
-                                  return <span className={days < 0 ? 'text-rose-600' : undefined}>{days}</span>
-                                })()}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-3">
-                            <div className="text-sm font-medium">ÐšÐ°Ð»Ð¾Ñ€Ð¸Ð¸:</div>
-                            <div className="text-sm">{client.calories} ÐºÐºÐ°Ð»</div>
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            <div className="font-medium mb-1">Ð”Ð½Ð¸ Ð´Ð¾ÑÑ‚Ð°Ð²ÐºÐ¸:</div>
-                            <div className="flex flex-wrap gap-1">
-                              {client.deliveryDays?.monday && <span className="rounded-sm border bg-muted px-1.5 py-0.5 text-muted-foreground">ÐŸÐ½</span>}
-                              {client.deliveryDays?.tuesday && <span className="rounded-sm border bg-muted px-1.5 py-0.5 text-muted-foreground">Ð’Ñ‚</span>}
-                              {client.deliveryDays?.wednesday && <span className="rounded-sm border bg-muted px-1.5 py-0.5 text-muted-foreground">Ð¡Ñ€</span>}
-                              {client.deliveryDays?.thursday && <span className="rounded-sm border bg-muted px-1.5 py-0.5 text-muted-foreground">Ð§Ñ‚</span>}
-                              {client.deliveryDays?.friday && <span className="rounded-sm border bg-muted px-1.5 py-0.5 text-muted-foreground">ÐŸÑ‚</span>}
-                              {client.deliveryDays?.saturday && <span className="rounded-sm border bg-muted px-1.5 py-0.5 text-muted-foreground">Ð¡Ð±</span>}
-                              {client.deliveryDays?.sunday && <span className="rounded-sm border bg-muted px-1.5 py-0.5 text-muted-foreground">Ð’Ñ</span>}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
                 </div>
               </CardContent>
             </Card>
@@ -3821,9 +3713,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       <AlertDialog open={isDeleteOrdersDialogOpen} onOpenChange={setIsDeleteOrdersDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ Ð²Ñ‹Ð±Ñ€Ð°Ð½Ð½Ñ‹Ðµ Ð·Ð°ÐºÐ°Ð·Ñ‹?</AlertDialogTitle>
+            <AlertDialogTitle>ÃÂ£ÃÂ´ÃÂ°ÃÂ»ÃÂ¸Ã‘â€šÃ‘Å’ ÃÂ²Ã‘â€¹ÃÂ±Ã‘â‚¬ÃÂ°ÃÂ½ÃÂ½Ã‘â€¹ÃÂµ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·Ã‘â€¹?</AlertDialogTitle>
             <AlertDialogDescription>
-              Ð‘ÑƒÐ´ÐµÑ‚ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¾ Ð·Ð°ÐºÐ°Ð·Ð¾Ð²: {selectedOrders.size}. Ð­Ñ‚Ð¾ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ðµ Ð½ÐµÐ»ÑŒÐ·Ñ Ð¾Ñ‚Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ.
+              Ãâ€˜Ã‘Æ’ÃÂ´ÃÂµÃ‘â€š Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½ÃÂ¾ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·ÃÂ¾ÃÂ²: {selectedOrders.size}. ÃÂ­Ã‘â€šÃÂ¾ ÃÂ´ÃÂµÃÂ¹Ã‘ÂÃ‘â€šÃÂ²ÃÂ¸ÃÂµ ÃÂ½ÃÂµÃÂ»Ã‘Å’ÃÂ·Ã‘Â ÃÂ¾Ã‘â€šÃÂ¼ÃÂµÃÂ½ÃÂ¸Ã‘â€šÃ‘Å’.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -3841,9 +3733,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       <AlertDialog open={isPauseClientsDialogOpen} onOpenChange={setIsPauseClientsDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>ÐŸÑ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ Ð²Ñ‹Ð±Ñ€Ð°Ð½Ð½Ñ‹Ñ… ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²?</AlertDialogTitle>
+            <AlertDialogTitle>ÃÅ¸Ã‘â‚¬ÃÂ¸ÃÂ¾Ã‘ÂÃ‘â€šÃÂ°ÃÂ½ÃÂ¾ÃÂ²ÃÂ¸Ã‘â€šÃ‘Å’ ÃÂ²Ã‘â€¹ÃÂ±Ã‘â‚¬ÃÂ°ÃÂ½ÃÂ½Ã‘â€¹Ã‘â€¦ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²?</AlertDialogTitle>
             <AlertDialogDescription>
-              ÐšÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²: {selectedClients.size}. ÐžÐ½Ð¸ Ð½Ðµ Ð±ÑƒÐ´ÑƒÑ‚ Ð¿Ð¾Ð»ÑƒÑ‡Ð°Ñ‚ÑŒ Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸Ðµ Ð·Ð°ÐºÐ°Ð·Ñ‹.
+              ÃÅ¡ÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²: {selectedClients.size}. ÃÅ¾ÃÂ½ÃÂ¸ ÃÂ½ÃÂµ ÃÂ±Ã‘Æ’ÃÂ´Ã‘Æ’Ã‘â€š ÃÂ¿ÃÂ¾ÃÂ»Ã‘Æ’Ã‘â€¡ÃÂ°Ã‘â€šÃ‘Å’ ÃÂ°ÃÂ²Ã‘â€šÃÂ¾ÃÂ¼ÃÂ°Ã‘â€šÃÂ¸Ã‘â€¡ÃÂµÃ‘ÂÃÂºÃÂ¸ÃÂµ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·Ã‘â€¹.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -3852,7 +3744,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               disabled={isMutatingClients}
               onClick={() => void handlePauseSelectedClients({ skipConfirm: true })}
             >
-              {isMutatingClients ? t.common.loading : 'ÐŸÑ€Ð¸Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ'}
+              {isMutatingClients ? t.common.loading : 'ÃÅ¸Ã‘â‚¬ÃÂ¸ÃÂ¾Ã‘ÂÃ‘â€šÃÂ°ÃÂ½ÃÂ¾ÃÂ²ÃÂ¸Ã‘â€šÃ‘Å’'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -3861,9 +3753,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       <AlertDialog open={isResumeClientsDialogOpen} onOpenChange={setIsResumeClientsDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Ð’Ð¾Ð·Ð¾Ð±Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ Ð²Ñ‹Ð±Ñ€Ð°Ð½Ð½Ñ‹Ñ… ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²?</AlertDialogTitle>
+            <AlertDialogTitle>Ãâ€™ÃÂ¾ÃÂ·ÃÂ¾ÃÂ±ÃÂ½ÃÂ¾ÃÂ²ÃÂ¸Ã‘â€šÃ‘Å’ ÃÂ²Ã‘â€¹ÃÂ±Ã‘â‚¬ÃÂ°ÃÂ½ÃÂ½Ã‘â€¹Ã‘â€¦ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²?</AlertDialogTitle>
             <AlertDialogDescription>
-              ÐšÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²: {selectedClients.size}. ÐÐ²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸Ðµ Ð·Ð°ÐºÐ°Ð·Ñ‹ ÑÐ½Ð¾Ð²Ð° Ð±ÑƒÐ´ÑƒÑ‚ Ð²ÐºÐ»ÑŽÑ‡ÐµÐ½Ñ‹.
+              ÃÅ¡ÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²: {selectedClients.size}. ÃÂÃÂ²Ã‘â€šÃÂ¾ÃÂ¼ÃÂ°Ã‘â€šÃÂ¸Ã‘â€¡ÃÂµÃ‘ÂÃÂºÃÂ¸ÃÂµ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·Ã‘â€¹ Ã‘ÂÃÂ½ÃÂ¾ÃÂ²ÃÂ° ÃÂ±Ã‘Æ’ÃÂ´Ã‘Æ’Ã‘â€š ÃÂ²ÃÂºÃÂ»Ã‘Å½Ã‘â€¡ÃÂµÃÂ½Ã‘â€¹.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -3872,7 +3764,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               disabled={isMutatingClients}
               onClick={() => void handleResumeSelectedClients({ skipConfirm: true })}
             >
-              {isMutatingClients ? t.common.loading : 'Ð’Ð¾Ð·Ð¾Ð±Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ'}
+              {isMutatingClients ? t.common.loading : 'Ãâ€™ÃÂ¾ÃÂ·ÃÂ¾ÃÂ±ÃÂ½ÃÂ¾ÃÂ²ÃÂ¸Ã‘â€šÃ‘Å’'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -3881,9 +3773,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       <AlertDialog open={isDeleteClientsDialogOpen} onOpenChange={setIsDeleteClientsDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ Ð²Ñ‹Ð±Ñ€Ð°Ð½Ð½Ñ‹Ñ… ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²?</AlertDialogTitle>
+            <AlertDialogTitle>ÃÂ£ÃÂ´ÃÂ°ÃÂ»ÃÂ¸Ã‘â€šÃ‘Å’ ÃÂ²Ã‘â€¹ÃÂ±Ã‘â‚¬ÃÂ°ÃÂ½ÃÂ½Ã‘â€¹Ã‘â€¦ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂ¾ÃÂ²?</AlertDialogTitle>
             <AlertDialogDescription>
-              Ð‘ÑƒÐ´ÑƒÑ‚ ÑƒÐ´Ð°Ð»ÐµÐ½Ñ‹ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ñ‹: {selectedClients.size}, Ð° Ñ‚Ð°ÐºÐ¶Ðµ ÑÐ²ÑÐ·Ð°Ð½Ð½Ñ‹Ðµ Ð°Ð²Ñ‚Ð¾-Ð·Ð°ÐºÐ°Ð·Ñ‹ Ð·Ð° Ð¿Ð¾ÑÐ»ÐµÐ´Ð½Ð¸Ðµ 30 Ð´Ð½ÐµÐ¹.
+              Ãâ€˜Ã‘Æ’ÃÂ´Ã‘Æ’Ã‘â€š Ã‘Æ’ÃÂ´ÃÂ°ÃÂ»ÃÂµÃÂ½Ã‘â€¹ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃ‘â€¹: {selectedClients.size}, ÃÂ° Ã‘â€šÃÂ°ÃÂºÃÂ¶ÃÂµ Ã‘ÂÃÂ²Ã‘ÂÃÂ·ÃÂ°ÃÂ½ÃÂ½Ã‘â€¹ÃÂµ ÃÂ°ÃÂ²Ã‘â€šÃÂ¾-ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·Ã‘â€¹ ÃÂ·ÃÂ° ÃÂ¿ÃÂ¾Ã‘ÂÃÂ»ÃÂµÃÂ´ÃÂ½ÃÂ¸ÃÂµ 30 ÃÂ´ÃÂ½ÃÂµÃÂ¹.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -3902,9 +3794,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       < Dialog open={isOrderDetailsModalOpen} onOpenChange={setIsOrderDetailsModalOpen} >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Ð”ÐµÑ‚Ð°Ð»Ð¸ Ð·Ð°ÐºÐ°Ð·Ð° #{selectedOrder?.orderNumber}</DialogTitle>
+            <DialogTitle>Ãâ€ÃÂµÃ‘â€šÃÂ°ÃÂ»ÃÂ¸ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·ÃÂ° #{selectedOrder?.orderNumber}</DialogTitle>
             <DialogDescription>
-              ÐŸÐ¾Ð»Ð½Ð°Ñ Ð¸Ð½Ñ„Ð¾Ñ€Ð¼Ð°Ñ†Ð¸Ñ Ð¾ Ð·Ð°ÐºÐ°Ð·Ðµ Ð¸ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ðµ
+              ÃÅ¸ÃÂ¾ÃÂ»ÃÂ½ÃÂ°Ã‘Â ÃÂ¸ÃÂ½Ã‘â€žÃÂ¾Ã‘â‚¬ÃÂ¼ÃÂ°Ã‘â€ ÃÂ¸Ã‘Â ÃÂ¾ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ·ÃÂµ ÃÂ¸ ÃÂºÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€šÃÂµ
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
@@ -3913,7 +3805,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 {/* Basic Info */}
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-500">Ð¡Ñ‚Ð°Ñ‚ÑƒÑ:</span>
+                    <span className="text-sm font-medium text-slate-500">ÃÂ¡Ã‘â€šÃÂ°Ã‘â€šÃ‘Æ’Ã‘Â:</span>
                     <Badge
                       className={
                         selectedOrder.orderStatus === 'DELIVERED'
@@ -3924,61 +3816,61 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       }
                     >
                       {selectedOrder.orderStatus === 'DELIVERED'
-                        ? "Ð”Ð¾ÑÑ‚Ð°Ð²Ð»ÐµÐ½"
+                        ? "Ãâ€ÃÂ¾Ã‘ÂÃ‘â€šÃÂ°ÃÂ²ÃÂ»ÃÂµÃÂ½"
                         : selectedOrder.orderStatus === 'IN_DELIVERY'
-                          ? "Ð’ Ð´Ð¾ÑÑ‚Ð°Ð²ÐºÐµ"
-                          : "ÐžÐ¶Ð¸Ð´Ð°ÐµÑ‚"}
+                          ? "Ãâ€™ ÃÂ´ÃÂ¾Ã‘ÂÃ‘â€šÃÂ°ÃÂ²ÃÂºÃÂµ"
+                          : "ÃÅ¾ÃÂ¶ÃÂ¸ÃÂ´ÃÂ°ÃÂµÃ‘â€š"}
                     </Badge>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-500">ÐžÐ¿Ð»Ð°Ñ‚Ð°:</span>
+                    <span className="text-sm font-medium text-slate-500">ÃÅ¾ÃÂ¿ÃÂ»ÃÂ°Ã‘â€šÃÂ°:</span>
                     <Badge
                       variant={selectedOrder.paymentStatus === 'PAID' ? "default" : "destructive"}
                       className={selectedOrder.paymentStatus === 'PAID' ? "bg-green-100 text-green-800" : ""}
                     >
-                      {selectedOrder.paymentStatus === 'PAID' ? "ÐžÐ¿Ð»Ð°Ñ‡ÐµÐ½" : "ÐÐµ Ð¾Ð¿Ð»Ð°Ñ‡ÐµÐ½"}
+                      {selectedOrder.paymentStatus === 'PAID' ? "ÃÅ¾ÃÂ¿ÃÂ»ÃÂ°Ã‘â€¡ÃÂµÃÂ½" : "ÃÂÃÂµ ÃÂ¾ÃÂ¿ÃÂ»ÃÂ°Ã‘â€¡ÃÂµÃÂ½"}
                     </Badge>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-500">ÐœÐµÑ‚Ð¾Ð´:</span>
-                    <span className="text-sm">{selectedOrder.paymentMethod === 'CASH' ? 'ÐÐ°Ð»Ð¸Ñ‡Ð½Ñ‹Ðµ' : 'ÐšÐ°Ñ€Ñ‚Ð°'}</span>
+                    <span className="text-sm font-medium text-slate-500">ÃÅ“ÃÂµÃ‘â€šÃÂ¾ÃÂ´:</span>
+                    <span className="text-sm">{selectedOrder.paymentMethod === 'CASH' ? 'ÃÂÃÂ°ÃÂ»ÃÂ¸Ã‘â€¡ÃÂ½Ã‘â€¹ÃÂµ' : 'ÃÅ¡ÃÂ°Ã‘â‚¬Ã‘â€šÃÂ°'}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-500">ÐšÐ¾Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾:</span>
-                    <span className="text-sm font-bold">{selectedOrder.quantity} Ð¿Ð¾Ñ€Ñ†.</span>
+                    <span className="text-sm font-medium text-slate-500">ÃÅ¡ÃÂ¾ÃÂ»ÃÂ¸Ã‘â€¡ÃÂµÃ‘ÂÃ‘â€šÃÂ²ÃÂ¾:</span>
+                    <span className="text-sm font-bold">{selectedOrder.quantity} ÃÂ¿ÃÂ¾Ã‘â‚¬Ã‘â€ .</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-500">ÐšÐ°Ð»Ð¾Ñ€Ð¸Ð¸:</span>
-                    <span className="text-sm">{selectedOrder.calories} ÐºÐºÐ°Ð»</span>
+                    <span className="text-sm font-medium text-slate-500">ÃÅ¡ÃÂ°ÃÂ»ÃÂ¾Ã‘â‚¬ÃÂ¸ÃÂ¸:</span>
+                    <span className="text-sm">{selectedOrder.calories} ÃÂºÃÂºÃÂ°ÃÂ»</span>
                   </div>
                 </div>
 
                 <div className="border-t pt-4 space-y-3">
-                  <h4 className="font-semibold text-sm">ÐžÐ¿ÐµÑ€Ð°Ñ†Ð¸Ð¾Ð½Ð½Ñ‹Ðµ Ð´ÐµÑ‚Ð°Ð»Ð¸</h4>
+                  <h4 className="font-semibold text-sm">ÃÅ¾ÃÂ¿ÃÂµÃ‘â‚¬ÃÂ°Ã‘â€ ÃÂ¸ÃÂ¾ÃÂ½ÃÂ½Ã‘â€¹ÃÂµ ÃÂ´ÃÂµÃ‘â€šÃÂ°ÃÂ»ÃÂ¸</h4>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                     <span className="text-slate-500">Priority</span>
                     <span>{selectedOrder.priority ?? 3}</span>
                     <span className="text-slate-500">ETA</span>
-                    <span>{selectedOrder.etaMinutes ? `${selectedOrder.etaMinutes} Ð¼Ð¸Ð½` : '-'}</span>
-                    <span className="text-slate-500">ÐŸÐ¾ÑÐ»ÐµÐ´Ð½ÐµÐµ Ð¸Ð·Ð¼ÐµÐ½ÐµÐ½Ð¸Ðµ</span>
+                    <span>{selectedOrder.etaMinutes ? `${selectedOrder.etaMinutes} ÃÂ¼ÃÂ¸ÃÂ½` : '-'}</span>
+                    <span className="text-slate-500">ÃÅ¸ÃÂ¾Ã‘ÂÃÂ»ÃÂµÃÂ´ÃÂ½ÃÂµÃÂµ ÃÂ¸ÃÂ·ÃÂ¼ÃÂµÃÂ½ÃÂµÃÂ½ÃÂ¸ÃÂµ</span>
                     <span>
                       {selectedOrder.statusChangedAt
                         ? new Date(selectedOrder.statusChangedAt).toLocaleString('ru-RU')
                         : '-'}
                     </span>
-                    <span className="text-slate-500">ÐÐ°Ð·Ð½Ð°Ñ‡ÐµÐ½ ÐºÑƒÑ€ÑŒÐµÑ€</span>
+                    <span className="text-slate-500">ÃÂÃÂ°ÃÂ·ÃÂ½ÃÂ°Ã‘â€¡ÃÂµÃÂ½ ÃÂºÃ‘Æ’Ã‘â‚¬Ã‘Å’ÃÂµÃ‘â‚¬</span>
                     <span>{selectedOrder.assignedAt ? new Date(selectedOrder.assignedAt).toLocaleString('ru-RU') : '-'}</span>
-                    <span className="text-slate-500">Ð¡Ñ‚Ð°Ñ€Ñ‚ Ð´Ð¾ÑÑ‚Ð°Ð²ÐºÐ¸</span>
+                    <span className="text-slate-500">ÃÂ¡Ã‘â€šÃÂ°Ã‘â‚¬Ã‘â€š ÃÂ´ÃÂ¾Ã‘ÂÃ‘â€šÃÂ°ÃÂ²ÃÂºÃÂ¸</span>
                     <span>{selectedOrder.pickedUpAt ? new Date(selectedOrder.pickedUpAt).toLocaleString('ru-RU') : '-'}</span>
-                    <span className="text-slate-500">ÐŸÐ°ÑƒÐ·Ð°</span>
+                    <span className="text-slate-500">ÃÅ¸ÃÂ°Ã‘Æ’ÃÂ·ÃÂ°</span>
                     <span>{selectedOrder.pausedAt ? new Date(selectedOrder.pausedAt).toLocaleString('ru-RU') : '-'}</span>
-                    <span className="text-slate-500">Ð—Ð°Ð²ÐµÑ€ÑˆÐµÐ½</span>
+                    <span className="text-slate-500">Ãâ€”ÃÂ°ÃÂ²ÃÂµÃ‘â‚¬Ã‘Ë†ÃÂµÃÂ½</span>
                     <span>{selectedOrder.deliveredAt ? new Date(selectedOrder.deliveredAt).toLocaleString('ru-RU') : '-'}</span>
                   </div>
                 </div>
 
                 <div className="border-t pt-4 space-y-3">
-                  <h4 className="font-semibold text-sm">ÐšÐ»Ð¸ÐµÐ½Ñ‚</h4>
+                  <h4 className="font-semibold text-sm">ÃÅ¡ÃÂ»ÃÂ¸ÃÂµÃÂ½Ã‘â€š</h4>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-md bg-slate-100 flex items-center justify-center">
                       <User className="w-5 h-5 text-slate-500" />
@@ -3991,7 +3883,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 </div>
 
                 <div className="border-t pt-4 space-y-3">
-                  <h4 className="font-semibold text-sm">Ð”Ð¾ÑÑ‚Ð°Ð²ÐºÐ°</h4>
+                  <h4 className="font-semibold text-sm">Ãâ€ÃÂ¾Ã‘ÂÃ‘â€šÃÂ°ÃÂ²ÃÂºÃÂ°</h4>
                   <div className="space-y-2">
                     <div className="flex items-start gap-2">
                       <MapPin className="w-4 h-4 mt-0.5 text-slate-400" />
@@ -4028,7 +3920,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                             {' - '}
                             {event.message || event.eventType}
                             {event.previousStatus || event.nextStatus
-                              ? ` (${event.previousStatus || '-'} â†’ ${event.nextStatus || '-'})`
+                              ? ` (${event.previousStatus || '-'} Ã¢â€ â€™ ${event.nextStatus || '-'})`
                               : ''}
                           </span>
                         </div>
@@ -4039,7 +3931,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
                 {selectedOrder.specialFeatures && (
                   <div className="border-t pt-4 space-y-2">
-                    <h4 className="font-semibold text-sm">ÐžÑÐ¾Ð±ÐµÐ½Ð½Ð¾ÑÑ‚Ð¸</h4>
+                    <h4 className="font-semibold text-sm">ÃÅ¾Ã‘ÂÃÂ¾ÃÂ±ÃÂµÃÂ½ÃÂ½ÃÂ¾Ã‘ÂÃ‘â€šÃÂ¸</h4>
                     <p className="text-sm bg-orange-50 p-2 rounded border border-orange-100 text-orange-800">
                       {selectedOrder.specialFeatures}
                     </p>
@@ -4048,7 +3940,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
                 {selectedOrder.courierName && (
                   <div className="border-t pt-4 space-y-2">
-                    <h4 className="font-semibold text-sm">ÐšÑƒÑ€ÑŒÐµÑ€</h4>
+                    <h4 className="font-semibold text-sm">ÃÅ¡Ã‘Æ’Ã‘â‚¬Ã‘Å’ÃÂµÃ‘â‚¬</h4>
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-md bg-blue-50 flex items-center justify-center">
                         <Truck className="w-4 h-4 text-blue-500" />
@@ -4062,14 +3954,14 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsOrderDetailsModalOpen(false)}>
-              Ð—Ð°ÐºÑ€Ñ‹Ñ‚ÑŒ
+              Ãâ€”ÃÂ°ÃÂºÃ‘â‚¬Ã‘â€¹Ã‘â€šÃ‘Å’
             </Button>
             {selectedOrder && (
               <Button onClick={() => {
                 setIsOrderDetailsModalOpen(false)
                 handleEditOrder(selectedOrder)
               }}>
-                Ð ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ
+                ÃÂ ÃÂµÃÂ´ÃÂ°ÃÂºÃ‘â€šÃÂ¸Ã‘â‚¬ÃÂ¾ÃÂ²ÃÂ°Ã‘â€šÃ‘Å’
               </Button>
             )}
           </DialogFooter>
@@ -4098,16 +3990,16 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       < Dialog open={isCreateCourierModalOpen} onOpenChange={setIsCreateCourierModalOpen} >
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ ÐšÑƒÑ€ÑŒÐµÑ€Ð°</DialogTitle>
+            <DialogTitle>ÃÂ¡ÃÂ¾ÃÂ·ÃÂ´ÃÂ°Ã‘â€šÃ‘Å’ ÃÅ¡Ã‘Æ’Ã‘â‚¬Ã‘Å’ÃÂµÃ‘â‚¬ÃÂ°</DialogTitle>
             <DialogDescription>
-              Ð¡Ð¾Ð·Ð´Ð°Ð¹Ñ‚Ðµ Ð½Ð¾Ð²Ñ‹Ð¹ Ð°ÐºÐºÐ°ÑƒÐ½Ñ‚ Ð´Ð»Ñ ÐºÑƒÑ€ÑŒÐµÑ€Ð°
+              ÃÂ¡ÃÂ¾ÃÂ·ÃÂ´ÃÂ°ÃÂ¹Ã‘â€šÃÂµ ÃÂ½ÃÂ¾ÃÂ²Ã‘â€¹ÃÂ¹ ÃÂ°ÃÂºÃÂºÃÂ°Ã‘Æ’ÃÂ½Ã‘â€š ÃÂ´ÃÂ»Ã‘Â ÃÂºÃ‘Æ’Ã‘â‚¬Ã‘Å’ÃÂµÃ‘â‚¬ÃÂ°
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateCourier}>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-2">
                 <Label htmlFor="courierName" className="text-right">
-                  Ð˜Ð¼Ñ
+                  ÃËœÃÂ¼Ã‘Â
                 </Label>
                 <Input
                   id="courierName"
@@ -4132,7 +4024,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
               </div>
               <div className="grid grid-cols-4 items-center gap-2">
                 <Label htmlFor="courierPassword" className="text-right">
-                  ÐŸÐ°Ñ€Ð¾Ð»ÑŒ
+                  ÃÅ¸ÃÂ°Ã‘â‚¬ÃÂ¾ÃÂ»Ã‘Å’
                 </Label>
                 <Input
                   id="courierPassword"
@@ -4151,10 +4043,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
             )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsCreateCourierModalOpen(false)}>
-                ÐžÑ‚Ð¼ÐµÐ½Ð°
+                ÃÅ¾Ã‘â€šÃÂ¼ÃÂµÃÂ½ÃÂ°
               </Button>
               <Button type="submit" disabled={isCreatingCourier}>
-                {isCreatingCourier ? 'Ð¡Ð¾Ð·Ð´Ð°Ð½Ð¸Ðµ...' : 'Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ'}
+                {isCreatingCourier ? 'ÃÂ¡ÃÂ¾ÃÂ·ÃÂ´ÃÂ°ÃÂ½ÃÂ¸ÃÂµ...' : 'ÃÂ¡ÃÂ¾ÃÂ·ÃÂ´ÃÂ°Ã‘â€šÃ‘Å’'}
               </Button>
             </DialogFooter>
           </form>

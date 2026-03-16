@@ -65,7 +65,7 @@ export function CalendarDateSelector({
   })()
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2">
       {showShiftButtons && shiftSelectedDate ? (
         <>
           <Button
@@ -117,7 +117,7 @@ export function CalendarDateSelector({
           allTime: profileUiText.allTime ?? selectedDateLabel ?? 'All time',
         }}
         locale={locale}
-        className="w-[240px] max-w-full"
+        className="min-w-0 w-[240px] max-w-full"
       />
 
       {/* Keep the selected label in the DOM for quick QA/debug in case locale formatting differs. */}

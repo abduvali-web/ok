@@ -926,9 +926,6 @@
     height: 100%;
   }
 
-  .desktop-tabs-list {
-    display: none !important;
-  }
 }
 
 @media (max-width: 375px) {

@@ -543,18 +543,20 @@ export function FinanceTab({
                         <CardHeader>
                             <CardTitle className="text-lg font-medium">{t.finance.history}</CardTitle>
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-2">
-                                <CardDescription className="flex-1">
+                                <CardDescription className="flex-1 min-w-0">
                                     {t.finance.historyDesc}
                                 </CardDescription>
-                                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                                <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-hidden sm:w-auto">
                                     <SearchPanel
                                         value={historySearchQuery}
                                         onChange={setHistorySearchQuery}
                                         placeholder={t.admin.searchPlaceholder}
+                                        className="max-w-none flex-1 sm:flex-none"
                                     />
 
                                     {applySelectedDate && (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) && profileUiText && (
-                                        <CalendarDateSelector
+                                        <div className="min-w-0 shrink">
+                                          <CalendarDateSelector
                                             selectedDate={selectedDate || null}
                                             applySelectedDate={applySelectedDate}
                                             shiftSelectedDate={shiftSelectedDate}
@@ -563,7 +565,8 @@ export function FinanceTab({
                                             applySelectedPeriod={applySelectedPeriod}
                                             locale={calendarLocale}
                                             profileUiText={profileUiText}
-                                        />
+                                          />
+                                        </div>
                                     )}
 
                                     <RefreshIconButton
