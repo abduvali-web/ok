@@ -1,6 +1,7 @@
 'use client'
 
 import type React from 'react'
+import dynamic from 'next/dynamic'
 import {
   Dialog,
   DialogContent,
@@ -22,7 +23,14 @@ import {
 } from '@/components/ui/select'
 import type { Admin, Client, Order } from '@/components/admin/dashboard/types'
 import { formatLatLng } from '@/lib/geo'
-import { MiniLocationPickerMap } from '@/components/admin/dashboard/shared/MiniLocationPickerMap'
+
+const MiniLocationPickerMap = dynamic(
+  () =>
+    import('@/components/admin/dashboard/shared/MiniLocationPickerMap').then(
+      (mod) => mod.MiniLocationPickerMap
+    ),
+  { ssr: false, loading: () => <div className="h-full w-full animate-pulse border bg-muted/30" /> }
+)
 
 export type OrderFormData = {
   customerName: string

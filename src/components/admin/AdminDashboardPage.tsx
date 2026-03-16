@@ -114,7 +114,6 @@ import {
 
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
-import { MiniLocationPickerMap } from '@/components/admin/dashboard/shared/MiniLocationPickerMap'
 import { SearchPanel } from '@/components/ui/search-panel'
 import type { DateRange } from 'react-day-picker'
 
@@ -130,6 +129,13 @@ const WarehouseStartPointPickerMap = dynamic(
   () =>
     import('@/components/admin/dashboard/shared/WarehouseStartPointPickerMap').then(
       (mod) => mod.WarehouseStartPointPickerMap
+    ),
+  { ssr: false, loading: () => <div className="h-full w-full animate-pulse border bg-muted/30" /> }
+)
+const MiniLocationPickerMap = dynamic(
+  () =>
+    import('@/components/admin/dashboard/shared/MiniLocationPickerMap').then(
+      (mod) => mod.MiniLocationPickerMap
     ),
   { ssr: false, loading: () => <div className="h-full w-full animate-pulse border bg-muted/30" /> }
 )
