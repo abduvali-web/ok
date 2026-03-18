@@ -13,6 +13,7 @@ export function SearchPanel({
   ariaLabel,
   disabled,
   inputRef,
+  tone = 'green',
   className,
   inputClassName,
 }: {
@@ -22,21 +23,42 @@ export function SearchPanel({
   ariaLabel?: string
   disabled?: boolean
   inputRef?: Ref<HTMLInputElement>
+  tone?: 'green' | 'orange'
   className?: string
   inputClassName?: string
 }) {
+  const wrapperTone =
+    tone === 'orange'
+      ? 'bg-gourmet-orange'
+      : 'bg-gourmet-green dark:bg-dark-green'
+
   return (
-    <div className={cn('relative min-w-0 w-full max-w-[360px]', className)}>
-      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-      <Input
-        ref={inputRef}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        aria-label={ariaLabel || placeholder}
-        disabled={disabled}
-        className={cn('h-9 border-border bg-background pl-9', inputClassName)}
-      />
+    <div
+      className={cn(
+        'relative min-w-0 w-full max-w-[520px] rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300',
+        wrapperTone,
+        disabled && 'opacity-60',
+        className
+      )}
+    >
+      <div className="rounded-full border-2 border-dashed border-white/20 dark:border-white/10 flex items-center px-4 md:px-6 py-2 md:py-3">
+        <Search className="pointer-events-none mr-3 md:mr-4 size-5 md:size-6 text-gourmet-ink dark:text-dark-text" />
+        <Input
+          ref={inputRef}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          aria-label={ariaLabel || placeholder}
+          disabled={disabled}
+          className={cn(
+            'h-auto border-0 bg-transparent px-0 py-0 text-base md:text-lg font-bold shadow-none backdrop-blur-0 rounded-none',
+            'text-gourmet-ink dark:text-dark-text placeholder:text-gourmet-ink/70 dark:placeholder:text-dark-text/70',
+            'focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0 focus-visible:bg-transparent',
+            'hover:bg-transparent',
+            inputClassName
+          )}
+        />
+      </div>
     </div>
   )
 }

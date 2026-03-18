@@ -649,7 +649,10 @@ export function AdminsTab({
 
           {/* Controls Bar */}
           <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 md:gap-6 relative z-10">
-            <motion.div whileHover={{ scale: 1.01 }} className="relative flex-1 bg-gourmet-orange rounded-full shadow-xl border-b-4 border-black/20 p-1">
+            <motion.div
+              whileHover={{ scale: 1.01 }}
+              className="relative flex-1 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
+            >
               <div className="rounded-full border-2 border-dashed border-white/30 flex items-center px-4 md:px-6 py-2 md:py-3">
                 <Search className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text mr-3 md:mr-4" />
                 <input
