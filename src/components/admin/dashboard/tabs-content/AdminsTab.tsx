@@ -2,7 +2,7 @@
 
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { Edit, Pause, Play, Plus, Trash2, Users } from 'lucide-react'
+import { CookingPot, Edit, Pause, Play, Plus, RotateCcw, Search, Trash2, Users } from 'lucide-react'
 
 import type { Admin } from '@/components/admin/dashboard/types'
 import {
@@ -15,11 +15,10 @@ import { AllowedTabsPicker } from '@/components/admin/dashboard/AllowedTabsPicke
 import { FormField } from '@/components/admin/dashboard/shared/FormField'
 import { EntityStatusBadge } from '@/components/admin/dashboard/shared/EntityStatusBadge'
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
-import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
-import { SearchPanel } from '@/components/ui/search-panel'
 import type { DateRange } from 'react-day-picker'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { fetchApi } from '@/lib/api-client'
+import { cn } from '@/lib/utils'
 
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
@@ -32,9 +31,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Badge } from '@/components/ui/badge'
 import { IconButton } from '@/components/ui/icon-button'
 import {
   Dialog,
@@ -443,219 +440,302 @@ export function AdminsTab({
 
   return (
     <>
-      <TabsContent value="admins" className="space-y-4">
-        <Card className="border bg-card">
-          <CardHeader className="space-y-4 pb-3">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <CardTitle>{t.admin.manageLowAdmins}</CardTitle>
-                <CardDescription>{t.admin.manageLowAdminsDesc}</CardDescription>
+      <TabsContent value="admins" className="h-full">
+        <div className="content-card h-full flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300">
+          {/* Background Watermark */}
+          <div className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none">
+            <CookingPot className="w-56 h-56 md:w-64 md:h-64 text-gourmet-ink dark:text-dark-text" />
+          </div>
+
+          {/* Title */}
+          <div className="flex flex-col gap-2 relative z-10">
+            <h2 className="text-2xl md:text-4xl font-extrabold text-gourmet-ink dark:text-dark-text tracking-tight">
+              {t.admin.manageLowAdmins}
+            </h2>
+            <p className="text-base md:text-lg text-gourmet-ink dark:text-dark-text font-medium">
+              {t.admin.manageLowAdminsDesc}
+            </p>
+          </div>
+
+          {/* Controls Bar */}
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 md:gap-6 relative z-10">
+            <div className="relative flex-1 bg-gourmet-orange rounded-full shadow-xl border-b-4 border-black/20 p-1">
+              <div className="rounded-full border-2 border-dashed border-white/30 flex items-center px-4 md:px-6 py-2 md:py-3">
+                <Search className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text mr-3 md:mr-4" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder={t.admin.searchPlaceholder}
+                  aria-label={t.admin.searchPlaceholder}
+                  className="w-full bg-transparent py-0 text-base md:text-lg focus:outline-none text-gourmet-ink dark:text-dark-text placeholder:text-gourmet-ink dark:placeholder:text-dark-text"
+                />
               </div>
-              <div className="flex w-full flex-wrap items-center justify-end gap-2 lg:w-auto">
-                {applySelectedDate && (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) && profileUiText && (
-                  <div className="flex basis-full items-center gap-2 sm:basis-auto sm:mr-auto">
-                    <CalendarDateSelector
-                      selectedDate={selectedDate || null}
-                      applySelectedDate={applySelectedDate}
-                      shiftSelectedDate={shiftSelectedDate}
-                      selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
-                      selectedPeriod={selectedPeriod}
-                      applySelectedPeriod={applySelectedPeriod}
-                      locale={calendarLocale}
-                      profileUiText={profileUiText}
-                    />
-                    <RefreshIconButton
-                      label={profileUiText?.refresh ?? 'Refresh'}
-                      onClick={() => void handleRefresh()}
-                      isLoading={isRefreshing}
-                      iconSize="md"
-                    />
-                  </div>
-                )}
-                {!(applySelectedDate && (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) && profileUiText) ? (
-                  <RefreshIconButton
-                    label={profileUiText?.refresh ?? 'Refresh'}
-                    onClick={() => void handleRefresh()}
-                    isLoading={isRefreshing}
-                    iconSize="md"
+            </div>
+
+            <div className="flex items-center gap-2 md:gap-4 overflow-x-auto lg:overflow-visible py-4 lg:py-6 no-scrollbar">
+              {applySelectedDate &&
+              (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) &&
+              profileUiText ? (
+                <div className="flex flex-shrink-0 items-center gap-2">
+                  <CalendarDateSelector
+                    selectedDate={selectedDate || null}
+                    applySelectedDate={applySelectedDate}
+                    shiftSelectedDate={shiftSelectedDate}
+                    selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
+                    selectedPeriod={selectedPeriod}
+                    applySelectedPeriod={applySelectedPeriod}
+                    locale={calendarLocale}
+                    profileUiText={profileUiText}
                   />
-                ) : null}
-                {!isLowAdminView && (
-                  <>
-                    <Button
-                      onClick={openCreateModal}
-                      variant="default"
-                      size="icon"
-                      className="h-9 w-9"
-                      aria-label={t.admin.create}
-                      title={t.admin.create}
-                    >
-                      <Plus className="size-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-9 w-9"
-                      onClick={() => void handleBulkToggleStatus()}
-                      disabled={selectedAdminIds.size === 0 || isBulkMutating}
-                      aria-label={shouldPauseSelectedAdmins ? t.admin.pause : t.admin.resume}
-                      title={shouldPauseSelectedAdmins ? t.admin.pause : t.admin.resume}
-                    >
-                      {shouldPauseSelectedAdmins ? <Pause className="size-4" /> : <Play className="size-4" />}
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="h-9 w-9"
-                      onClick={() => setIsBulkDeleteOpen(true)}
-                      disabled={selectedAdminIds.size === 0 || isBulkMutating}
-                      aria-label={`${t.admin.deleteSelected} (${selectedAdminIds.size})`}
-                      title={`${t.admin.deleteSelected} (${selectedAdminIds.size})`}
-                    >
-                      {isBulkMutating ? (
-                        <span className="text-xs">{t.common.loading}</span>
+                </div>
+              ) : null}
+
+              {!isLowAdminView ? (
+                <>
+                  <Button
+                    type="button"
+                    onClick={openCreateModal}
+                    variant="ghost"
+                    className="w-[50px] h-[50px] p-1 bg-dark-green rounded-full shadow-xl border-b-4 border-black/20"
+                    aria-label={t.admin.create}
+                    title={t.admin.create}
+                  >
+                    <span className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                      <Plus className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                    </span>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-[50px] h-[50px] p-1 bg-dark-green rounded-full shadow-xl border-b-4 border-black/20"
+                    onClick={() => void handleBulkToggleStatus()}
+                    disabled={selectedAdminIds.size === 0 || isBulkMutating}
+                    aria-label={shouldPauseSelectedAdmins ? t.admin.pause : t.admin.resume}
+                    title={shouldPauseSelectedAdmins ? t.admin.pause : t.admin.resume}
+                  >
+                    <span className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                      {shouldPauseSelectedAdmins ? (
+                        <Pause className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
                       ) : (
-                        <Trash2 className="size-4" />
+                        <Play className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
                       )}
-                    </Button>
-                    {selectedAdminIds.size > 0 && (
-                      <Badge variant="secondary" className="h-7 px-2 text-xs">
-                        {selectedAdminIds.size}
-                      </Badge>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
+                    </span>
+                  </Button>
 
-            <div className="flex items-center">
-              <SearchPanel
-                value={searchTerm}
-                onChange={setSearchTerm}
-                placeholder={t.admin.searchPlaceholder}
-              />
-            </div>
-          </CardHeader>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-[50px] h-[50px] p-1 bg-dark-green rounded-full shadow-xl border-b-4 border-black/20"
+                    onClick={() => setIsBulkDeleteOpen(true)}
+                    disabled={selectedAdminIds.size === 0 || isBulkMutating}
+                    aria-label={`${t.admin.deleteSelected} (${selectedAdminIds.size})`}
+                    title={`${t.admin.deleteSelected} (${selectedAdminIds.size})`}
+                  >
+                    <span className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                      {isBulkMutating ? (
+                        <span className="text-xs font-bold text-gourmet-ink dark:text-dark-text">{t.common.loading}</span>
+                      ) : (
+                        <Trash2 className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                      )}
+                    </span>
+                  </Button>
+                </>
+              ) : null}
 
-          <CardContent className="pt-0">
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow className="h-9">
-                    {!isLowAdminView && (
-                      <TableHead className="w-[44px] px-2">
-                        <Checkbox
-                          aria-label="Select all admins"
-                          checked={
-                            filteredAdmins.length > 0 && selectedAdminsSnapshot.length === filteredAdmins.length
-                              ? true
-                              : selectedAdminsSnapshot.length > 0
-                                ? 'indeterminate'
-                                : false
-                          }
-                          onCheckedChange={(checked) => toggleSelectAllFilteredAdmins(checked === true)}
-                        />
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-[50px] h-[50px] p-1 bg-dark-green rounded-full shadow-xl border-b-4 border-black/20"
+                onClick={() => void handleRefresh()}
+                disabled={isRefreshing}
+                aria-label={profileUiText?.refresh ?? 'Refresh'}
+                title={profileUiText?.refresh ?? 'Refresh'}
+              >
+                <span className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                  <RotateCcw className={cn('w-5 h-5 text-gourmet-ink dark:text-dark-text', isRefreshing && 'animate-spin')} />
+                </span>
+              </Button>
+
+              {!isLowAdminView && selectedAdminIds.size > 0 ? (
+                <span className="flex-shrink-0 px-4 py-2 rounded-full bg-gourmet-cream/60 dark:bg-dark-green/20 border-2 border-dashed border-gourmet-green/30 dark:border-white/10 font-black text-xs uppercase tracking-widest text-gourmet-ink dark:text-dark-text">
+                  {selectedAdminIds.size}
+                </span>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="flex flex-col gap-4 md:gap-6 relative z-10 pb-10">
+            <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table className="min-w-[980px]">
+                  <TableHeader>
+                    <TableRow className="h-12 bg-gourmet-cream/60 dark:bg-dark-green/20">
+                      {!isLowAdminView && (
+                        <TableHead className="w-[44px] px-2">
+                          <Checkbox
+                            aria-label="Select all admins"
+                            checked={
+                              filteredAdmins.length > 0 && selectedAdminsSnapshot.length === filteredAdmins.length
+                                ? true
+                                : selectedAdminsSnapshot.length > 0
+                                  ? 'indeterminate'
+                                  : false
+                            }
+                            onCheckedChange={(checked) => toggleSelectAllFilteredAdmins(checked === true)}
+                            onClick={(event) => event.stopPropagation()}
+                          />
+                        </TableHead>
+                      )}
+                      <TableHead className="w-[200px] text-xs font-black uppercase tracking-[0.2em] text-gourmet-ink dark:text-dark-text">
+                        {t.admin.table.name}
                       </TableHead>
-                    )}
-                    <TableHead className="w-[200px]">{t.admin.table.name}</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead className="w-[150px]">{t.admin.table.role}</TableHead>
-                    <TableHead className="w-[100px]">Delivered</TableHead>
-                    <TableHead className="w-[120px]">Not Delivered</TableHead>
-                    <TableHead className="w-[130px]">{t.common.status}</TableHead>
-                    <TableHead className="w-[130px]">{t.finance.salary}</TableHead>
-                    <TableHead className="w-[140px] text-right">{profileUiText.balance ?? 'Balance'}</TableHead>
-                    {!isLowAdminView && <TableHead className="w-[140px] text-right">{t.admin.table.actions}</TableHead>}
-                  </TableRow>
-                </TableHeader>
+                      <TableHead className="text-xs font-black uppercase tracking-[0.2em] text-gourmet-ink dark:text-dark-text">
+                        Email
+                      </TableHead>
+                      <TableHead className="w-[150px] text-xs font-black uppercase tracking-[0.2em] text-gourmet-ink dark:text-dark-text">
+                        {t.admin.table.role}
+                      </TableHead>
+                      <TableHead className="w-[100px] text-xs font-black uppercase tracking-[0.2em] text-gourmet-ink dark:text-dark-text">
+                        Delivered
+                      </TableHead>
+                      <TableHead className="w-[120px] text-xs font-black uppercase tracking-[0.2em] text-gourmet-ink dark:text-dark-text">
+                        Not Delivered
+                      </TableHead>
+                      <TableHead className="w-[130px] text-xs font-black uppercase tracking-[0.2em] text-gourmet-ink dark:text-dark-text">
+                        {t.common.status}
+                      </TableHead>
+                      <TableHead className="w-[130px] text-xs font-black uppercase tracking-[0.2em] text-gourmet-ink dark:text-dark-text">
+                        {t.finance.salary}
+                      </TableHead>
+                      <TableHead className="w-[140px] text-right text-xs font-black uppercase tracking-[0.2em] text-gourmet-ink dark:text-dark-text">
+                        {profileUiText.balance ?? 'Balance'}
+                      </TableHead>
+                      {!isLowAdminView && (
+                        <TableHead className="w-[140px] text-right text-xs font-black uppercase tracking-[0.2em] text-gourmet-ink dark:text-dark-text">
+                          {t.admin.table.actions}
+                        </TableHead>
+                      )}
+                    </TableRow>
+                  </TableHeader>
 
-                <TableBody>
-                  {filteredAdmins.map((admin) => {
-                    const normalizedRole = toRoleOption(admin.role)
-                    const pendingAction = pendingActions[admin.id]
+                  <TableBody>
+                    {filteredAdmins.map((admin, index) => {
+                      const normalizedRole = toRoleOption(admin.role)
+                      const pendingAction = pendingActions[admin.id]
+                      const isSelected = selectedAdminIds.has(admin.id)
 
-                    return (
-                      <TableRow key={admin.id} className="h-10">
-                        {!isLowAdminView && (
-                          <TableCell className="px-2 py-1.5">
-                            <Checkbox
-                              aria-label={`Select admin ${admin.name}`}
-                              checked={selectedAdminIds.has(admin.id)}
-                              onCheckedChange={() => toggleAdminSelection(admin.id)}
-                              disabled={Boolean(pendingAction) || isBulkMutating}
+                      return (
+                        <TableRow
+                          key={admin.id}
+                          className={cn(
+                            'h-12 transition-colors border-b border-black/5 dark:border-white/5',
+                            index % 2 === 0
+                              ? 'bg-gourmet-cream dark:bg-dark-surface'
+                              : 'bg-gourmet-cream/40 dark:bg-dark-green/20',
+                            !isLowAdminView &&
+                              'cursor-pointer hover:bg-gourmet-green/10 dark:hover:bg-dark-green/30',
+                            isSelected &&
+                              "relative before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-gourmet-orange before:rounded-r-full"
+                          )}
+                          onClick={() => {
+                            if (isLowAdminView) return
+                            if (pendingAction || isBulkMutating) return
+                            toggleAdminSelection(admin.id)
+                          }}
+                        >
+                          {!isLowAdminView && (
+                            <TableCell className="px-2 py-2 align-middle">
+                              <Checkbox
+                                aria-label={`Select admin ${admin.name}`}
+                                checked={isSelected}
+                                onCheckedChange={() => toggleAdminSelection(admin.id)}
+                                disabled={Boolean(pendingAction) || isBulkMutating}
+                                onClick={(event) => event.stopPropagation()}
+                              />
+                            </TableCell>
+                          )}
+                          <TableCell className="py-2 font-bold text-gourmet-ink dark:text-dark-text">
+                            {admin.name}
+                          </TableCell>
+                          <TableCell className="py-2 font-medium text-gourmet-ink/70 dark:text-dark-text/70">
+                            {admin.email}
+                          </TableCell>
+                          <TableCell className="py-2 font-medium text-gourmet-ink dark:text-dark-text">
+                            {roleLabel[normalizedRole]}
+                          </TableCell>
+                          <TableCell className="py-2 font-bold text-emerald-600">
+                            {normalizedRole === 'COURIER' ? adminStats[admin.id]?.delivered || 0 : '-'}
+                          </TableCell>
+                          <TableCell className="py-2 font-bold text-rose-600">
+                            {normalizedRole === 'COURIER' ? adminStats[admin.id]?.notDelivered || 0 : '-'}
+                          </TableCell>
+                          <TableCell className="py-2">
+                            <EntityStatusBadge
+                              isActive={admin.isActive}
+                              activeLabel={t.admin.table.active}
+                              inactiveLabel={t.admin.table.paused}
                             />
                           </TableCell>
-                        )}
-                        <TableCell className="py-1.5 font-medium">{admin.name}</TableCell>
-                        <TableCell className="py-1.5 text-muted-foreground">{admin.email}</TableCell>
-                        <TableCell className="py-1.5">{roleLabel[normalizedRole]}</TableCell>
-                        <TableCell className="py-1.5 font-medium text-emerald-600">
-                          {normalizedRole === 'COURIER' ? adminStats[admin.id]?.delivered || 0 : '-'}
-                        </TableCell>
-                        <TableCell className="py-1.5 font-medium text-rose-600">
-                          {normalizedRole === 'COURIER' ? adminStats[admin.id]?.notDelivered || 0 : '-'}
-                        </TableCell>
-                        <TableCell className="py-1.5">
-                          <EntityStatusBadge
-                            isActive={admin.isActive}
-                            activeLabel={t.admin.table.active}
-                            inactiveLabel={t.admin.table.paused}
-                          />
-                        </TableCell>
-                        <TableCell className="py-1.5">
-                          {admin.salary && admin.salary > 0 ? `${salaryFormatter.format(admin.salary)} UZS` : '-'}
-                        </TableCell>
-                        <TableCell className="py-1.5 text-right tabular-nums">
-                          {salaryLedgerByAdminId[admin.id] ? (
-                            <span
-                              className={
-                                salaryLedgerByAdminId[admin.id].balance > 0
-                                  ? 'font-medium text-rose-600'
-                                  : salaryLedgerByAdminId[admin.id].balance < 0
-                                    ? 'font-medium text-emerald-600'
-                                    : 'text-muted-foreground'
-                              }
-                              title={`Days: ${salaryLedgerByAdminId[admin.id].days}; Accrued: ${salaryFormatter.format(salaryLedgerByAdminId[admin.id].accrued)} UZS; Paid: ${salaryFormatter.format(salaryLedgerByAdminId[admin.id].paid)} UZS`}
-                            >
-                              {salaryLedgerByAdminId[admin.id].balance > 0 ? '+' : ''}
-                              {salaryFormatter.format(Math.round(salaryLedgerByAdminId[admin.id].balance))} UZS
-                            </span>
-                          ) : (
-                            '-'
-                          )}
-                        </TableCell>
-                        {!isLowAdminView && (
-                          <TableCell className="py-1.5 text-right">
-                            <IconButton
-                              label={t.admin.edit}
-                              variant="outline"
-                              iconSize="sm"
-                              onClick={() => openEditModal(admin)}
-                              disabled={Boolean(pendingAction) || isBulkMutating}
-                            >
-                              <Edit className="size-4" />
-                            </IconButton>
+                          <TableCell className="py-2 font-medium text-gourmet-ink dark:text-dark-text">
+                            {admin.salary && admin.salary > 0 ? `${salaryFormatter.format(admin.salary)} UZS` : '-'}
                           </TableCell>
-                        )}
-                      </TableRow>
-                    )
-                  })}
+                          <TableCell className="py-2 text-right tabular-nums">
+                            {salaryLedgerByAdminId[admin.id] ? (
+                              <span
+                                className={
+                                  salaryLedgerByAdminId[admin.id].balance > 0
+                                    ? 'font-bold text-rose-600'
+                                    : salaryLedgerByAdminId[admin.id].balance < 0
+                                      ? 'font-bold text-emerald-600'
+                                      : 'text-gourmet-ink/60 dark:text-dark-text/60'
+                                }
+                                title={`Days: ${salaryLedgerByAdminId[admin.id].days}; Accrued: ${salaryFormatter.format(salaryLedgerByAdminId[admin.id].accrued)} UZS; Paid: ${salaryFormatter.format(salaryLedgerByAdminId[admin.id].paid)} UZS`}
+                              >
+                                {salaryLedgerByAdminId[admin.id].balance > 0 ? '+' : ''}
+                                {salaryFormatter.format(Math.round(salaryLedgerByAdminId[admin.id].balance))} UZS
+                              </span>
+                            ) : (
+                              <span className="text-gourmet-ink/60 dark:text-dark-text/60">-</span>
+                            )}
+                          </TableCell>
+                          {!isLowAdminView && (
+                            <TableCell className="py-2 text-right">
+                              <div onClick={(event) => event.stopPropagation()}>
+                                <IconButton
+                                  label={t.admin.edit}
+                                  variant="outline"
+                                  iconSize="sm"
+                                  onClick={() => openEditModal(admin)}
+                                  disabled={Boolean(pendingAction) || isBulkMutating}
+                                >
+                                  <Edit className="size-4" />
+                                </IconButton>
+                              </div>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      )
+                    })}
 
-                  {filteredAdmins.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={!isLowAdminView ? 10 : 8} className="h-20 text-center text-muted-foreground">
-                        <div className="inline-flex items-center gap-2 text-sm">
-                          <Users className="size-4" />
-                          {t.admin.noAdminsFound}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                    {filteredAdmins.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={!isLowAdminView ? 10 : 8} className="h-20 text-center">
+                          <div className="inline-flex items-center gap-2 text-sm font-bold text-gourmet-ink/60 dark:text-dark-text/60">
+                            <Users className="size-4" />
+                            {t.admin.noAdminsFound}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </TabsContent>
 
       <Dialog open={isFormModalOpen} onOpenChange={handleFormOpenChange}>
