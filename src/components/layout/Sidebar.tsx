@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { motion } from 'framer-motion';
 import {
   BarChart3,
   ChefHat,
@@ -65,46 +66,46 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-50 w-72 -translate-x-full transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]',
-          // Mobile: full glassy panel
-          'border-r border-zinc-200 dark:border-white/[0.06] bg-white/95 dark:bg-[#08080e]/95 backdrop-blur-2xl',
-          // Desktop: floating card
-          'lg:static lg:translate-x-0 lg:border-none lg:w-[260px] lg:m-4 lg:rounded-2xl lg:bg-white/70 dark:lg:bg-white/[0.02] lg:border lg:border-zinc-200/80 dark:lg:border-white/[0.06] lg:backdrop-blur-xl lg:shadow-sm dark:lg:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.3)]',
+          // Mobile: mock panel
+          'border-r border-black/10 dark:border-white/[0.06] bg-gourmet-green/90 dark:bg-dark-green/90 backdrop-blur-2xl',
+          // Desktop: mock pill
+          'lg:static lg:translate-x-0 lg:border-none lg:w-32 lg:m-4 lg:rounded-[40px] lg:bg-gourmet-green/40 lg:dark:bg-dark-green/40 lg:p-4 lg:shadow-inner',
           isOpen && 'translate-x-0',
           className
         )}
       >
         {/* Premium top shine (desktop only) */}
-        <div className="hidden lg:block absolute top-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent pointer-events-none" />
+        <div className="hidden lg:block absolute top-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-black/10 to-transparent pointer-events-none" />
         
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-6 lg:pb-3">
+          <div className="flex items-center justify-between px-6 py-6 lg:px-0 lg:py-2">
             <div className="flex items-center gap-3">
-              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/25">
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-dark-surface text-white shadow-lg shadow-black/10 border-2 border-white/20">
                 <ChefHat className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-lg font-bold tracking-tight text-zinc-900 dark:text-white/95">AutoFood</p>
-                <p className="text-[11px] font-semibold text-zinc-400 dark:text-white/35 tracking-wider uppercase">
+                <p className="text-lg font-bold tracking-tight text-gourmet-ink dark:text-dark-text">AutoFood</p>
+                <p className="text-[11px] font-semibold text-gourmet-ink/70 dark:text-dark-text/70 tracking-wider uppercase">
                   {language === 'ru' ? 'Панель' : language === 'uz' ? 'Panel' : 'Dashboard'}
                 </p>
               </div>
             </div>
 
-            <Button variant="ghost" size="icon" className="lg:hidden text-zinc-400 dark:text-white/45 hover:text-zinc-700 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.06] rounded-xl" onClick={onClose}>
+            <Button variant="ghost" size="icon" className="lg:hidden text-gourmet-ink/70 dark:text-dark-text/70 hover:text-gourmet-ink dark:hover:text-dark-text hover:bg-black/5 dark:hover:bg-white/[0.06] rounded-xl" onClick={onClose}>
               <X className="h-5 w-5" />
             </Button>
           </div>
 
           {/* Divider */}
-          <div className="mx-5 h-[1px] bg-gradient-to-r from-transparent via-zinc-200 dark:via-white/[0.06] to-transparent" />
+          <div className="mx-5 lg:mx-0 h-[1px] bg-gradient-to-r from-transparent via-black/10 dark:via-white/[0.08] to-transparent" />
 
           {/* Navigation */}
           <ScrollArea className="flex-1 py-4">
-            <nav className="space-y-0.5 px-3 lg:px-2">
+            <nav className="flex flex-col items-center gap-2 px-3 lg:px-0">
               {menuItems.map((item) => {
                 if ('type' in item && item.type === 'divider') {
-                  return <div key={item.id} className="mx-3 my-3 h-[1px] bg-gradient-to-r from-transparent via-zinc-100 dark:via-white/[0.04] to-transparent" />;
+                  return <div key={item.id} className="w-full my-2 h-[1px] bg-gradient-to-r from-transparent via-black/10 dark:via-white/[0.08] to-transparent" />;
                 }
 
                 const Icon = item.icon;

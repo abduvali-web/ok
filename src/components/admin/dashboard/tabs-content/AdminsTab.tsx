@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Cherry,
   CookingPot,
+  Edit,
   Pause,
   Play,
   Plus,
@@ -44,6 +45,7 @@ import {
 import { mapLegacyAllowedTabId, type CanonicalTabId } from '@/components/admin/dashboard/tabs'
 import { AllowedTabsPicker } from '@/components/admin/dashboard/AllowedTabsPicker'
 import { FormField } from '@/components/admin/dashboard/shared/FormField'
+import { EntityStatusBadge } from '@/components/admin/dashboard/shared/EntityStatusBadge'
 import type { DateRange } from 'react-day-picker'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { fetchApi } from '@/lib/api-client'
@@ -61,6 +63,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { IconButton } from '@/components/ui/icon-button'
 import {
   Dialog,
   DialogContent,
@@ -78,6 +81,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { TabsContent } from '@/components/ui/tabs'
 
 type PendingAction = 'toggle' | 'delete'
@@ -106,6 +117,7 @@ export function AdminsTab({
   isLowAdminView,
   onRefresh,
   tabsCopy,
+  orders = [],
   selectedDate,
   applySelectedDate,
   selectedDateLabel,
@@ -128,7 +140,7 @@ export function AdminsTab({
   selectedPeriodLabel?: string
   profileUiText?: any
 }) {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   const [searchTerm, setSearchTerm] = useState('')
   const [pendingActions, setPendingActions] = useState<Record<string, PendingAction>>({})
@@ -161,6 +173,53 @@ export function AdminsTab({
     }),
     [t.admin.lowAdmin, t.admin.worker, t.courier.title]
   )
+
+  const salaryFormatter = useMemo(() => {
+    if (language === 'uz') return new Intl.NumberFormat('uz-UZ')
+    if (language === 'en') return new Intl.NumberFormat('en-US')
+    return new Intl.NumberFormat('ru-RU')
+  }, [language])
+
+  const [salaryLedgerByAdminId, setSalaryLedgerByAdminId] = useState<
+    Record<string, { balance: number; paid: number; accrued: number; days: number }>
+  >({})
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const controller = new AbortController()
+    const asOf = (selectedPeriod?.to ?? selectedPeriod?.from ?? selectedDate ?? new Date()).toISOString()
+
+    void fetch(`/api/admin/finance/admin-balances?asOf=${encodeURIComponent(asOf)}`, {
+      signal: controller.signal,
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (controller.signal.aborted) return
+        const rows: any[] = Array.isArray(data?.admins) ? data.admins : []
+        const next: Record<string, { balance: number; paid: number; accrued: number; days: number }> = {}
+        for (const row of rows) {
+          if (!row || typeof row !== 'object') continue
+          const id = (row as any).id
+          if (typeof id !== 'string') continue
+          const balance = Number((row as any).balance ?? 0)
+          const paid = Number((row as any).paid ?? 0)
+          const accrued = Number((row as any).accrued ?? 0)
+          const days = Number((row as any).days ?? 0)
+          next[id] = {
+            balance: Number.isFinite(balance) ? balance : 0,
+            paid: Number.isFinite(paid) ? paid : 0,
+            accrued: Number.isFinite(accrued) ? accrued : 0,
+            days: Number.isFinite(days) ? days : 0,
+          }
+        }
+        setSalaryLedgerByAdminId(next)
+      })
+      .catch(() => {
+        // ignore transient loading failures
+      })
+
+    return () => controller.abort()
+  }, [selectedDate, selectedPeriod])
 
   // Gourmet mock date picker state (local UI, persisted via applySelectedDate/applySelectedPeriod)
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
@@ -222,6 +281,29 @@ export function AdminsTab({
       return new Set(filteredAdmins.map((admin) => admin.id))
     })
   }, [filteredAdmins])
+
+  const adminStats = useMemo(() => {
+    const stats: Record<string, { delivered: number; notDelivered: number }> = {}
+    lowAdmins.forEach((a) => {
+      stats[a.id] = { delivered: 0, notDelivered: 0 }
+    })
+
+    if (orders && orders.length > 0) {
+      orders.forEach((order) => {
+        if (!order?.courierId) return
+        if (!stats[order.courierId]) stats[order.courierId] = { delivered: 0, notDelivered: 0 }
+
+        const status = order.orderStatus
+        if (status === 'DELIVERED') {
+          stats[order.courierId].delivered++
+        } else if (status !== 'NEW' && status !== 'CANCELED') {
+          stats[order.courierId].notDelivered++
+        }
+      })
+    }
+
+    return stats
+  }, [lowAdmins, orders])
 
   const setPendingAction = useCallback((adminId: string, action: PendingAction | null) => {
     setPendingActions((prev) => {
@@ -576,7 +658,7 @@ export function AdminsTab({
                   onChange={(event) => setSearchTerm(event.target.value)}
                   placeholder="Qidirish..."
                   aria-label={t.admin.searchPlaceholder}
-                  className="w-full bg-transparent py-0 text-base md:text-lg focus:outline-none text-gourmet-ink dark:text-dark-text placeholder:text-gourmet-ink dark:placeholder:text-dark-text"
+                  className="w-full bg-transparent py-0 !text-base md:!text-lg focus:outline-none text-gourmet-ink dark:text-dark-text placeholder:text-gourmet-ink dark:placeholder:text-dark-text"
                 />
               </div>
             </motion.div>
@@ -645,8 +727,8 @@ export function AdminsTab({
                     onClick={() => setIsBulkDeleteOpen(true)}
                     disabled={selectedAdminIds.size === 0 || isBulkMutating}
                     className="w-[50px] h-[50px] bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
-                    aria-label={`${t.admin.deleteSelected} (${selectedAdminIds.size})`}
-                    title={`${t.admin.deleteSelected} (${selectedAdminIds.size})`}
+                    aria-label={t.admin.deleteSelected}
+                    title={t.admin.deleteSelected}
                   >
                     <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
                       <Trash2 className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
@@ -685,11 +767,6 @@ export function AdminsTab({
                 </motion.button>
               )}
 
-              {!isLowAdminView && selectedAdminIds.size > 0 ? (
-                <span className="flex-shrink-0 px-4 py-2 rounded-full bg-gourmet-cream/60 dark:bg-dark-green/20 border-2 border-dashed border-gourmet-green/30 dark:border-white/10 font-black text-xs uppercase tracking-widest text-gourmet-ink dark:text-dark-text">
-                  {selectedAdminIds.size}
-                </span>
-              ) : null}
             </div>
           </div>
 
@@ -702,120 +779,145 @@ export function AdminsTab({
                 toggleSelectAllFilteredAdmins(!allSelected)
               }
 
+              const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text'
+              const cellBorder = 'border-l border-black/5 dark:border-white/5'
+
               return (
-                <>
-                  <div
-                    onClick={toggleSelectAll}
-                    className={cn(
-                      'grid grid-cols-2 px-4 md:px-10 py-3 md:py-5 bg-gourmet-cream/60 dark:bg-dark-green/20 rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 relative overflow-hidden group transition-colors duration-300',
-                      !isLowAdminView ? 'cursor-pointer' : 'cursor-default'
-                    )}
-                  >
-                    {allSelected && (
-                      <motion.div
-                        initial={{ x: -20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        className="absolute left-0 top-1/2 -translate-y-1/2 w-3 md:w-5 h-12 md:h-16 bg-gourmet-orange rounded-r-full z-20"
-                      />
-                    )}
-                    <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-10 pointer-events-none">
-                      <Cherry className="w-8 h-8 md:w-12 md:h-12 rotate-12" />
-                      <Utensils className="w-8 h-8 md:w-12 md:h-12 -rotate-12" />
-                    </div>
-                    <div className="relative flex items-center">
-                      <span className="text-xs md:text-sm font-black uppercase tracking-[0.1em] md:tracking-[0.2em] transition-colors text-gourmet-ink dark:text-dark-text">
-                        Ism
-                      </span>
-                      <div
-                        className={cn(
-                          'absolute right-0 top-1/2 -translate-y-1/2 h-8 md:h-10 w-[1px] md:w-[2px] bg-gradient-to-b from-transparent to-transparent',
-                          allSelected ? 'via-gourmet-orange/40' : 'via-gourmet-green/40 dark:via-dark-green/40'
-                        )}
-                      />
-                    </div>
-                    <div className="flex items-center pl-4 md:pl-10">
-                      <span className="text-xs md:text-sm font-black uppercase tracking-[0.1em] md:tracking-[0.2em] transition-colors text-gourmet-ink dark:text-dark-text">
-                        Email
-                      </span>
-                    </div>
+                <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 overflow-hidden relative">
+                  <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none">
+                    <Cherry className="w-10 h-10 md:w-14 md:h-14 rotate-12" />
+                    <Utensils className="w-10 h-10 md:w-14 md:h-14 -rotate-12" />
                   </div>
 
-                  <div className="flex flex-col gap-3 md:gap-4">
-                    {filteredAdmins.map((admin, index) => {
-                      const isSelected = selectedAdminIds.has(admin.id)
-                      const pendingAction = pendingActions[admin.id]
-
-                      return (
-                        <motion.div
-                          key={admin.id}
-                          initial={{ opacity: 0, x: 50 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          onClick={() => {
-                            if (isLowAdminView) return
-                            if (pendingAction || isBulkMutating) return
-                            toggleAdminSelection(admin.id)
-                          }}
-                          onDoubleClick={() => {
-                            if (isLowAdminView) return
-                            openEditModal(admin)
-                          }}
-                          whileHover={
-                            isLowAdminView
-                              ? undefined
-                              : {
-                                  scale: isSelected ? 1.01 : 1.02,
-                                  x: 5,
-                                  y: 2,
-                                  backgroundColor: isSelected ? undefined : 'rgba(141, 163, 130, 0.1)',
-                                }
-                          }
-                          whileTap={isLowAdminView ? undefined : { scale: 0.98 }}
-                          transition={{
-                            type: 'spring',
-                            stiffness: 300,
-                            damping: 20,
-                            delay: index * 0.05,
-                          }}
+                  <div className="overflow-x-auto relative">
+                    <Table className="min-w-[1150px]">
+                      <TableHeader>
+                        <TableRow
                           className={cn(
-                            'grid grid-cols-2 px-4 md:px-10 py-4 md:py-6 rounded-2xl md:rounded-3xl shadow-md border-b-4 transition-all relative overflow-hidden',
-                            index % 2 === 0
-                              ? 'bg-gourmet-cream dark:bg-dark-surface border-black/5 dark:border-white/5'
-                              : 'bg-gourmet-cream/40 dark:bg-dark-green/20 border-black/5 dark:border-white/5',
-                            !isLowAdminView ? 'cursor-pointer' : 'cursor-default'
+                            'h-12 bg-gourmet-cream/60 dark:bg-dark-green/20 cursor-pointer select-none',
+                            !isLowAdminView ? 'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/30' : 'cursor-default'
                           )}
+                          onClick={toggleSelectAll}
                         >
-                          {isSelected && (
-                            <motion.div
-                              initial={{ x: -20, opacity: 0 }}
-                              animate={{ x: 0, opacity: 1 }}
-                              className="absolute left-0 top-1/2 -translate-y-1/2 w-3 md:w-5 h-12 md:h-16 bg-gourmet-orange rounded-r-full z-20"
-                            />
-                          )}
-                          <div className="relative flex items-center">
-                            <span className="text-sm md:text-lg font-bold transition-colors truncate pr-2 text-gourmet-ink dark:text-dark-text">
-                              {admin.name}
-                            </span>
-                            <div className="absolute right-0 top-1/2 -translate-y-1/2 h-10 md:h-12 w-[1px] md:w-[2px] bg-gradient-to-b from-transparent to-transparent via-gourmet-orange/30" />
-                          </div>
-                          <div className="flex items-center pl-4 md:pl-10">
-                            <span className="text-sm md:text-lg font-medium transition-colors truncate text-gourmet-ink dark:text-dark-text">
-                              {admin.email}
-                            </span>
-                          </div>
-                        </motion.div>
-                      )
-                    })}
+                          <TableHead className="w-[18px] px-0" />
+                          <TableHead className={cn('w-[220px]', headCell, 'pl-4 md:pl-6')}>{t.admin.table.name}</TableHead>
+                          <TableHead className={cn(headCell, cellBorder)}>Email</TableHead>
+                          <TableHead className={cn('w-[160px]', headCell, cellBorder)}>{t.admin.table.role}</TableHead>
+                          <TableHead className={cn('w-[110px]', headCell, cellBorder)}>Delivered</TableHead>
+                          <TableHead className={cn('w-[130px]', headCell, cellBorder)}>Not Delivered</TableHead>
+                          <TableHead className={cn('w-[140px]', headCell, cellBorder)}>{t.common.status}</TableHead>
+                          <TableHead className={cn('w-[140px]', headCell, cellBorder)}>{t.finance.salary}</TableHead>
+                          <TableHead className={cn('w-[170px] text-right', headCell, cellBorder)}>
+                            {profileUiText.balance ?? 'Balance'}
+                          </TableHead>
+                          {!isLowAdminView && <TableHead className={cn('w-[140px] text-right', headCell, cellBorder)}>{t.admin.table.actions}</TableHead>}
+                        </TableRow>
+                      </TableHeader>
 
-                    {filteredAdmins.length === 0 && (
-                      <div className="py-10 text-center text-gourmet-ink/60 dark:text-dark-text/60 font-bold">
-                        <div className="inline-flex items-center gap-2 text-sm">
-                          <Users className="size-4" />
-                          {t.admin.noAdminsFound}
-                        </div>
-                      </div>
-                    )}
+                      <TableBody>
+                        {filteredAdmins.map((admin, index) => {
+                          const normalizedRole = toRoleOption(admin.role)
+                          const isSelected = selectedAdminIds.has(admin.id)
+                          const pendingAction = pendingActions[admin.id]
+
+                          return (
+                            <TableRow
+                              key={admin.id}
+                              className={cn(
+                                'h-12 transition-colors border-t border-black/5 dark:border-white/5',
+                                index % 2 === 0
+                                  ? 'bg-gourmet-cream dark:bg-dark-surface'
+                                  : 'bg-gourmet-cream/40 dark:bg-dark-green/20',
+                                !isLowAdminView &&
+                                  'cursor-pointer hover:bg-gourmet-green/10 dark:hover:bg-dark-green/30',
+                                isSelected && "relative before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-gourmet-orange before:rounded-r-full"
+                              )}
+                              onClick={() => {
+                                if (isLowAdminView) return
+                                if (pendingAction || isBulkMutating) return
+                                toggleAdminSelection(admin.id)
+                              }}
+                              onDoubleClick={() => {
+                                if (isLowAdminView) return
+                                openEditModal(admin)
+                              }}
+                            >
+                              <TableCell className="w-[18px] px-0" />
+                              <TableCell className="pl-4 md:pl-6 font-bold text-gourmet-ink dark:text-dark-text">
+                                {admin.name}
+                              </TableCell>
+                              <TableCell className={cn('font-medium text-gourmet-ink/70 dark:text-dark-text/70', cellBorder)}>
+                                {admin.email}
+                              </TableCell>
+                              <TableCell className={cn('font-medium text-gourmet-ink dark:text-dark-text', cellBorder)}>
+                                {roleLabel[normalizedRole]}
+                              </TableCell>
+                              <TableCell className={cn('font-bold text-emerald-600', cellBorder)}>
+                                {normalizedRole === 'COURIER' ? adminStats[admin.id]?.delivered || 0 : '-'}
+                              </TableCell>
+                              <TableCell className={cn('font-bold text-rose-600', cellBorder)}>
+                                {normalizedRole === 'COURIER' ? adminStats[admin.id]?.notDelivered || 0 : '-'}
+                              </TableCell>
+                              <TableCell className={cn(cellBorder)}>
+                                <EntityStatusBadge
+                                  isActive={admin.isActive}
+                                  activeLabel={t.admin.table.active}
+                                  inactiveLabel={t.admin.table.paused}
+                                />
+                              </TableCell>
+                              <TableCell className={cn('font-medium text-gourmet-ink dark:text-dark-text', cellBorder)}>
+                                {admin.salary && admin.salary > 0 ? `${salaryFormatter.format(admin.salary)} UZS` : '-'}
+                              </TableCell>
+                              <TableCell className={cn('text-right tabular-nums', cellBorder)}>
+                                {salaryLedgerByAdminId[admin.id] ? (
+                                  <span
+                                    className={
+                                      salaryLedgerByAdminId[admin.id].balance > 0
+                                        ? 'font-bold text-rose-600'
+                                        : salaryLedgerByAdminId[admin.id].balance < 0
+                                          ? 'font-bold text-emerald-600'
+                                          : 'text-gourmet-ink/60 dark:text-dark-text/60'
+                                    }
+                                    title={`Days: ${salaryLedgerByAdminId[admin.id].days}; Accrued: ${salaryFormatter.format(salaryLedgerByAdminId[admin.id].accrued)} UZS; Paid: ${salaryFormatter.format(salaryLedgerByAdminId[admin.id].paid)} UZS`}
+                                  >
+                                    {salaryLedgerByAdminId[admin.id].balance > 0 ? '+' : ''}
+                                    {salaryFormatter.format(Math.round(salaryLedgerByAdminId[admin.id].balance))} UZS
+                                  </span>
+                                ) : (
+                                  <span className="text-gourmet-ink/60 dark:text-dark-text/60">-</span>
+                                )}
+                              </TableCell>
+                              {!isLowAdminView && (
+                                <TableCell className={cn('text-right', cellBorder)} onClick={(event) => event.stopPropagation()}>
+                                  <IconButton
+                                    label={t.admin.edit}
+                                    variant="outline"
+                                    iconSize="sm"
+                                    onClick={() => openEditModal(admin)}
+                                    disabled={Boolean(pendingAction) || isBulkMutating}
+                                  >
+                                    <Edit className="size-4" />
+                                  </IconButton>
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          )
+                        })}
+
+                        {filteredAdmins.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={!isLowAdminView ? 10 : 9} className="h-20 text-center">
+                              <div className="inline-flex items-center gap-2 text-sm font-bold text-gourmet-ink/60 dark:text-dark-text/60">
+                                <Users className="size-4" />
+                                {t.admin.noAdminsFound}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
                   </div>
-                </>
+                </div>
               )
             })()}
           </div>

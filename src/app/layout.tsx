@@ -8,6 +8,7 @@ import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistratio
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 import { PWANetworkStatus } from '@/components/PWANetworkStatus';
 import { TamboProviderClient } from "@/components/providers/TamboProviderClient";
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
 
 const sans = Manrope({
   variable: "--font-geist-sans",
@@ -79,23 +80,25 @@ export default function RootLayout({
       <body
         className={`${sans.variable} antialiased bg-background text-foreground `}
       >
-        <LanguageProvider>
-          <AdminSettingsProvider>
-            <TamboProviderClient>
-              <ServiceWorkerRegistration />
-              <a
-                href="#main-content"
-                className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-elevated"
-              >
-                Skip to content
-              </a>
-              <div id="main-content">{children}</div>
-              <PWANetworkStatus />
-              <PWAInstallPrompt />
-              <Toaster />
-            </TamboProviderClient>
-          </AdminSettingsProvider>
-        </LanguageProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            <AdminSettingsProvider>
+              <TamboProviderClient>
+                <ServiceWorkerRegistration />
+                <a
+                  href="#main-content"
+                  className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-elevated"
+                >
+                  Skip to content
+                </a>
+                <div id="main-content">{children}</div>
+                <PWANetworkStatus />
+                <PWAInstallPrompt />
+                <Toaster />
+              </TamboProviderClient>
+            </AdminSettingsProvider>
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
