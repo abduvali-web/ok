@@ -136,8 +136,8 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                       className={cn(
                         'w-12 h-12 md:w-[96px] md:h-[96px] rounded-full flex items-center justify-center relative transition-all overflow-hidden z-10',
                         isActive
-                          ? 'bg-gourmet-orange shadow-2xl border-b-4 border-black/20'
-                          : 'bg-white dark:bg-dark-surface shadow-lg border-b-4 border-black/10 dark:border-white/10'
+                          ? 'bg-gourmet-orange shadow-2xl'
+                          : 'bg-white dark:bg-dark-surface shadow-lg'
                       )}
                     >
                       <motion.div
