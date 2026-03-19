@@ -113,43 +113,28 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                       onClose();
                     }}
                     className={cn(
-                      'flex flex-col items-center gap-1 md:gap-2 group relative py-2 md:py-4 transition-all duration-300 w-full md:w-[121px] md:h-[156px]',
-                      isActive && 'scale-105'
+                      'flex flex-col items-center gap-1 md:gap-2 group relative py-2 md:py-4 transition-colors duration-200 w-full md:w-[121px] md:h-[156px]'
                     )}
                   >
                     {isActive && (
                       <motion.div
                         layoutId="active-nav-bg"
-                        className="absolute left-1/2 top-1/2 w-16 h-full md:w-[121px] md:h-[156px] -translate-x-1/2 -translate-y-1/2 bg-gourmet-cream dark:bg-dark-surface rounded-[20px] md:rounded-[30px] shadow-[-10px_0_15px_rgba(0,0,0,0.05)] z-0 transition-colors duration-300"
+                        className="absolute inset-1 bg-gourmet-cream/85 dark:bg-dark-surface/70 rounded-[20px] md:rounded-[30px] border border-black/5 dark:border-white/[0.08] shadow-sm z-0 transition-colors duration-300"
                         transition={{ type: 'spring', stiffness: 200, damping: 30 }}
                       />
                     )}
 
                     <motion.div
-                      animate={{ y: 0 }}
-                      whileHover={{
-                        y: [0, -8, 8, 0],
-                        transition: { duration: 3.375, repeat: Infinity, ease: 'easeInOut' },
-                      }}
-                      whileTap={{ y: 0, scale: 0.95 }}
-                      transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      transition={{ type: 'spring', stiffness: 260, damping: 24 }}
                       className={cn(
                         'w-12 h-12 md:w-[96px] md:h-[96px] rounded-full flex items-center justify-center relative transition-all overflow-hidden z-10',
                         isActive
-                          ? 'bg-gourmet-orange shadow-2xl'
-                          : 'bg-white dark:bg-dark-surface shadow-lg'
+                          ? 'bg-gourmet-orange shadow-lg border border-black/10'
+                          : 'bg-white/90 dark:bg-dark-surface/80 shadow-md border border-black/5 dark:border-white/[0.08]'
                       )}
                     >
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        whileHover={{ scale: 4 }}
-                        transition={{ duration: 0.6, ease: 'easeOut' }}
-                        className={cn(
-                          'absolute w-10 h-10 rounded-full pointer-events-none z-0',
-                          isActive ? 'bg-white/20' : 'bg-gourmet-orange/20'
-                        )}
-                      />
-
                       <div
                         className={cn(
                           'w-10 h-10 md:w-[80px] md:h-[80px] rounded-full flex items-center justify-center border-2 border-dashed relative z-10',
