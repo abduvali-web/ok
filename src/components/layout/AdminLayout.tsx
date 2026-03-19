@@ -26,8 +26,8 @@ interface AdminLayoutProps {
   userName?: string;
 }
 
-export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, userName: _userName }: AdminLayoutProps) {
-  const { t, language } = useLanguage();
+export function AdminLayout({ children, mode, activeTab: _activeTab, onTabChange, onLogout, userName: _userName }: AdminLayoutProps) {
+  const { t } = useLanguage();
   const { settings: adminSettings, updateSettings: updateAdminSettings } = useAdminSettingsContext();
   const router = useRouter();
   const pathname = usePathname();
@@ -38,24 +38,6 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
       ? window.matchMedia('(prefers-color-scheme: dark)').matches
       : false;
   const isDark = adminSettings.theme === 'dark' || (adminSettings.theme === 'system' && systemPrefersDark);
-
-  const tabLabels: Record<string, string> = {
-    statistics: t.admin.statistics,
-    orders: t.admin.orders,
-    map: language === 'uz' ? 'Xarita' : 'Map',
-    warehouse: t.warehouse.title,
-    cooking: t.warehouse.cooking,
-    sets: language === 'uz' ? "To'plamlar" : 'Sets',
-    finance: t.finance.title,
-    clients: t.admin.clients,
-    couriers: t.admin.couriers,
-    chat: t.courier.chat,
-    settings: t.admin.settings,
-    admins: t.admin.admins,
-    bin: t.admin.bin,
-    history: t.admin.history,
-    profile: t.common.profile,
-  };
 
   const showDatabase = mode === 'middle';
   const openModalParam = (key: 'chat' | 'settings') => {
@@ -90,9 +72,9 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
             <Utensils className="w-6 h-6 md:w-10 md:h-10 text-gourmet-ink dark:text-dark-text" />
           </motion.div>
           <div className="min-w-0">
-            <h1 className="text-xl md:text-2xl font-bold text-gourmet-ink dark:text-dark-text tracking-tight truncate">AutoFood</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gourmet-ink dark:text-dark-text tracking-tight truncate">Gourmet</h1>
             <p className="hidden md:block text-sm text-gourmet-ink dark:text-dark-text font-medium truncate">
-              {tabLabels[activeTab] || activeTab}
+              Management V1
             </p>
           </div>
         </motion.div>
