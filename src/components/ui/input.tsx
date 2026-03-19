@@ -8,11 +8,11 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       type={type}
       data-slot="input"
       className={cn(
-        "file:text-zinc-600 dark:file:text-white placeholder:text-zinc-400 dark:placeholder:text-white/25 selection:bg-primary/30 selection:text-white flex h-10 w-full min-w-0 rounded-xl px-4 py-2.5 text-sm transition-all duration-300 outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
-        "bg-white/50 dark:bg-white/[0.03] border border-black/10 dark:border-white/[0.07] text-zinc-900 dark:text-white shadow-sm dark:shadow-inner",
+        "file:text-gourmet-ink/70 dark:file:text-dark-text/70 placeholder:text-gourmet-ink/45 dark:placeholder:text-dark-text/30 selection:bg-gourmet-green/30 selection:text-gourmet-ink flex h-10 w-full min-w-0 rounded-xl px-4 py-2.5 text-sm transition-all duration-300 outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+        "bg-gourmet-cream/60 dark:bg-dark-surface/20 border border-gourmet-green/25 dark:border-white/10 text-gourmet-ink dark:text-dark-text shadow-sm dark:shadow-inner",
         "backdrop-blur-md",
-        "focus-visible:border-black/30 dark:focus-visible:border-white/20 focus-visible:ring-2 focus-visible:ring-black/10 dark:focus-visible:ring-white/[0.08] focus-visible:bg-white dark:focus-visible:bg-white/[0.06]",
-        "hover:border-black/20 dark:hover:border-white/[0.12] hover:bg-white/80 dark:hover:bg-white/[0.04]",
+        "focus-visible:border-gourmet-green/45 dark:focus-visible:border-white/20 focus-visible:ring-2 focus-visible:ring-gourmet-green/15 dark:focus-visible:ring-white/[0.08] focus-visible:bg-gourmet-cream/90 dark:focus-visible:bg-dark-surface/35",
+        "hover:border-gourmet-green/35 dark:hover:border-white/15 hover:bg-gourmet-cream/80 dark:hover:bg-dark-surface/30",
         "aria-invalid:border-red-500/40 aria-invalid:ring-red-500/15",
         className
       )}

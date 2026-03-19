@@ -7,11 +7,11 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card"
       className={cn(
-        "group/card relative flex flex-col gap-4 rounded-2xl py-5 text-zinc-950 dark:text-white transition-all duration-500",
-        "bg-white/60 dark:bg-white/[0.02] border border-black/5 dark:border-white/[0.07]",
+        "group/card relative flex flex-col gap-4 rounded-2xl py-5 text-gourmet-ink dark:text-dark-text transition-all duration-500",
+        "bg-gourmet-cream/80 dark:bg-dark-surface/30 border-2 border-dashed border-gourmet-green/25 dark:border-white/10",
         "shadow-sm dark:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)]",
         "backdrop-blur-xl",
-        "hover:border-black/10 dark:hover:border-white/[0.12] hover:bg-white/80 dark:hover:bg-white/[0.04]",
+        "hover:border-gourmet-green/35 dark:hover:border-white/15 hover:bg-gourmet-cream/90 dark:hover:bg-dark-surface/40",
         "hover:shadow-md dark:hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.5)]",
         "hover:-translate-y-[1px]",
         className
@@ -35,11 +35,11 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="card-title" className={cn("leading-none font-bold tracking-tight text-zinc-900 dark:text-white/95", className)} {...props} />
+  return <div data-slot="card-title" className={cn("leading-none font-bold tracking-tight text-gourmet-ink dark:text-dark-text", className)} {...props} />
 }
 
 function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="card-description" className={cn("text-zinc-500 dark:text-white/45 text-sm font-medium dark:font-light leading-relaxed", className)} {...props} />
+  return <div data-slot="card-description" className={cn("text-gourmet-ink/70 dark:text-dark-text/70 text-sm font-medium dark:font-light leading-relaxed", className)} {...props} />
 }
 
 function CardAction({ className, ...props }: React.ComponentProps<"div">) {

@@ -533,6 +533,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "source": "components/ui/textarea.tsx"
   },
   {
+    "name": "ThemeProvider",
+    "purpose": "UI component from components providers ThemeProvider",
+    "source": "components/providers/ThemeProvider.tsx"
+  },
+  {
     "name": "toast",
     "purpose": "UI component from components ui toast",
     "source": "components/ui/toast.tsx"

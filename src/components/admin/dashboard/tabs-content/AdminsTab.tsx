@@ -63,7 +63,6 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { IconButton } from '@/components/ui/icon-button'
 import {
   Dialog,
   DialogContent,
@@ -896,16 +895,20 @@ export function AdminsTab({
                               </TableCell>
                               {!isLowAdminView && (
                                 <TableCell className={cn('text-right', cellBorder)} onClick={(event) => event.stopPropagation()}>
-                                  <IconButton
-                                    label={t.admin.edit}
-                                    variant="outline"
-                                    iconSize="sm"
-                                    className="border-gourmet-green-light/30 bg-gourmet-green-light/35 hover:bg-gourmet-green-light/45 text-gourmet-ink dark:text-dark-text dark:border-white/10 dark:bg-dark-green/35 dark:hover:bg-dark-green/45"
+                                  <motion.button
+                                    type="button"
+                                    whileHover={{ scale: 1.12, y: 4 }}
+                                    whileTap={{ scale: 0.9 }}
                                     onClick={() => openEditModal(admin)}
                                     disabled={Boolean(pendingAction) || isBulkMutating}
+                                    className="ml-auto w-10 h-10 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                                    aria-label={t.admin.edit}
+                                    title={t.admin.edit}
                                   >
-                                    <Edit className="size-4" />
-                                  </IconButton>
+                                    <div className="w-8 h-8 rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                                      <Edit className="w-5 h-5 text-gourmet-ink dark:text-dark-text" />
+                                    </div>
+                                  </motion.button>
                                 </TableCell>
                               )}
                             </TableRow>

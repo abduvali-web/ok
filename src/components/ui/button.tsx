@@ -9,13 +9,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "border border-transparent dark:border-white/20 bg-zinc-900 dark:bg-white text-white dark:text-black shadow-md dark:shadow-[0_1px_12px_rgba(255,255,255,0.15)] hover:shadow-lg dark:hover:shadow-[0_2px_20px_rgba(255,255,255,0.25)] hover:bg-zinc-800 dark:hover:bg-white/95",
+        default: "border border-transparent dark:border-white/20 bg-gourmet-green dark:bg-dark-green text-gourmet-ink dark:text-dark-text shadow-xl border-b-4 border-black/20 hover:shadow-2xl hover:bg-gourmet-green/90 dark:hover:bg-dark-green/90",
         success: "border border-emerald-500/30 dark:border-emerald-500/30 bg-emerald-500 dark:bg-emerald-600 text-white shadow-[0_1px_12px_rgba(52,211,153,0.25)] hover:shadow-[0_2px_20px_rgba(52,211,153,0.35)] hover:bg-emerald-600 dark:hover:bg-emerald-500",
         warning: "border border-amber-500/30 dark:border-amber-500/30 bg-amber-500 dark:bg-amber-500 text-white dark:text-black shadow-[0_1px_12px_rgba(251,191,36,0.25)] hover:shadow-[0_2px_20px_rgba(251,191,36,0.35)] hover:bg-amber-600 dark:hover:bg-amber-400",
         destructive: "border border-red-500/30 dark:border-red-500/30 bg-red-500 dark:bg-red-600 text-white shadow-[0_1px_12px_rgba(239,68,68,0.25)] hover:shadow-[0_2px_20px_rgba(239,68,68,0.35)] hover:bg-red-600 dark:hover:bg-red-500",
-        outline: "border border-black/10 dark:border-white/10 bg-white/50 dark:bg-white/[0.03] text-zinc-900 dark:text-white backdrop-blur-md hover:bg-black/5 dark:hover:bg-white/[0.08] hover:border-black/20 dark:hover:border-white/20 shadow-sm",
-        secondary: "border border-black/5 dark:border-white/10 bg-black/5 dark:bg-white/[0.06] text-zinc-900 dark:text-white backdrop-blur-md hover:bg-black/10 dark:hover:bg-white/[0.12] dark:hover:border-white/15 shadow-sm",
-        ghost: "border border-transparent text-zinc-600 dark:text-white/70 hover:bg-black/5 dark:hover:bg-white/[0.06] hover:text-zinc-900 dark:hover:text-white",
+        outline: "border border-gourmet-green/25 dark:border-white/10 bg-gourmet-cream/70 dark:bg-dark-surface/40 text-gourmet-ink dark:text-dark-text backdrop-blur-md hover:bg-gourmet-cream/90 dark:hover:bg-dark-surface/55 hover:border-gourmet-green/35 dark:hover:border-white/20 shadow-sm",
+        secondary: "border border-gourmet-green/15 dark:border-white/10 bg-gourmet-cream/45 dark:bg-dark-surface/30 text-gourmet-ink dark:text-dark-text backdrop-blur-md hover:bg-gourmet-cream/65 dark:hover:bg-dark-surface/45 shadow-sm",
+        ghost: "border border-transparent text-gourmet-ink/70 dark:text-dark-text/70 hover:bg-gourmet-green/10 dark:hover:bg-dark-green/30 hover:text-gourmet-ink dark:hover:text-dark-text",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
