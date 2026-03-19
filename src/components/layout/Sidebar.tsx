@@ -60,8 +60,8 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-50 w-72 -translate-x-full transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]',
-          'border-r-2 border-black/10 dark:border-white/[0.06] bg-gourmet-green/90 dark:bg-dark-green/90 backdrop-blur-2xl',
-          'md:relative md:translate-x-0 md:border-2 md:w-[128px] md:h-[1088px] md:m-4 md:rounded-[40px] md:bg-gourmet-green/40 md:dark:bg-dark-green/40 md:p-4 md:shadow-inner',
+          'bg-gourmet-green/90 dark:bg-dark-green/90 backdrop-blur-2xl',
+          'md:relative md:translate-x-0 md:w-[128px] md:h-[1088px] md:m-4 md:rounded-[40px] md:bg-gourmet-green/40 md:dark:bg-dark-green/40 md:p-4 md:shadow-inner',
           isOpen && 'translate-x-0',
           className
         )}
