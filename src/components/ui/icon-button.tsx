@@ -11,6 +11,12 @@ const ICON_BUTTON_SIZE = {
   lg: 'h-10 w-10',
 } as const
 
+const ICON_BUTTON_INNER_SIZE = {
+  sm: 'h-7 w-7',
+  md: 'h-8 w-8',
+  lg: 'h-9 w-9',
+} as const
+
 export type IconButtonProps = Omit<ButtonProps, 'size' | 'children'> & {
   label: string
   children: React.ReactNode
@@ -20,19 +26,35 @@ export type IconButtonProps = Omit<ButtonProps, 'size' | 'children'> & {
 type ButtonProps = React.ComponentProps<typeof Button>
 
 export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-  { label, children, className, iconSize = 'md', ...props },
+  { label, children, className, iconSize = 'md', variant, ...props },
   ref
 ) {
+  const effectiveVariant: ButtonProps['variant'] = variant === 'destructive' ? 'destructive' : 'default'
+
   return (
     <Button
       ref={ref}
       size="icon"
+      variant={effectiveVariant}
       aria-label={label}
       title={label}
-      className={cn(ICON_BUTTON_SIZE[iconSize], className)}
+      className={cn(
+        ICON_BUTTON_SIZE[iconSize],
+        'rounded-full p-1',
+        'hover:scale-[1.08]',
+        className
+      )}
       {...props}
     >
-      {children}
+      <span
+        className={cn(
+          ICON_BUTTON_INNER_SIZE[iconSize],
+          'rounded-full border-2 border-dashed border-white/10 flex items-center justify-center',
+          effectiveVariant === 'destructive' ? 'text-white' : 'text-gourmet-ink dark:text-dark-text'
+        )}
+      >
+        {children}
+      </span>
       <span className="sr-only">{label}</span>
     </Button>
   )

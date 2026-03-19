@@ -897,16 +897,16 @@ export function AdminsTab({
                                 <TableCell className={cn('text-right', cellBorder)} onClick={(event) => event.stopPropagation()}>
                                   <motion.button
                                     type="button"
-                                    whileHover={{ scale: 1.12, y: 4 }}
+                                    whileHover={{ scale: 1.15, y: 5 }}
                                     whileTap={{ scale: 0.9 }}
                                     onClick={() => openEditModal(admin)}
                                     disabled={Boolean(pendingAction) || isBulkMutating}
-                                    className="ml-auto w-10 h-10 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                                    className="ml-auto w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
                                     aria-label={t.admin.edit}
                                     title={t.admin.edit}
                                   >
-                                    <div className="w-8 h-8 rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                                      <Edit className="w-5 h-5 text-gourmet-ink dark:text-dark-text" />
+                                    <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                                      <Edit className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
                                     </div>
                                   </motion.button>
                                 </TableCell>
