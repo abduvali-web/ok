@@ -612,11 +612,11 @@ export function AdminsTab({
 
   return (
     <>
-      <TabsContent value="admins" className="h-full">
+      <TabsContent value="admins" className="min-h-0">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="content-card h-full flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300"
+          className="content-card flex-1 min-h-0 flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300"
         >
           {/* Background Watermark */}
           <motion.div
@@ -774,7 +774,7 @@ export function AdminsTab({
           </div>
 
           {/* Sheet */}
-          <div className="flex flex-col gap-4 md:gap-6 relative z-10 pb-10">
+          <div className="flex flex-col gap-4 md:gap-6 relative z-10 flex-1 min-h-0">
             {(() => {
               const allSelected = filteredAdmins.length > 0 && selectedAdminIds.size === filteredAdmins.length
               const toggleSelectAll = () => {
@@ -792,7 +792,7 @@ export function AdminsTab({
                     <Utensils className="w-10 h-10 md:w-14 md:h-14 -rotate-12" />
                   </div>
 
-                  <div className="overflow-x-auto relative">
+                  <div className="overflow-auto relative flex-1 min-h-0">
                     <Table className="min-w-[1150px]">
                       <TableHeader>
                         <TableRow

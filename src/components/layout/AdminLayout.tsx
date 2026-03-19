@@ -73,8 +73,8 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
             <Utensils className="w-6 h-6 md:w-10 md:h-10 text-gourmet-ink dark:text-dark-text" />
           </motion.div>
           <div className="min-w-0">
-            <h1 className="text-xl md:text-2xl font-bold text-gourmet-ink dark:text-dark-text tracking-tight truncate">Gourmet</h1>
-            <p className="hidden md:block text-sm text-gourmet-ink dark:text-dark-text font-medium truncate">
+            <h1 className="text-xl md:text-2xl font-bold text-gourmet-green tracking-tight truncate">Gourmet</h1>
+            <p className="hidden md:block text-sm text-gourmet-green font-medium truncate">
               Management V1
             </p>
           </div>
@@ -147,7 +147,7 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
       <div className="flex flex-col md:flex-row flex-1 py-4 md:py-8 px-2 md:px-4 gap-4 md:gap-6 pb-24 md:pb-8">
         <Sidebar activeTab={activeTab} onTabChange={onTabChange} isOpen={false} onClose={() => {}} onLogout={onLogout} className="z-40" />
 
-        <main className="flex-1 relative min-w-0">
+        <main className="flex-1 relative min-w-0 flex flex-col min-h-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -155,7 +155,7 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.99 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="min-w-0"
+              className="min-w-0 flex-1 flex flex-col min-h-0"
             >
               {children}
             </motion.div>

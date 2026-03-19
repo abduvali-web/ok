@@ -61,7 +61,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
         className={cn(
           'fixed inset-y-0 left-0 z-50 w-72 -translate-x-full transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]',
           'border-r-2 border-black/10 dark:border-white/[0.06] bg-gourmet-green/90 dark:bg-dark-green/90 backdrop-blur-2xl',
-          'md:relative md:translate-x-0 md:border-2 md:w-32 md:m-4 md:rounded-[40px] md:bg-gourmet-green/40 md:dark:bg-dark-green/40 md:p-4 md:shadow-inner',
+          'md:relative md:translate-x-0 md:border-2 md:w-[128px] md:h-[1088px] md:m-4 md:rounded-[40px] md:bg-gourmet-green/40 md:dark:bg-dark-green/40 md:p-4 md:shadow-inner',
           isOpen && 'translate-x-0',
           className
         )}
@@ -113,14 +113,14 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                       onClose();
                     }}
                     className={cn(
-                      'flex flex-col items-center gap-1 md:gap-2 group relative py-2 md:py-4 transition-all duration-300',
+                      'flex flex-col items-center gap-1 md:gap-2 group relative py-2 md:py-4 transition-all duration-300 w-full md:w-[121px] md:h-[156px]',
                       isActive && 'scale-105'
                     )}
                   >
                     {isActive && (
                       <motion.div
                         layoutId="active-nav-bg"
-                        className="absolute inset-y-0 w-16 md:w-[121px] left-1/2 -translate-x-1/2 bg-gourmet-cream dark:bg-dark-surface rounded-[20px] md:rounded-[30px] shadow-[-10px_0_15px_rgba(0,0,0,0.05)] z-0 transition-colors duration-300"
+                        className="absolute left-1/2 top-1/2 w-16 h-full md:w-[121px] md:h-[156px] -translate-x-1/2 -translate-y-1/2 bg-gourmet-cream dark:bg-dark-surface rounded-[20px] md:rounded-[30px] shadow-[-10px_0_15px_rgba(0,0,0,0.05)] z-0 transition-colors duration-300"
                         transition={{ type: 'spring', stiffness: 200, damping: 30 }}
                       />
                     )}
@@ -134,7 +134,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                       whileTap={{ y: 0, scale: 0.95 }}
                       transition={{ type: 'spring', stiffness: 200, damping: 30 }}
                       className={cn(
-                        'w-12 h-12 md:w-24 md:h-24 rounded-full flex items-center justify-center relative transition-all overflow-hidden z-10',
+                        'w-12 h-12 md:w-[96px] md:h-[96px] rounded-full flex items-center justify-center relative transition-all overflow-hidden z-10',
                         isActive
                           ? 'bg-gourmet-orange shadow-2xl border-b-4 border-black/20'
                           : 'bg-white dark:bg-dark-surface shadow-lg border-b-4 border-black/10 dark:border-white/10'
@@ -152,7 +152,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
 
                       <div
                         className={cn(
-                          'w-10 h-10 md:w-20 md:h-20 rounded-full flex items-center justify-center border-2 border-dashed relative z-10',
+                          'w-10 h-10 md:w-[80px] md:h-[80px] rounded-full flex items-center justify-center border-2 border-dashed relative z-10',
                           isActive ? 'border-white/30' : 'border-black/10 dark:border-white/10'
                         )}
                       >

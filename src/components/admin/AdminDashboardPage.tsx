@@ -2399,7 +2399,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         </DialogContent>
       </Dialog>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0 gap-6">
 
           {!isMiddleAdminView && (
             <>
