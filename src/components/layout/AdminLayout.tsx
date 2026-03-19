@@ -61,7 +61,7 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 100, damping: 15 }}
-        className="h-20 md:h-24 bg-dark-green flex items-center justify-between px-4 md:px-10 rounded-b-[30px] md:rounded-b-[50px] shadow-xl z-30 transition-colors duration-300 sticky top-0"
+        className="h-20 md:h-24 bg-dark-green flex items-center justify-between px-4 md:px-10 rounded-b-[30px] md:rounded-b-[50px] shadow-xl z-30 transition-colors duration-300"
       >
         <motion.div whileHover={{ scale: 1.05, y: 4 }} className="flex items-center gap-2 md:gap-4 cursor-pointer min-w-0">
           <motion.div
