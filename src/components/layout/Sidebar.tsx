@@ -6,10 +6,8 @@ import {
   ChefHat,
   DollarSign,
   History,
-  MessageSquare,
   Package,
   ShoppingCart,
-  Trash2,
   Users,
   X,
 } from 'lucide-react';
@@ -48,8 +46,6 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
     { id: 'finance', label: t.finance.title, icon: DollarSign, badge: null },
     { id: 'history', label: t.admin.history, icon: History, badge: null },
     { id: 'divider-3', type: 'divider' },
-    { id: 'chat', label: t.courier.chat, icon: MessageSquare, badge: null },
-    { id: 'bin', label: t.admin.bin, icon: Trash2, badge: null },
   ];
 
   return (
@@ -65,7 +61,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
         className={cn(
           'fixed inset-y-0 left-0 z-50 w-72 -translate-x-full transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]',
           'border-r border-black/10 dark:border-white/[0.06] bg-gourmet-green/90 dark:bg-dark-green/90 backdrop-blur-2xl',
-          'md:relative md:translate-x-0 md:border-none md:w-32 md:m-4 md:rounded-[40px] md:bg-gourmet-green/40 md:dark:bg-dark-green/40 md:p-4 md:shadow-inner',
+          'md:relative md:translate-x-0 md:border-none md:w-20 md:m-4 md:rounded-[32px] md:bg-gourmet-green/40 md:dark:bg-dark-green/40 md:p-2 md:shadow-inner',
           isOpen && 'translate-x-0',
           className
         )}
@@ -94,14 +90,14 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
             </Button>
           </div>
 
-          <div className="flex-1 py-4 md:py-2 overflow-y-auto overflow-x-visible">
-            <nav className="flex flex-col items-center gap-2 md:gap-6 px-3 md:px-0 justify-start">
+          <div className="flex-1 py-4 md:py-1 overflow-y-auto overflow-x-visible">
+            <nav className="flex flex-col items-center gap-2 md:gap-3 px-3 md:px-0 justify-start">
               {menuItems.map((item) => {
                 if ('type' in item) {
                   return (
                     <div
                       key={item.id}
-                      className="self-stretch my-2 h-[1px] bg-gradient-to-r from-transparent via-black/10 dark:via-white/[0.08] to-transparent"
+                      className="self-stretch my-1.5 h-[1px] bg-gradient-to-r from-transparent via-black/10 dark:via-white/[0.08] to-transparent"
                     />
                   );
                 }
@@ -124,7 +120,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                     {isActive && (
                       <motion.div
                         layoutId="active-nav-bg"
-                        className="absolute inset-y-0 w-16 md:w-[121px] left-1/2 -translate-x-1/2 bg-gourmet-cream dark:bg-dark-surface rounded-[20px] md:rounded-[30px] shadow-[-10px_0_15px_rgba(0,0,0,0.05)] z-0 transition-colors duration-300"
+                        className="absolute inset-y-0 w-14 md:w-[84px] left-1/2 -translate-x-1/2 bg-gourmet-cream dark:bg-dark-surface rounded-[18px] md:rounded-[22px] shadow-[-10px_0_15px_rgba(0,0,0,0.05)] z-0 transition-colors duration-300"
                         transition={{ type: 'spring', stiffness: 200, damping: 30 }}
                       />
                     )}
@@ -138,7 +134,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                       whileTap={{ y: 0, scale: 0.95 }}
                       transition={{ type: 'spring', stiffness: 200, damping: 30 }}
                       className={cn(
-                        'w-12 h-12 md:w-24 md:h-24 rounded-full flex items-center justify-center relative transition-all overflow-hidden z-10',
+                        'w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center relative transition-all overflow-hidden z-10',
                         isActive
                           ? 'bg-gourmet-orange shadow-2xl border-b-4 border-black/20'
                           : 'bg-white dark:bg-dark-surface shadow-lg border-b-4 border-black/10 dark:border-white/10'
@@ -156,15 +152,15 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
 
                       <div
                         className={cn(
-                          'w-10 h-10 md:w-20 md:h-20 rounded-full flex items-center justify-center border-2 border-dashed relative z-10',
+                          'w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 border-dashed relative z-10',
                           isActive ? 'border-white/30' : 'border-black/10 dark:border-white/10'
                         )}
                       >
-                        <Icon className="w-5 h-5 md:w-10 md:h-10 text-gourmet-ink dark:text-dark-text" />
+                        <Icon className="w-4 h-4 md:w-5 md:h-5 text-gourmet-ink dark:text-dark-text" />
                       </div>
                     </motion.div>
 
-                    <span className="text-[10px] md:text-sm font-bold transition-colors duration-300 relative z-10 text-gourmet-ink dark:text-dark-text text-center px-2 truncate w-full">
+                    <span className="text-[9px] md:text-[11px] font-bold transition-colors duration-300 relative z-10 text-gourmet-ink dark:text-dark-text text-center px-1 truncate w-full">
                       {item.label}
                     </span>
                   </button>
