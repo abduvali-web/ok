@@ -69,7 +69,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between px-6 py-6 md:hidden">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-dark-surface text-white shadow-lg shadow-black/10 shrink-0">
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-dark-surface text-white shadow-lg shadow-black/10 border-2 border-white/20 shrink-0">
                 <ChefHat className="h-5 w-5" />
               </div>
               <div className="min-w-0">
@@ -152,8 +152,8 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
 
                       <div
                         className={cn(
-                          'w-10 h-10 md:w-[80px] md:h-[80px] rounded-full flex items-center justify-center relative z-10',
-                          isActive ? 'bg-white/15' : 'bg-black/5 dark:bg-white/10'
+                          'w-10 h-10 md:w-[80px] md:h-[80px] rounded-full flex items-center justify-center border-2 border-dashed relative z-10',
+                          isActive ? 'border-white/30' : 'border-black/10 dark:border-white/10'
                         )}
                       >
                         <Icon className="w-5 h-5 md:w-10 md:h-10 text-gourmet-ink dark:text-dark-text" />
