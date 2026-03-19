@@ -34,7 +34,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { Sidebar } from './Sidebar';
 import { useState } from 'react';
 
