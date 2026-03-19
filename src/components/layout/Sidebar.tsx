@@ -113,7 +113,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                       onClose();
                     }}
                     className={cn(
-                      'flex flex-col items-center gap-1 md:gap-2 group relative py-2 md:py-4 transition-colors duration-200 w-full md:w-[121px] md:h-[156px]'
+                      'flex flex-col items-center gap-1 md:gap-2 group relative py-2 md:py-4 transition-colors duration-200 w-full md:w-[121px] md:h-[156px] rounded-[26px] md:rounded-[30px] overflow-hidden'
                     )}
                   >
                     {isActive && (
@@ -145,7 +145,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                       </div>
                     </motion.div>
 
-                    <span className="text-[10px] md:text-sm font-bold transition-colors duration-300 relative z-10 text-gourmet-ink dark:text-dark-text text-center px-1">
+                    <span className="text-[10px] md:text-sm font-bold transition-colors duration-300 relative z-10 text-gourmet-ink dark:text-dark-text text-center px-2 w-full max-w-[110px] truncate whitespace-nowrap">
                       {item.label}
                     </span>
                   </button>
