@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BarChart3, ChefHat, CookingPot, Database, LogOut, MessageSquare, Moon, Settings, ShoppingCart, Sun, Users } from 'lucide-react';
+import { BarChart3, ChefHat, CookingPot, Database, LogOut, MessageSquare, Moon, Settings, ShoppingCart, Sun, Users, Utensils } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
@@ -80,43 +80,15 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
         transition={{ type: 'spring', stiffness: 100, damping: 15 }}
         className="h-20 md:h-24 bg-dark-green flex items-center justify-between px-4 md:px-10 rounded-b-[30px] md:rounded-b-[50px] shadow-xl z-30 transition-colors duration-300 sticky top-0"
       >
-        <motion.div whileHover={{ scale: 1.05, y: 4 }} className="flex items-center gap-2 md:gap-4 min-w-0">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <motion.button
-                type="button"
-                animate={{ rotate: [-12, 12, -12] }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                className="bg-dark-surface p-2 md:p-3 rounded-full shadow-inner border-2 border-white/20 transition-colors duration-300"
-                aria-label="Open menu"
-                title="Open menu"
-              >
-                <ChefHat className="w-6 h-6 md:w-10 md:h-10 text-gourmet-ink dark:text-dark-text" />
-              </motion.button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="min-w-56">
-              {showDatabase ? (
-                <DropdownMenuItem onSelect={() => router.push('/middle-admin/database')} className="gap-2">
-                  <Database className="h-4 w-4" />
-                  <span>Database</span>
-                </DropdownMenuItem>
-              ) : null}
-              <DropdownMenuItem onSelect={() => openModalParam('chat')} className="gap-2">
-                <MessageSquare className="h-4 w-4" />
-                <span>{t.courier.chat}</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => openModalParam('settings')} className="gap-2">
-                <Settings className="h-4 w-4" />
-                <span>{t.admin.settings}</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => onLogout()} className="gap-2 text-rose-600 focus:text-rose-600">
-                <LogOut className="h-4 w-4" />
-                <span>{t.common.logout}</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
+        <motion.div whileHover={{ scale: 1.05, y: 4 }} className="flex items-center gap-2 md:gap-4 cursor-pointer min-w-0">
+          <motion.div
+            animate={{ rotate: [-12, 12, -12] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            className="bg-dark-surface p-2 md:p-3 rounded-full shadow-inner border-2 border-white/20 transition-colors duration-300"
+            aria-hidden="true"
+          >
+            <Utensils className="w-6 h-6 md:w-10 md:h-10 text-gourmet-ink dark:text-dark-text" />
+          </motion.div>
           <div className="min-w-0">
             <h1 className="text-xl md:text-2xl font-bold text-gourmet-ink dark:text-dark-text tracking-tight truncate">AutoFood</h1>
             <p className="hidden md:block text-sm text-gourmet-ink dark:text-dark-text font-medium truncate">
@@ -144,8 +116,43 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
             </div>
           </motion.button>
 
-          {/* Extra space reserved for mock parity (right side icon) */}
-          <div className="w-12 h-12 md:w-16 md:h-16" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.1, rotate: 5, y: 8 }}
+                whileTap={{ scale: 0.9 }}
+                className="w-12 h-12 md:w-16 md:h-16 bg-dark-surface rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/10 group transition-colors duration-300"
+                aria-label="Open menu"
+                title="Open menu"
+              >
+                <div className="w-10 h-10 md:w-13 md:h-13 rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                  <ChefHat className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text" />
+                </div>
+              </motion.button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-56">
+              {showDatabase ? (
+                <DropdownMenuItem onSelect={() => router.push('/middle-admin/database')} className="gap-2">
+                  <Database className="h-4 w-4" />
+                  <span>Database</span>
+                </DropdownMenuItem>
+              ) : null}
+              <DropdownMenuItem onSelect={() => openModalParam('chat')} className="gap-2">
+                <MessageSquare className="h-4 w-4" />
+                <span>{t.courier.chat}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => openModalParam('settings')} className="gap-2">
+                <Settings className="h-4 w-4" />
+                <span>{t.admin.settings}</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => onLogout()} className="gap-2 text-rose-600 focus:text-rose-600">
+                <LogOut className="h-4 w-4" />
+                <span>{t.common.logout}</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </motion.header>
 
