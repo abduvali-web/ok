@@ -116,14 +116,6 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                       'flex flex-col items-center gap-1 md:gap-2 group relative py-2 md:py-4 transition-colors duration-200 w-full md:w-[121px] md:h-[156px]'
                     )}
                   >
-                    {isActive && (
-                      <motion.div
-                        layoutId="active-nav-bg"
-                        className="absolute inset-1 bg-gourmet-cream/85 dark:bg-dark-surface/70 rounded-[20px] md:rounded-[30px] border border-black/5 dark:border-white/[0.08] shadow-sm z-0 transition-colors duration-300"
-                        transition={{ type: 'spring', stiffness: 200, damping: 30 }}
-                      />
-                    )}
-
                     <motion.div
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
