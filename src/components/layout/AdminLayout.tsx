@@ -8,6 +8,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAdminSettingsContext } from '@/contexts/AdminSettingsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageSwitcherCompact } from '@/components/LanguageSwitcher';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -97,6 +98,11 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
               )}
             </div>
           </motion.button>
+
+          <LanguageSwitcherCompact
+            className="w-12 h-12 md:w-16 md:h-16 bg-dark-surface rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/10 group transition-colors duration-300"
+            align="end"
+          />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
