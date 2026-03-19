@@ -23,6 +23,8 @@ import {
     Cherry,
     CookingPot,
     ArrowRight,
+    Clock,
+    Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -120,7 +122,15 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                 failedLoadCookingPlans: 'Не удалось загрузить планы готовки',
                 refresh: 'Обновить',
                 statsHeader: 'Складская аналитика',
-                statsSub: 'Управление запасами и производством'
+                statsSub: 'Управление запасами и производством',
+                calendarUiText: {
+                    calendar: 'Календарь',
+                    today: 'Сегодня',
+                    thisWeek: 'Неделя',
+                    thisMonth: 'Месяц',
+                    clearRange: 'Очистить',
+                    allTime: 'За все время'
+                }
             }
         }
         return {
@@ -132,7 +142,15 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             failedLoadCookingPlans: 'Failed to load cooking plans',
             refresh: 'Refresh',
             statsHeader: 'Warehouse Analytics',
-            statsSub: 'Inventory & Production Management'
+            statsSub: 'Inventory & Production Management',
+            calendarUiText: {
+                calendar: 'Calendar',
+                today: 'Today',
+                thisWeek: 'This Week',
+                thisMonth: 'This Month',
+                clearRange: 'Clear',
+                allTime: 'All Time'
+            }
         }
     }, [language])
 
@@ -366,6 +384,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                     value={cookingRange} 
                                     onChange={setCookingRange} 
                                     locale={dateLocale}
+                                    uiText={auditUiText.calendarUiText}
                                     className="bg-white/50 dark:bg-dark-green/20 rounded-2xl border-none shadow-inner"
                                 />
                                 <Select value={cookingSelectedSetId} onValueChange={setCookingSelectedSetId}>
@@ -434,7 +453,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-4 p-4 bg-white/30 rounded-[40px] border border-white/40 shadow-xl">
-                                        <CalendarRangeSelector value={calcRange} onChange={setCalcRange} locale={dateLocale} className="w-full bg-transparent border-none" />
+                                        <CalendarRangeSelector value={calcRange} onChange={setCalcRange} locale={dateLocale} uiText={auditUiText.calendarUiText} className="w-full bg-transparent border-none" />
                                         <Button 
                                             onClick={() => calculateForPeriod(calcRangeDays)} 
                                             className="h-16 rounded-[32px] bg-gourmet-green hover:bg-gourmet-green/90 dark:bg-dark-green text-xl font-black uppercase tracking-widest shadow-2xl hover:scale-[1.02] transition-all"

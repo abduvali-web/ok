@@ -531,8 +531,8 @@ export function AdminsTab({
     const startDateView = startOfWeek(monthStart, { weekStartsOn: 1 })
     const endDateView = endOfWeek(monthEnd, { weekStartsOn: 1 })
 
-    const rows: JSX.Element[] = []
-    let days: JSX.Element[] = []
+    const rows: any[] = []
+    let days: any[] = []
     let day = startDateView
     const dateFormat = 'd'
 
