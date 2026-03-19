@@ -49,7 +49,7 @@ export function StatisticsTab({ stats }: StatisticsTabProps) {
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="content-card flex-1 min-h-0 flex flex-col gap-8 md:gap-14 relative overflow-hidden px-4 md:px-14 py-8 md:py-16 transition-colors duration-300"
+        className="content-card flex-1 min-h-0 flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300"
       >
         {/* Background Watermark */}
         <motion.div
@@ -57,7 +57,7 @@ export function StatisticsTab({ stats }: StatisticsTabProps) {
           transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
           className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none"
         >
-          <PieChart className="w-64 h-64 md:w-80 md:h-80 text-gourmet-ink dark:text-dark-text" />
+          <PieChart className="w-56 h-56 md:w-64 md:h-64 text-gourmet-ink dark:text-dark-text" />
         </motion.div>
 
         {/* Title */}
@@ -66,7 +66,7 @@ export function StatisticsTab({ stats }: StatisticsTabProps) {
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-3xl md:text-5xl font-extrabold text-gourmet-ink dark:text-dark-text tracking-tight"
+            className="text-2xl md:text-4xl font-extrabold text-gourmet-ink dark:text-dark-text tracking-tight"
           >
             {t.admin.statistics}
           </motion.h2>
@@ -74,16 +74,16 @@ export function StatisticsTab({ stats }: StatisticsTabProps) {
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="text-lg md:text-2xl text-gourmet-ink/60 dark:text-dark-text/60 font-medium"
+            className="text-base md:text-lg text-gourmet-ink dark:text-dark-text font-medium"
           >
             Sizning biznesingiz raqamlarda
           </motion.p>
         </div>
 
-        <div className="space-y-12 md:space-y-20 relative z-10 flex-1 overflow-auto no-scrollbar pb-10">
+        <div className="space-y-10 md:space-y-14 relative z-10 flex-1 overflow-auto no-scrollbar pb-10">
           {/* Order Status */}
           <section>
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-4 mb-6 md:mb-8">
                 <TrendingUp className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
                 <h3 className="text-sm md:text-base font-black uppercase tracking-[0.2em] text-gourmet-ink dark:text-dark-text">Buyurtmalar holati</h3>
             </div>
@@ -125,7 +125,7 @@ export function StatisticsTab({ stats }: StatisticsTabProps) {
 
           {/* Payment Stats */}
           <section>
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-4 mb-6 md:mb-8">
                 <CreditCard className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
                 <h3 className="text-sm md:text-base font-black uppercase tracking-[0.2em] text-gourmet-ink dark:text-dark-text">To'lovlar tahlili</h3>
             </div>
@@ -167,7 +167,7 @@ export function StatisticsTab({ stats }: StatisticsTabProps) {
 
           {/* Customer Stats */}
           <section>
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-4 mb-6 md:mb-8">
                 <Users className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
                 <h3 className="text-sm md:text-base font-black uppercase tracking-[0.2em] text-gourmet-ink dark:text-dark-text">Mijozlar faolligi</h3>
             </div>
@@ -209,7 +209,7 @@ export function StatisticsTab({ stats }: StatisticsTabProps) {
 
           {/* Calories */}
           <section>
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-4 mb-6 md:mb-8">
                 <Beef className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
                 <h3 className="text-sm md:text-base font-black uppercase tracking-[0.2em] text-gourmet-ink dark:text-dark-text">Ratsionlar tahlili</h3>
             </div>

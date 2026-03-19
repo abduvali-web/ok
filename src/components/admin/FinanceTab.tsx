@@ -8,17 +8,15 @@ import {
     Wallet,
     History,
     Plus,
-    Minus,
     Loader2,
-    ShoppingCart,
-    Trash2,
-    PieChart,
+    Search,
+    RotateCcw,
+    Cherry,
+    Utensils,
+    CookingPot,
+    Calendar as CalendarIcon,
     ArrowUpRight,
     ArrowDownLeft,
-    CreditCard,
-    ChevronDown,
-    Search,
-    Filter,
 } from 'lucide-react';
 import {
     Table,
@@ -36,21 +34,11 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { toast } from 'sonner';
-import { getAllIngredients } from '@/lib/menuData';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector';
-import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
-import { SearchPanel } from '@/components/ui/search-panel'
 import type { DateRange } from 'react-day-picker'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -98,7 +86,6 @@ export function FinanceTab({
 }: FinanceTabProps) {
     const { t, language } = useLanguage();
     const calendarLocale = language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'
-    const [activeSubTab, setActiveSubTab] = useState('history');
     const [companyBalance, setCompanyBalance] = useState(0);
     const [clients, setClients] = useState<Client[]>([]);
     const [history, setHistory] = useState<Transaction[]>([]);
@@ -107,7 +94,6 @@ export function FinanceTab({
     const [isCompanyFundsModalOpen, setIsCompanyFundsModalOpen] = useState(false);
     const [transactionAmount, setTransactionAmount] = useState('');
     const [transactionDescription, setTransactionDescription] = useState('');
-    const [transactionCategory, setTransactionCategory] = useState('');
     const [transactionType, setTransactionType] = useState<'INCOME' | 'EXPENSE'>('INCOME');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -175,29 +161,17 @@ export function FinanceTab({
         return rows;
     }, [history, selectedPeriod, historySearchQuery]);
 
-    const MetricCard = ({ label, value, sub, icon: Icon, color, dot }: any) => (
-        <motion.div
-            whileHover={{ y: -5, scale: 1.02 }}
-            className="group relative rounded-[40px] border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-8 bg-white/40 dark:bg-dark-green/10 transition-all duration-300 overflow-hidden"
-        >
-            <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                {Icon && <Icon className="w-12 h-12 text-gourmet-ink dark:text-dark-text" />}
-            </div>
-            <div className="flex items-center gap-3 mb-4">
-                <span className={cn("h-3 w-3 rounded-full", dot)} />
-                <span className="text-sm font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">{label}</span>
-            </div>
-            <div className={cn("text-3xl font-black tracking-tighter", color)}>{formatCurrency(value)}</div>
-            <p className="text-sm font-bold opacity-40 mt-2">{sub}</p>
-        </motion.div>
-    );
+    const appliedRangeLabel = selectedPeriodLabel || 'All time'
+
+    const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text'
+    const cellBorder = 'border-l-2 border-dashed border-gourmet-green/25 dark:border-white/10'
 
     return (
         <TabsContent value="finance" className="min-h-0">
             <motion.div
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="content-card flex-1 min-h-0 flex flex-col gap-8 md:gap-14 relative overflow-hidden px-4 md:px-14 py-8 md:py-16 transition-colors duration-300"
+                className="content-card flex-1 min-h-0 flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300"
             >
                 {/* Background Watermark */}
                 <motion.div
@@ -205,48 +179,49 @@ export function FinanceTab({
                     transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
                     className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none"
                 >
-                    <Wallet className="w-64 h-64 text-gourmet-ink dark:text-dark-text" />
+                    <Wallet className="w-56 h-56 md:w-64 md:h-64 text-gourmet-ink dark:text-dark-text" />
                 </motion.div>
 
-                {/* Title Section */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10 text-gourmet-ink dark:text-dark-text">
-                    <div className="flex flex-col gap-2">
-                        <motion.h2 className="text-3xl md:text-5xl font-extrabold tracking-tight uppercase">
-                            Financial Audit
-                        </motion.h2>
-                        <motion.p className="text-sm md:text-base opacity-40 font-bold uppercase tracking-[0.3em]">
-                            Cashflow & Balance Statement
-                        </motion.p>
-                    </div>
-
-                    <div className="flex bg-white/40 dark:bg-dark-green/20 backdrop-blur-xl border border-white/20 p-2 rounded-full shadow-xl">
-                        <Button 
-                            onClick={() => setIsCompanyFundsModalOpen(true)}
-                            className="rounded-full px-8 bg-gourmet-green dark:bg-dark-green text-gourmet-cream font-black uppercase tracking-widest text-xs h-12 md:h-14 hover:scale-[1.05] transition-all"
-                        >
-                            <Plus className="mr-3 w-5 h-5" />
-                            Manage Funds
-                        </Button>
-                    </div>
+                {/* Title */}
+                <div className="flex flex-col gap-2 relative z-10">
+                    <motion.h2
+                        initial={{ x: -50, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                        className="text-2xl md:text-4xl font-extrabold text-gourmet-ink dark:text-dark-text tracking-tight"
+                    >
+                        Financial Audit
+                    </motion.h2>
+                    <motion.p
+                        initial={{ x: -50, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className="text-base md:text-lg text-gourmet-ink dark:text-dark-text font-medium"
+                    >
+                        Cashflow & Balance Statement
+                    </motion.p>
                 </div>
 
-                {/* Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-                    <MetricCard label="Current Balance" value={companyBalance} sub="System cash on hand" color="text-gourmet-ink" dot="bg-gourmet-ink" icon={Wallet} />
-                    <MetricCard label="Floating Prepaid" value={incomeSum} sub="Customer prepayments" color="text-emerald-600" dot="bg-emerald-500" icon={TrendingUp} />
-                    <MetricCard label="Accounts Receivable" value={debtSum} sub="Pending customer debts" color="text-rose-600" dot="bg-rose-500" icon={TrendingDown} />
-                </div>
-
-                {/* Transactions Table Section */}
-                <div className="flex flex-col gap-8 relative z-10 flex-1 min-h-0">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="flex items-center gap-4">
-                            <History className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
-                            <h3 className="text-sm md:text-base font-black uppercase tracking-[0.2em] text-gourmet-ink dark:text-dark-text">Transaction History</h3>
+                {/* Controls Bar */}
+                <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 md:gap-6 relative z-10">
+                    <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        className="relative flex-1 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
+                    >
+                        <div className="rounded-full border-2 border-dashed border-white/30 flex items-center px-4 md:px-6 py-2 md:py-3">
+                            <Search className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text mr-3 md:mr-4" />
+                            <input
+                                type="text"
+                                value={historySearchQuery}
+                                onChange={(event) => setHistorySearchQuery(event.target.value)}
+                                placeholder="Search transactions..."
+                                className="w-full bg-transparent py-0 !text-base md:!text-lg focus:outline-none text-gourmet-ink dark:text-dark-text placeholder:text-gourmet-ink dark:placeholder:text-dark-text"
+                            />
                         </div>
+                    </motion.div>
 
-                        <div className="flex flex-wrap items-center gap-3">
-                            <RefreshIconButton label="Refresh" onClick={handleRefresh} isLoading={isFinanceRefreshing} className="bg-white/40 border-none shadow-lg" />
+                    <div className="flex items-center gap-2 md:gap-4 overflow-x-auto lg:overflow-visible py-4 lg:py-6 no-scrollbar">
+                        <div className="relative flex-shrink-0">
                             {applySelectedPeriod && profileUiText && (
                                 <CalendarDateSelector
                                     selectedDate={selectedDate || null}
@@ -258,87 +233,190 @@ export function FinanceTab({
                                     locale={calendarLocale}
                                     profileUiText={profileUiText}
                                     customTrigger={(open) => (
-                                        <Button onClick={open} variant="outline" className="h-10 rounded-2xl bg-white/40 border-none px-6 font-bold shadow-lg">
-                                            {selectedPeriodLabel || 'All Time'}
-                                        </Button>
+                                        <motion.div
+                                            whileHover={{
+                                                x: [0, -5],
+                                                transition: { x: { duration: 1, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' } },
+                                            }}
+                                            whileTap={{ x: 0 }}
+                                            onClick={open}
+                                            className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
+                                        >
+                                            <div className="w-[42px] h-[42px] md:w-full md:h-full rounded-full border-2 border-dashed border-white/10 flex items-center justify-center md:px-6">
+                                                <CalendarIcon className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text md:mr-3" />
+                                                <span className="hidden md:inline font-bold text-sm md:text-lg text-gourmet-ink dark:text-dark-text whitespace-nowrap">
+                                                    {appliedRangeLabel}
+                                                </span>
+                                            </div>
+                                        </motion.div>
                                     )}
                                 />
                             )}
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gourmet-ink/40" />
-                                <Input 
-                                    className="h-10 w-48 rounded-2xl border-none bg-white/40 shadow-lg pl-9 font-medium" 
-                                    placeholder="Search..." 
-                                    value={historySearchQuery}
-                                    onChange={e => setHistorySearchQuery(e.target.value)}
-                                />
-                            </div>
+                        </div>
+
+                        <div className="flex gap-2 md:gap-4 items-center flex-shrink-0">
+                            <motion.button
+                                type="button"
+                                whileHover={{ scale: 1.15, y: 5 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => setIsCompanyFundsModalOpen(true)}
+                                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300"
+                                aria-label="Manage Funds"
+                                title="Manage Funds"
+                            >
+                                <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                                    <Plus className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                                </div>
+                            </motion.button>
+
+                            <motion.button
+                                type="button"
+                                whileHover={{ rotate: 180, scale: 1.1, y: 5 }}
+                                whileTap={{ scale: 0.8 }}
+                                onClick={handleRefresh}
+                                disabled={isFinanceRefreshing}
+                                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                                aria-label="Refresh"
+                                title="Refresh"
+                            >
+                                <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                                    <RotateCcw className={cn('w-5 h-5 text-gourmet-ink dark:text-dark-text', isFinanceRefreshing && 'animate-spin')} />
+                                </div>
+                            </motion.button>
                         </div>
                     </div>
+                </div>
 
-                    <div className="flex-1 min-h-0 overflow-auto no-scrollbar rounded-[40px] border-2 border-dashed border-gourmet-green/20 bg-white/40 p-4 md:p-8">
-                        <Table className="text-gourmet-ink dark:text-dark-text">
-                            <TableHeader>
-                                <TableRow className="border-none hover:bg-transparent uppercase tracking-widest text-[10px] opacity-40 font-black">
-                                    <TableHead>Execution Date</TableHead>
-                                    <TableHead>Entity/Reason</TableHead>
-                                    <TableHead>Classification</TableHead>
-                                    <TableHead className="text-right">Magnitude</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <AnimatePresence mode="popLayout">
-                                    {visibleHistoryRows.map((tx, idx) => (
-                                        <motion.tr 
-                                            key={tx.id}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: idx * 0.05 }}
-                                            className="group border-b border-gourmet-green/10 last:border-none hover:bg-gourmet-green/5 transition-colors"
-                                        >
-                                            <TableCell className="py-5 font-medium text-xs opacity-60">
-                                                {new Date(tx.createdAt).toLocaleString(language === 'ru' ? 'ru-RU' : 'uz-UZ')}
-                                            </TableCell>
-                                            <TableCell className="py-5">
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold text-sm tracking-tight">{tx.description || tx.customer?.name || 'Company Operation'}</span>
-                                                    <span className="text-[10px] opacity-40 uppercase font-black tracking-widest">
-                                                        {tx.customer ? 'Customer Ledger' : 'Internal Funds'}
-                                                    </span>
+                {/* Metrics */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 relative z-10">
+                    <motion.div
+                        whileHover={{ y: -5, scale: 1.02 }}
+                        className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-6 md:p-8 bg-gourmet-cream/40 dark:bg-dark-green/10 hover:bg-gourmet-green/10 dark:hover:bg-dark-green/20 transition-all duration-300 overflow-hidden"
+                    >
+                        <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Wallet className="w-12 h-12 text-gourmet-ink dark:text-dark-text" />
+                        </div>
+                        <div className="flex items-center gap-3 mb-4">
+                            <span className="inline-block h-3 w-3 rounded-full shadow-lg bg-gourmet-ink dark:bg-dark-text" />
+                            <span className="text-xs md:text-sm font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">Current Balance</span>
+                        </div>
+                        <div className="text-3xl md:text-5xl font-black tracking-tighter text-gourmet-ink dark:text-dark-text">{formatCurrency(companyBalance)}</div>
+                        <p className="text-sm md:text-lg font-bold text-gourmet-ink/40 dark:text-dark-text/40 mt-2">System cash on hand</p>
+                        <div className="absolute bottom-0 left-0 h-2 w-0 group-hover:w-full transition-all duration-500 bg-gourmet-ink dark:bg-dark-text" />
+                    </motion.div>
+                    <motion.div
+                        whileHover={{ y: -5, scale: 1.02 }}
+                        className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-6 md:p-8 bg-gourmet-cream/40 dark:bg-dark-green/10 hover:bg-gourmet-green/10 dark:hover:bg-dark-green/20 transition-all duration-300 overflow-hidden"
+                    >
+                        <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <TrendingUp className="w-12 h-12 text-gourmet-ink dark:text-dark-text" />
+                        </div>
+                        <div className="flex items-center gap-3 mb-4">
+                            <span className="inline-block h-3 w-3 rounded-full shadow-lg bg-emerald-500" />
+                            <span className="text-xs md:text-sm font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">Floating Prepaid</span>
+                        </div>
+                        <div className="text-3xl md:text-5xl font-black tracking-tighter text-emerald-600 dark:text-emerald-400">{formatCurrency(incomeSum)}</div>
+                        <p className="text-sm md:text-lg font-bold text-gourmet-ink/40 dark:text-dark-text/40 mt-2">Customer prepayments</p>
+                        <div className="absolute bottom-0 left-0 h-2 w-0 group-hover:w-full transition-all duration-500 bg-emerald-500" />
+                    </motion.div>
+                    <motion.div
+                        whileHover={{ y: -5, scale: 1.02 }}
+                        className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-6 md:p-8 bg-gourmet-cream/40 dark:bg-dark-green/10 hover:bg-gourmet-green/10 dark:hover:bg-dark-green/20 transition-all duration-300 overflow-hidden"
+                    >
+                        <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <TrendingDown className="w-12 h-12 text-gourmet-ink dark:text-dark-text" />
+                        </div>
+                        <div className="flex items-center gap-3 mb-4">
+                            <span className="inline-block h-3 w-3 rounded-full shadow-lg bg-rose-500" />
+                            <span className="text-xs md:text-sm font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">Accounts Receivable</span>
+                        </div>
+                        <div className="text-3xl md:text-5xl font-black tracking-tighter text-rose-600 dark:text-rose-400">{formatCurrency(debtSum)}</div>
+                        <p className="text-sm md:text-lg font-bold text-gourmet-ink/40 dark:text-dark-text/40 mt-2">Pending customer debts</p>
+                        <div className="absolute bottom-0 left-0 h-2 w-0 group-hover:w-full transition-all duration-500 bg-rose-500" />
+                    </motion.div>
+                </div>
+
+                {/* Table Sheet */}
+                <div className="flex flex-col gap-4 md:gap-6 relative z-10 flex-1 min-h-0">
+                    <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 overflow-hidden relative flex-1 flex flex-col min-h-0">
+                        <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none text-gourmet-green-light dark:text-gourmet-green">
+                            <Cherry className="w-10 h-10 md:w-14 md:h-14 rotate-12" />
+                            <CookingPot className="w-10 h-10 md:w-14 md:h-14 -rotate-12" />
+                        </div>
+
+                        <div className="overflow-auto relative flex-1 min-h-0">
+                            <Table className="min-w-[900px] text-gourmet-ink dark:text-dark-text">
+                                <TableHeader>
+                                    <TableRow className="h-12 bg-gourmet-cream/60 dark:bg-dark-green/20 cursor-default">
+                                        <TableHead className={cn('w-[200px]', headCell, 'pl-4 md:pl-6')}>Execution Date</TableHead>
+                                        <TableHead className={cn(headCell, cellBorder)}>Entity/Reason</TableHead>
+                                        <TableHead className={cn('w-[160px]', headCell, cellBorder)}>Classification</TableHead>
+                                        <TableHead className={cn('w-[180px] text-right', headCell, cellBorder)}>Magnitude</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <AnimatePresence mode="popLayout">
+                                        {visibleHistoryRows.map((tx, idx) => (
+                                            <motion.tr 
+                                                key={tx.id}
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: idx * 0.05 }}
+                                                className={cn(
+                                                    'h-12 transition-colors border-t border-gourmet-green/15 dark:border-white/10',
+                                                    idx % 2 === 0
+                                                        ? 'bg-gourmet-cream dark:bg-dark-surface'
+                                                        : 'bg-gourmet-cream/40 dark:bg-dark-green/20',
+                                                    'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/30'
+                                                )}
+                                            >
+                                                <TableCell className="pl-4 md:pl-6 font-medium text-xs text-gourmet-ink/60 dark:text-dark-text/60">
+                                                    {new Date(tx.createdAt).toLocaleString(language === 'ru' ? 'ru-RU' : 'uz-UZ')}
+                                                </TableCell>
+                                                <TableCell className={cn(cellBorder)}>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-sm tracking-tight">{tx.description || tx.customer?.name || 'Company Operation'}</span>
+                                                        <span className="text-[10px] text-gourmet-ink/40 dark:text-dark-text/40 uppercase font-black tracking-widest">
+                                                            {tx.customer ? 'Customer Ledger' : 'Internal Funds'}
+                                                        </span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className={cn(cellBorder)}>
+                                                    <Badge variant="outline" className="rounded-full border-gourmet-ink/10 dark:border-white/10 bg-gourmet-cream/40 dark:bg-dark-green/20 px-3 uppercase text-[9px] font-black">
+                                                        {tx.category}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className={cn("text-right font-black text-base tabular-nums tracking-tighter", cellBorder,
+                                                    tx.type === 'INCOME' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                                                )}>
+                                                    {tx.type === 'INCOME' ? '+' : '-'}{formatCurrency(tx.amount)}
+                                                </TableCell>
+                                            </motion.tr>
+                                        ))}
+                                    </AnimatePresence>
+                                    {visibleHistoryRows.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-20 text-center">
+                                                <div className="inline-flex items-center gap-2 text-sm font-bold text-gourmet-ink/60 dark:text-dark-text/60">
+                                                    <History className="size-4" />
+                                                    No monetary movements found.
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="py-5">
-                                                <Badge variant="outline" className="rounded-full border-gourmet-ink/10 bg-white/40 px-3 uppercase text-[9px] font-black">
-                                                    {tx.category}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className={cn("py-5 text-right font-black text-base tabular-nums tracking-tighter",
-                                                tx.type === 'INCOME' ? 'text-emerald-600' : 'text-rose-600'
-                                            )}>
-                                                {tx.type === 'INCOME' ? '+' : '-'}{formatCurrency(tx.amount)}
-                                            </TableCell>
-                                        </motion.tr>
-                                    ))}
-                                </AnimatePresence>
-                                {visibleHistoryRows.length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="h-64 text-center opacity-40 font-bold uppercase tracking-[0.2em] text-xs">
-                                            No monetary movements found.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </div>
                 </div>
             </motion.div>
 
             {/* Fund Management Modal */}
             <Dialog open={isCompanyFundsModalOpen} onOpenChange={setIsCompanyFundsModalOpen}>
-                <DialogContent className="rounded-[40px] border-none shadow-2xl backdrop-blur-3xl bg-white/90 p-10 max-w-lg">
+                <DialogContent className="rounded-[40px] border-none shadow-2xl backdrop-blur-3xl bg-white/90 dark:bg-dark-surface/90 p-10 max-w-lg">
                     <DialogHeader className="mb-6">
-                        <DialogTitle className="text-3xl font-black uppercase tracking-tighter">Adjust Liquidity</DialogTitle>
-                        <DialogDescription className="text-slate-500 font-medium">Record a company cashflow event manually.</DialogDescription>
+                        <DialogTitle className="text-3xl font-black uppercase tracking-tighter text-gourmet-ink dark:text-dark-text">Adjust Liquidity</DialogTitle>
+                        <DialogDescription className="text-slate-500 dark:text-dark-text/60 font-medium">Record a company cashflow event manually.</DialogDescription>
                     </DialogHeader>
                     
                     <div className="space-y-6">
@@ -371,7 +449,7 @@ export function FinanceTab({
                                 type="number" 
                                 value={transactionAmount} 
                                 onChange={e => setTransactionAmount(e.target.value)}
-                                className="h-16 rounded-[28px] bg-white border-2 border-dashed border-slate-200 text-2xl font-black px-8 focus:border-gourmet-green"
+                                className="h-16 rounded-[28px] bg-white dark:bg-dark-green/20 border-2 border-dashed border-slate-200 dark:border-white/10 text-2xl font-black px-8 focus:border-gourmet-green"
                                 placeholder="0"
                             />
                         </div>
@@ -381,7 +459,7 @@ export function FinanceTab({
                             <Input 
                                 value={transactionDescription} 
                                 onChange={e => setTransactionDescription(e.target.value)}
-                                className="h-14 rounded-[24px] bg-white border-none shadow-inner px-6 font-medium"
+                                className="h-14 rounded-[24px] bg-white dark:bg-dark-green/20 border-none shadow-inner px-6 font-medium"
                                 placeholder="E.g. Office rent, Investment..."
                             />
                         </div>

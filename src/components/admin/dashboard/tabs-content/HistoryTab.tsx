@@ -13,18 +13,21 @@ import {
   Shield, 
   Activity, 
   Search, 
-  RefreshCw 
+  RotateCcw,
+  Cherry,
+  Utensils,
+  CookingPot,
+  X,
+  Calendar as CalendarIcon,
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
-import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
 import type { DateRange } from 'react-day-picker'
 import { TabsContent } from '@/components/ui/tabs'
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -120,174 +123,272 @@ export function HistoryTab({
     return logs.filter(l => [l.action, l.entityType, l.description, l.admin.name].join(' ').toLowerCase().includes(q));
   }, [logs, searchTerm]);
 
-  const MetricCard = ({ label, value, sub, icon: Icon, color, dot }: any) => (
-    <motion.div
-        whileHover={{ y: -5, scale: 1.02 }}
-        className="group relative rounded-[40px] border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-8 bg-white/40 dark:bg-dark-green/10 transition-all duration-300 overflow-hidden"
-    >
-        <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
-            {Icon && <Icon className="w-12 h-12 text-gourmet-ink dark:text-dark-text" />}
-        </div>
-        <div className="flex items-center gap-3 mb-4">
-            <span className={cn("h-3 w-3 rounded-full", dot)} />
-            <span className="text-sm font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">{label}</span>
-        </div>
-        <div className={cn("text-3xl font-black tracking-tighter", color)}>{value}</div>
-        <p className="text-sm font-bold opacity-40 mt-2">{sub}</p>
-    </motion.div>
-  );
+  const appliedRangeLabel = selectedPeriodLabel || 'All time'
+
+  const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text'
+  const cellBorder = 'border-l-2 border-dashed border-gourmet-green/25 dark:border-white/10'
 
   return (
     <TabsContent value="history" className="min-h-0">
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="content-card flex-1 min-h-0 flex flex-col gap-8 md:gap-14 relative overflow-hidden px-4 md:px-14 py-8 md:py-16 transition-colors duration-300"
+        className="content-card flex-1 min-h-0 flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300"
       >
-        <div className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none">
-            <Activity className="w-64 h-64 text-gourmet-ink dark:text-dark-text" />
+        {/* Background Watermark */}
+        <motion.div
+          animate={{ y: [0, -20, 0], rotate: [0, 5, -5, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+          className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none"
+        >
+          <Activity className="w-56 h-56 md:w-64 md:h-64 text-gourmet-ink dark:text-dark-text" />
+        </motion.div>
+
+        {/* Title */}
+        <div className="flex flex-col gap-2 relative z-10">
+          <motion.h2
+            initial={{ x: -50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-2xl md:text-4xl font-extrabold text-gourmet-ink dark:text-dark-text tracking-tight"
+          >
+            System Audit
+          </motion.h2>
+          <motion.p
+            initial={{ x: -50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-base md:text-lg text-gourmet-ink dark:text-dark-text font-medium"
+          >
+            Operational Transparency Log
+          </motion.p>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10 text-gourmet-ink dark:text-dark-text">
-            <div className="flex flex-col gap-2">
-                <motion.h2 className="text-3xl md:text-5xl font-extrabold tracking-tight uppercase">System Audit</motion.h2>
-                <motion.p className="text-sm md:text-base opacity-40 font-bold uppercase tracking-[0.3em]">Operational Transparency Log</motion.p>
+        {/* Controls Bar */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 md:gap-6 relative z-10">
+          <motion.div
+            whileHover={{ scale: 1.01 }}
+            className="relative flex-1 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
+          >
+            <div className="rounded-full border-2 border-dashed border-white/30 flex items-center px-4 md:px-6 py-2 md:py-3">
+              <Search className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text mr-3 md:mr-4" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Filter events..."
+                className="w-full bg-transparent py-0 !text-base md:!text-lg focus:outline-none text-gourmet-ink dark:text-dark-text placeholder:text-gourmet-ink dark:placeholder:text-dark-text"
+              />
             </div>
-            
-            <div className="flex flex-wrap items-center gap-3 bg-white/40 dark:bg-dark-green/20 p-2 rounded-full shadow-xl">
+          </motion.div>
+
+          <div className="flex items-center gap-2 md:gap-4 overflow-x-auto lg:overflow-visible py-4 lg:py-6 no-scrollbar">
+            <div className="relative flex-shrink-0">
+              {applySelectedPeriod && profileUiText && (
+                <CalendarDateSelector
+                  selectedDate={selectedDate || null}
+                  applySelectedDate={applySelectedDate!}
+                  shiftSelectedDate={shiftSelectedDate!}
+                  selectedDateLabel={selectedPeriodLabel}
+                  selectedPeriod={selectedPeriod}
+                  applySelectedPeriod={applySelectedPeriod}
+                  locale={calendarLocale}
+                  profileUiText={profileUiText}
+                  customTrigger={(open) => (
+                    <motion.div
+                      whileHover={{
+                        x: [0, -5],
+                        transition: { x: { duration: 1, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' } },
+                      }}
+                      whileTap={{ x: 0 }}
+                      onClick={open}
+                      className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
+                    >
+                      <div className="w-[42px] h-[42px] md:w-full md:h-full rounded-full border-2 border-dashed border-white/10 flex items-center justify-center md:px-6">
+                        <CalendarIcon className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text md:mr-3" />
+                        <span className="hidden md:inline font-bold text-sm md:text-lg text-gourmet-ink dark:text-dark-text whitespace-nowrap">
+                          {appliedRangeLabel}
+                        </span>
+                      </div>
+                    </motion.div>
+                  )}
+                />
+              )}
+            </div>
+
+            <div className="flex gap-2 md:gap-4 items-center flex-shrink-0">
+              {/* User filter button */}
+              <div className="relative flex-shrink-0">
                 <Select value={selectedUser} onValueChange={setSelectedUser}>
-                    <SelectTrigger className="h-12 w-48 rounded-full border-none bg-transparent font-bold">
-                        <User className="mr-2 h-4 w-4" />
+                  <SelectTrigger className="w-[50px] h-[50px] md:w-auto md:h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 border-none p-0 transition-colors duration-300 [&>svg]:hidden">
+                    <div className="w-[42px] h-[42px] md:w-full md:h-full rounded-full border-2 border-dashed border-white/10 flex items-center justify-center md:px-6">
+                      <User className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text md:mr-3" />
+                      <span className="hidden md:inline font-bold text-sm text-gourmet-ink dark:text-dark-text whitespace-nowrap">
                         <SelectValue placeholder="All Admins" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl border-none shadow-2xl backdrop-blur-xl">
-                        <SelectItem value="all">All Admins</SelectItem>
-                        {users.map(u => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-            </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-            <MetricCard label="Action Count" value={total} sub="Total operations recorded" color="text-gourmet-ink" dot="bg-blue-500" icon={History} />
-            <MetricCard label="Active Admins" value={users.length} sub="Staff members tracked" color="text-gourmet-ink" dot="bg-emerald-500" icon={Shield} />
-        </div>
-
-        <div className="flex flex-col gap-8 relative z-10 flex-1 min-h-0">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                    <Activity className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
-                    <h3 className="text-sm md:text-base font-black uppercase tracking-[0.2em] text-gourmet-ink dark:text-dark-text">Event Stream</h3>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3">
-                    <RefreshIconButton label="Refetch" onClick={fetchLogs} isLoading={isLoading} className="bg-white/40 border-none shadow-lg" />
-                    {applySelectedPeriod && profileUiText && (
-                        <CalendarDateSelector
-                            selectedDate={selectedDate || null}
-                            applySelectedDate={applySelectedDate!}
-                            shiftSelectedDate={shiftSelectedDate!}
-                            selectedDateLabel={selectedPeriodLabel}
-                            selectedPeriod={selectedPeriod}
-                            applySelectedPeriod={applySelectedPeriod}
-                            locale={calendarLocale}
-                            profileUiText={profileUiText}
-                            customTrigger={(open) => (
-                                <Button onClick={open} variant="outline" className="h-10 rounded-2xl bg-white/40 border-none px-6 font-bold shadow-lg">
-                                    {selectedPeriodLabel || 'All Time'}
-                                </Button>
-                            )}
-                        />
-                    )}
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gourmet-ink/40" />
-                        <Input 
-                            className="h-10 w-48 rounded-2xl border-none bg-white/40 shadow-lg pl-9 font-medium" 
-                            placeholder="Filter events..." 
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                        />
+                      </span>
                     </div>
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-none shadow-2xl backdrop-blur-xl">
+                    <SelectItem value="all">All Admins</SelectItem>
+                    {users.map(u => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <motion.button
+                type="button"
+                whileHover={{ rotate: 180, scale: 1.1, y: 5 }}
+                whileTap={{ scale: 0.8 }}
+                onClick={() => void fetchLogs()}
+                disabled={isLoading}
+                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                aria-label="Refresh"
+                title="Refresh"
+              >
+                <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                  <RotateCcw className={cn('w-5 h-5 text-gourmet-ink dark:text-dark-text', isLoading && 'animate-spin')} />
                 </div>
+              </motion.button>
+            </div>
+          </div>
+        </div>
+
+        {/* Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 relative z-10">
+          <motion.div
+            whileHover={{ y: -5, scale: 1.02 }}
+            className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-6 md:p-8 bg-gourmet-cream/40 dark:bg-dark-green/10 hover:bg-gourmet-green/10 dark:hover:bg-dark-green/20 transition-all duration-300 overflow-hidden"
+          >
+            <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <History className="w-12 h-12 text-gourmet-ink dark:text-dark-text" />
+            </div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="inline-block h-3 w-3 rounded-full shadow-lg bg-blue-500" />
+              <span className="text-xs md:text-sm font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">Action Count</span>
+            </div>
+            <div className="text-3xl md:text-5xl font-black tracking-tighter text-gourmet-ink dark:text-dark-text">{total}</div>
+            <p className="text-sm md:text-lg font-bold text-gourmet-ink/40 dark:text-dark-text/40 mt-2">Total operations recorded</p>
+            <div className="absolute bottom-0 left-0 h-2 w-0 group-hover:w-full transition-all duration-500 bg-blue-500" />
+          </motion.div>
+          <motion.div
+            whileHover={{ y: -5, scale: 1.02 }}
+            className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-6 md:p-8 bg-gourmet-cream/40 dark:bg-dark-green/10 hover:bg-gourmet-green/10 dark:hover:bg-dark-green/20 transition-all duration-300 overflow-hidden"
+          >
+            <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Shield className="w-12 h-12 text-gourmet-ink dark:text-dark-text" />
+            </div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="inline-block h-3 w-3 rounded-full shadow-lg bg-emerald-500" />
+              <span className="text-xs md:text-sm font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">Active Admins</span>
+            </div>
+            <div className="text-3xl md:text-5xl font-black tracking-tighter text-gourmet-ink dark:text-dark-text">{users.length}</div>
+            <p className="text-sm md:text-lg font-bold text-gourmet-ink/40 dark:text-dark-text/40 mt-2">Staff members tracked</p>
+            <div className="absolute bottom-0 left-0 h-2 w-0 group-hover:w-full transition-all duration-500 bg-emerald-500" />
+          </motion.div>
+        </div>
+
+        {/* Table Sheet */}
+        <div className="flex flex-col gap-4 md:gap-6 relative z-10 flex-1 min-h-0">
+          <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 overflow-hidden relative flex-1 flex flex-col min-h-0">
+            <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none text-gourmet-green-light dark:text-gourmet-green">
+              <Cherry className="w-10 h-10 md:w-14 md:h-14 rotate-12" />
+              <Utensils className="w-10 h-10 md:w-14 md:h-14 -rotate-12" />
             </div>
 
-            <div className="flex-1 min-h-0 overflow-auto no-scrollbar rounded-[40px] border-2 border-dashed border-gourmet-green/20 bg-white/40 p-4 md:p-8">
-                <Table>
-                    <TableHeader>
-                        <TableRow className="border-none hover:bg-transparent uppercase tracking-widest text-[10px] opacity-40 font-black">
-                            <TableHead>Execution Time</TableHead>
-                            <TableHead>Initiator</TableHead>
-                            <TableHead>Operation Status</TableHead>
-                            <TableHead>Impact Description</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <AnimatePresence mode="popLayout">
-                            {filteredLogs.map((log, idx) => (
-                                <motion.tr 
-                                    key={log.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
-                                    className="group border-b border-gourmet-green/10 last:border-none hover:bg-gourmet-green/5 transition-colors"
-                                >
-                                    <TableCell className="py-5 font-medium text-xs opacity-60">
-                                        {format(new Date(log.createdAt), 'dd MMM HH:mm:ss', { locale: dateLocale })}
-                                    </TableCell>
-                                    <TableCell className="py-5">
-                                        <div className="flex flex-col">
-                                            <span className="font-bold text-sm tracking-tight">{log.admin.name}</span>
-                                            <span className="text-[10px] opacity-40 uppercase font-black tracking-widest">{log.admin.role}</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="py-5">
-                                        <Badge variant="outline" className="rounded-full border-gourmet-ink/10 bg-white/40 px-3 uppercase text-[9px] font-black">
-                                            {log.action}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="py-5 max-w-sm truncate text-sm font-medium opacity-80" title={log.description}>
-                                        {log.description}
-                                    </TableCell>
-                                </motion.tr>
-                            ))}
-                        </AnimatePresence>
-                        {filteredLogs.length === 0 && !isLoading && (
-                            <TableRow>
-                                <TableCell colSpan={4} className="h-64 text-center opacity-40 font-bold uppercase tracking-[0.2em] text-xs">No records found matching criteria.</TableCell>
-                            </TableRow>
+            <div className="overflow-auto relative flex-1 min-h-0">
+              <Table className="min-w-[900px]">
+                <TableHeader>
+                  <TableRow className="h-12 bg-gourmet-cream/60 dark:bg-dark-green/20 cursor-default">
+                    <TableHead className={cn('w-[200px]', headCell, 'pl-4 md:pl-6')}>Execution Time</TableHead>
+                    <TableHead className={cn(headCell, cellBorder)}>Initiator</TableHead>
+                    <TableHead className={cn('w-[180px]', headCell, cellBorder)}>Operation</TableHead>
+                    <TableHead className={cn(headCell, cellBorder)}>Impact Description</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <AnimatePresence mode="popLayout">
+                    {filteredLogs.map((log, idx) => (
+                      <motion.tr 
+                        key={log.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className={cn(
+                          'h-12 transition-colors border-t border-gourmet-green/15 dark:border-white/10',
+                          idx % 2 === 0
+                            ? 'bg-gourmet-cream dark:bg-dark-surface'
+                            : 'bg-gourmet-cream/40 dark:bg-dark-green/20',
+                          'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/30'
                         )}
-                        {isLoading && logs.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={4} className="h-64 text-center">
-                                    <Loader2 className="w-8 h-8 animate-spin mx-auto opacity-20" />
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
+                      >
+                        <TableCell className="pl-4 md:pl-6 font-medium text-xs text-gourmet-ink/60 dark:text-dark-text/60">
+                          {format(new Date(log.createdAt), 'dd MMM HH:mm:ss', { locale: dateLocale })}
+                        </TableCell>
+                        <TableCell className={cn(cellBorder)}>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-sm text-gourmet-ink dark:text-dark-text tracking-tight">{log.admin.name}</span>
+                            <span className="text-[10px] text-gourmet-ink/40 dark:text-dark-text/40 uppercase font-black tracking-widest">{log.admin.role}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className={cn(cellBorder)}>
+                          <Badge variant="outline" className="rounded-full border-gourmet-ink/10 dark:border-white/10 bg-gourmet-cream/40 dark:bg-dark-green/20 px-3 uppercase text-[9px] font-black text-gourmet-ink dark:text-dark-text">
+                            {log.action}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className={cn('max-w-sm truncate font-medium text-sm text-gourmet-ink/80 dark:text-dark-text/80', cellBorder)} title={log.description}>
+                          {log.description}
+                        </TableCell>
+                      </motion.tr>
+                    ))}
+                  </AnimatePresence>
+                  {filteredLogs.length === 0 && !isLoading && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-20 text-center">
+                        <div className="inline-flex items-center gap-2 text-sm font-bold text-gourmet-ink/60 dark:text-dark-text/60">
+                          <Activity className="size-4" />
+                          No records found matching criteria.
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {isLoading && logs.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-20 text-center">
+                        <Loader2 className="w-8 h-8 animate-spin mx-auto text-gourmet-ink/20 dark:text-dark-text/20" />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </div>
+          </div>
 
-            <div className="flex items-center justify-between pt-6 border-t-2 border-dashed border-gourmet-green/10">
-                <div className="text-[10px] font-black uppercase tracking-widest opacity-30">Showing {logs.length} of {total} events</div>
-                <div className="flex gap-4">
-                    <Button 
-                        variant="ghost" 
-                        onClick={() => setPage(p => Math.max(0, p - 1))} 
-                        disabled={page === 0 || isLoading}
-                        className="rounded-full hover:bg-gourmet-green/10 font-bold"
-                    >
-                        <ChevronLeft className="mr-2 w-4 h-4" /> Previous
-                    </Button>
-                    <Button 
-                        variant="ghost" 
-                        onClick={() => setPage(p => p + 1)} 
-                        disabled={!hasMore || isLoading}
-                        className="rounded-full hover:bg-gourmet-green/10 font-bold"
-                    >
-                        Next <ChevronRight className="ml-2 w-4 h-4" />
-                    </Button>
-                </div>
+          {/* Pagination */}
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] font-black uppercase tracking-widest text-gourmet-ink/30 dark:text-dark-text/30">Showing {logs.length} of {total} events</div>
+            <div className="flex gap-2 md:gap-4">
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.1, x: -5 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setPage(p => Math.max(0, p - 1))}
+                disabled={page === 0 || isLoading}
+                className="h-[42px] px-6 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none font-bold text-sm text-gourmet-ink dark:text-dark-text"
+              >
+                <ChevronLeft className="mr-2 w-4 h-4" /> Previous
+              </motion.button>
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.1, x: 5 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setPage(p => p + 1)}
+                disabled={!hasMore || isLoading}
+                className="h-[42px] px-6 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none font-bold text-sm text-gourmet-ink dark:text-dark-text"
+              >
+                Next <ChevronRight className="ml-2 w-4 h-4" />
+              </motion.button>
             </div>
+          </div>
         </div>
       </motion.div>
     </TabsContent>
