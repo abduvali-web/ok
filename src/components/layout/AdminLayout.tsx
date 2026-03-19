@@ -26,7 +26,7 @@ interface AdminLayoutProps {
   userName?: string;
 }
 
-export function AdminLayout({ children, mode, activeTab: _activeTab, onTabChange, onLogout, userName: _userName }: AdminLayoutProps) {
+export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, userName: _userName }: AdminLayoutProps) {
   const { t } = useLanguage();
   const { settings: adminSettings, updateSettings: updateAdminSettings } = useAdminSettingsContext();
   const router = useRouter();
