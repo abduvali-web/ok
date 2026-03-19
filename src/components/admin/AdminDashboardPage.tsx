@@ -130,10 +130,10 @@ const TrialStatus = dynamic(() => import('@/components/admin/TrialStatus').then(
 const ChatCenter = dynamic(() => import('@/components/chat/ChatCenter').then(m => m.ChatCenter), { ssr: false })
 const ChangePasswordModal = dynamic(() => import('@/components/admin/ChangePasswordModal').then(m => m.ChangePasswordModal), { ssr: false })
 
-const AdminDashboardPage = () => {
+const AdminDashboardPage = ({ mode }: { mode?: 'middle' | 'low' }) => {
   const { data: session } = useSession()
   const { t, language } = useLanguage()
-  const meRole = session?.user?.role || 'MIDDLE_ADMIN'
+  const meRole = mode === 'low' ? 'LOW_ADMIN' : mode === 'middle' ? 'MIDDLE_ADMIN' : (session?.user?.role || 'MIDDLE_ADMIN')
   const isSuperAdmin = meRole === 'SUPER_ADMIN'
   const isMiddleAdminView = meRole === 'MIDDLE_ADMIN' || isSuperAdmin
   const isLowAdminView = meRole === 'LOW_ADMIN'

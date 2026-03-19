@@ -8,6 +8,7 @@ import {
   TamboThreadInputProvider,
 } from "@tambo-ai/react";
 import { MessageSquare } from "lucide-react";
+import { SessionProvider } from "next-auth/react";
 
 import { tamboComponents } from "@/lib/tambo/components";
 import {
@@ -69,7 +70,7 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
 
   if (!apiKey) {
     return (
-      <>
+      <SessionProvider>
         {children}
         <Button
           type="button"
@@ -81,11 +82,12 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
         >
           <MessageSquare className="h-5 w-5" />
         </Button>
-      </>
+      </SessionProvider>
     );
   }
 
   return (
+    <SessionProvider>
     <TamboProvider
       apiKey={apiKey}
       userKey={userKey}
@@ -111,5 +113,6 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
         {shouldRenderFloatingLauncher ? <TamboAgentWidget /> : null}
       </TamboThreadInputProvider>
     </TamboProvider>
+    </SessionProvider>
   );
 }
