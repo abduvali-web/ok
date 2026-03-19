@@ -787,7 +787,7 @@ export function AdminsTab({
 
               return (
                 <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 overflow-hidden relative">
-                  <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none">
+                  <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none text-gourmet-green-light dark:text-gourmet-green">
                     <Cherry className="w-10 h-10 md:w-14 md:h-14 rotate-12" />
                     <Utensils className="w-10 h-10 md:w-14 md:h-14 -rotate-12" />
                   </div>
@@ -900,7 +900,7 @@ export function AdminsTab({
                                     label={t.admin.edit}
                                     variant="outline"
                                     iconSize="sm"
-                                    className="border-black/10 bg-gourmet-green/25 hover:bg-gourmet-green/35 dark:bg-dark-green/35 dark:hover:bg-dark-green/45"
+                                    className="border-gourmet-green-light/30 bg-gourmet-green-light/35 hover:bg-gourmet-green-light/45 text-gourmet-ink dark:text-dark-text dark:border-white/10 dark:bg-dark-green/35 dark:hover:bg-dark-green/45"
                                     onClick={() => openEditModal(admin)}
                                     disabled={Boolean(pendingAction) || isBulkMutating}
                                   >
