@@ -86,7 +86,7 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
             whileHover={{ scale: 1.1, y: 4 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => updateAdminSettings({ theme: isDark ? 'light' : 'dark' })}
-            className="w-12 h-12 md:w-16 md:h-16 bg-dark-surface rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/10 group transition-colors duration-300"
+            className="w-12 h-12 md:w-16 md:h-16 bg-gourmet-green dark:bg-dark-surface rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/10 group transition-colors duration-300"
             aria-label={t.admin.theme}
             title={t.admin.theme}
           >
@@ -100,7 +100,7 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
           </motion.button>
 
           <LanguageSwitcherCompact
-            className="w-12 h-12 md:w-16 md:h-16 bg-dark-surface rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/10 group transition-colors duration-300"
+            className="w-12 h-12 md:w-16 md:h-16 bg-gourmet-green dark:bg-dark-surface rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/10 group transition-colors duration-300"
             align="end"
           />
 
@@ -110,7 +110,7 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
                 type="button"
                 whileHover={{ scale: 1.1, rotate: 5, y: 8 }}
                 whileTap={{ scale: 0.9 }}
-                className="w-12 h-12 md:w-16 md:h-16 bg-dark-surface rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/10 group transition-colors duration-300"
+                className="w-12 h-12 md:w-16 md:h-16 bg-gourmet-green dark:bg-dark-surface rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/10 group transition-colors duration-300"
                 aria-label="Open menu"
                 title="Open menu"
               >
