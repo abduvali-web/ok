@@ -42,11 +42,12 @@ import {
   CookingPot,
   Scale,
   Edit,
+  Loader2,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { signOut, useSession } from 'next-auth/react'
-import AdminLayout from '@/components/admin/AdminLayout'
+import { AdminLayout } from '@/components/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -118,16 +119,16 @@ import { HistoryTab } from './dashboard/tabs-content/HistoryTab'
 import { BinTab } from './dashboard/tabs-content/BinTab'
 
 // Modals and heavy components
-const OrderModal = dynamic(() => import('@/components/admin/dashboard/modals/OrderModal'), { ssr: false })
-const OrderDetailsModal = dynamic(() => import('@/components/admin/dashboard/modals/OrderDetailsModal'), { ssr: false })
-const DispatchMapPanel = dynamic(() => import('@/components/admin/DispatchMapPanel'), {
+import { OrderModal, type OrderFormData } from '@/components/admin/dashboard/modals/OrderModal'
+
+const DispatchMapPanel = dynamic(() => import('@/components/admin/orders/DispatchMapPanel').then(m => m.DispatchMapPanel), {
   ssr: false,
   loading: () => <div className="h-48 w-full animate-pulse bg-muted rounded-xl" />
 })
-const SiteBuilderCard = dynamic(() => import('@/components/admin/SiteBuilderCard'), { ssr: false })
-const TrialStatus = dynamic(() => import('@/components/admin/TrialStatus'), { ssr: false })
-const ChatCenter = dynamic(() => import('@/components/admin/ChatCenter'), { ssr: false })
-const ChangePasswordModal = dynamic(() => import('@/components/admin/ChangePasswordModal'), { ssr: false })
+const SiteBuilderCard = dynamic(() => import('@/components/admin/SiteBuilderCard').then(m => m.SiteBuilderCard), { ssr: false })
+const TrialStatus = dynamic(() => import('@/components/admin/TrialStatus').then(m => m.TrialStatus), { ssr: false })
+const ChatCenter = dynamic(() => import('@/components/chat/ChatCenter').then(m => m.ChatCenter), { ssr: false })
+const ChangePasswordModal = dynamic(() => import('@/components/admin/ChangePasswordModal').then(m => m.ChangePasswordModal), { ssr: false })
 
 const AdminDashboardPage = () => {
   const { data: session } = useSession()
@@ -139,6 +140,32 @@ const AdminDashboardPage = () => {
 
   // Tab state
   const [activeTab, setActiveTab] = useState('statistics')
+
+  // Order Form State
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null)
+
+  // Order Form State
+  const [orderFormData, setOrderFormData] = useState<OrderFormData>({
+    customerName: '',
+    customerPhone: '',
+    deliveryAddress: '',
+    deliveryTime: '08:00',
+    quantity: 1,
+    calories: 1600,
+    specialFeatures: '',
+    paymentStatus: 'PENDING',
+    paymentMethod: 'CASH',
+    isPrepaid: false,
+    amountReceived: null,
+    selectedClientId: 'manual',
+    latitude: null,
+    longitude: null,
+    courierId: '',
+    assignedSetId: '',
+  })
+  const [orderError, setOrderError] = useState('')
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false)
+  const [availableSets, setAvailableSets] = useState<any[]>([])
 
   // Date selection state
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
@@ -204,6 +231,16 @@ const AdminDashboardPage = () => {
 
   const selectedDateISO = selectedDate ? toLocalIsoDate(selectedDate) : null
 
+  const fetchAvailableSets = useCallback(async () => {
+    try {
+      const resp = await fetch('/api/admin/sets')
+      if (resp.ok) {
+        const data = await resp.json()
+        setAvailableSets(Array.isArray(data) ? data : [])
+      }
+    } catch { /* ignore */ }
+  }, [])
+
   // Fetch data
   const fetchData = useCallback(async () => {
     setIsLoading(true)
@@ -259,7 +296,8 @@ const AdminDashboardPage = () => {
     fetchData()
     fetchBinData()
     fetchClientFinance()
-  }, [fetchData, fetchBinData, fetchClientFinance])
+    fetchAvailableSets()
+  }, [fetchData, fetchBinData, fetchClientFinance, fetchAvailableSets])
 
   // Handle Tab changes
   useEffect(() => {
@@ -275,9 +313,101 @@ const AdminDashboardPage = () => {
   }
 
   // Handlers for Orders
+  const handleCreateOrder = () => {
+    setEditingOrderId(null)
+    setOrderFormData({
+        customerName: '',
+        customerPhone: '',
+        deliveryAddress: '',
+        deliveryTime: '08:00',
+        quantity: 1,
+        calories: 1600,
+        specialFeatures: '',
+        paymentStatus: 'PENDING',
+        paymentMethod: 'CASH',
+        isPrepaid: false,
+        amountReceived: null,
+        selectedClientId: 'manual',
+        latitude: null,
+        longitude: null,
+        courierId: '',
+        assignedSetId: '',
+      })
+    setIsOrderModalOpen(true)
+  }
+
   const handleEditOrder = (order: any) => {
     setSelectedOrder(order)
+    setEditingOrderId(order.id)
+    setOrderFormData({
+        customerName: order.customer?.name || order.customerName || '',
+        customerPhone: order.customer?.phone || order.customerPhone || '',
+        deliveryAddress: order.deliveryAddress || '',
+        deliveryTime: order.deliveryTime || '08:00',
+        quantity: order.quantity || 1,
+        calories: order.calories || 1600,
+        specialFeatures: order.specialFeatures || '',
+        paymentStatus: order.paymentStatus || 'PENDING',
+        paymentMethod: order.paymentMethod || 'CASH',
+        isPrepaid: !!order.isPrepaid,
+        amountReceived: order.amountReceived === 0 ? 0 : (order.amountReceived || null),
+        selectedClientId: order.clientId || 'manual',
+        latitude: order.latitude || null,
+        longitude: order.longitude || null,
+        courierId: order.courierId || '',
+        assignedSetId: order.assignedSetId || '',
+      })
     setIsOrderModalOpen(true)
+  }
+
+  const handleOrderSubmit = async (e: any) => {
+    if (e && e.preventDefault) e.preventDefault()
+    setIsCreatingOrder(true)
+    setOrderError('')
+    try {
+      const url = editingOrderId ? `/api/orders/${editingOrderId}` : '/api/orders'
+      const method = editingOrderId ? 'PATCH' : 'POST'
+      const resp = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderFormData)
+      })
+      if (resp.ok) {
+        toast.success(editingOrderId ? 'Заказ изменен' : 'Заказ создан')
+        setIsOrderModalOpen(false)
+        fetchData()
+        setEditingOrderId(null)
+      } else {
+        const d = await resp.json().catch(() => ({}))
+        setOrderError(d.error || 'Failed to save order')
+      }
+    } catch {
+      setOrderError('Submit failed')
+    } finally {
+      setIsCreatingOrder(false)
+    }
+  }
+
+  const handleClientSelectForOrder = (clientId: string) => {
+    if (clientId === 'manual') {
+        setOrderFormData(prev => ({ ...prev, selectedClientId: 'manual' }))
+        return
+    }
+    const client = clients.find(c => c.id === clientId)
+    if (client) {
+         setOrderFormData(prev => ({
+             ...prev,
+             selectedClientId: clientId,
+             customerName: client.name || '',
+             customerPhone: client.phone || '',
+             deliveryAddress: client.address || '',
+             calories: client.calories || 1600,
+             specialFeatures: client.specialFeatures || '',
+             assignedSetId: client.assignedSetId || prev.assignedSetId,
+             latitude: client.latitude || null,
+             longitude: client.longitude || null,
+         }))
+    }
   }
 
   const handleDeleteSelectedOrders = async () => {
@@ -308,19 +438,28 @@ const AdminDashboardPage = () => {
     setIsCreateClientModalOpen(true)
   }
 
-  const handleToggleClientStatus = async (id: string, current: boolean) => {
+  const shouldPauseSelectedClients = useMemo(() => {
+    return Array.from(selectedClients).some(id => clients.find(c => c.id === id)?.isActive)
+  }, [selectedClients, clients])
+
+  const handleToggleClientsStatusBulk = async () => {
+    if (selectedClients.size === 0) return
+    setIsMutatingClients(true)
     try {
-      const resp = await fetch(`/api/admin/clients/${id}/toggle-status`, {
+      const ids = Array.from(selectedClients)
+      const resp = await fetch(`/api/admin/clients/bulk-toggle-status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: !current })
+        body: JSON.stringify({ ids, isActive: !shouldPauseSelectedClients })
       })
       if (resp.ok) {
-        toast.success(language === 'ru' ? 'Статус клиента изменен' : 'Client status updated')
+        toast.success('Status updated')
         fetchData()
       }
     } catch {
       toast.error('Action failed')
+    } finally {
+      setIsMutatingClients(false)
     }
   }
 
@@ -434,6 +573,7 @@ const AdminDashboardPage = () => {
         bin: 'Корзина',
         warehouse: 'Склад',
         finance: 'Финансы',
+        interface: 'Интерфейс',
       }
     }
     return {
@@ -445,6 +585,7 @@ const AdminDashboardPage = () => {
       bin: 'Bin',
       warehouse: 'Warehouse',
       finance: 'Finance',
+      interface: 'Interface',
     }
   }, [language])
 
@@ -484,7 +625,12 @@ const AdminDashboardPage = () => {
   const DispatchActionIcon = MapIcon
 
   return (
-    <AdminLayout>
+      <AdminLayout 
+        mode={meRole === 'MIDDLE_ADMIN' ? 'middle' : 'low'}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        onLogout={() => signOut()}
+      >
       <div className="flex flex-col h-full bg-gourmet-cream dark:bg-dark-surface transition-colors duration-500 overflow-hidden">
         
         {/* Main Dashboard Tabs Container */}
@@ -520,7 +666,7 @@ const AdminDashboardPage = () => {
             <div className="flex-1 min-h-0 relative">
               <AnimatePresence mode="wait">
                 {/* Statistics Tab */}
-                <StatisticsTab key="statistics" />
+                <StatisticsTab key="statistics" stats={stats} />
 
                 {/* Orders Tab */}
                 <OrdersTab
@@ -567,6 +713,28 @@ const AdminDashboardPage = () => {
                 <ClientsTab
                   key="clients"
                   clients={filteredClients}
+                  selectedClients={selectedClients}
+                  onSelectClient={(id) => {
+                    const next = new Set(selectedClients)
+                    if (next.has(id)) next.delete(id)
+                    else next.add(id)
+                    setSelectedClients(next)
+                  }}
+                  onSelectAll={() => {
+                    if (selectedClients.size === filteredClients.length) setSelectedClients(new Set())
+                    else setSelectedClients(new Set(filteredClients.map(c => c.id)))
+                  }}
+                  onDeleteSelected={() => setIsDeleteClientsDialogOpen(true)}
+                  onToggleStatus={handleToggleClientsStatusBulk}
+                  onEditClient={handleEditClient}
+                  onCreateClient={() => {
+                    setEditingClientId(null)
+                    setIsCreateClientModalOpen(true)
+                  }}
+                  onRefresh={handleRefreshAll}
+                  isRefreshing={isDashboardRefreshing}
+                  isMutating={isMutatingClients}
+                  shouldPauseSelectedClients={shouldPauseSelectedClients}
                   selectedDate={selectedDate}
                   applySelectedDate={setSelectedDate}
                   shiftSelectedDate={(days) => {
@@ -575,38 +743,12 @@ const AdminDashboardPage = () => {
                     next.setDate(next.getDate() + days)
                     setSelectedDate(next)
                   }}
-                  selectedDateLabel={selectedPeriodLabel}
                   selectedPeriod={selectedPeriod}
                   applySelectedPeriod={setSelectedPeriod}
+                  selectedPeriodLabel={selectedPeriodLabel}
                   profileUiText={profileUiText}
-                  onRefresh={handleRefreshAll}
-                  isLoading={isLoading}
-                  selectedClients={selectedClients}
-                  onToggleClientSelection={(id) => {
-                    const next = new Set(selectedClients)
-                    if (next.has(id)) next.delete(id)
-                    else next.add(id)
-                    setSelectedClients(next)
-                  }}
-                  onToggleAllSelection={(c) => {
-                    if (c) setSelectedClients(new Set(filteredClients.map(cl => cl.id)))
-                    else setSelectedClients(new Set())
-                  }}
-                  onEditClient={handleEditClient}
-                  onDeleteSelected={() => setIsDeleteClientsDialogOpen(true)}
-                  onToggleStatus={handleToggleClientStatus}
-                  onOpenCreateModal={() => {
-                    setEditingClientId(null)
-                    setIsCreateClientModalOpen(true)
-                  }}
-                  isMutating={isMutatingClients}
                   clientFinanceById={clientFinanceById}
-                  isFinanceLoading={isClientFinanceLoading}
-                  orders={orders}
-                  searchTerm={clientSearchTerm}
-                  onSearchChange={setClientSearchTerm}
-                  t={t}
-                  language={language}
+                  isClientFinanceLoading={isClientFinanceLoading}
                 />
 
                 {/* Admins Tab */}
@@ -723,21 +865,25 @@ const AdminDashboardPage = () => {
         <AnimatePresence>
           {isOrderModalOpen && (
             <OrderModal
-              isOpen={isOrderModalOpen}
-              onClose={() => setIsOrderModalOpen(false)}
-              order={selectedOrder}
-              onSaved={handleRefreshAll}
-              initialDate={selectedDate || new Date()}
+              open={isOrderModalOpen}
+              onOpenChange={setIsOrderModalOpen}
+              editingOrderId={editingOrderId}
+              setEditingOrderId={setEditingOrderId}
+              orderFormData={orderFormData}
+              setOrderFormData={setOrderFormData}
+              editingOrder={selectedOrder}
+              clients={clients}
+              couriers={couriers}
+              availableSets={availableSets}
+              orderError={orderError}
+              isCreatingOrder={isCreatingOrder}
+              onSubmit={handleOrderSubmit}
+              onClientSelect={handleClientSelectForOrder}
+              onAddressChange={(val) => setOrderFormData(prev => ({ ...prev, deliveryAddress: val }))}
             />
           )}
 
-          {isOrderDetailsModalOpen && selectedOrder && (
-            <OrderDetailsModal
-              isOpen={isOrderDetailsModalOpen}
-              onClose={() => setIsOrderDetailsModalOpen(false)}
-              order={selectedOrder}
-            />
-          )}
+
 
           {isDispatchOpen && (
             <DispatchMapPanel
