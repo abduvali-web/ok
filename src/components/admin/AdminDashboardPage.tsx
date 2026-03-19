@@ -2281,7 +2281,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   }
 
   return (
-    <AdminLayout activeTab={activeTab} onTabChange={setActiveTab} onLogout={() => void handleLogout()}>
+    <AdminLayout mode={mode} activeTab={activeTab} onTabChange={setActiveTab} onLogout={() => void handleLogout()}>
 
       <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
         {/* Mobile PWA: full-screen dialog (like dispatch panel). Desktop: centered large modal. */}
