@@ -61,7 +61,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
         className={cn(
           'fixed inset-y-0 left-0 z-50 w-72 -translate-x-full transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]',
           'bg-gourmet-green/90 dark:bg-dark-green/90 backdrop-blur-2xl',
-          'md:relative md:translate-x-0 md:w-[128px] md:h-[1088px] md:m-4 md:rounded-[40px] md:bg-gourmet-green/40 md:dark:bg-dark-green/40 md:p-4 md:shadow-inner',
+          'md:relative md:translate-x-0 md:w-[128px] md:m-4 md:rounded-[40px] md:bg-gourmet-green/40 md:dark:bg-dark-green/40 md:p-4 md:shadow-inner md:self-start md:h-fit',
           isOpen && 'translate-x-0',
           className
         )}
@@ -90,7 +90,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
             </Button>
           </div>
 
-          <div className="flex-1 py-4 md:py-1 overflow-y-auto overflow-x-visible">
+          <div className="flex-1 py-4 md:py-1 overflow-y-auto md:overflow-y-visible overflow-x-visible">
             <nav className="flex flex-col items-center gap-2 md:gap-6 px-3 md:px-0 justify-start">
               {menuItems.map((item) => {
                 if ('type' in item) {
@@ -116,6 +116,14 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                       'flex flex-col items-center gap-1 md:gap-2 group relative py-2 md:py-4 transition-colors duration-200 w-full md:w-[121px] md:h-[156px]'
                     )}
                   >
+                    {isActive && (
+                      <motion.div
+                        layoutId="active-nav-bg"
+                        className="absolute inset-1 bg-gourmet-cream/85 dark:bg-dark-surface/70 rounded-[20px] md:rounded-[30px] border border-black/5 dark:border-white/[0.08] shadow-sm z-0 transition-colors duration-300"
+                        transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+                      />
+                    )}
+
                     <motion.div
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
