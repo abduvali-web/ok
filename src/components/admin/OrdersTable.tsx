@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { IconButton } from '@/components/ui/icon-button'
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/table"
 import { Edit } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { cn } from '@/lib/utils'
 
 interface Order {
     id: string
@@ -50,6 +52,7 @@ interface OrdersTableProps {
     onDeleteSelected: () => void
     onViewOrder?: (order: Order) => void
     onEditOrder?: (order: Order) => void
+    isGourmetStyle?: boolean
 }
 
 export function OrdersTable({
@@ -59,9 +62,126 @@ export function OrdersTable({
     onSelectAll,
     onDeleteSelected: _onDeleteSelected,
     onViewOrder: _onViewOrder,
-    onEditOrder
+    onEditOrder,
+    isGourmetStyle
 }: OrdersTableProps) {
-    const { t } = useLanguage()
+    const { t, language } = useLanguage()
+
+    if (isGourmetStyle) {
+        const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text'
+        const cellBorder = 'border-l-2 border-dashed border-gourmet-green/25 dark:border-white/10'
+
+        return (
+            <Table className="min-w-[1550px]">
+                <TableHeader>
+                    <TableRow className="h-12 bg-gourmet-cream/60 dark:bg-dark-green/20">
+                        <TableHead className="w-[60px] px-6">
+                            <Checkbox
+                                checked={orders.length > 0 && selectedOrders.size === orders.length}
+                                onCheckedChange={onSelectAll}
+                                className="border-gourmet-ink/20 dark:border-white/20"
+                            />
+                        </TableHead>
+                        <TableHead className={headCell}>{t.admin.table.number}</TableHead>
+                        <TableHead className={cn(headCell, cellBorder)}>{t.admin.table.client}</TableHead>
+                        <TableHead className={cn(headCell, cellBorder)}>{t.admin.table.address}</TableHead>
+                        <TableHead className={cn(headCell, cellBorder)}>{t.admin.table.time}</TableHead>
+                        <TableHead className={cn(headCell, cellBorder)}>{t.admin.table.type}</TableHead>
+                        <TableHead className={cn(headCell, cellBorder)}>{t.admin.table.amount}</TableHead>
+                        <TableHead className={cn(headCell, cellBorder)}>{t.admin.table.calories}</TableHead>
+                        <TableHead className={cn(headCell, cellBorder)}>{t.admin.table.features}</TableHead>
+                        <TableHead className={cn(headCell, cellBorder)}>{t.admin.table.courier}</TableHead>
+                        <TableHead className={cn(headCell, cellBorder)}>{t.admin.table.status}</TableHead>
+                        <TableHead className={cn(headCell, cellBorder)}>Priority</TableHead>
+                        <TableHead className={cn(headCell, cellBorder)}>ETA</TableHead>
+                        <TableHead className={cn(headCell, cellBorder)}>Updated</TableHead>
+                        <TableHead className={cn(headCell, cellBorder)}>{t.admin.table.payment}</TableHead>
+                        <TableHead className={cn(headCell, cellBorder, 'text-right pr-10')}>{t.admin.table.actions}</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {orders.map((order) => (
+                        <TableRow key={order.id} className="h-16 border-b-2 border-dashed border-gourmet-green/15 dark:border-white/5 hover:bg-gourmet-green/5 dark:hover:bg-dark-green/10 transition-colors">
+                            <TableCell className="px-6">
+                                <Checkbox
+                                    checked={selectedOrders.has(order.id)}
+                                    onCheckedChange={() => onSelectOrder(order.id)}
+                                    className="border-gourmet-ink/20 dark:border-white/20"
+                                />
+                            </TableCell>
+                            <TableCell className="font-bold text-gourmet-ink dark:text-dark-text">#{order.orderNumber}</TableCell>
+                            <TableCell className={cn('max-w-[200px]', cellBorder)}>
+                                <div className="font-bold text-gourmet-ink dark:text-dark-text truncate">{order.customer.name}</div>
+                                <div className="text-sm font-medium text-gourmet-ink/60 dark:text-dark-text/60 truncate">{order.customer.phone}</div>
+                            </TableCell>
+                            <TableCell className={cn('max-w-[250px] truncate font-medium text-gourmet-ink dark:text-dark-text', cellBorder)}>
+                                {order.deliveryAddress}
+                            </TableCell>
+                            <TableCell className={cn('font-bold text-gourmet-ink dark:text-dark-text', cellBorder)}>{order.deliveryTime}</TableCell>
+                            <TableCell className={cellBorder}>
+                                <Badge variant="outline" className="border-gourmet-ink/20 text-gourmet-ink dark:border-white/20 dark:text-dark-text font-bold">
+                                    {order.isAutoOrder ? t.admin.auto : t.admin.manual}
+                                </Badge>
+                            </TableCell>
+                            <TableCell className={cn('font-bold text-gourmet-ink dark:text-dark-text', cellBorder)}>{order.quantity}</TableCell>
+                            <TableCell className={cn('font-bold text-gourmet-ink dark:text-dark-text', cellBorder)}>{order.calories}</TableCell>
+                            <TableCell className={cn('max-w-[150px] truncate font-medium text-gourmet-ink dark:text-dark-text', cellBorder)}>
+                                {order.specialFeatures || '-'}
+                            </TableCell>
+                            <TableCell className={cn('max-w-[160px] truncate font-bold text-gourmet-ink dark:text-dark-text', cellBorder)}>
+                                {order.courierName || '-'}
+                            </TableCell>
+                            <TableCell className={cellBorder}>
+                                <Badge variant={
+                                    order.orderStatus === 'DELIVERED' ? 'default' :
+                                        order.orderStatus === 'PENDING' ? 'secondary' :
+                                            order.orderStatus === 'IN_DELIVERY' ? 'outline' : 'destructive'
+                                } className="font-bold">
+                                    {order.orderStatus}
+                                </Badge>
+                            </TableCell>
+                            <TableCell className={cn('font-bold text-gourmet-ink dark:text-dark-text', cellBorder)}>{order.priority ?? 3}</TableCell>
+                            <TableCell className={cn('font-bold text-gourmet-ink dark:text-dark-text', cellBorder)}>
+                                {order.etaMinutes ? `${order.etaMinutes} min` : '-'}
+                            </TableCell>
+                            <TableCell className={cn('text-xs font-bold text-gourmet-ink/60 dark:text-dark-text/60', cellBorder)}>
+                                {order.statusChangedAt
+                                    ? new Date(order.statusChangedAt).toLocaleString(language === 'ru' ? 'ru-RU' : 'en-US', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                    })
+                                    : '-'}
+                            </TableCell>
+                            <TableCell className={cellBorder}>
+                                <Badge variant={order.paymentStatus === 'PAID' ? 'default' : 'destructive'} className="font-bold">
+                                    {order.paymentStatus}
+                                </Badge>
+                            </TableCell>
+                            <TableCell className={cn('text-right pr-10', cellBorder)}>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => onEditOrder?.(order)}
+                                    className="hover:bg-gourmet-green/20 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                                >
+                                    <Edit className="size-5 text-gourmet-ink dark:text-dark-text" />
+                                </Button>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                    {orders.length === 0 && (
+                        <TableRow>
+                            <TableCell colSpan={16} className="h-40 text-center font-bold text-gourmet-ink dark:text-dark-text text-xl">
+                                {t.admin.noOrders}
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
+        )
+    }
 
     return (
         <div className="space-y-4">

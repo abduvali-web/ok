@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { CalendarDays } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
 
@@ -66,13 +67,16 @@ export function CalendarRangeSelector({
   uiText,
   locale = 'en-US',
   className,
+  customTrigger,
 }: {
   value: DateRange | undefined
   onChange: (next: DateRange | undefined) => void
   uiText: CalendarRangeSelectorUiText
   locale?: string
   className?: string
+  customTrigger?: (open: () => void, isOpen: boolean) => React.ReactNode
 }) {
+  const [isOpen, setIsOpen] = useState(false)
   const label = formatRangeLabel(value, locale, uiText.allTime)
   const hasRange = Boolean(value?.from)
 
@@ -97,21 +101,25 @@ export function CalendarRangeSelector({
   }
 
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="secondary"
-          className={['h-9 min-w-0 w-[240px] max-w-full justify-between gap-2 px-3 text-left', className].filter(Boolean).join(' ')}
-        >
-          <span className="flex min-w-0 items-center gap-2">
-            <CalendarDays className="h-4 w-4 shrink-0 text-primary" />
-            <span className="truncate text-sm font-medium">{label}</span>
-          </span>
-          <span className="max-w-[110px] truncate text-[10px] uppercase tracking-wide text-muted-foreground">
-            {uiText.calendar}
-          </span>
-        </Button>
+        {customTrigger ? (
+          customTrigger(() => setIsOpen(true), isOpen)
+        ) : (
+          <Button
+            type="button"
+            variant="secondary"
+            className={['h-9 min-w-0 w-[240px] max-w-full justify-between gap-2 px-3 text-left', className].filter(Boolean).join(' ')}
+          >
+            <span className="flex min-w-0 items-center gap-2">
+              <CalendarDays className="h-4 w-4 shrink-0 text-primary" />
+              <span className="truncate text-sm font-medium">{label}</span>
+            </span>
+            <span className="max-w-[110px] truncate text-[10px] uppercase tracking-wide text-muted-foreground">
+              {uiText.calendar}
+            </span>
+          </Button>
+        )}
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar

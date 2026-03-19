@@ -30,6 +30,7 @@ interface CalendarDateSelectorProps {
     thisMonth?: string
     allTime?: string
   }
+  customTrigger?: (open: () => void) => React.ReactNode
 }
 
 function toLocalIsoDate(d: Date) {
@@ -49,6 +50,7 @@ export function CalendarDateSelector({
   selectedPeriod,
   applySelectedPeriod,
   profileUiText,
+  customTrigger,
 }: CalendarDateSelectorProps) {
   const isPeriodMode = typeof applySelectedPeriod === 'function'
   const value: DateRange | undefined = isPeriodMode
@@ -118,6 +120,7 @@ export function CalendarDateSelector({
         }}
         locale={locale}
         className="min-w-0 w-[240px] max-w-full"
+        customTrigger={customTrigger}
       />
 
       {/* Keep the selected label in the DOM for quick QA/debug in case locale formatting differs. */}

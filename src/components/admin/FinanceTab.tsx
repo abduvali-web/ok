@@ -1,12 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     TrendingUp,
     TrendingDown,
@@ -17,6 +12,13 @@ import {
     Loader2,
     ShoppingCart,
     Trash2,
+    PieChart,
+    ArrowUpRight,
+    ArrowDownLeft,
+    CreditCard,
+    ChevronDown,
+    Search,
+    Filter,
 } from 'lucide-react';
 import {
     Table,
@@ -44,11 +46,16 @@ import {
 import { toast } from 'sonner';
 import { getAllIngredients } from '@/lib/menuData';
 import { useLanguage } from '@/contexts/LanguageContext';
-
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector';
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import { SearchPanel } from '@/components/ui/search-panel'
 import type { DateRange } from 'react-day-picker'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 interface FinanceTabProps {
     className?: string;
@@ -65,23 +72,7 @@ interface FinanceTabProps {
 interface Client {
     id: string;
     name: string;
-    phone: string;
     balance: number;
-    dailyPrice?: number;
-    planType?: string;
-}
-
-interface AdminSalaryBalanceRow {
-    id: string
-    name: string
-    role: string
-    isActive: boolean
-    createdAt: string
-    salaryPerDay: number
-    days: number
-    accrued: number
-    paid: number
-    balance: number
 }
 
 interface Transaction {
@@ -91,7 +82,6 @@ interface Transaction {
     description: string;
     category: string;
     createdAt: string;
-    admin?: { name: string };
     customer?: { name: string; phone: string };
 }
 
@@ -112,773 +102,322 @@ export function FinanceTab({
     const [companyBalance, setCompanyBalance] = useState(0);
     const [clients, setClients] = useState<Client[]>([]);
     const [history, setHistory] = useState<Transaction[]>([]);
-    const [ingredientsList, setIngredientsList] = useState<string[]>([]);
-
-    // Filters
     const [historySearchQuery, setHistorySearchQuery] = useState('');
-    const [categories, setCategories] = useState<string[]>([]);
-
-    // Salary payout (as an expense category inside the general withdraw flow)
-    const [salaryAdmins, setSalaryAdmins] = useState<AdminSalaryBalanceRow[]>([])
-    const [isSalaryAdminsLoading, setIsSalaryAdminsLoading] = useState(false)
-    const [selectedSalaryAdminId, setSelectedSalaryAdminId] = useState('')
-    const [isFinanceRefreshing, setIsFinanceRefreshing] = useState(false)
-
-    const visibleHistory = useMemo(() => {
-        if (!selectedPeriod?.from) return history
-        const start = new Date(selectedPeriod.from)
-        start.setHours(0, 0, 0, 0)
-        const end = new Date(selectedPeriod.to ?? selectedPeriod.from)
-        end.setHours(23, 59, 59, 999)
-
-        return history.filter((tx) => {
-            const at = new Date(tx.createdAt).getTime()
-            return at >= start.getTime() && at <= end.getTime()
-        })
-    }, [history, selectedPeriod])
-
-    // Modals
+    const [isFinanceRefreshing, setIsFinanceRefreshing] = useState(false);
     const [isCompanyFundsModalOpen, setIsCompanyFundsModalOpen] = useState(false);
-    const [isBuyIngredientsModalOpen, setIsBuyIngredientsModalOpen] = useState(false);
-
-    // Form Data
     const [transactionAmount, setTransactionAmount] = useState('');
     const [transactionDescription, setTransactionDescription] = useState('');
     const [transactionCategory, setTransactionCategory] = useState('');
     const [transactionType, setTransactionType] = useState<'INCOME' | 'EXPENSE'>('INCOME');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Buy Ingredients Form
-    const [purchaseItems, setPurchaseItems] = useState<{ name: string; amount: string; costPerUnit: string }[]>([
-        { name: '', amount: '', costPerUnit: '' }
-    ]);
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('ru-RU', {
+            style: 'currency', currency: 'UZS', minimumFractionDigits: 0,
+        }).format(amount);
+    };
 
-    useEffect(() => {
-        setIngredientsList(getAllIngredients());
+    const fetchCompanyFinance = useCallback(async () => {
+        try {
+            let url = `/api/admin/finance/company?limit=100&type=all&category=all`;
+            const response = await fetch(url);
+            if (response.ok) {
+                const data = await response.json();
+                setCompanyBalance(data.companyBalance);
+                setHistory(data.history || []);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }, []);
+
+    const fetchClients = useCallback(async () => {
+        try {
+            const r = await fetch(`/api/admin/finance/clients?filter=all`);
+            if (r.ok) setClients(await r.json());
+        } catch (e) {
+            console.error(e);
+        }
     }, []);
 
     useEffect(() => {
         fetchCompanyFinance();
         fetchClients();
-    }, []);
+    }, [fetchCompanyFinance, fetchClients]);
 
-    useEffect(() => {
-        // Keep the client debt / prepaid widgets aligned with the selected audit period.
-        const asOf = selectedPeriod?.to ?? selectedPeriod?.from ?? selectedDate ?? null
-        void fetchClients(asOf)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedPeriod?.from, selectedPeriod?.to, selectedDate]);
-
-    useEffect(() => {
-        fetchCompanyFinance(); // Refresh history
-    }, [selectedDate]);
-
-    useEffect(() => {
-        if (!isCompanyFundsModalOpen) return
-        if (!(transactionType === 'EXPENSE' && transactionCategory === 'SALARY')) return
-        void fetchSalaryAdmins()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isCompanyFundsModalOpen, transactionCategory, transactionType, selectedDate, selectedPeriod]);
-
-    const fetchCompanyFinance = async () => {
-        try {
-            let url = `/api/admin/finance/company?limit=50&type=all&category=all`;
-            if (activeSubTab === 'history' && selectedDate) {
-                // Only filter by date when viewing history, so total company balance isn't affected.
-                url += `&date=${selectedDate.toISOString()}`;
-            }
-            const response = await fetch(url);
-            if (response.ok) {
-                const data = await response.json();
-                setCompanyBalance(data.companyBalance);
-                setHistory(data.history);
-
-                // Extract unique categories
-                const uniqueCategories = Array.from(new Set(data.history.map((tx: Transaction) => tx.category)));
-                setCategories(uniqueCategories as string[]);
-            }
-        } catch (error) {
-            console.error('Error fetching company finance:', error);
-            toast.error('Ошибка загрузки данных финансов');
-        }
+    const handleRefresh = async () => {
+        setIsFinanceRefreshing(true);
+        await Promise.all([fetchCompanyFinance(), fetchClients()]);
+        setIsFinanceRefreshing(false);
     };
 
-    const handleRefreshFinance = async () => {
-        setIsFinanceRefreshing(true)
-        try {
-            await Promise.resolve(fetchCompanyFinance())
-            const asOf = selectedPeriod?.to ?? selectedPeriod?.from ?? selectedDate ?? null
-            await Promise.resolve(fetchClients(asOf))
-        } finally {
-            setIsFinanceRefreshing(false)
-        }
-    }
-
-    const fetchClients = async (asOf: Date | null = null) => {
-        try {
-            let url = `/api/admin/finance/clients?filter=all`
-            if (asOf) url += `&asOf=${encodeURIComponent(asOf.toISOString())}`
-            const response = await fetch(url);
-            if (response.ok) {
-                const data = await response.json();
-                setClients(data);
-            }
-        } catch (error) {
-            console.error('Error fetching clients:', error);
-            toast.error('Ошибка загрузки списка клиентов');
-        }
-    };
-
-    const fetchSalaryAdmins = async () => {
-        setIsSalaryAdminsLoading(true);
-        try {
-            const asOf = (selectedPeriod?.to ?? selectedPeriod?.from ?? selectedDate ?? new Date()).toISOString();
-            const response = await fetch(`/api/admin/finance/admin-balances?asOf=${encodeURIComponent(asOf)}`);
-            if (response.ok) {
-                const data = await response.json();
-                setSalaryAdmins(Array.isArray(data?.admins) ? data.admins : []);
-            }
-        } catch (error) {
-            console.error('Error fetching salary admins:', error);
-        } finally {
-            setIsSalaryAdminsLoading(false);
-        }
-    };
-
-    const handleTransactionSubmit = async () => {
-        const isSalaryPayout = transactionType === 'EXPENSE' && transactionCategory === 'SALARY';
-        if (isSalaryPayout) {
-            if (!selectedSalaryAdminId) {
-                toast.error(t.finance.selectStaff);
-                return;
-            }
-            if (!transactionAmount || parseFloat(transactionAmount) <= 0) {
-                toast.error(t.finance.enterAmount);
-                return;
-            }
-
-            setIsSubmitting(true);
-            try {
-                const response = await fetch('/api/admin/finance/salary', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        recipientAdminId: selectedSalaryAdminId,
-                        amount: parseFloat(transactionAmount),
-                    }),
-                });
-
-                if (response.ok) {
-                    toast.success(t.finance.salaryPaid);
-                    setIsCompanyFundsModalOpen(false);
-
-                    setSelectedSalaryAdminId('');
-                    setTransactionAmount('');
-                    setTransactionDescription('');
-                    setTransactionCategory('');
-                    setTransactionType('INCOME');
-
-                    fetchCompanyFinance();
-                    fetchSalaryAdmins();
-                } else {
-                    const data = await response.json();
-                    toast.error(data.error || t.finance.paymentError);
-                }
-            } catch (error) {
-                console.error('Error paying salary:', error);
-                toast.error(t.common.connectionError);
-            } finally {
-                setIsSubmitting(false);
-            }
-
-            return;
-        }
-
-        if (!transactionAmount || parseFloat(transactionAmount) <= 0) {
-            toast.error(t.finance.enterAmount);
-            return;
-        }
-        if (!transactionDescription) {
-            toast.error(t.finance.enterDescription);
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            const payload = {
-                amount: parseFloat(transactionAmount),
-                type: transactionType,
-                description: transactionDescription,
-                category: transactionCategory || 'COMPANY_FUNDS'
-            };
-
-            const response = await fetch('/api/admin/finance/transaction', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (response.ok) {
-                toast.success(t.finance.transactionSuccess);
-                setIsCompanyFundsModalOpen(false);
-
-                // Reset form
-                setTransactionAmount('');
-                setTransactionDescription('');
-                setTransactionCategory('');
-                setTransactionType('INCOME');
-
-                // Refresh data
-                fetchCompanyFinance();
-                fetchClients();
-            } else {
-                toast.error(t.finance.transactionError);
-            }
-        } catch (error) {
-            console.error('Error submitting transaction:', error);
-            toast.error(t.common.connectionError);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleAddPurchaseItem = () => {
-        setPurchaseItems([...purchaseItems, { name: '', amount: '', costPerUnit: '' }]);
-    };
-
-    const handleRemovePurchaseItem = (index: number) => {
-        const newItems = [...purchaseItems];
-        newItems.splice(index, 1);
-        setPurchaseItems(newItems);
-    };
-
-    const handlePurchaseItemChange = (index: number, field: string, value: string) => {
-        const newItems = [...purchaseItems];
-        // @ts-ignore
-        newItems[index][field] = value;
-        setPurchaseItems(newItems);
-    };
-
-    const calculateTotalPurchaseCost = () => {
-        return purchaseItems.reduce((total, item) => {
-            const amount = parseFloat(item.amount) || 0;
-            const cost = parseFloat(item.costPerUnit) || 0;
-            return total + (amount * cost);
-        }, 0);
-    };
-
-    const handleBuyIngredientsSubmit = async () => {
-        // Validate
-        const itemsToBuy = purchaseItems.filter(item => item.name && item.amount && item.costPerUnit);
-        if (itemsToBuy.length === 0) {
-            toast.error(t.warehouse.addIngredient);
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            const payload = {
-                items: itemsToBuy.map(item => ({
-                    name: item.name,
-                    amount: parseFloat(item.amount),
-                    costPerUnit: parseFloat(item.costPerUnit),
-                    unit: 'kg' // Default assumption from UI
-                }))
-            };
-
-            const response = await fetch('/api/admin/finance/buy-ingredients', {
-                method: 'POST', // Correct method for buying ingredients
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (response.ok) {
-                toast.success(t.finance.buySuccess);
-                setIsBuyIngredientsModalOpen(false);
-                setPurchaseItems([{ name: '', amount: '', costPerUnit: '' }]);
-                fetchCompanyFinance();
-            } else {
-                const data = await response.json();
-                toast.error(data.error || t.finance.buyError);
-            }
-        } catch (error) {
-            console.error('Error buying ingredients:', error);
-            toast.error(t.common.connectionError);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('ru-RU', {
-            style: 'currency',
-            currency: 'UZS',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        }).format(amount);
-    };
-
-    const formatDate = useCallback((dateString: string) => {
-        return new Date(dateString).toLocaleString('ru-RU', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }, []);
+    const incomeSum = useMemo(() => clients.reduce((s, c) => c.balance > 0 ? s + c.balance : s, 0), [clients]);
+    const debtSum = useMemo(() => Math.abs(clients.reduce((s, c) => c.balance < 0 ? s + c.balance : s, 0)), [clients]);
 
     const visibleHistoryRows = useMemo(() => {
-        const q = historySearchQuery.trim().toLowerCase()
-        if (!q) return visibleHistory
+        let rows = history;
+        if (selectedPeriod?.from) {
+            const start = new Date(selectedPeriod.from).setHours(0,0,0,0);
+            const end = new Date(selectedPeriod.to ?? selectedPeriod.from).setHours(23,59,59,999);
+            rows = rows.filter(tx => {
+                const d = new Date(tx.createdAt).getTime();
+                return d >= start && d <= end;
+            });
+        }
+        const q = historySearchQuery.trim().toLowerCase();
+        if (q) {
+            rows = rows.filter(tx => (
+                tx.description?.toLowerCase().includes(q) || 
+                tx.category?.toLowerCase().includes(q) ||
+                tx.customer?.name?.toLowerCase().includes(q)
+            ));
+        }
+        return rows;
+    }, [history, selectedPeriod, historySearchQuery]);
 
-        return visibleHistory.filter((tx) => {
-            const hay = [
-                tx.type,
-                tx.category,
-                tx.description,
-                String(tx.amount ?? ''),
-                tx.customer?.name,
-                tx.customer?.phone,
-                tx.customer ? 'client' : 'company',
-                formatDate(tx.createdAt),
-            ]
-                .filter(Boolean)
-                .join(' ')
-                .toLowerCase()
-
-            return hay.includes(q)
-        })
-    }, [formatDate, historySearchQuery, visibleHistory])
+    const MetricCard = ({ label, value, sub, icon: Icon, color, dot }: any) => (
+        <motion.div
+            whileHover={{ y: -5, scale: 1.02 }}
+            className="group relative rounded-[40px] border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-8 bg-white/40 dark:bg-dark-green/10 transition-all duration-300 overflow-hidden"
+        >
+            <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                {Icon && <Icon className="w-12 h-12 text-gourmet-ink dark:text-dark-text" />}
+            </div>
+            <div className="flex items-center gap-3 mb-4">
+                <span className={cn("h-3 w-3 rounded-full", dot)} />
+                <span className="text-sm font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">{label}</span>
+            </div>
+            <div className={cn("text-3xl font-black tracking-tighter", color)}>{formatCurrency(value)}</div>
+            <p className="text-sm font-bold opacity-40 mt-2">{sub}</p>
+        </motion.div>
+    );
 
     return (
-        <div className={`space-y-6 ${className}`}>
-            {/* Top Stats Section */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="glass-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-blue-900">
-                            {t.finance.companyBalance}
-                        </CardTitle>
-                        <Wallet className="h-4 w-4 text-blue-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-blue-700">{formatCurrency(companyBalance)}</div>
-                        <div className="flex items-center justify-between mt-4">
-                            <p className="text-xs text-blue-600/80">
-                                {t.finance.currentFunds}
-                            </p>
-                            <Button
-                                size="sm"
-                                className="h-7 bg-blue-600 hover:bg-blue-700"
-                                onClick={() => {
-                                    setTransactionAmount('');
-                                    setTransactionDescription('');
-                                    setTransactionCategory('');
-                                    setTransactionType('INCOME');
-                                    setIsCompanyFundsModalOpen(true);
-                                }}
-                            >
-                                <Plus className="w-3 h-3 mr-1" />
-                                {t.finance.manageBalance}
-                            </Button>
-                            <Button
-                                size="sm"
-                                className="h-7 bg-indigo-600 hover:bg-indigo-700 ml-2"
-                                onClick={() => setIsBuyIngredientsModalOpen(true)}
-                            >
-                                <ShoppingCart className="w-3 h-3 mr-1" />
-                                {t.finance.purchase}
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+        <TabsContent value="finance" className="min-h-0">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="content-card flex-1 min-h-0 flex flex-col gap-8 md:gap-14 relative overflow-hidden px-4 md:px-14 py-8 md:py-16 transition-colors duration-300"
+            >
+                {/* Background Watermark */}
+                <motion.div
+                    animate={{ y: [0, -20, 0], rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+                    className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none"
+                >
+                    <Wallet className="w-64 h-64 text-gourmet-ink dark:text-dark-text" />
+                </motion.div>
 
-                <Card className="glass-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">
-                            {t.finance.clientDebt}
-                        </CardTitle>
-                        <TrendingDown className="h-4 w-4 text-red-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-red-600">
-                            {formatCurrency(clients.reduce((sum, c) => c.balance < 0 ? sum + c.balance : sum, 0))}
-                        </div>
-                        <p className="text-xs text-slate-500 mt-1">
-                            {t.finance.negativeBalanceSum}
-                        </p>
-                    </CardContent>
-                </Card>
+                {/* Title Section */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10 text-gourmet-ink dark:text-dark-text">
+                    <div className="flex flex-col gap-2">
+                        <motion.h2 className="text-3xl md:text-5xl font-extrabold tracking-tight uppercase">
+                            Financial Audit
+                        </motion.h2>
+                        <motion.p className="text-sm md:text-base opacity-40 font-bold uppercase tracking-[0.3em]">
+                            Cashflow & Balance Statement
+                        </motion.p>
+                    </div>
 
-                <Card className="glass-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">
-                            {t.finance.clientPrepaid}
-                        </CardTitle>
-                        <TrendingUp className="h-4 w-4 text-green-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-green-600">
-                            {formatCurrency(clients.reduce((sum, c) => c.balance > 0 ? sum + c.balance : sum, 0))}
-                        </div>
-                        <p className="text-xs text-slate-500 mt-1">
-                            {t.finance.positiveBalanceSum}
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
+                    <div className="flex bg-white/40 dark:bg-dark-green/20 backdrop-blur-xl border border-white/20 p-2 rounded-full shadow-xl">
+                        <Button 
+                            onClick={() => setIsCompanyFundsModalOpen(true)}
+                            className="rounded-full px-8 bg-gourmet-green dark:bg-dark-green text-gourmet-cream font-black uppercase tracking-widest text-xs h-12 md:h-14 hover:scale-[1.05] transition-all"
+                        >
+                            <Plus className="mr-3 w-5 h-5" />
+                            Manage Funds
+                        </Button>
+                    </div>
+                </div>
 
-            <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-4">
-                <TabsList>
-                    <TabsTrigger value="history" className="flex items-center gap-2">
-                        <History className="w-4 h-4" />
-                        {t.finance.history}
-                    </TabsTrigger>
-                </TabsList>
+                {/* Metrics */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+                    <MetricCard label="Current Balance" value={companyBalance} sub="System cash on hand" color="text-gourmet-ink" dot="bg-gourmet-ink" icon={Wallet} />
+                    <MetricCard label="Floating Prepaid" value={incomeSum} sub="Customer prepayments" color="text-emerald-600" dot="bg-emerald-500" icon={TrendingUp} />
+                    <MetricCard label="Accounts Receivable" value={debtSum} sub="Pending customer debts" color="text-rose-600" dot="bg-rose-500" icon={TrendingDown} />
+                </div>
 
-                {/* HISTORY TAB */}
-                <TabsContent value="history">
-                    <Card className="border-none shadow-sm">
-                        <CardHeader>
-                            <CardTitle className="text-lg font-medium">{t.finance.history}</CardTitle>
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-2">
-                                <CardDescription className="flex-1 min-w-0">
-                                    {t.finance.historyDesc}
-                                </CardDescription>
-                                 {/* Orders-tab style: wrap on mobile so actions never disappear off-screen. */}
-                                 <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
-                                     <RefreshIconButton
-                                         label={profileUiText?.refresh ?? 'Refresh'}
-                                         onClick={() => void handleRefreshFinance()}
-                                         isLoading={isFinanceRefreshing}
-                                         iconSize="md"
-                                     />
-
-                                     {applySelectedDate &&
-                                       (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) &&
-                                       profileUiText ? (
-                                         <CalendarDateSelector
-                                             selectedDate={selectedDate || null}
-                                             applySelectedDate={applySelectedDate}
-                                             shiftSelectedDate={shiftSelectedDate}
-                                             selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
-                                             selectedPeriod={selectedPeriod}
-                                             applySelectedPeriod={applySelectedPeriod}
-                                             locale={calendarLocale}
-                                             profileUiText={profileUiText}
-                                         />
-                                       ) : null}
-
-                                     <SearchPanel
-                                         value={historySearchQuery}
-                                         onChange={setHistorySearchQuery}
-                                         placeholder={t.admin.searchPlaceholder}
-                                         className="w-full sm:w-[260px] md:w-[320px] flex-none basis-full sm:basis-auto"
-                                     />
-
-                                     {/* Category filter removed: search + date period are the primary audit controls. */}
-                                 </div>
-                             </div>
-                         </CardHeader>
-                        <CardContent>
-                            <div className="rounded-md border">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>{t.finance.date}</TableHead>
-                                            <TableHead>{t.finance.type}</TableHead>
-                                            <TableHead>{t.finance.category}</TableHead>
-                                            <TableHead>{t.finance.description}</TableHead>
-                                            <TableHead>{t.finance.linkedTo}</TableHead>
-                                            <TableHead className="text-right">{t.finance.amount}</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {visibleHistoryRows.length === 0 ? (
-                                            <TableRow>
-                                                <TableCell colSpan={6} className="h-24 text-center text-slate-500">
-                                                    {t.finance.emptyHistory}
-                                                </TableCell>
-                                            </TableRow>
-                                        ) : (
-                                            visibleHistoryRows.map((tx) => (
-                                                    <TableRow key={tx.id}>
-                                                        <TableCell className="text-xs text-slate-500">
-                                                            {formatDate(tx.createdAt)}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Badge variant={tx.type === 'INCOME' ? 'outline' : 'secondary'} className={
-                                                                tx.type === 'INCOME' ? 'text-green-600 border-green-200 bg-green-50' : 'text-red-600 bg-red-50'
-                                                            }>
-                                                                {tx.type === 'INCOME' ? t.finance.income : t.finance.expense}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell className="text-xs font-medium">
-                                                            {tx.category}
-                                                        </TableCell>
-                                                        <TableCell className="max-w-[200px] truncate" title={tx.description}>
-                                                            {tx.description || '-'}
-                                                        </TableCell>
-                                                        <TableCell className="text-sm">
-                                                            {tx.customer ? (
-                                                                <div className="flex flex-col">
-                                                                    <span className="font-medium">{tx.customer.name}</span>
-                                                                    <span className="text-xs text-slate-400">{t.admin.clients}</span>
-                                                                </div>
-                                                            ) : (
-                                                                <span className="text-slate-500">{t.finance.companyBalance}</span>
-                                                            )}
-                                                        </TableCell>
-                                                        <TableCell className={`text-right font-medium ${tx.type === 'INCOME' ? 'text-green-600' : 'text-red-600'
-                                                            }`}>
-                                                            {tx.type === 'INCOME' ? '+' : '-'}{formatCurrency(tx.amount)}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
-
-            {/* COMPANY FUNDS MODAL */}
-            <Dialog open={isCompanyFundsModalOpen} onOpenChange={setIsCompanyFundsModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{t.finance.manageBalance}</DialogTitle>
-                        <DialogDescription>
-                            {t.finance.manageBalanceDesc}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">{t.finance.type}</Label>
-                            <div className="col-span-3 flex gap-2">
-                                <Button
-                                    type="button"
-                                    variant={transactionType === 'INCOME' ? 'default' : 'outline'}
-                                    onClick={() => {
-                                        setTransactionType('INCOME')
-                                        if (transactionCategory === 'SALARY') {
-                                            setTransactionCategory('')
-                                            setSelectedSalaryAdminId('')
-                                        }
-                                    }}
-                                    className={transactionType === 'INCOME' ? 'bg-green-600 hover:bg-green-700' : ''}
-                                >
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    {t.finance.topUp}
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant={transactionType === 'EXPENSE' ? 'default' : 'outline'}
-                                    onClick={() => setTransactionType('EXPENSE')}
-                                    className={transactionType === 'EXPENSE' ? 'bg-red-600 hover:bg-red-700' : ''}
-                                >
-                                    <Minus className="w-4 h-4 mr-2" />
-                                    {t.finance.withdraw}
-                                </Button>
-                            </div>
+                {/* Transactions Table Section */}
+                <div className="flex flex-col gap-8 relative z-10 flex-1 min-h-0">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="flex items-center gap-4">
+                            <History className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                            <h3 className="text-sm md:text-base font-black uppercase tracking-[0.2em] text-gourmet-ink dark:text-dark-text">Transaction History</h3>
                         </div>
 
-
-                        {/* Category + salary payout selection */}
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="category" className="text-right">{t.finance.category}</Label>
-                            <div className="col-span-3 relative">
-                                <Input
-                                    id="category"
-                                    value={transactionCategory}
-                                    onChange={(e) => {
-                                        const next = e.target.value
-                                        setTransactionCategory(next)
-                                        if (next === 'SALARY') {
-                                            setTransactionType('EXPENSE')
-                                        }
-                                    }}
-                                    placeholder={t.finance.category}
-                                    list="categories-datalist"
+                        <div className="flex flex-wrap items-center gap-3">
+                            <RefreshIconButton label="Refresh" onClick={handleRefresh} isLoading={isFinanceRefreshing} className="bg-white/40 border-none shadow-lg" />
+                            {applySelectedPeriod && profileUiText && (
+                                <CalendarDateSelector
+                                    selectedDate={selectedDate || null}
+                                    applySelectedDate={applySelectedDate!}
+                                    shiftSelectedDate={shiftSelectedDate!}
+                                    selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
+                                    selectedPeriod={selectedPeriod}
+                                    applySelectedPeriod={applySelectedPeriod}
+                                    locale={calendarLocale}
+                                    profileUiText={profileUiText}
+                                    customTrigger={(open) => (
+                                        <Button onClick={open} variant="outline" className="h-10 rounded-2xl bg-white/40 border-none px-6 font-bold shadow-lg">
+                                            {selectedPeriodLabel || 'All Time'}
+                                        </Button>
+                                    )}
                                 />
-                                <datalist id="categories-datalist">
-                                    <option value="COMPANY_FUNDS" />
-                                    <option value="INVESTMENT" />
-                                    <option value="WITHDRAWAL" />
-                                    <option value="SALARY" />
-                                    <option value="INGREDIENTS" />
-                                    {categories.map(cat => (
-                                        <option key={cat} value={cat} />
-                                    ))}
-                                </datalist>
+                            )}
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gourmet-ink/40" />
+                                <Input 
+                                    className="h-10 w-48 rounded-2xl border-none bg-white/40 shadow-lg pl-9 font-medium" 
+                                    placeholder="Search..." 
+                                    value={historySearchQuery}
+                                    onChange={e => setHistorySearchQuery(e.target.value)}
+                                />
                             </div>
                         </div>
+                    </div>
 
-                        {transactionType === 'EXPENSE' && transactionCategory === 'SALARY' ? (
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="salary-recipient" className="text-right">{t.finance.staff}</Label>
-                                <Select
-                                    value={selectedSalaryAdminId}
-                                    onValueChange={(val) => {
-                                        setSelectedSalaryAdminId(val)
-                                        const row = salaryAdmins.find((a) => a.id === val)
-                                        if (row) {
-                                            const suggested = Math.max(0, Math.round(row.balance))
-                                            if (!Number.isNaN(suggested)) {
-                                                setTransactionAmount(String(suggested))
-                                            }
-                                        }
-                                    }}
-                                >
-                                    <SelectTrigger id="salary-recipient" className="col-span-3">
-                                        <SelectValue placeholder={isSalaryAdminsLoading ? t.common.loading : t.finance.selectStaff} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {salaryAdmins.map((a) => (
-                                            <SelectItem key={a.id} value={a.id}>
-                                                {a.name} ({a.role}) - {formatCurrency(a.balance)}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        ) : null}
+                    <div className="flex-1 min-h-0 overflow-auto no-scrollbar rounded-[40px] border-2 border-dashed border-gourmet-green/20 bg-white/40 p-4 md:p-8">
+                        <Table className="text-gourmet-ink dark:text-dark-text">
+                            <TableHeader>
+                                <TableRow className="border-none hover:bg-transparent uppercase tracking-widest text-[10px] opacity-40 font-black">
+                                    <TableHead>Execution Date</TableHead>
+                                    <TableHead>Entity/Reason</TableHead>
+                                    <TableHead>Classification</TableHead>
+                                    <TableHead className="text-right">Magnitude</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <AnimatePresence mode="popLayout">
+                                    {visibleHistoryRows.map((tx, idx) => (
+                                        <motion.tr 
+                                            key={tx.id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.05 }}
+                                            className="group border-b border-gourmet-green/10 last:border-none hover:bg-gourmet-green/5 transition-colors"
+                                        >
+                                            <TableCell className="py-5 font-medium text-xs opacity-60">
+                                                {new Date(tx.createdAt).toLocaleString(language === 'ru' ? 'ru-RU' : 'uz-UZ')}
+                                            </TableCell>
+                                            <TableCell className="py-5">
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-sm tracking-tight">{tx.description || tx.customer?.name || 'Company Operation'}</span>
+                                                    <span className="text-[10px] opacity-40 uppercase font-black tracking-widest">
+                                                        {tx.customer ? 'Customer Ledger' : 'Internal Funds'}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="py-5">
+                                                <Badge variant="outline" className="rounded-full border-gourmet-ink/10 bg-white/40 px-3 uppercase text-[9px] font-black">
+                                                    {tx.category}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className={cn("py-5 text-right font-black text-base tabular-nums tracking-tighter",
+                                                tx.type === 'INCOME' ? 'text-emerald-600' : 'text-rose-600'
+                                            )}>
+                                                {tx.type === 'INCOME' ? '+' : '-'}{formatCurrency(tx.amount)}
+                                            </TableCell>
+                                        </motion.tr>
+                                    ))}
+                                </AnimatePresence>
+                                {visibleHistoryRows.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="h-64 text-center opacity-40 font-bold uppercase tracking-[0.2em] text-xs">
+                                            No monetary movements found.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </div>
+            </motion.div>
 
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="amount" className="text-right">
-                                {t.finance.amount} ({transactionType === 'INCOME' ? '+' : '-'})
-                            </Label>
-                            <Input
-                                id="amount"
-                                type="number"
-                                min="0"
-                                value={transactionAmount}
-                                onChange={(e) => setTransactionAmount(e.target.value)}
-                                className="col-span-3"
+            {/* Fund Management Modal */}
+            <Dialog open={isCompanyFundsModalOpen} onOpenChange={setIsCompanyFundsModalOpen}>
+                <DialogContent className="rounded-[40px] border-none shadow-2xl backdrop-blur-3xl bg-white/90 p-10 max-w-lg">
+                    <DialogHeader className="mb-6">
+                        <DialogTitle className="text-3xl font-black uppercase tracking-tighter">Adjust Liquidity</DialogTitle>
+                        <DialogDescription className="text-slate-500 font-medium">Record a company cashflow event manually.</DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-2 gap-4">
+                            <Button 
+                                variant={transactionType === 'INCOME' ? 'default' : 'outline'}
+                                onClick={() => setTransactionType('INCOME')}
+                                className={cn("h-16 rounded-[28px] text-lg font-black uppercase flex-col gap-1", 
+                                    transactionType === 'INCOME' ? "bg-emerald-600 hover:bg-emerald-700" : "opacity-40"
+                                )}
+                            >
+                                <ArrowUpRight className="w-5 h-5 mb-1" />
+                                Add Funds
+                            </Button>
+                            <Button 
+                                variant={transactionType === 'EXPENSE' ? 'default' : 'outline'}
+                                onClick={() => setTransactionType('EXPENSE')}
+                                className={cn("h-16 rounded-[28px] text-lg font-black uppercase flex-col gap-1", 
+                                    transactionType === 'EXPENSE' ? "bg-rose-600 hover:bg-rose-700" : "opacity-40"
+                                )}
+                            >
+                                <ArrowDownLeft className="w-5 h-5 mb-1" />
+                                Withdrawal
+                            </Button>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="uppercase text-[10px] font-black opacity-40 ml-4 tracking-widest">Amount (UZS)</Label>
+                            <Input 
+                                type="number" 
+                                value={transactionAmount} 
+                                onChange={e => setTransactionAmount(e.target.value)}
+                                className="h-16 rounded-[28px] bg-white border-2 border-dashed border-slate-200 text-2xl font-black px-8 focus:border-gourmet-green"
                                 placeholder="0"
                             />
                         </div>
 
-                        {!(transactionType === 'EXPENSE' && transactionCategory === 'SALARY') ? (
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="description" className="text-right">{t.finance.description}</Label>
-                                <Input
-                                    id="description"
-                                    value={transactionDescription}
-                                    onChange={(e) => setTransactionDescription(e.target.value)}
-                                    className="col-span-3"
-                                    placeholder={t.finance.description}
-                                />
-                            </div>
-                        ) : null}
-
+                        <div className="space-y-2">
+                            <Label className="uppercase text-[10px] font-black opacity-40 ml-4 tracking-widest">Reason / Memo</Label>
+                            <Input 
+                                value={transactionDescription} 
+                                onChange={e => setTransactionDescription(e.target.value)}
+                                className="h-14 rounded-[24px] bg-white border-none shadow-inner px-6 font-medium"
+                                placeholder="E.g. Office rent, Investment..."
+                            />
+                        </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsCompanyFundsModalOpen(false)}>Отмена</Button>
-                        <Button onClick={handleTransactionSubmit} disabled={isSubmitting}>
-                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                            Подтвердить
+
+                    <DialogFooter className="mt-10 sm:justify-start gap-4">
+                        <Button 
+                            className="flex-1 h-14 rounded-[28px] bg-gourmet-green dark:bg-dark-green text-white font-black uppercase tracking-widest shadow-xl"
+                            onClick={async () => {
+                                if (!transactionAmount) return;
+                                setIsSubmitting(true);
+                                try {
+                                    const resp = await fetch('/api/admin/finance/transaction', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            amount: parseFloat(transactionAmount),
+                                            type: transactionType,
+                                            description: transactionDescription,
+                                            category: 'COMPANY_FUNDS'
+                                        })
+                                    });
+                                    if (resp.ok) {
+                                        toast.success('Funds recorded');
+                                        setIsCompanyFundsModalOpen(false);
+                                        fetchCompanyFinance();
+                                    }
+                                } finally { setIsSubmitting(false); }
+                            }}
+                        >
+                            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Apply To Balance'}
                         </Button>
+                        <Button variant="ghost" className="h-14 rounded-[28px] font-bold" onClick={() => setIsCompanyFundsModalOpen(false)}>Dismiss</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
-            {/* BUY INGREDIENTS MODAL */}
-            < Dialog open={isBuyIngredientsModalOpen} onOpenChange={setIsBuyIngredientsModalOpen} >
-                <DialogContent className="max-w-3xl">
-                    <DialogHeader>
-                        <DialogTitle>{t.finance.buyIngredients}</DialogTitle>
-                        <DialogDescription>
-                            {t.finance.buyIngredientsDesc}
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto">
-                        <div className="flex justify-between items-center px-1">
-                            <Label className="w-1/3">{t.warehouse.ingredient}</Label>
-                            <Label className="w-24">{t.finance.amountKg}</Label>
-                            <Label className="w-24">{t.finance.pricePerKg}</Label>
-                            <Label className="w-24">{t.finance.amount}</Label>
-                            <div className="w-8"></div>
-                        </div>
-
-                        {purchaseItems.map((item, index) => (
-                            <div key={index} className="flex gap-2 items-center">
-                                <div className="w-1/3 relative group">
-                                    {/* Searchable Combobox Input */}
-                                    <div className="relative">
-                                        <Input
-                                            value={item.name}
-                                            onChange={(e) => handlePurchaseItemChange(index, 'name', e.target.value)}
-                                            placeholder={t.common.name}
-                                            className="w-full"
-                                            list={`ingredients-list-${index}`}
-                                        />
-                                        <datalist id={`ingredients-list-${index}`}>
-                                            {ingredientsList.map(ing => (
-                                                <option key={ing} value={ing} />
-                                            ))}
-                                        </datalist>
-                                    </div>
-                                </div>
-                                <Input
-                                    type="number"
-                                    min="0"
-                                    step="0.1"
-                                    placeholder="0"
-                                    className="w-24"
-                                    value={item.amount}
-                                    onChange={(e) => handlePurchaseItemChange(index, 'amount', e.target.value)}
-                                />
-                                <Input
-                                    type="number"
-                                    min="0"
-                                    step="100"
-                                    placeholder="0"
-                                    className="w-24"
-                                    value={item.costPerUnit}
-                                    onChange={(e) => handlePurchaseItemChange(index, 'costPerUnit', e.target.value)}
-                                />
-                                <div className="w-24 text-right font-medium text-sm">
-                                    {formatCurrency((parseFloat(item.amount) || 0) * (parseFloat(item.costPerUnit) || 0))}
-                                </div>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="w-8 h-8 text-red-500 hover:bg-red-50"
-                                    onClick={() => handleRemovePurchaseItem(index)}
-                                    disabled={purchaseItems.length === 1}
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        ))}
-
-                        <Button variant="outline" size="sm" onClick={handleAddPurchaseItem} className="w-full border-dashed">
-                            <Plus className="w-4 h-4 mr-2" /> {t.finance.addRow}
-                        </Button>
-                    </div>
-
-                    <div className="flex justify-between items-center pt-4 border-t">
-                        <div className="text-lg font-bold">
-                            {t.finance.total}: {formatCurrency(calculateTotalPurchaseCost())}
-                        </div>
-                        <div className="flex gap-2">
-                            <Button variant="outline" onClick={() => setIsBuyIngredientsModalOpen(false)}>{t.common.cancel}</Button>
-                            <Button onClick={handleBuyIngredientsSubmit} disabled={isSubmitting}>
-                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                                {t.finance.confirmPurchase}
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog >
-        </div >
+        </TabsContent>
     );
 }
-
-// Ensure default export if needed, or stick to named export and import accordingly.
-// Existing pages seem to use named imports for components.
-

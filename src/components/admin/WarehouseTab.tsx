@@ -1,11 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Package,
     Calculator,
@@ -13,7 +9,20 @@ import {
     ChefHat,
     Loader2,
     Users,
-    UtensilsCrossed
+    UtensilsCrossed,
+    RefreshCw,
+    History,
+    PieChart,
+    ChevronLeft,
+    ChevronRight,
+    Search,
+    Plus,
+    Box,
+    ShoppingBag,
+    Utensils,
+    Cherry,
+    CookingPot,
+    ArrowRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -29,7 +38,7 @@ import {
 } from '@/lib/menuData';
 
 import { IngredientsManager } from './warehouse/IngredientsManager';
-import { CookingManager } from './warehouse/CookingManager'; // Integrated
+import { CookingManager } from './warehouse/CookingManager';
 import { CalendarRangeSelector } from '@/components/admin/dashboard/shared/CalendarRangeSelector'
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import type { DateRange } from 'react-day-picker'
@@ -43,6 +52,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface WarehouseTabProps {
     className?: string;
@@ -50,112 +63,17 @@ interface WarehouseTabProps {
 
 export function WarehouseTab({ className }: WarehouseTabProps) {
     const { t, language } = useLanguage();
-
-    const dateLocale = useMemo(() => {
-        if (language === 'ru') return 'ru-RU'
-        if (language === 'uz') return 'uz-UZ'
-        return 'en-US'
-    }, [language])
-
-    const calendarRangeUiText = useMemo(() => {
-        if (language === 'ru') {
-            return {
-                calendar: 'Календарь',
-                today: 'Сегодня',
-                thisWeek: 'Эта неделя',
-                thisMonth: 'Этот месяц',
-                clearRange: 'Сбросить',
-                allTime: 'За все время',
-            }
-        }
-        if (language === 'uz') {
-            return {
-                calendar: 'Kalendar',
-                today: 'Bugun',
-                thisWeek: 'Shu hafta',
-                thisMonth: 'Shu oy',
-                clearRange: 'Tozalash',
-                allTime: 'Barcha vaqt',
-            }
-        }
-        return {
-            calendar: 'Calendar',
-            today: 'Today',
-            thisWeek: 'This week',
-            thisMonth: 'This month',
-            clearRange: 'Clear',
-            allTime: 'All time',
-        }
-    }, [language])
-
-    const auditUiText = useMemo(() => {
-        if (language === 'ru') {
-            return {
-                setsTab: 'Сеты',
-                activeSet: 'Активный (авто)',
-                refreshCookingPlans: '????????',
-                planned: 'Запланировано',
-                cooked: 'Приготовлено',
-                remaining: 'Осталось',
-                failedLoadCookingPlans: 'Не удалось загрузить планы готовки',
-                loadedOrdersTomorrow: (count: number) => `Загружено ${count} заказов на завтра`,
-                loadedActiveClients: (count: number) => `Загружено ${count} активных клиентов`,
-                clientsLoadError: 'Ошибка загрузки данных клиентов',
-                warehouseLoadError: 'Ошибка загрузки данных склада',
-                menuCalcDone: (menu: number) => `Расчет для меню ${menu} выполнен`,
-                selectDatesForCalc: 'Выберите даты для расчета',
-                periodCalcDone: (count: number) => `Расчет для ${count} дней выполнен`,
-            }
-        }
-        if (language === 'uz') {
-            return {
-                setsTab: 'Setlar',
-                activeSet: 'Faol (avto)',
-                planned: 'Reja',
-                cooked: 'Pishirildi',
-                remaining: 'Qoldi',
-                failedLoadCookingPlans: 'Pishirish rejalari yuklanmadi',
-                loadedOrdersTomorrow: (count: number) => `Ertangi kun uchun ${count} ta buyurtma yuklandi`,
-                loadedActiveClients: (count: number) => `${count} ta faol mijoz yuklandi`,
-                clientsLoadError: "Mijozlar ma'lumotini yuklashda xatolik",
-                warehouseLoadError: "Ombor ma'lumotini yuklashda xatolik",
-                menuCalcDone: (menu: number) => `${menu}-menyu uchun hisob-kitob bajarildi`,
-                selectDatesForCalc: 'Hisoblash uchun sanalarni tanlang',
-                periodCalcDone: (count: number) => `${count} kun uchun hisob-kitob bajarildi`,
-            }
-        }
-        return {
-            setsTab: 'Sets',
-            activeSet: 'Active (auto)',
-            planned: 'Planned',
-            cooked: 'Cooked',
-            remaining: 'Remaining',
-            failedLoadCookingPlans: 'Failed to load cooking plans',
-            loadedOrdersTomorrow: (count: number) => `Loaded ${count} orders for tomorrow`,
-            loadedActiveClients: (count: number) => `Loaded ${count} active clients`,
-            clientsLoadError: 'Failed to load client data',
-            warehouseLoadError: 'Failed to load warehouse data',
-            menuCalcDone: (menu: number) => `Calculation for menu ${menu} completed`,
-            selectDatesForCalc: 'Select dates to calculate',
-            periodCalcDone: (count: number) => `Calculation for ${count} days completed`,
-        }
-    }, [language])
     const [activeSubTab, setActiveSubTab] = useState('cooking');
     const [tomorrowMenu, setTomorrowMenu] = useState<DailyMenu | undefined>(undefined);
     const [tomorrowMenuNumber, setTomorrowMenuNumber] = useState<number>(0);
     const [dishQuantities, setDishQuantities] = useState<Record<number, number>>({});
     const [inventory, setInventory] = useState<Record<string, number>>({});
     const [clientsByCalorie, setClientsByCalorie] = useState<Record<number, number>>({
-        1200: 0,
-        1600: 0,
-        2000: 0,
-        2500: 0,
-        3000: 0,
+        1200: 0, 1600: 0, 2000: 0, 2500: 0, 3000: 0,
     });
     const [isLoadingClients, setIsLoadingClients] = useState(false);
     const [activeSet, setActiveSet] = useState<any>(null);
     const [allClients, setAllClients] = useState<any[]>([]);
-
     const [allOrders, setAllOrders] = useState<any[]>([]);
     const [availableSets, setAvailableSets] = useState<any[]>([]);
 
@@ -164,7 +82,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     const [shoppingList, setShoppingList] = useState<Map<string, { amount: number; unit: string }>>(new Map());
     const [calcRange, setCalcRange] = useState<DateRange | undefined>(undefined)
 
-    // Cooking audit state (period + per-day drilldown)
+    // Cooking audit state
     const [cookingRange, setCookingRange] = useState<DateRange | undefined>(() => {
         const tomorrow = new Date()
         tomorrow.setDate(tomorrow.getDate() + 1)
@@ -175,997 +93,429 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         const tomorrow = new Date()
         tomorrow.setDate(tomorrow.getDate() + 1)
         tomorrow.setHours(0, 0, 0, 0)
-        const yyyy = tomorrow.getFullYear()
-        const mm = String(tomorrow.getMonth() + 1).padStart(2, '0')
-        const dd = String(tomorrow.getDate()).padStart(2, '0')
-        return `${yyyy}-${mm}-${dd}`
+        return formatToIso(tomorrow)
     })
-    const [cookingPlans, setCookingPlans] = useState<Array<{ date: string; menuNumber: number; dishes: any; cookedStats: any }>>([])
+    const [cookingPlans, setCookingPlans] = useState<any[]>([])
     const [isCookingPlansLoading, setIsCookingPlansLoading] = useState(false)
     const [cookingPlansError, setCookingPlansError] = useState<string>('')
     const [cookingSelectedSetId, setCookingSelectedSetId] = useState<string>('active')
 
-    const toLocalIsoDate = useCallback((d: Date) => {
+    function formatToIso(d: Date) {
         const yyyy = d.getFullYear()
         const mm = String(d.getMonth() + 1).padStart(2, '0')
         const dd = String(d.getDate()).padStart(2, '0')
         return `${yyyy}-${mm}-${dd}`
-    }, [])
+    }
 
-    const calcRangeDays = useMemo(() => {
-        if (!calcRange?.from) return [] as string[]
-        const end = calcRange.to ?? calcRange.from
+    const dateLocale = language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US';
 
-        const dates: string[] = []
-        const cursor = new Date(calcRange.from)
-        cursor.setHours(0, 0, 0, 0)
-
-        const limit = 45 // keep UI & calculations bounded
-        while (cursor.getTime() <= end.getTime() && dates.length < limit) {
-            dates.push(toLocalIsoDate(cursor))
-            cursor.setDate(cursor.getDate() + 1)
+    const auditUiText = useMemo(() => {
+        if (language === 'ru') {
+            return {
+                setsTab: 'Сеты',
+                activeSet: 'Активный (авто)',
+                planned: 'Запланировано',
+                cooked: 'Приготовлено',
+                remaining: 'Осталось',
+                failedLoadCookingPlans: 'Не удалось загрузить планы готовки',
+                refresh: 'Обновить',
+                statsHeader: 'Складская аналитика',
+                statsSub: 'Управление запасами и производством'
+            }
         }
-
-        return dates
-    }, [calcRange])
+        return {
+            setsTab: 'Sets',
+            activeSet: 'Active (auto)',
+            planned: 'Planned',
+            cooked: 'Cooked',
+            remaining: 'Remaining',
+            failedLoadCookingPlans: 'Failed to load cooking plans',
+            refresh: 'Refresh',
+            statsHeader: 'Warehouse Analytics',
+            statsSub: 'Inventory & Production Management'
+        }
+    }, [language])
 
     const cookingRangeDays = useMemo(() => {
         if (!cookingRange?.from) return [] as string[]
         const end = cookingRange.to ?? cookingRange.from
-
         const dates: string[] = []
         const cursor = new Date(cookingRange.from)
         cursor.setHours(0, 0, 0, 0)
-
-        const limit = 31 // keep the UI usable (month max)
-        while (cursor.getTime() <= end.getTime() && dates.length < limit) {
-            dates.push(toLocalIsoDate(cursor))
+        while (cursor.getTime() <= end.getTime() && dates.length < 31) {
+            dates.push(formatToIso(cursor))
             cursor.setDate(cursor.getDate() + 1)
         }
         return dates
-    }, [cookingRange, toLocalIsoDate])
+    }, [cookingRange])
 
-    useEffect(() => {
-        if (!cookingRangeDays.length) return
-        // Ensure selected day stays inside the chosen range.
-        if (!cookingRangeDays.includes(selectedCookingDateISO)) {
-            setSelectedCookingDateISO(cookingRangeDays[0])
+    const calcRangeDays = useMemo(() => {
+        if (!calcRange?.from) return [] as string[]
+        const end = calcRange.to ?? calcRange.from
+        const dates: string[] = []
+        const cursor = new Date(calcRange.from)
+        cursor.setHours(0, 0, 0, 0)
+        while (cursor.getTime() <= end.getTime() && dates.length < 45) {
+            dates.push(formatToIso(cursor))
+            cursor.setDate(cursor.getDate() + 1)
         }
-    }, [cookingRangeDays, selectedCookingDateISO])
+        return dates
+    }, [calcRange])
 
-    const refreshCookingPlansForRange = useCallback(async () => {
-        if (!cookingRange?.from) {
-            setCookingPlans([])
-            return
-        }
-
-        const fromIso = toLocalIsoDate(cookingRange.from)
-        const toIso = toLocalIsoDate(cookingRange.to ?? cookingRange.from)
-
-        setIsCookingPlansLoading(true)
-        setCookingPlansError('')
+    const fetchData = useCallback(async () => {
         try {
-            const response = await fetch(`/api/admin/warehouse/cooking-plan?from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`)
-            const data = await response.json().catch(() => ({}))
-            if (!response.ok) {
-                setCookingPlans([])
-                setCookingPlansError(data?.error || auditUiText.failedLoadCookingPlans)
-                return
-            }
-
-            setCookingPlans(Array.isArray((data as any)?.plans) ? (data as any).plans : [])
-        } catch (error) {
-            setCookingPlans([])
-            setCookingPlansError(error instanceof Error ? error.message : auditUiText.failedLoadCookingPlans)
-        } finally {
-            setIsCookingPlansLoading(false)
-        }
-    }, [cookingRange, toLocalIsoDate])
-
-    useEffect(() => {
-        void refreshCookingPlansForRange()
-    }, [refreshCookingPlansForRange])
-
-    const cookingTotals = useMemo(() => {
-        const safeNumber = (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? value : 0)
-
-        let planned = 0
-        let cooked = 0
-
-        for (const plan of cookingPlans) {
-            const dishes = plan?.dishes && typeof plan.dishes === 'object' ? plan.dishes : {}
-            for (const qty of Object.values(dishes as Record<string, unknown>)) {
-                planned += safeNumber(qty)
-            }
-
-            const cookedStats = plan?.cookedStats && typeof plan.cookedStats === 'object' ? plan.cookedStats : {}
-            for (const dishStats of Object.values(cookedStats as Record<string, unknown>)) {
-                if (!dishStats || typeof dishStats !== 'object') continue
-                for (const qty of Object.values(dishStats as Record<string, unknown>)) {
-                    cooked += safeNumber(qty)
+            // Inventory
+            const invResp = await fetch('/api/admin/warehouse/ingredients');
+            if (invResp.ok) {
+                const data = await invResp.json();
+                if (Array.isArray(data)) {
+                    const inv: Record<string, number> = {};
+                    data.forEach(i => inv[i.name] = i.amount);
+                    setInventory(inv);
                 }
             }
-        }
 
-        const remaining = Math.max(0, planned - cooked)
-        return { planned, cooked, remaining }
-    }, [cookingPlans])
-
-    const selectedCookingMenuNumber = useMemo(() => {
-        try {
-            const date = new Date(selectedCookingDateISO)
-            if (Number.isNaN(date.getTime())) return tomorrowMenuNumber
-            return getMenuNumber(date)
-        } catch {
-            return tomorrowMenuNumber
-        }
-    }, [selectedCookingDateISO, tomorrowMenuNumber])
-
-    // Load tomorrow's menu on mount
-    useEffect(() => {
-        const menuNumber = getTomorrowsMenuNumber();
-        setTomorrowMenuNumber(menuNumber);
-        const menu = getTomorrowsMenu();
-        setTomorrowMenu(menu);
-
-        // Note: dish quantities will be set after clientsByCalorie is loaded
-        // See the effect below that depends on both menu and clientsByCalorie
-
-        // Fetch data from API
-        fetchData();
-    }, [tomorrowMenuNumber]);
-
-    // Set default dish quantities based on total active clients
-    useEffect(() => {
-        if (!tomorrowMenu) return;
-        const totalClients = Object.values(clientsByCalorie).reduce((sum, count) => sum + count, 0);
-
-        // Only set quantities if clients have been loaded (totalClients > 0)
-        // If totalClients is 0, either no clients exist or data hasn't loaded yet
-        // In practice, this should update once fetchClientCalories completes
-        if (totalClients === 0) return;
-
-        const initialQuantities: Record<number, number> = {};
-        tomorrowMenu.dishes.forEach(dish => {
-            // Default to total clients, but user can adjust
-            initialQuantities[dish.id] = totalClients;
-        });
-        setDishQuantities(initialQuantities);
-    }, [tomorrowMenu, clientsByCalorie]);
-
-    const getDistributionForDate = useCallback((date: Date) => {
-        const distribution: Record<number, number> = {
-            1200: 0,
-            1600: 0,
-            2000: 0,
-            2500: 0,
-            3000: 0,
-        };
-
-        const dateStr = toLocalIsoDate(date);
-        const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-
-        // 1. Try to get distribution from ACTUAL ORDERS first (Source of Truth)
-        const dayOrders = allOrders.filter(o => {
-            const oDate = String(o.deliveryDate ?? '').slice(0, 10)
-            return oDate === dateStr
-        });
-
-        if (dayOrders.length > 0) {
-            dayOrders.forEach(order => {
-                const cals = order.calories || 2000;
-                // Map to nearest tier
-                if (cals <= 1400) distribution[1200]++;
-                else if (cals <= 1800) distribution[1600]++;
-                else if (cals <= 2200) distribution[2000]++;
-                else if (cals <= 2800) distribution[2500]++;
-                else distribution[3000]++;
-            });
-            return distribution;
-        }
-
-        // 2. Fallback to Client Patterns if no orders exist for this day
-        allClients.forEach((client: any) => {
-            if (client.isActive !== false) {
-                // Parse deliveryDays if it's a string
-                let deliveryDays = client.deliveryDays;
-                if (typeof deliveryDays === 'string') {
-                    try { deliveryDays = JSON.parse(deliveryDays); } catch { deliveryDays = {}; }
-                }
-
-                // Filter by delivery day if available
-                if (deliveryDays && deliveryDays[dayOfWeek] === false) {
-                    return;
-                }
-
-                const calories = client.calories || 2000;
-                // Map to nearest tier
-                if (calories <= 1400) distribution[1200]++;
-                else if (calories <= 1800) distribution[1600]++;
-                else if (calories <= 2200) distribution[2000]++;
-                else if (calories <= 2800) distribution[2500]++;
-                else distribution[3000]++;
+            // Sets
+            const setsResp = await fetch('/api/admin/sets');
+            if (setsResp.ok) {
+                const data = await setsResp.json();
+                setAvailableSets(data || []);
+                setActiveSet(data?.find((s: any) => s.isActive) || null);
             }
-        });
 
-        return distribution;
-    }, [allClients, allOrders, toLocalIsoDate]);
-
-    // Fetch client calorie distribution from database
-    const fetchClientCalories = useCallback(async () => {
-        setIsLoadingClients(true);
-        try {
-            // Fetch clients and orders in parallel
-            const [clientsResponse, ordersResponse] = await Promise.all([
+            // Clients & Orders
+            const [cResp, oResp] = await Promise.all([
                 fetch('/api/admin/clients'),
                 fetch('/api/orders')
             ]);
-
-            let clients: any[] = [];
-            let orders: any[] = [];
-
-            if (clientsResponse.ok) {
-                clients = await clientsResponse.json();
-                setAllClients(clients);
+            if (cResp.ok) setAllClients(await cResp.json());
+            if (oResp.ok) {
+                const data = await oResp.json();
+                setAllOrders(data.orders || data || []);
             }
-
-            if (ordersResponse.ok) {
-                const ordersData = await ordersResponse.json();
-                orders = ordersData.orders || ordersData || [];
-                setAllOrders(orders);
-            }
-
-            // Calculate tomorrow's distribution for CookingManager
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(today.getDate() + 1);
-
-            const distribution: Record<number, number> = {
-                1200: 0, 1600: 0, 2000: 0, 2500: 0, 3000: 0,
-            };
-            const dayOfWeek = tomorrow.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-            const tomorrowDateStr = toLocalIsoDate(tomorrow);
-
-            // Try using orders first (they're the source of truth)
-            const tomorrowOrders = orders.filter((o: any) => {
-                const oDate = String(o.deliveryDate ?? '').slice(0, 10)
-                return oDate === tomorrowDateStr
-            });
-
-            if (tomorrowOrders.length > 0) {
-                tomorrowOrders.forEach((order: any) => {
-                    const cals = order.calories || 2000;
-                    const qty = order.quantity || 1;
-                    if (cals <= 1400) distribution[1200] += qty;
-                    else if (cals <= 1800) distribution[1600] += qty;
-                    else if (cals <= 2200) distribution[2000] += qty;
-                    else if (cals <= 2800) distribution[2500] += qty;
-                    else distribution[3000] += qty;
-                });
-                setClientsByCalorie(distribution);
-                console.log('Distribution from orders:', distribution, 'Orders count:', tomorrowOrders.length);
-                toast.success(auditUiText.loadedOrdersTomorrow(tomorrowOrders.length));
-                return;
-            }
-
-            // Fallback to active client patterns if no orders for tomorrow
-            clients.forEach((client: any) => {
-                if (client.isActive !== false) {
-                    let deliveryDays = client.deliveryDays;
-                    if (typeof deliveryDays === 'string') {
-                        try { deliveryDays = JSON.parse(deliveryDays); } catch { deliveryDays = {}; }
-                    }
-                    if (deliveryDays && deliveryDays[dayOfWeek] === false) return;
-
-                    const calories = client.calories || 2000;
-                    if (calories <= 1400) distribution[1200]++;
-                    else if (calories <= 1800) distribution[1600]++;
-                    else if (calories <= 2200) distribution[2000]++;
-                    else if (calories <= 2800) distribution[2500]++;
-                    else distribution[3000]++;
-                }
-            });
-
-            setClientsByCalorie(distribution);
-            const totalClients = Object.values(distribution).reduce((a, b) => a + b, 0);
-            console.log('Distribution from clients:', distribution, 'Total:', totalClients);
-            toast.success(auditUiText.loadedActiveClients(totalClients));
-        } catch (error) {
-            console.error('Error fetching client data:', error);
-            toast.error(auditUiText.clientsLoadError);
-        } finally {
-            setIsLoadingClients(false);
+        } catch (e) {
+            console.error(e);
         }
     }, []);
+
+    const refreshCookingPlansForRange = useCallback(async () => {
+        if (!cookingRange?.from) return;
+        const from = formatToIso(cookingRange.from);
+        const to = formatToIso(cookingRange.to ?? cookingRange.from);
+        setIsCookingPlansLoading(true);
+        try {
+            const resp = await fetch(`/api/admin/warehouse/cooking-plan?from=${from}&to=${to}`);
+            const data = await resp.json();
+            setCookingPlans(data.plans || []);
+        } catch (e) {
+            setCookingPlansError('Error loading plans');
+        } finally {
+            setIsCookingPlansLoading(false);
+        }
+    }, [cookingRange]);
 
     useEffect(() => {
-        fetchClientCalories();
-    }, [fetchClientCalories]);
+        fetchData();
+        const m = getTomorrowsMenuNumber();
+        setTomorrowMenuNumber(m);
+        setTomorrowMenu(getTomorrowsMenu());
+    }, [fetchData]);
 
-    const fetchInventory = useCallback(async () => {
-        try {
-            const response = await fetch('/api/admin/warehouse/ingredients');
-            if (response.ok) {
-                const data = await response.json().catch(() => null);
-                if (!Array.isArray(data)) return;
-                // Convert array to record: { "Rice": 500, ... }
-                const invRecord: Record<string, number> = {};
-                data.forEach((item: { name: string, amount: number }) => {
-                    invRecord[item.name] = item.amount;
-                });
-                setInventory(invRecord);
-            }
-        } catch (error) {
-            console.error('Error fetching inventory:', error);
-        }
-    }, []);
+    useEffect(() => {
+        refreshCookingPlansForRange();
+    }, [refreshCookingPlansForRange]);
 
-    const fetchData = async () => {
-        try {
-            fetchInventory();
-
-
-            // Fetch cooking plan for tomorrow (based on tomorrowMenuNumber and date)
-            // We need the date for tomorrow. getTomorrowsMenuNumber() implies +1 day from today roughly, 
-            // but let's be precise. The menu cycle starts Dec 4.
-            // Actually, we can just save/load by date.
-            // Let's assume tomorrow's date for the query.
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(today.getDate() + 1);
-            const dateStr = toLocalIsoDate(tomorrow);
-
-            const planResponse = await fetch(`/api/admin/warehouse/cooking-plan?date=${dateStr}`);
-            if (planResponse.ok) {
-                const data = await planResponse.json();
-                if (data.dishes) {
-                    setDishQuantities(data.dishes);
-                }
-            }
-
-            // Fetch active set
-            const setsResponse = await fetch('/api/admin/sets');
-            if (setsResponse.ok) {
-                const rawSets = await setsResponse.json().catch(() => null);
-                const sets = Array.isArray(rawSets) ? rawSets : [];
-                setAvailableSets(sets);
-
-                const active = sets.find((s: any) => s.isActive);
-                if (active) {
-                    setActiveSet(active);
-
-                    // If active set has dishes for tomorrow, update tomorrowMenu
-                    const dayData = active.calorieGroups[tomorrowMenuNumber.toString()];
-                    if (dayData && Array.isArray(dayData)) {
-                        const uniqueDishesMap = new Map<number, Dish>();
-                        dayData.forEach((group: any) => {
-                            group.dishes.forEach((d: any) => {
-                                if (!uniqueDishesMap.has(d.dishId)) {
-                                    uniqueDishesMap.set(d.dishId, {
-                                        id: d.dishId,
-                                        name: d.dishName,
-                                        mealType: d.mealType
-                                    } as any);
-                                }
-                            });
-                        });
-                        if (uniqueDishesMap.size > 0) {
-                            setTomorrowMenu({
-                                menuNumber: tomorrowMenuNumber,
-                                dishes: Array.from(uniqueDishesMap.values())
-                            });
-                        }
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error fetching warehouse data:', error);
-            toast.error(auditUiText.warehouseLoadError);
-        }
-    };
-
-    // updateInventory removed
-
-
-
-
-    const calculateForTomorrow = () => {
-        // Helper to map calories to tier
-        const getTier = (c: number) => c <= 1400 ? 1200 : c <= 1800 ? 1600 : c <= 2200 ? 2000 : c <= 2800 ? 2500 : 3000;
-
-        // 1. Calculate Split Distribution
-        const standardStats: Record<number, number> = { 1200: 0, 1600: 0, 2000: 0, 2500: 0, 3000: 0 };
-        const setStats: Record<string, Record<number, number>> = {};
-
-        availableSets.forEach(s => {
-            setStats[s.id] = { 1200: 0, 1600: 0, 2000: 0, 2500: 0, 3000: 0 };
+    const cookingTotals = useMemo(() => {
+        let p = 0, c = 0;
+        cookingPlans.forEach(plan => {
+            Object.values(plan.dishes || {}).forEach((q: any) => p += q);
+            Object.values(plan.cookedStats || {}).forEach((ds: any) => {
+                Object.values(ds || {}).forEach((q: any) => c += q);
+            });
         });
+        return { planned: p, cooked: c, remaining: Math.max(0, p - c) };
+    }, [cookingPlans]);
 
-        // Determine target date (Tomorrow)
-        const date = new Date();
-        date.setDate(date.getDate() + 1);
-        const dateStr = toLocalIsoDate(date);
-        const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-
-        // Filter valid orders
-        const dayOrders = allOrders.filter(o => o.deliveryDate && o.deliveryDate.startsWith(dateStr));
-
-        if (dayOrders.length > 0) {
-            dayOrders.forEach(order => {
-                const client = allClients.find(c => c.id === order.customerId);
-                const tier = getTier(order.calories || 2000);
-
-                // If client has assigned set, add to that set's stats
-                if (client?.assignedSetId && setStats[client.assignedSetId]) {
-                    setStats[client.assignedSetId][tier] = (setStats[client.assignedSetId][tier] || 0) + (order.quantity || 1);
-                } else {
-                    // Else add to standard stats (or Active Global Set if we treat 'assignedSetId=null' as Active Set)
-                    // Logic: If assignedSetId is null, they get the "Active Global Set" effectively.
-                    // But 'calculateIngredientsForMenu' without 'activeSet' arg calculates Standard Menu. 
-                    // Does 'activeSet' state in this component represent the Global Active Set? YES.
-                    // So if we pass 'activeSet' to calculateIngredientsForMenu, it uses it.
-                    // If we pass NULL, it uses Standard.
-                    // Correct Logic: 
-                    // - Unassigned clients usage should be calculated using the `activeSet` state (Global Active).
-                    // - Assigned clients usage should be calculated using their specific Set.
-
-                    // Actually, if an Active Set exists, UNASSIGNED clients should use IT.
-                    // If NO Active Set exists, they use Standard.
-                    // So we accumulate them in 'standardStats', but we will calculate 'standardStats' ingredients using 'activeSet' (Global).
-                    standardStats[tier] = (standardStats[tier] || 0) + (order.quantity || 1);
-                }
-            });
-        } else {
-            // Fallback to Clients
-            allClients.forEach(client => {
-                if (client.isActive !== false) {
-                    let dDays = client.deliveryDays;
-                    if (typeof dDays === 'string') {
-                        try { dDays = JSON.parse(dDays); } catch { dDays = {}; }
-                    }
-                    if (dDays && dDays[dayOfWeek] === false) return;
-
-                    const tier = getTier(client.calories || 2000);
-
-                    if (client.assignedSetId && setStats[client.assignedSetId]) {
-                        setStats[client.assignedSetId][tier]++;
-                    } else {
-                        standardStats[tier]++;
-                    }
-                }
-            });
-        }
-
-        // 2. Aggregate Ingredients
-        const totalIngredients = new Map<string, { amount: number; unit: string }>();
-
-        const mergeIngredients = (source: Map<string, { amount: number; unit: string }>) => {
-            for (const [name, { amount, unit }] of source) {
-                const existing = totalIngredients.get(name);
-                if (existing) {
-                    existing.amount += amount;
-                } else {
-                    totalIngredients.set(name, { amount, unit });
-                }
-            }
-        };
-
-        // Calculate for Standard/Global Active
-        const globalIngredients = calculateIngredientsForMenu(
-            tomorrowMenuNumber,
-            standardStats,
-            dishQuantities,
-            activeSet // Use the Global Active Set for unassigned clients
-        );
-        mergeIngredients(globalIngredients);
-
-        // Calculate for Assigned Sets
-        for (const set of availableSets) {
-            // Skip if this is the active set (already handled in global?)
-            // Wait: 'activeSet' passed above IS the object found in 'availableSets' with .isActive=true.
-            // So if we iterate 'availableSets' again, we will double count the active set IF 'setStats' captured data for it.
-            // BUT: 'setStats' is populated by `client.assignedSetId`. 
-            // Does `client.assignedSetId` get set to the Active Set ID automatically? 
-            // New clients have `assignedSetId: ''` or `null`.
-            // If a client is Explicitly Assigned to the Active Set, they have `assignedSetId = 'id-of-active'`.
-            // Those counts went into `setStats['id-of-active']`.
-            // The `standardStats` captured clients with `assignedSetId = null`.
-
-            // So: 
-            // 1. `standardStats` (Unassigned) -> Use `activeSet`.
-            // 2. `setStats['non-active-id']` -> Use that set.
-            // 3. `setStats['active-id']` -> Use that set (Active Set).
-
-            // Issue: If we use `activeSet` for StandardStats, and also calculate `setStats['active-id']` separately, 
-            // using `calculateIngredientsForMenu(..., set)`, it works fine. They are just two batches of people using the same set.
-            // Merging them implies summing ingredients.
-
-            // HOWEVER, `calculateIngredientsForMenu` takes `dishQuantities`. 
-            // `dishQuantities` is GLOBAL dish IDs.
-            // If Set A and Set B share Dish ID 100, and we adjusted its quantity...
-            // `calculateIngredientsForMenu` uses `dishQuantities` logic: 
-            // `const dishQty = dishQuantities?.[dish.id] ?? totalClients;`.
-            // If we iterate multiple times, `dishQuantities` (e.g. 50 portions) will be applied EACH TIME?
-            // E.g. Set A uses Dish 100. Set B uses Dish 100.
-            // We configured "Dish 100 = 50 portions".
-            // Loop 1 (Set A): Uses 50 portions? 
-            // Loop 2 (Set B): Uses 50 portions?
-            // Total = 100? This is wrong if we meant 50 TOTAL.
-
-            // BUT: `dishQuantities` in standard usage is "Total portions to cook".
-            // If we are calculating ingredients based on CLIENT COUNT (Predictive), we usually IGNORE `dishQuantities` unless we are in "Manual Override" mode.
-            // The logic in `calculateIngredientsForMenu` uses `dishQuantities` if present.
-            // If `dishQuantities` is set, `portionsForTier` depends on it.
-
-            // Warning: If usage of `dishQuantities` overrides client counts, then splitting calculation breaks the logic 
-            // because "Dish Qty 50" means "50 total", but we apply it to "Subset A" then "Subset B".
-
-            // If `dishQuantities` are derived from TOTAL clients (which they are in useEffect), then:
-            // We should NOT use global `dishQuantities` when calculating subsets, 
-            // OR we should split `dishQuantities` too.
-            // OR we should rely on `clientsByCalorie` count which logic falls back to if `dishQuantities` is matching?
-
-            // Let's check `calculateIngredientsForMenu`:
-            // `const dishQty = dishQuantities?.[dish.id] ?? totalClients;`
-            // `const portionsForTier = (dishQty / totalClients) * clientCount;`
-            // It scales `dishQty` by `clientCount / totalClients`.
-            // `totalClients` here is SUM of `clientsByCalorie` passed to function.
-
-            // So: 
-            // Call 1: `clientsByCalorie` = {1200: 5}. `totalClients` = 5.
-            // `dishQty` = 50 (Global).
-            // `portions` = (50 / 5) * 5 = 50.
-
-            // Call 2: `clientsByCalorie` = {1200: 10}. `totalClients` = 10.
-            // `dishQty` = 50 (Global).
-            // `portions` = (50 / 10) * 10 = 50.
-
-            // Total Ingredients = 50 portions + 50 portions = 100 portions!
-            // Double counting!
-
-            // Fix: We must NOT pass the global `dishQuantities` when doing split calculation, 
-            // unless we can split `dishQuantities` per set.
-            // Since we effectively want to calculate ingredients based on "Number of People", 
-            // checks `dishQuantities` is risky.
-
-            // However, `dishQuantities` defaults to `totalClients` if undefined.
-            // If we pass `undefined` for `dishQuantities`, it uses `totalClients` (sum of subset).
-            // This effectively calculates "Exact Ingredients for these clients".
-            // This is what we want for "Calculator".
-
-            // So: pass `undefined` (or empty object) as `dishQuantities` to `calculateIngredientsForMenu` 
-            // to force it to use the `clientsByCalorie` count strictly.
-
-            // Only issue: If user MANUALLY adjusted quantities in UI for "Extra portions", we lose that.
-            // The UI `dishQuantities` reflects "Total planned to cook".
-            // If we want to respect that, we need to handle it.
-            // But traditionally, "Calculator" tells you "What you NEED to buy based on clients".
-            // Manual adjustments are usually for "Cooking Plan".
-
-            // I will pass `undefined` for `dishQuantities` to prioritize Client Count based calculation.
-            // If the user wants to calculate based on `dishQuantities`, they assume global toggle?
-            // Given the complexity, counting based on clients is stricter and safer for "Shopping List".
-
-            const dist = setStats[set.id];
-            const hasClients = Object.values(dist || {}).some(v => v > 0);
-            if (!hasClients) continue;
-
-            const setIng = calculateIngredientsForMenu(
-                tomorrowMenuNumber,
-                dist,
-                undefined, // Ignore manual quantities, use client count
-                set
-            );
-            mergeIngredients(setIng);
-        }
-
-        // Refine Global call:
-        // Also pass undefined?
-        // If I pass dishQuantities, I get the scaling issue.
-        // So I will pass undefined to global too.
-
-        // Re-do Global Call Logic inside this block
-        const globalIngredients2 = calculateIngredientsForMenu(
-            tomorrowMenuNumber,
-            standardStats,
-            undefined,
-            activeSet
-        );
-        mergeIngredients(globalIngredients2);
-
-        setCalculatedIngredients(totalIngredients);
-
-        const shopping = calculateShoppingList(totalIngredients, inventory);
-        setShoppingList(shopping);
-
-        toast.success(auditUiText.menuCalcDone(tomorrowMenuNumber));
-    };
+    const selectedCookingMenuNumber = useMemo(() => {
+        try {
+            return getMenuNumber(new Date(selectedCookingDateISO));
+        } catch { return tomorrowMenuNumber; }
+    }, [selectedCookingDateISO, tomorrowMenuNumber]);
 
     const calculateForPeriod = (dates: string[]) => {
-        if (dates.length === 0) {
-            toast.error(auditUiText.selectDatesForCalc);
-            return;
-        }
-
-        const totalIngredients = new Map<string, { amount: number; unit: string }>();
-
-        for (const dateStr of dates) {
-            const date = new Date(dateStr);
-            const menuNumber = getMenuNumber(date);
-
-            // DYNAMICALLY calculate distribution for this specific date
-            const distributionForDate = getDistributionForDate(date);
-
-            const menuIngredients = calculateIngredientsForMenu(
-                menuNumber,
-                distributionForDate,
-                dishQuantities, // User overrides (usually for tomorrow)
-                activeSet
-            );
-
-            for (const [name, { amount, unit }] of menuIngredients) {
-                const existing = totalIngredients.get(name);
-                if (existing) {
-                    existing.amount = Math.round((existing.amount + amount) * 10) / 10;
-                } else {
-                    totalIngredients.set(name, { amount, unit });
-                }
-            }
-        }
-
-        setCalculatedIngredients(totalIngredients);
-        const shopping = calculateShoppingList(totalIngredients, inventory);
-        setShoppingList(shopping);
-
-        toast.success(auditUiText.periodCalcDone(dates.length));
+        const total = new Map<string, { amount: number; unit: string }>();
+        dates.forEach(d => {
+            const date = new Date(d);
+            const menuNum = getMenuNumber(date);
+            const dist = getDistributionForDate(date);
+            const ings = calculateIngredientsForMenu(menuNum, dist, undefined, activeSet);
+            ings.forEach((v, k) => {
+                const ex = total.get(k);
+                if (ex) ex.amount = Math.round((ex.amount + v.amount) * 10) / 10;
+                else total.set(k, { ...v });
+            });
+        });
+        setCalculatedIngredients(total);
+        setShoppingList(calculateShoppingList(total, inventory));
+        toast.success('Calculation complete');
     };
 
-    const _mealTypeIcons: Record<keyof typeof MEAL_TYPES, string> = {
-        BREAKFAST: '🌅',
-        SECOND_BREAKFAST: '🥐',
-        LUNCH: '🍽️',
-        SNACK: '🍎',
-        DINNER: '🌙',
-        SIXTH_MEAL: '🥗',
-        UNKNOWN: '❓',
-    };
-
-    // Calculate required ingredients with CALORIE-SCALED amounts
-    // For each dish, sum ingredients across all calorie tiers based on client distribution
-    const _requiredIngredients = useMemo(() => {
-        if (!tomorrowMenu) return new Map<string, { amount: number; unit: string }>();
-        const required = new Map<string, { amount: number; unit: string }>();
-
-        // For each dish, calculate total ingredients needed across all calorie tiers
-        for (const dish of tomorrowMenu.dishes) {
-            const dishQty = dishQuantities[dish.id] || 0;
-            if (dishQty <= 0) continue;
-
-            // Calculate proportionally based on client distribution
-            // Example: 2 clients at 1200kcal, 1 at 2000kcal = 3 total
-            // Each calorie tier gets its scaled ingredients
-            const totalClients = Object.values(clientsByCalorie).reduce((sum, c) => sum + c, 0);
-
-            if (totalClients === 0) continue;
-
-            // For each calorie tier
-            for (const [calorieStr, clientCount] of Object.entries(clientsByCalorie)) {
-                if (clientCount <= 0) continue;
-
-                const calories = parseInt(calorieStr);
-                const mealType = dish.mealType as keyof typeof MEAL_TYPES;
-
-                // Get scaled ingredients for this calorie tier
-                const scaledIngredients = scaleIngredients(
-                    dish.ingredients,
-                    calories,
-                    mealType,
-                    1 // per portion
-                );
-
-                // Calculate how many portions for this tier
-                // If dishQty matches totalClients, each tier gets clientCount portions
-                // If user overrides dishQty, distribute proportionally
-                const portionsForTier = Math.round((dishQty / totalClients) * clientCount);
-
-                for (const ing of scaledIngredients) {
-                    const existing = required.get(ing.name);
-                    const amount = ing.amount * portionsForTier;
-                    if (existing) {
-                        existing.amount = Math.round((existing.amount + amount) * 10) / 10;
-                    } else {
-                        required.set(ing.name, { amount: Math.round(amount * 10) / 10, unit: ing.unit });
-                    }
-                }
-            }
+    function getDistributionForDate(date: Date) {
+        const dist: any = { 1200: 0, 1600: 0, 2000: 0, 2500: 0, 3000: 0 };
+        const ds = formatToIso(date);
+        const day = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+        const orders = allOrders.filter(o => String(o.deliveryDate || '').startsWith(ds));
+        if (orders.length > 0) {
+            orders.forEach(o => {
+                const c = o.calories || 2000;
+                if (c <= 1400) dist[1200]++;
+                else if (c <= 1800) dist[1600]++;
+                else if (c <= 2200) dist[2000]++;
+                else if (c <= 2800) dist[2500]++;
+                else dist[3000]++;
+            });
+        } else {
+            allClients.forEach(c => {
+                if (c.isActive === false) return;
+                let dd = c.deliveryDays;
+                if (typeof dd === 'string') try { dd = JSON.parse(dd) } catch { dd = {} }
+                if (dd && dd[day] === false) return;
+                const cal = c.calories || 2000;
+                if (cal <= 1400) dist[1200]++;
+                else if (cal <= 1800) dist[1600]++;
+                else if (cal <= 2200) dist[2000]++;
+                else if (cal <= 2800) dist[2500]++;
+                else dist[3000]++;
+            });
         }
-        return required;
-    }, [tomorrowMenu, dishQuantities, clientsByCalorie]);
+        return dist;
+    }
 
-    // Check which ingredients are insufficient
-    // Inventory check disabled - handled by server
-    // const insufficientIngredients = useMemo(() => { ... }, []);
-    // const hasEnoughStock = true;
-    const _totalDishesToCook = Object.values(dishQuantities).reduce((sum, qty) => sum + qty, 0);
-
-    const totalPlannedPortions = useMemo(
-        () => Object.values(clientsByCalorie).reduce((sum, qty) => sum + qty, 0),
-        [clientsByCalorie]
+    const StatItem = ({ label, value, sub, color, dot, icon: Icon }: any) => (
+        <motion.div
+            whileHover={{ y: -5, scale: 1.02 }}
+            className="group relative rounded-3xl border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-6 bg-white/40 dark:bg-dark-green/10 hover:bg-gourmet-green/10 transition-all duration-300 overflow-hidden"
+        >
+            <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                {Icon && <Icon className="w-10 h-10 text-gourmet-ink dark:text-dark-text" />}
+            </div>
+            <div className="flex items-center gap-2 mb-3">
+                <span className={cn("h-2 w-2 rounded-full", dot)} />
+                <span className="text-xs font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">{label}</span>
+            </div>
+            <div className={cn("text-3xl font-black tracking-tighter", color)}>{value}</div>
+            <p className="text-xs font-bold text-gourmet-ink/40 dark:text-dark-text/40 mt-1">{sub}</p>
+        </motion.div>
     );
 
     return (
-        <div className={`space-y-6 ${className}`}>
-            <Card className="glass-card">
-                <CardHeader>
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div>
-                            <CardTitle className="flex items-center gap-2 text-xl">
-                                <Package className="w-5 h-5 text-primary" />
-                                {t.warehouse.title}
-                            </CardTitle>
-                            <CardDescription>
-                                {t.warehouse.description}
-                            </CardDescription>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="flex items-center gap-1 px-3 py-1.5 bg-primary/5">
-                                <ChefHat className="w-4 h-4" />
-                                <span>{t.warehouse.menuFor} {tomorrowMenuNumber}</span>
-                            </Badge>
-                        </div>
+        <TabsContent value="warehouse" className="min-h-0">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="content-card flex-1 min-h-0 flex flex-col gap-8 md:gap-14 relative overflow-hidden px-4 md:px-14 py-8 md:py-16 transition-colors duration-300"
+            >
+                {/* Background Watermark */}
+                <motion.div
+                    animate={{ y: [0, -20, 0], rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+                    className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none"
+                >
+                    <Package className="w-64 h-64 text-gourmet-ink dark:text-dark-text" />
+                </motion.div>
+
+                {/* Title Section */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10 text-gourmet-ink dark:text-dark-text">
+                    <div className="flex flex-col gap-2">
+                        <motion.h2 className="text-3xl md:text-5xl font-extrabold tracking-tight uppercase">
+                            {auditUiText.statsHeader}
+                        </motion.h2>
+                        <motion.p className="text-sm md:text-base opacity-40 font-bold uppercase tracking-[0.3em]">
+                            {auditUiText.statsSub}
+                        </motion.p>
                     </div>
-                </CardHeader>
-                <CardContent>
-                    <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-                        <TabsList className="grid w-full grid-cols-5 mb-6">
-                            <TabsTrigger value="cooking" className="flex items-center gap-2">
-                                <ChefHat className="w-4 h-4" />
-                                <span className="hidden sm:inline">{t.warehouse.cooking}</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="sets" className="flex items-center gap-2">
-                                <UtensilsCrossed className="w-4 h-4" />
-                                <span className="hidden sm:inline">{auditUiText.setsTab}</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="inventory" className="flex items-center gap-2">
-                                <Package className="w-4 h-4" />
-                                <span className="hidden sm:inline">{t.warehouse.inventory}</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="calculator" className="flex items-center gap-2">
-                                <Calculator className="w-4 h-4" />
-                                <span className="hidden sm:inline">{t.warehouse.calculator}</span>
-                            </TabsTrigger>
 
-                        </TabsList>
+                    <TabsList className="bg-white/40 dark:bg-dark-green/20 backdrop-blur-xl border border-white/20 p-1 rounded-[32px] h-14 md:h-16 flex items-center md:px-6 shadow-xl">
+                        <TabsTrigger value="cooking" className="rounded-full px-6 h-full data-[state=active]:bg-gourmet-green dark:data-[state=active]:bg-dark-green font-bold uppercase tracking-widest text-xs transition-all duration-500">
+                            {t.warehouse.cooking}
+                        </TabsTrigger>
+                        <TabsTrigger value="sets" className="rounded-full px-6 h-full data-[state=active]:bg-gourmet-green dark:data-[state=active]:bg-dark-green font-bold uppercase tracking-widest text-xs transition-all duration-500">
+                            {auditUiText.setsTab}
+                        </TabsTrigger>
+                        <TabsTrigger value="inventory" className="rounded-full px-6 h-full data-[state=active]:bg-gourmet-green dark:data-[state=active]:bg-dark-green font-bold uppercase tracking-widest text-xs transition-all duration-500">
+                            {t.warehouse.inventory}
+                        </TabsTrigger>
+                        <TabsTrigger value="calculator" className="rounded-full px-6 h-full data-[state=active]:bg-gourmet-green dark:data-[state=active]:bg-dark-green font-bold uppercase tracking-widest text-xs transition-all duration-500">
+                            {t.warehouse.calculator}
+                        </TabsTrigger>
+                    </TabsList>
+                </div>
 
-                        {/* Cooking Tab - Dishes to prepare for tomorrow */}
-                        <TabsContent value="cooking" className="space-y-4">
-                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <CalendarRangeSelector
-                                        value={cookingRange}
-                                        onChange={setCookingRange}
-                                        uiText={{
-                                            ...calendarRangeUiText,
-                                            calendar: (() => {
-                                                if (!cookingRange?.from) return 'Menu'
-                                                const fromNum = getMenuNumber(cookingRange.from)
-                                                const toNum = getMenuNumber(cookingRange.to ?? cookingRange.from)
-                                                return fromNum === toNum ? `Menu ${fromNum}` : `Menu ${fromNum}-${toNum}`
-                                            })(),
-                                        }}
-                                        locale={dateLocale}
-                                        className="w-[240px] max-w-full min-w-0"
-                                    />
-
-                                    <Select value={cookingSelectedSetId} onValueChange={setCookingSelectedSetId}>
-                                        <SelectTrigger className="h-9 w-[220px] max-w-full">
-                                            <SelectValue placeholder={auditUiText.setsTab} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="active">{auditUiText.activeSet}</SelectItem>
-                                            {availableSets.map((s) => (
-                                                <SelectItem key={String(s.id)} value={String(s.id)}>
-                                                    {s.name} {s.isActive ? '✓' : ''}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-
-                                    <RefreshIconButton
-                                        label={auditUiText.refreshCookingPlans ?? 'Refresh'}
-                                        onClick={() => {
-                                            fetchData()
-                                            void refreshCookingPlansForRange()
-                                        }}
-                                        isLoading={isCookingPlansLoading}
-                                        iconSize="md"
-                                    />
-                                </div>
-
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <span>{auditUiText.planned}: <span className="font-semibold text-foreground">{cookingTotals.planned}</span></span>
-                                    <span>·</span>
-                                    <span>{auditUiText.cooked}: <span className="font-semibold text-emerald-600">{cookingTotals.cooked}</span></span>
-                                    <span>·</span>
-                                    <span>{auditUiText.remaining}: <span className="font-semibold text-amber-600">{cookingTotals.remaining}</span></span>
-                                    {isCookingPlansLoading ? <Loader2 className="ml-1 h-3.5 w-3.5 animate-spin" /> : null}
-                                </div>
+                <div className="flex-1 min-h-0 overflow-auto no-scrollbar pb-10 relative z-10">
+                    <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="h-full flex flex-col">
+                        
+                        <TabsContent value="cooking" className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <StatItem label={auditUiText.planned} value={cookingTotals.planned} sub="Portions total" color="text-gourmet-ink" dot="bg-gourmet-ink" icon={CookingPot} />
+                                <StatItem label={auditUiText.cooked} value={cookingTotals.cooked} sub="Successfully prepared" color="text-emerald-600" dot="bg-emerald-500" icon={ChefHat} />
+                                <StatItem label={auditUiText.remaining} value={cookingTotals.remaining} sub="Still to be done" color="text-amber-600" dot="bg-amber-500" icon={Clock} />
                             </div>
 
-                            {cookingPlansError ? (
-                                <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
-                                    {cookingPlansError}
-                                </div>
-                            ) : null}
+                            <div className="flex flex-wrap items-center gap-4 bg-white/20 dark:bg-dark-green/5 p-4 rounded-3xl border-2 border-dashed border-gourmet-green/20">
+                                <CalendarRangeSelector 
+                                    value={cookingRange} 
+                                    onChange={setCookingRange} 
+                                    locale={dateLocale}
+                                    className="bg-white/50 dark:bg-dark-green/20 rounded-2xl border-none shadow-inner"
+                                />
+                                <Select value={cookingSelectedSetId} onValueChange={setCookingSelectedSetId}>
+                                    <SelectTrigger className="h-12 w-[220px] rounded-2xl bg-white/50 dark:bg-dark-green/20 border-none shadow-inner">
+                                        <SelectValue placeholder={auditUiText.setsTab} />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-2xl border-none shadow-2xl backdrop-blur-xl">
+                                        <SelectItem value="active">{auditUiText.activeSet}</SelectItem>
+                                        {availableSets.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                <RefreshIconButton 
+                                    label={auditUiText.refresh} 
+                                    onClick={() => { fetchData(); refreshCookingPlansForRange(); }} 
+                                    isLoading={isCookingPlansLoading}
+                                    className="bg-gourmet-green dark:bg-dark-green text-gourmet-cream shadow-lg hover:shadow-2xl transition-all"
+                                />
+                            </div>
 
-                            {cookingRangeDays.length > 1 ? (
-                                <div className="flex gap-2 overflow-x-auto rounded-lg border bg-card p-2">
-                                    {cookingRangeDays.map((iso) => (
-                                        <button
-                                            key={iso}
-                                            type="button"
-                                            onClick={() => setSelectedCookingDateISO(iso)}
-                                            className={[
-                                                'shrink-0 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors',
-                                                iso === selectedCookingDateISO
-                                                    ? 'bg-primary text-primary-foreground border-primary'
-                                                    : 'bg-background hover:bg-muted/30 border-border',
-                                            ].join(' ')}
-                                        >
-                                            {iso}
-                                        </button>
-                                    ))}
-                                </div>
-                            ) : null}
-
-                            {/* NEW: Detailed Cooking Manager */}
-                            <CookingManager
-                                date={selectedCookingDateISO}
-                                menuNumber={selectedCookingMenuNumber}
-                                clientsByCalorie={clientsByCalorie}
-                                clients={allClients}
-                                orders={allOrders}
-                                availableSets={availableSets}
-                                selectedSetId={cookingSelectedSetId}
-                                onSelectedSetIdChange={setCookingSelectedSetId}
-                                selectedCalorieGroup="all"
-                                onSelectedCalorieGroupChange={() => {}}
-                                showHeader={false}
-                                showContextInfo={false}
-                                onCook={() => { fetchData(); void refreshCookingPlansForRange(); }} // Refresh inventory + audit summary on cook
-                                orderInfo={{
-                                    total: Object.values(clientsByCalorie).reduce((a, b) => a + b, 0),
-                                    byCalorie: clientsByCalorie
-                                }}
-                            />
+                            <div className="rounded-[40px] border-2 border-dashed border-gourmet-green/20 bg-white/10 p-6">
+                                <CookingManager
+                                    date={selectedCookingDateISO}
+                                    menuNumber={selectedCookingMenuNumber}
+                                    clientsByCalorie={clientsByCalorie}
+                                    clients={allClients}
+                                    orders={allOrders}
+                                    availableSets={availableSets}
+                                    selectedSetId={cookingSelectedSetId}
+                                    onSelectedSetIdChange={setCookingSelectedSetId}
+                                    selectedCalorieGroup="all"
+                                    onSelectedCalorieGroupChange={() => {}}
+                                    showHeader={false}
+                                    showContextInfo={false}
+                                    onCook={() => { fetchData(); refreshCookingPlansForRange(); }}
+                                />
+                            </div>
                         </TabsContent>
 
-                        {/* Sets Tab */}
-                        <TabsContent value="sets" className="space-y-4">
+                        <TabsContent value="sets" className="h-full animate-in fade-in slide-in-from-bottom-4">
                             <SetsTab />
                         </TabsContent>
 
-                        {/* Inventory Tab - Managed by IngredientsManager */}
-                        <TabsContent value="inventory" className="space-y-4">
-                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                                {t.warehouse.inventoryInfo}
+                        <TabsContent value="inventory" className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                            <div className="bg-amber-500/10 border-2 border-dashed border-amber-500/30 rounded-[40px] p-8 flex items-center gap-6">
+                                <div className="p-4 bg-amber-500/20 rounded-3xl text-amber-600">
+                                    <Info className="w-8 h-8" />
+                                </div>
+                                <div className="space-y-1">
+                                    <h3 className="text-xl font-black text-amber-700 uppercase tracking-tight">Stock Management</h3>
+                                    <p className="text-amber-600/70 font-medium">{t.warehouse.inventoryInfo}</p>
+                                </div>
                             </div>
-
                             <IngredientsManager onUpdate={fetchData} />
                         </TabsContent>
 
-                        {/* Calculator Tab - Multi-day calculation */}
-                        <TabsContent value="calculator" className="space-y-4">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {/* Left: Date selection */}
-                                <div className="space-y-4">
-                                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
-                                        {t.warehouse.calcDaysInfo}
+                        <TabsContent value="calculator" className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                                <div className="space-y-6 flex flex-col justify-center">
+                                    <div className="bg-gourmet-green/10 border-2 border-dashed border-gourmet-green/30 rounded-[40px] p-8 flex items-center gap-6">
+                                        <div className="p-4 bg-gourmet-green/20 rounded-3xl text-gourmet-green">
+                                            <Calculator className="w-8 h-8" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-black text-gourmet-ink/80 dark:text-dark-text/80 uppercase tracking-tight">Provisioning</h3>
+                                            <p className="text-gourmet-ink/40 dark:text-dark-text/40 font-medium">Forecast ingredients based on expected menu cycle.</p>
+                                        </div>
                                     </div>
-
-                                    <CalendarRangeSelector
-                                        value={calcRange}
-                                        onChange={setCalcRange}
-                                        uiText={{
-                                            ...calendarRangeUiText,
-                                            calendar: (() => {
-                                                if (!calcRange?.from) return 'Menu'
-                                                const fromNum = getMenuNumber(calcRange.from)
-                                                const toNum = getMenuNumber(calcRange.to ?? calcRange.from)
-                                                return fromNum === toNum ? `Menu ${fromNum}` : `Menu ${fromNum}-${toNum}`
-                                            })(),
-                                        }}
-                                        locale={dateLocale}
-                                        className="w-full min-w-0"
-                                    />
-
-                                    <Button
-                                        onClick={() => {
-                                            if (calcRangeDays.length > 0) calculateForPeriod(calcRangeDays)
-                                            else calculateForTomorrow()
-                                        }}
-                                        className="w-full justify-center"
-                                        variant="default"
-                                        size="icon"
-                                        aria-label={
-                                            calcRangeDays.length > 0
-                                                ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
-                                                : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())
-                                        }
-                                        title={
-                                            calcRangeDays.length > 0
-                                                ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
-                                                : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())
-                                        }
-                                    >
-                                        <Calculator className="w-4 h-4" />
-                                        <span className="sr-only">
-                                            {calcRangeDays.length > 0
-                                                ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
-                                                : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())}
-                                        </span>
-                                    </Button>
+                                    <div className="flex flex-col gap-4 p-4 bg-white/30 rounded-[40px] border border-white/40 shadow-xl">
+                                        <CalendarRangeSelector value={calcRange} onChange={setCalcRange} locale={dateLocale} className="w-full bg-transparent border-none" />
+                                        <Button 
+                                            onClick={() => calculateForPeriod(calcRangeDays)} 
+                                            className="h-16 rounded-[32px] bg-gourmet-green hover:bg-gourmet-green/90 dark:bg-dark-green text-xl font-black uppercase tracking-widest shadow-2xl hover:scale-[1.02] transition-all"
+                                        >
+                                            Run Calculation
+                                            <ArrowRight className="ml-4 w-6 h-6" />
+                                        </Button>
+                                    </div>
                                 </div>
 
-                                {/* Right: Results */}
-                                <div className="space-y-4">
-                                    {calculatedIngredients.size > 0 && (
-                                        <>
-                                            <div>
-                                                <h4 className="font-medium mb-2 flex items-center gap-2">
-                                                    <Package className="w-4 h-4" />
-                                                    {t.warehouse.requiredIngredients}
+                                <AnimatePresence mode="wait">
+                                    {calculatedIngredients.size > 0 ? (
+                                        <motion.div 
+                                            key="results"
+                                            initial={{ opacity: 0, x: 20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: -20 }}
+                                            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                                        >
+                                            <div className="bg-white/40 dark:bg-dark-green/10 backdrop-blur-xl rounded-[40px] border-2 border-dashed border-gourmet-green/20 p-8 flex flex-col gap-6">
+                                                <h4 className="flex items-center gap-3 text-lg font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">
+                                                    <CookingPot className="w-6 h-6" />
+                                                    Groceries
                                                 </h4>
-                                                <div className="bg-card rounded-lg border border-border max-h-48 overflow-y-auto">
-                                                    {Array.from(calculatedIngredients.entries()).map(([name, { amount, unit }]) => (
-                                                        <div key={name} className="flex justify-between p-2 border-b last:border-0 text-sm">
-                                                            <span className="text-slate-700">{name}</span>
-                                                            <span className="font-medium">{amount} {unit}</span>
+                                                <div className="flex-1 overflow-auto pr-2 custom-scrollbar space-y-3">
+                                                    {Array.from(calculatedIngredients.entries()).map(([k, v]) => (
+                                                        <div key={k} className="flex justify-between items-center bg-white/40 p-3 rounded-2xl border border-white/20">
+                                                            <span className="font-bold text-gourmet-ink/70 dark:text-dark-text/70">{k}</span>
+                                                            <Badge variant="secondary" className="rounded-lg bg-gourmet-green/10 text-gourmet-green font-black">{v.amount} {v.unit}</Badge>
                                                         </div>
                                                     ))}
                                                 </div>
                                             </div>
 
-                                            <div>
-                                                <h4 className="font-medium mb-2 flex items-center gap-2 text-orange-600">
-                                                    <ShoppingCart className="w-4 h-4" />
-                                                    {t.warehouse.shoppingListTitle}
+                                            <div className="bg-orange-500/5 backdrop-blur-xl rounded-[40px] border-2 border-dashed border-orange-500/20 p-8 flex flex-col gap-6">
+                                                <h4 className="flex items-center gap-3 text-lg font-black uppercase tracking-widest text-orange-600/60">
+                                                    <ShoppingBag className="w-6 h-6" />
+                                                    To Buy
                                                 </h4>
-                                                <div className="bg-orange-50 rounded-lg border border-orange-200 max-h-48 overflow-y-auto">
-                                                    {shoppingList.size > 0 ? (
-                                                        Array.from(shoppingList.entries()).map(([name, { amount, unit }]) => (
-                                                            <div key={name} className="flex justify-between w-full p-2 border-b border-orange-100 last:border-0 text-sm">
-                                                                <span className="text-orange-800">{name}</span>
-                                                                <span className="font-medium text-orange-900">{amount} {unit}</span>
+                                                <div className="flex-1 overflow-auto pr-2 custom-scrollbar space-y-3">
+                                                    {shoppingList.size > 0 ? Array.from(shoppingList.entries()).map(([k, v]) => (
+                                                        <div key={k} className="flex justify-between items-center bg-orange-500/10 p-3 rounded-2xl border border-orange-500/10">
+                                                            <span className="font-bold text-orange-700">{k}</span>
+                                                            <Badge variant="secondary" className="rounded-lg bg-orange-500 text-white font-black">{v.amount} {v.unit}</Badge>
+                                                        </div>
+                                                    )) : (
+                                                        <div className="flex-1 flex flex-col items-center justify-center text-center p-10 gap-4">
+                                                            <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-600">
+                                                                <Utensils className="w-8 h-8" />
                                                             </div>
-                                                        ))
-                                                    ) : (
-                                                        <div className="p-4 text-center text-green-600 text-sm">
-                                                            {t.warehouse.allGood}
+                                                            <p className="font-bold text-emerald-600 uppercase tracking-widest text-xs">Pantry is full!</p>
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
-                                        </>
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div 
+                                            key="empty"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="h-full flex flex-col items-center justify-center bg-white/40 rounded-[60px] border-4 border-dashed border-gourmet-green/10 p-20 text-center"
+                                        >
+                                            <div className="p-10 bg-gourmet-green/5 rounded-full mb-8 relative">
+                                                <PieChart className="w-20 h-20 text-gourmet-green opacity-20" />
+                                                <motion.div 
+                                                    animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                                    transition={{ duration: 2, repeat: Infinity }}
+                                                    className="absolute inset-0 border-4 border-gourmet-green/20 rounded-full"
+                                                />
+                                            </div>
+                                            <h4 className="text-2xl font-black text-gourmet-ink/60 uppercase tracking-tighter mb-2">Ready for planning?</h4>
+                                            <p className="text-gourmet-ink/30 font-bold max-w-sm">Select a date range to calculate needed ingredients and shopping list.</p>
+                                        </motion.div>
                                     )}
-
-                                    {calculatedIngredients.size === 0 && (
-                                        <TabEmptyState
-                                            title={t.warehouse.clickToCalc}
-                                            description={t.warehouse.calcDaysInfo}
-                                            icon={<Calculator className="mx-auto mb-3 size-6 text-muted-foreground" />}
-                                        />
-                                    )}
-                                </div>
+                                </AnimatePresence>
                             </div>
                         </TabsContent>
-
-
-
                     </Tabs>
-                </CardContent>
-            </Card>
-        </div>
+                </div>
+            </motion.div>
+        </TabsContent>
     );
 }
-
