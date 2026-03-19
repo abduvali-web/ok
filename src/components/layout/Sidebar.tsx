@@ -21,7 +21,6 @@ import {
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 type DividerItem = { id: string; type: 'divider' };
@@ -75,9 +74,9 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-72 -translate-x-full transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] overflow-x-hidden',
+          'fixed inset-y-0 left-0 z-50 w-72 -translate-x-full transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]',
           'border-r border-black/10 dark:border-white/[0.06] bg-gourmet-green/90 dark:bg-dark-green/90 backdrop-blur-2xl',
-          'md:relative md:translate-x-0 md:border-none md:w-36 md:m-4 md:rounded-[40px] md:bg-gourmet-green/40 md:dark:bg-dark-green/40 md:p-3 md:shadow-inner',
+          'md:relative md:translate-x-0 md:border-none md:w-32 md:m-4 md:rounded-[40px] md:bg-gourmet-green/40 md:dark:bg-dark-green/40 md:p-4 md:shadow-inner',
           isOpen && 'translate-x-0',
           className
         )}
@@ -106,7 +105,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
             </Button>
           </div>
 
-          <ScrollArea className="flex-1 py-4 md:py-2">
+          <div className="flex-1 py-4 md:py-2 overflow-y-auto overflow-x-visible">
             <nav className="flex flex-col items-center gap-2 md:gap-6 px-3 md:px-0 justify-start">
               {menuItems.map((item) => {
                 if ('type' in item) {
@@ -136,7 +135,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                     {isActive && (
                       <motion.div
                         layoutId="active-nav-bg"
-                        className="absolute inset-y-0 w-16 md:w-[120px] left-1/2 -translate-x-1/2 bg-gourmet-cream dark:bg-dark-surface rounded-[20px] md:rounded-[30px] shadow-[-10px_0_15px_rgba(0,0,0,0.05)] z-0 transition-colors duration-300"
+                        className="absolute inset-y-0 w-16 md:w-[121px] left-1/2 -translate-x-1/2 bg-gourmet-cream dark:bg-dark-surface rounded-[20px] md:rounded-[30px] shadow-[-10px_0_15px_rgba(0,0,0,0.05)] z-0 transition-colors duration-300"
                         transition={{ type: 'spring', stiffness: 200, damping: 30 }}
                       />
                     )}
@@ -183,7 +182,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                 );
               })}
             </nav>
-          </ScrollArea>
+          </div>
 
           <div className="px-3 pb-3 md:pb-2">
             <button
