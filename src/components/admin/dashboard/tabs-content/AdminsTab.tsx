@@ -676,7 +676,7 @@ export function AdminsTab({
                   }}
                   whileTap={{ x: 0 }}
                   onClick={openDatePicker}
-                  className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer"
+                  className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
                 >
                   <div className="w-[42px] h-[42px] md:w-full md:h-full rounded-full border-2 border-dashed border-white/10 flex items-center justify-center md:px-6">
                     <CalendarIcon className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text md:mr-3" />
@@ -695,7 +695,7 @@ export function AdminsTab({
                     whileTap={{ scale: 0.9 }}
                     onClick={openCreateModal}
                     disabled={isBulkMutating}
-                    className="w-[50px] h-[50px] bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                    className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
                     aria-label={t.admin.create}
                     title={t.admin.create}
                   >
@@ -710,7 +710,7 @@ export function AdminsTab({
                     whileTap={{ scale: 0.9 }}
                     onClick={() => void handleBulkToggleStatus()}
                     disabled={selectedAdminIds.size === 0 || isBulkMutating}
-                    className="w-[50px] h-[50px] bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                    className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
                     aria-label={shouldPauseSelectedAdmins ? t.admin.pause : t.admin.resume}
                     title={shouldPauseSelectedAdmins ? t.admin.pause : t.admin.resume}
                   >
@@ -729,7 +729,7 @@ export function AdminsTab({
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setIsBulkDeleteOpen(true)}
                     disabled={selectedAdminIds.size === 0 || isBulkMutating}
-                    className="w-[50px] h-[50px] bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                    className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
                     aria-label={t.admin.deleteSelected}
                     title={t.admin.deleteSelected}
                   >
@@ -744,7 +744,7 @@ export function AdminsTab({
                     whileTap={{ scale: 0.8 }}
                     onClick={() => void handleRefresh()}
                     disabled={isRefreshing}
-                    className="w-[50px] h-[50px] bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                    className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
                     aria-label={profileUiText?.refresh ?? 'Refresh'}
                     title={profileUiText?.refresh ?? 'Refresh'}
                   >
@@ -760,7 +760,7 @@ export function AdminsTab({
                   whileTap={{ scale: 0.8 }}
                   onClick={() => void handleRefresh()}
                   disabled={isRefreshing}
-                  className="w-[50px] h-[50px] bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                  className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
                   aria-label={profileUiText?.refresh ?? 'Refresh'}
                   title={profileUiText?.refresh ?? 'Refresh'}
                 >
@@ -783,7 +783,7 @@ export function AdminsTab({
               }
 
               const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text'
-              const cellBorder = 'border-l border-black/5 dark:border-white/5'
+              const cellBorder = 'border-l-2 border-dashed border-gourmet-green/25 dark:border-white/10'
 
               return (
                 <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 overflow-hidden relative">
@@ -827,13 +827,13 @@ export function AdminsTab({
                             <TableRow
                               key={admin.id}
                               className={cn(
-                                'h-12 transition-colors border-t border-black/5 dark:border-white/5',
+                                'h-12 transition-colors border-t border-gourmet-green/15 dark:border-white/10',
                                 index % 2 === 0
                                   ? 'bg-gourmet-cream dark:bg-dark-surface'
                                   : 'bg-gourmet-cream/40 dark:bg-dark-green/20',
                                 !isLowAdminView &&
                                   'cursor-pointer hover:bg-gourmet-green/10 dark:hover:bg-dark-green/30',
-                                isSelected && "relative before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-gourmet-orange before:rounded-r-full"
+                                isSelected && 'bg-gourmet-green/10 dark:bg-dark-green/30'
                               )}
                               onClick={() => {
                                 if (isLowAdminView) return
@@ -845,7 +845,11 @@ export function AdminsTab({
                                 openEditModal(admin)
                               }}
                             >
-                              <TableCell className="w-[18px] px-0" />
+                              <TableCell className="w-[18px] px-0">
+                                <div className="h-full flex items-center justify-start">
+                                  {isSelected ? <div className="w-1.5 h-8 bg-gourmet-orange rounded-r-full" /> : null}
+                                </div>
+                              </TableCell>
                               <TableCell className="pl-4 md:pl-6 font-bold text-gourmet-ink dark:text-dark-text">
                                 {admin.name}
                               </TableCell>
@@ -896,6 +900,7 @@ export function AdminsTab({
                                     label={t.admin.edit}
                                     variant="outline"
                                     iconSize="sm"
+                                    className="border-black/10 bg-gourmet-green/25 hover:bg-gourmet-green/35 dark:bg-dark-green/35 dark:hover:bg-dark-green/45"
                                     onClick={() => openEditModal(admin)}
                                     disabled={Boolean(pendingAction) || isBulkMutating}
                                   >
@@ -1007,7 +1012,7 @@ export function AdminsTab({
                     <button
                       type="button"
                       onClick={applyDraftRange}
-                      className="bg-dark-green text-gourmet-ink dark:text-dark-text px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-green-500/20 hover:scale-105 active:scale-95 transition-all"
+                      className="bg-gourmet-green dark:bg-dark-green text-gourmet-ink dark:text-dark-text px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-green-500/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
                     >
                       Tayyor
                     </button>
