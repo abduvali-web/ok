@@ -1324,7 +1324,10 @@ export default function DatabasePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6">
+    <div className="min-h-screen bg-gourmet-cream dark:bg-dark-surface p-4 sm:p-6 lg:p-10 font-sans transition-colors duration-500 overflow-hidden relative text-gourmet-ink dark:text-dark-text">
+      <div className="fixed top-[-20%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-gourmet-green/5 dark:bg-dark-green/5 blur-[120px] pointer-events-none" />
+      <div className="fixed bottom-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-gourmet-green/10 dark:bg-dark-green/10 blur-[100px] pointer-events-none" />
+
       <input
         ref={fileInputRef}
         type="file"
@@ -1341,27 +1344,33 @@ export default function DatabasePage() {
         onChange={(event) => void handleImportAllSheetsFileChosen(event.target.files?.[0] ?? null)}
         aria-hidden
       />
-      <Card className="overflow-hidden">
-        <CardHeader className="border-b">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="h-4 w-4" />
-                {uiText.workspaceTitle}
-              </CardTitle>
-              <CardDescription>
+
+      <div className="mx-auto w-full max-w-[1400px]">
+        <div className="bg-white/50 dark:bg-white/[0.02] backdrop-blur-2xl rounded-[40px] border-2 border-dashed border-gourmet-ink/10 dark:border-white/10 shadow-2xl overflow-hidden relative p-6 md:p-8 lg:p-12 mb-8 content-card">
+          <div className="absolute top-[-10%] right-[-5%] opacity-[0.03] dark:opacity-[0.01] rotate-12 scale-[2] pointer-events-none">
+            <Database className="w-96 h-96 text-gourmet-ink dark:text-white" />
+          </div>
+
+          <div className="relative z-10 flex flex-col xl:flex-row xl:items-end justify-between gap-8 mb-8 pb-8 border-b-2 border-dashed border-gourmet-ink/10 dark:border-white/10">
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Button asChild variant="outline" size="icon" className="w-[50px] h-[50px] rounded-full border-b-4 border-black/10 hover:bg-gourmet-green hover:text-white dark:hover:bg-dark-green transition-all" aria-label={uiText.backToMiddleAdmin} title={uiText.backToMiddleAdmin}>
+                  <Link href="/middle-admin">
+                    <ArrowLeft className="h-5 w-5" />
+                  </Link>
+                </Button>
+                <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter flex items-center gap-4">
+                  <Database className="h-8 w-8 md:h-12 md:w-12 text-gourmet-green dark:text-dark-green" />
+                  {uiText.workspaceTitle}
+                </h1>
+              </div>
+              <p className="text-sm font-bold tracking-widest uppercase opacity-50 ml-[66px]">
                 {uiText.workspaceDescription(snapshot?.scope ?? uiText.unknownScope, lastSyncedLabel)}
-              </CardDescription>
+              </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <Button asChild variant="outline" size="icon" aria-label={uiText.backToMiddleAdmin} title={uiText.backToMiddleAdmin}>
-                <Link href="/middle-admin">
-                  <ArrowLeft className="h-4 w-4" />
-                  <span className="sr-only">{uiText.backToMiddleAdmin}</span>
-                </Link>
-              </Button>
-              <div className="hidden text-sm text-muted-foreground sm:block">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="hidden text-sm font-bold uppercase tracking-widest opacity-50 sm:block mr-4 border-r-2 border-dashed border-black/10 dark:border-white/10 pr-4">
                 {tables.length} {uiText.sheetsCount}
               </div>
               
@@ -1370,11 +1379,11 @@ export default function DatabasePage() {
                 onChange={setDate}
                 uiText={{
                   calendar: menuChip,
+                  allTime: uiText.allTime,
                   today: uiText.today,
                   thisWeek: uiText.thisWeek,
                   thisMonth: uiText.thisMonth,
                   clearRange: uiText.clearRange,
-                  allTime: uiText.allTime,
                 }}
                 locale={language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'}
               />
@@ -1383,6 +1392,7 @@ export default function DatabasePage() {
                 label={uiText.refresh}
                 variant="outline"
                 iconSize="md"
+                className="h-[50px] rounded-2xl border-b-4 border-black/10"
                 onClick={() => void loadSnapshot(true)}
                 disabled={isRefreshing}
               >
@@ -1392,6 +1402,7 @@ export default function DatabasePage() {
                 label={uiText.downloadAllSheets}
                 variant="outline"
                 iconSize="md"
+                className="h-[50px] rounded-2xl border-b-4 border-black/10"
                 onClick={handleDownloadUnifiedSnapshotClick}
               >
                 <Download className="h-4 w-4" />
@@ -1400,6 +1411,7 @@ export default function DatabasePage() {
                 label={isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}
                 variant="outline"
                 iconSize="md"
+                className="h-[50px] rounded-2xl border-b-4 border-black/10"
                 onClick={handleImportAllSheetsClick}
                 disabled={isImportingAllSheets}
               >
@@ -1409,35 +1421,32 @@ export default function DatabasePage() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <IconButton label="Profile" variant="ghost" iconSize="md">
-                    <CircleUser className="h-4 w-4" />
+                  <IconButton label="Profile" variant="ghost" iconSize="md" className="h-[50px] rounded-2xl border-b-4 border-black/10">
+                    <CircleUser className="h-5 w-5" />
                   </IconButton>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild className="gap-2">
-                    <Link href="/middle-admin?chat=1">
-                      <MessageSquare className="h-4 w-4" />
-                      <span>Chat</span>
-                    </Link>
+                <DropdownMenuContent align="end" className="min-w-[240px] rounded-3xl border-none shadow-2xl p-2 bg-white/90 backdrop-blur-3xl animate-in fade-in zoom-in-95">
+                  <DropdownMenuItem onSelect={() => window.dispatchEvent(new Event("tambo:open-chat"))} className="h-12 rounded-2xl gap-3 font-bold hover:bg-gourmet-green/10">
+                    <MessageSquare className="h-5 w-5 opacity-60" />
+                    <span>Chat</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="gap-2">
+                  <DropdownMenuItem asChild className="h-12 rounded-2xl gap-3 font-bold hover:bg-gourmet-green/10">
                     <Link href="/middle-admin?settings=1">
-                      <Settings className="h-4 w-4" />
+                      <Settings className="h-5 w-5 opacity-60" />
                       <span>Settings</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={() => void handleLogout()} className="gap-2 text-rose-600 focus:text-rose-600">
-                    <LogOut className="h-4 w-4" />
+                  <DropdownMenuSeparator className="bg-slate-100" />
+                  <DropdownMenuItem onSelect={() => void handleLogout()} className="h-12 rounded-2xl gap-3 text-rose-600 focus:text-rose-600 font-bold hover:bg-rose-50">
+                    <LogOut className="h-5 w-5" />
                     <span>Logout</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
-        </CardHeader>
 
-        <CardContent className="space-y-4 p-4">
+          <div className="space-y-6 relative z-10">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <SearchPanel value={tableQuery} onChange={setTableQuery} placeholder={uiText.searchTables} />
 
@@ -1767,8 +1776,9 @@ export default function DatabasePage() {
               </TabsContent>
             ))}
           </Tabs>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+      </div>
     </div>
   )
 }

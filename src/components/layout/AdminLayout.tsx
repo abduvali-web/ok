@@ -178,7 +178,7 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
                     <span>Database Engine</span>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onSelect={() => openModalParam('chat')} className="h-12 rounded-2xl gap-3 font-bold hover:bg-gourmet-green/10">
+                <DropdownMenuItem onSelect={() => window.dispatchEvent(new Event("tambo:open-chat"))} className="h-12 rounded-2xl gap-3 font-bold hover:bg-gourmet-green/10">
                   <MessageSquare className="h-5 w-5 opacity-60" />
                   <span>Communication Hub</span>
                 </DropdownMenuItem>

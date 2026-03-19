@@ -109,7 +109,6 @@ import { PLAN_TYPES } from '@/lib/menuData'
 import Link from 'next/link'
 
 // Specialized tabs
-import { StatisticsTab } from './dashboard/tabs-content/StatisticsTab'
 import { OrdersTab } from './dashboard/tabs-content/OrdersTab'
 import { ClientsTab } from './dashboard/tabs-content/ClientsTab'
 import { AdminsTab } from './dashboard/tabs-content/AdminsTab'
@@ -191,12 +190,10 @@ const AdminDashboardPage = ({ mode }: { mode?: 'middle' | 'low' }) => {
   // Search state
   const [clientSearchTerm, setClientSearchTerm] = useState('')
 
-  // Modal states
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
   const [isOrderDetailsModalOpen, setIsOrderDetailsModalOpen] = useState(false)
   const [isCreateClientModalOpen, setIsCreateClientModalOpen] = useState(false)
   const [isDispatchOpen, setIsDispatchOpen] = useState(false)
-  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
   const [isDeleteClientsDialogOpen, setIsDeleteClientsDialogOpen] = useState(false)
 
   // Sub-modal entities
@@ -565,7 +562,6 @@ const AdminDashboardPage = ({ mode }: { mode?: 'middle' | 'low' }) => {
   const tabsCopy = useMemo(() => {
     if (language === 'ru') {
       return {
-        statistics: 'Статистика',
         orders: 'Заказы',
         clients: 'Клиенты',
         admins: 'Админы',
@@ -577,7 +573,6 @@ const AdminDashboardPage = ({ mode }: { mode?: 'middle' | 'low' }) => {
       }
     }
     return {
-      statistics: 'Statistics',
       orders: 'Orders',
       clients: 'Clients',
       admins: 'Admins',
@@ -636,37 +631,8 @@ const AdminDashboardPage = ({ mode }: { mode?: 'middle' | 'low' }) => {
         {/* Main Dashboard Tabs Container */}
         <div className="flex-1 min-h-0 flex flex-col p-4 md:p-8 lg:p-12">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col min-h-0">
-            
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 lg:mb-12 relative z-50">
-              <div className="flex items-center gap-4 group">
-                <div className="p-3 bg-gourmet-green dark:bg-dark-green rounded-2xl shadow-lg group-hover:rotate-12 transition-transform duration-500">
-                  <LayoutDashboard className="w-6 h-6 text-gourmet-cream" />
-                </div>
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-black text-gourmet-ink dark:text-dark-text tracking-tighter uppercase">
-                    {profileUiText.dashboardTitle}
-                  </h1>
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30">Management Hub v2.0</p>
-                </div>
-              </div>
-
-              <TabsList className="bg-white/40 dark:bg-dark-green/20 backdrop-blur-3xl border border-white/20 p-1 rounded-[32px] h-14 md:h-16 flex items-center shadow-2xl">
-                {Object.entries(tabsCopy).map(([key, label]) => (
-                  <TabsTrigger 
-                    key={key} 
-                    value={key}
-                    className="rounded-full px-4 md:px-8 h-full data-[state=active]:bg-gourmet-green dark:data-[state=active]:bg-dark-green data-[state=active]:text-gourmet-cream font-bold uppercase tracking-widest text-[10px] md:text-xs transition-all duration-500"
-                  >
-                    {label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
-
             <div className="flex-1 min-h-0 relative">
               <AnimatePresence mode="wait">
-                {/* Statistics Tab */}
-                <StatisticsTab key="statistics" stats={stats} />
 
                 {/* Orders Tab */}
                 <OrdersTab
@@ -898,11 +864,6 @@ const AdminDashboardPage = ({ mode }: { mode?: 'middle' | 'low' }) => {
             />
           )}
 
-          <ChangePasswordModal
-            isOpen={isChangePasswordOpen}
-            onClose={() => setIsChangePasswordOpen(false)}
-          />
-
           <Dialog open={isDeleteClientsDialogOpen} onOpenChange={setIsDeleteClientsDialogOpen}>
             <DialogContent className="rounded-[40px] border-none shadow-2xl bg-white/90 backdrop-blur-3xl p-10">
               <DialogHeader>
@@ -924,26 +885,6 @@ const AdminDashboardPage = ({ mode }: { mode?: 'middle' | 'low' }) => {
             </DialogContent>
           </Dialog>
         </AnimatePresence>
-
-        {/* Floating Utility actions */}
-        <div className="fixed bottom-10 right-10 flex flex-col gap-4 z-[100]">
-           <motion.button 
-             whileHover={{ scale: 1.1, rotate: 15 }}
-             whileTap={{ scale: 0.9 }}
-             onClick={() => setIsChangePasswordOpen(true)}
-             className="w-14 h-14 bg-white/80 dark:bg-dark-green/40 backdrop-blur-xl border border-white/20 rounded-full shadow-2xl flex items-center justify-center text-gourmet-ink dark:text-dark-text"
-           >
-             <Key className="w-6 h-6" />
-           </motion.button>
-           <motion.button 
-             whileHover={{ scale: 1.1, rotate: -15 }}
-             whileTap={{ scale: 0.9 }}
-             onClick={() => signOut()}
-             className="w-14 h-14 bg-rose-500 rounded-full shadow-2xl flex items-center justify-center text-white"
-           >
-             <LogOut className="w-6 h-6" />
-           </motion.button>
-        </div>
 
       </div>
     </AdminLayout>

@@ -28,7 +28,6 @@ export type DashboardTabMeta = {
 }
 
 export const DASHBOARD_TAB_ORDER: CanonicalTabId[] = [
-  'statistics',
   'orders',
   'clients',
   'admins',
@@ -40,11 +39,6 @@ export const DASHBOARD_TAB_ORDER: CanonicalTabId[] = [
 ]
 
 export const DASHBOARD_TAB_META: Record<CanonicalTabId, DashboardTabMeta> = {
-  statistics: {
-    icon: BarChart3,
-    desktopAccent: 'data-[state=active]:text-emerald-600',
-    mobileAccent: 'bg-emerald-500',
-  },
   orders: {
     icon: Package,
     desktopAccent: 'data-[state=active]:text-teal-600',
@@ -89,7 +83,6 @@ export const DASHBOARD_TAB_META: Record<CanonicalTabId, DashboardTabMeta> = {
 
 export function getDashboardTabLabels(t: DashboardTabCopySource): Record<CanonicalTabId, string> {
   return {
-    statistics: t.admin.statistics,
     orders: t.admin.orders,
     clients: t.admin.clients,
     admins: t.admin.admins,
