@@ -115,6 +115,7 @@ import {
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import { SearchPanel } from '@/components/ui/search-panel'
+import { AdminLayout } from '@/components/layout/AdminLayout'
 import type { DateRange } from 'react-day-picker'
 
 const OrdersTable = dynamic(
@@ -2280,106 +2281,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-14">
-            <div className="flex items-center gap-4">
-              <h1 className="text-base font-semibold tracking-tight hidden md:block">{t.admin.dashboard}</h1>
-              <span className="hidden md:block text-xs text-muted-foreground">|</span>
-              <span className="text-xs text-muted-foreground hidden md:block">
-                {currentDate || ' '}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <IconButton
-                label={
-                  adminSettingsMounted
-                    ? `${t.admin.theme}: ${
-                        adminSettings.theme === 'system'
-                          ? t.admin.system
-                          : adminSettings.theme === 'dark'
-                            ? t.admin.dark
-                            : t.admin.light
-                      }`
-                    : t.admin.theme
-                }
-                type="button"
-                variant="outline"
-                iconSize="md"
-                onClick={() => {
-                  const next =
-                    adminSettings.theme === 'light' ? 'dark' : adminSettings.theme === 'dark' ? 'system' : 'light'
-                  updateAdminSettings({ theme: next })
-                }}
-              >
-                {adminSettings.theme === 'dark' ? (
-                  <Moon className="h-4 w-4" />
-                ) : adminSettings.theme === 'system' ? (
-                  <Monitor className="h-4 w-4" />
-                ) : (
-                  <Sun className="h-4 w-4" />
-                )}
-              </IconButton>
-              <LanguageSwitcher />
-              <div className="hidden md:block">
-                <TrialStatus compact />
-              </div>
-              {isMiddleAdminView && (
-                <Button
-                  asChild
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 md:hidden"
-                  aria-label={profileUiText.database}
-                  title={profileUiText.database}
-                >
-                  <Link href="/middle-admin/database">
-                    <Database className="w-4 h-4" />
-                  </Link>
-                </Button>
-              )}
-              {isMiddleAdminView && (
-                <Button
-                  asChild
-                  variant="ghost"
-                  size="icon"
-                  className="hidden md:inline-flex h-9 w-9"
-                  aria-label={profileUiText.database}
-                  title={profileUiText.database}
-                >
-                  <Link href="/middle-admin/database">
-                    <Database className="w-4 h-4" />
-                  </Link>
-                </Button>
-              )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <IconButton label="Profile" variant="ghost" iconSize="md" className="h-9 w-9">
-                    <CircleUser className="h-4 w-4" />
-                  </IconButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onSelect={() => setIsChatOpen(true)} className="gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    <span>{profileUiText.messages}</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setIsSettingsOpen(true)} className="gap-2">
-                    <Settings className="h-4 w-4" />
-                    <span>{t.admin.settings}</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={() => void handleLogout()} className="gap-2 text-rose-600 focus:text-rose-600">
-                    <LogOut className="h-4 w-4" />
-                    <span>{t.common.logout}</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </div>
-      </header>
+    <AdminLayout activeTab={activeTab} onTabChange={setActiveTab} onLogout={() => void handleLogout()}>
 
       <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
         {/* Mobile PWA: full-screen dialog (like dispatch panel). Desktop: centered large modal. */}
@@ -2497,12 +2399,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         </DialogContent>
       </Dialog>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <DesktopTabsNav
-            visibleTabs={visibleTabs}
-            copy={tabsCopy}
-          />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
 
           {!isMiddleAdminView && (
             <>
@@ -3801,7 +3698,6 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
 
         </Tabs>
-      </main >
       {/* Bulk edit modals intentionally removed for compact CRM layout */}
 
       <AlertDialog open={isDeleteOrdersDialogOpen} onOpenChange={setIsDeleteOrdersDialogOpen}>
@@ -4148,7 +4044,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         </DialogContent>
       </Dialog>
 
-    </div>
+    </AdminLayout>
   )
 }
 
