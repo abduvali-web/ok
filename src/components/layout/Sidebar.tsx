@@ -3,18 +3,13 @@
 import type React from 'react';
 import { motion } from 'framer-motion';
 import {
-  BarChart3,
   ChefHat,
   DollarSign,
   History,
-  LogOut,
   MessageSquare,
   Package,
-  Settings,
   ShoppingCart,
   Trash2,
-  Truck,
-  User,
   Users,
   X,
 } from 'lucide-react';
@@ -40,27 +35,21 @@ interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   onLogout: () => void;
 }
 
-export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, onLogout }: SidebarProps) {
+export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, onLogout: _onLogout }: SidebarProps) {
   const { t, language } = useLanguage();
 
   const menuItems: MenuItem[] = [
-    { id: 'statistics', label: t.admin.statistics, icon: BarChart3, badge: null },
     { id: 'orders', label: t.admin.orders, icon: ShoppingCart, badge: 0 },
     { id: 'clients', label: t.admin.clients, icon: Users, badge: null },
     { id: 'admins', label: t.admin.admins, icon: Users, badge: null },
-    { id: 'couriers', label: t.admin.couriers, icon: Truck, badge: null },
     { id: 'divider-1', type: 'divider' },
     { id: 'warehouse', label: t.warehouse.title, icon: Package, badge: null },
-    { id: 'cooking', label: t.warehouse.cooking, icon: ChefHat, badge: null },
     { id: 'divider-2', type: 'divider' },
     { id: 'finance', label: t.finance.title, icon: DollarSign, badge: null },
     { id: 'history', label: t.admin.history, icon: History, badge: null },
     { id: 'divider-3', type: 'divider' },
     { id: 'chat', label: t.courier.chat, icon: MessageSquare, badge: null },
     { id: 'bin', label: t.admin.bin, icon: Trash2, badge: null },
-    { id: 'divider-4', type: 'divider' },
-    { id: 'profile', label: t.common.profile, icon: User, badge: null },
-    { id: 'settings', label: t.admin.settings, icon: Settings, badge: null },
   ];
 
   return (
@@ -184,21 +173,6 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
             </nav>
           </div>
 
-          <div className="px-3 pb-3 md:pb-2">
-            <button
-              onClick={onLogout}
-              className="w-full flex flex-col items-center gap-1 md:gap-2 group relative py-2 md:py-4 transition-all duration-300"
-            >
-              <div className="w-12 h-12 md:w-24 md:h-24 rounded-full flex items-center justify-center relative transition-all overflow-hidden bg-white dark:bg-dark-surface shadow-lg border-b-4 border-black/10 dark:border-white/10">
-                <div className="w-10 h-10 md:w-20 md:h-20 rounded-full flex items-center justify-center border-2 border-dashed border-black/10 dark:border-white/10 relative z-10">
-                  <LogOut className="w-5 h-5 md:w-10 md:h-10 text-rose-600 dark:text-rose-400" />
-                </div>
-              </div>
-              <span className="text-[10px] md:text-sm font-bold text-rose-600 dark:text-rose-400 text-center px-2 truncate w-full">
-                {t.common.logout}
-              </span>
-            </button>
-          </div>
         </div>
       </aside>
     </>
