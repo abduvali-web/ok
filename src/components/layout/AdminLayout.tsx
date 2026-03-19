@@ -73,8 +73,8 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
             <Utensils className="w-6 h-6 md:w-10 md:h-10 text-gourmet-ink dark:text-dark-text" />
           </motion.div>
           <div className="min-w-0">
-            <h1 className="text-xl md:text-2xl font-bold text-gourmet-green tracking-tight truncate">Gourmet</h1>
-            <p className="hidden md:block text-sm text-gourmet-green font-medium truncate">
+            <h1 className="text-xl md:text-2xl font-bold text-gourmet-green-light dark:text-gourmet-green tracking-tight truncate">Gourmet</h1>
+            <p className="hidden md:block text-sm text-gourmet-green-light dark:text-gourmet-green font-medium truncate">
               Management V1
             </p>
           </div>
