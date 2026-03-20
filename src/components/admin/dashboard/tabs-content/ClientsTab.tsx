@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Calendar as CalendarIcon,
   Plus,
@@ -16,6 +16,21 @@ import {
   Edit,
   Utensils,
 } from 'lucide-react'
+import {
+  addDays,
+  addMonths,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isBefore,
+  isSameDay,
+  isSameMonth,
+  isWithinInterval,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+  subMonths,
+} from 'date-fns'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Button } from '@/components/ui/button'
@@ -30,7 +45,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
 import type { Client } from '@/components/admin/dashboard/types'
 import type { DateRange } from 'react-day-picker'
 
@@ -84,6 +98,28 @@ export function ClientsTab({
   const { t, language } = useLanguage()
   const [searchTerm, setSearchTerm] = useState('')
 
+  // Calendar dialog state
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+  const [currentMonth, setCurrentMonth] = useState<Date>(() =>
+    startOfDay(selectedPeriod?.from ?? selectedDate ?? new Date())
+  )
+  const [draftStartDate, setDraftStartDate] = useState<Date>(() =>
+    startOfDay(selectedPeriod?.from ?? selectedDate ?? new Date())
+  )
+  const [draftEndDate, setDraftEndDate] = useState<Date | null>(() =>
+    selectedPeriod?.to ? startOfDay(selectedPeriod.to) : null
+  )
+
+  // Lock body scroll when dialog is open
+  useEffect(() => {
+    if (!isDatePickerOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [isDatePickerOpen])
+
   const filteredClients = useMemo(() => {
     const q = searchTerm.trim().toLowerCase()
     if (!q) return clients
@@ -97,7 +133,127 @@ export function ClientsTab({
   }, [clients, searchTerm])
 
   const dateLocale = language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'
-  const appliedRangeLabel = selectedPeriodLabel || 'All time'
+
+  const appliedRangeLabel = useMemo(() => {
+    const from = selectedPeriod?.from ?? selectedDate ?? null
+    const to = selectedPeriod?.to ?? null
+    if (!from) return selectedPeriodLabel || 'All time'
+    if (to && !isSameDay(from, to)) return `${format(from, 'd-MMM')} - ${format(to, 'd-MMM, yyyy')}`
+    return format(from, 'd-MMM, yyyy')
+  }, [selectedDate, selectedPeriod?.from, selectedPeriod?.to, selectedPeriodLabel])
+
+  const openDatePicker = useCallback(() => {
+    const from = startOfDay(selectedPeriod?.from ?? selectedDate ?? new Date())
+    const to = selectedPeriod?.to ? startOfDay(selectedPeriod.to) : null
+    setDraftStartDate(from)
+    setDraftEndDate(to && !isSameDay(from, to) ? to : null)
+    setCurrentMonth(from)
+    setIsDatePickerOpen(true)
+  }, [selectedDate, selectedPeriod?.from, selectedPeriod?.to])
+
+  const closeDatePicker = useCallback(() => setIsDatePickerOpen(false), [])
+
+  const handleDateClick = useCallback(
+    (day: Date) => {
+      const normalized = startOfDay(day)
+      if (!draftStartDate || (draftStartDate && draftEndDate)) {
+        setDraftStartDate(normalized)
+        setDraftEndDate(null)
+        return
+      }
+
+      if (draftStartDate && !draftEndDate) {
+        if (isBefore(normalized, draftStartDate)) {
+          setDraftStartDate(normalized)
+          setDraftEndDate(null)
+          return
+        }
+
+        if (isSameDay(normalized, draftStartDate)) {
+          return
+        }
+
+        setDraftEndDate(normalized)
+      }
+    },
+    [draftEndDate, draftStartDate]
+  )
+
+  const renderCalendar = useCallback(() => {
+    const monthStart = startOfMonth(currentMonth)
+    const monthEnd = endOfMonth(monthStart)
+    const startDateView = startOfWeek(monthStart, { weekStartsOn: 1 })
+    const endDateView = endOfWeek(monthEnd, { weekStartsOn: 1 })
+
+    const rows: any[] = []
+    let days: any[] = []
+    let day = startDateView
+    const dateFormat = 'd'
+
+    while (day <= endDateView) {
+      for (let i = 0; i < 7; i++) {
+        const cloneDay = day
+        const isSelected =
+          (draftStartDate && isSameDay(cloneDay, draftStartDate)) || (draftEndDate && isSameDay(cloneDay, draftEndDate))
+        const isInRange =
+          draftStartDate && draftEndDate && isWithinInterval(cloneDay, { start: draftStartDate, end: draftEndDate })
+        const isCurrentMonth = isSameMonth(cloneDay, monthStart)
+
+        days.push(
+          <div
+            key={day.toString()}
+            className={cn(
+              'relative p-1 md:p-2 text-center cursor-pointer transition-all duration-200 rounded-lg md:rounded-xl',
+              !isCurrentMonth ? 'text-gourmet-ink/40 dark:text-dark-text/40' : 'text-gourmet-ink dark:text-dark-text',
+              isSelected
+                ? 'bg-dark-green text-gourmet-ink dark:text-dark-text shadow-md z-10'
+                : 'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40',
+              isInRange && !isSelected ? 'bg-dark-green/20' : ''
+            )}
+            onClick={() => handleDateClick(cloneDay)}
+          >
+            <span className="relative z-10 font-bold text-xs md:text-base">{format(cloneDay, dateFormat)}</span>
+          </div>
+        )
+        day = addDays(day, 1)
+      }
+      rows.push(
+        <div className="grid grid-cols-7 gap-1" key={day.toString()}>
+          {days}
+        </div>
+      )
+      days = []
+    }
+    return <div className="flex flex-col gap-1">{rows}</div>
+  }, [currentMonth, draftEndDate, draftStartDate, handleDateClick])
+
+  const applyDraftRange = useCallback(() => {
+    if (typeof applySelectedPeriod === 'function') {
+      applySelectedPeriod({ from: draftStartDate, to: draftEndDate ?? draftStartDate })
+      closeDatePicker()
+      return
+    }
+
+    if (typeof applySelectedDate === 'function') {
+      applySelectedDate(draftStartDate)
+    }
+    closeDatePicker()
+  }, [applySelectedDate, applySelectedPeriod, closeDatePicker, draftEndDate, draftStartDate])
+
+  const resetDraftRange = useCallback(() => {
+    const today = startOfDay(new Date())
+    setDraftStartDate(today)
+    setDraftEndDate(null)
+    setCurrentMonth(today)
+
+    if (typeof applySelectedPeriod === 'function') {
+      applySelectedPeriod({ from: today, to: today })
+    } else if (typeof applySelectedDate === 'function') {
+      applySelectedDate(today)
+    }
+
+    closeDatePicker()
+  }, [applySelectedDate, applySelectedPeriod, closeDatePicker])
 
   const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text'
   const cellBorder = 'border-l-2 border-dashed border-gourmet-green/25 dark:border-white/10'
@@ -157,37 +313,22 @@ export function ClientsTab({
           </motion.div>
 
           <div className="flex items-center gap-2 md:gap-4 overflow-x-auto lg:overflow-visible py-4 lg:py-6 no-scrollbar">
-            <div className="relative flex-shrink-0">
-              <CalendarDateSelector
-                selectedDate={selectedDate}
-                applySelectedDate={applySelectedDate}
-                shiftSelectedDate={shiftSelectedDate}
-                selectedDateLabel={selectedPeriodLabel}
-                selectedPeriod={selectedPeriod}
-                applySelectedPeriod={applySelectedPeriod}
-                showShiftButtons={false}
-                locale={dateLocale}
-                profileUiText={profileUiText}
-                customTrigger={(open) => (
-                    <motion.div
-                    whileHover={{
-                        x: [0, -5],
-                        transition: { x: { duration: 1, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' } },
-                    }}
-                    whileTap={{ x: 0 }}
-                    onClick={open}
-                    className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
-                    >
-                    <div className="w-[42px] h-[42px] md:w-full md:h-full rounded-full border-2 border-dashed border-white/10 flex items-center justify-center md:px-6">
-                        <CalendarIcon className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text md:mr-3" />
-                        <span className="hidden md:inline font-bold text-sm md:text-lg text-gourmet-ink dark:text-dark-text whitespace-nowrap">
-                        {appliedRangeLabel}
-                        </span>
-                    </div>
-                    </motion.div>
-                )}
-              />
-            </div>
+            <motion.button
+              whileHover={{
+                x: [0, -5],
+                transition: { x: { duration: 1, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' } },
+              }}
+              whileTap={{ x: 0 }}
+              onClick={openDatePicker}
+              className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
+            >
+              <div className="w-[42px] h-[42px] md:w-full md:h-full rounded-full border-2 border-dashed border-white/10 flex items-center justify-center md:px-6">
+                <CalendarIcon className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text md:mr-3" />
+                <span className="hidden md:inline font-bold text-sm md:text-lg text-gourmet-ink dark:text-dark-text whitespace-nowrap">
+                  {appliedRangeLabel}
+                </span>
+              </div>
+            </motion.button>
 
             <div className="flex gap-2 md:gap-4 items-center flex-shrink-0">
               <motion.button
@@ -305,9 +446,9 @@ export function ClientsTab({
                           {client.address}
                         </TableCell>
                         <TableCell className={cn('font-bold text-gourmet-ink dark:text-dark-text', cellBorder)}>
-                            <Badge variant="outline" className="border-gourmet-ink/20 text-gourmet-ink dark:border-white/20 dark:text-dark-text font-bold">
-                                {client.calories}
-                            </Badge>
+                          <Badge variant="outline" className="border-gourmet-ink/20 text-gourmet-ink dark:border-white/20 dark:text-dark-text font-bold">
+                            {client.calories}
+                          </Badge>
                         </TableCell>
                         <TableCell className={cn(cellBorder)}>
                           {isClientFinanceLoading ? (
@@ -352,6 +493,98 @@ export function ClientsTab({
           </div>
         </div>
       </motion.div>
+
+      {/* Calendar Dialog */}
+      <AnimatePresence>
+        {isDatePickerOpen && (
+          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeDatePicker}
+              className="absolute inset-0 bg-black/40 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative bg-gourmet-cream dark:bg-dark-surface rounded-3xl md:rounded-[40px] shadow-2xl border-2 border-gourmet-green/20 p-6 md:p-10 z-[1000] w-full max-w-[450px] mx-auto overflow-hidden transition-colors duration-300"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Calendar"
+            >
+              <button
+                type="button"
+                onClick={closeDatePicker}
+                className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-colors"
+                aria-label="Close"
+              >
+                <RotateCcw className="w-6 h-6 text-gourmet-ink dark:text-dark-text rotate-45" />
+              </button>
+
+              <div className="flex items-center justify-between mb-6 md:mb-8">
+                <button
+                  type="button"
+                  onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                >
+                  <RotateCcw className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text" />
+                </button>
+                <h3 className="text-xl md:text-2xl font-black text-gourmet-ink dark:text-dark-text">
+                  {format(currentMonth, 'MMMM yyyy')}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                >
+                  <RotateCcw className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text -rotate-180" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-7 gap-1 md:gap-2 mb-4">
+                {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map((d) => (
+                  <div
+                    key={d}
+                    className="text-center text-[10px] md:text-sm font-black text-gourmet-ink dark:text-dark-text uppercase tracking-widest py-2"
+                  >
+                    {d}
+                  </div>
+                ))}
+              </div>
+
+              <div className="text-base md:text-lg">{renderCalendar()}</div>
+
+              <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-gourmet-green/20">
+                <button
+                  type="button"
+                  onClick={resetDraftRange}
+                  className="text-sm md:text-base font-bold text-gourmet-ink dark:text-dark-text hover:text-gourmet-ink dark:hover:text-dark-text transition-colors"
+                >
+                  Reset
+                </button>
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={closeDatePicker}
+                    className="px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-sm md:text-base text-gourmet-ink dark:text-dark-text hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-all border border-gourmet-ink/5 sm:border-none"
+                  >
+                    Bekor qilish
+                  </button>
+                  <button
+                    type="button"
+                    onClick={applyDraftRange}
+                    className="bg-gourmet-green dark:bg-dark-green text-gourmet-ink dark:text-dark-text px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-green-500/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
+                  >
+                    Tayyor
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </TabsContent>
   )
 }

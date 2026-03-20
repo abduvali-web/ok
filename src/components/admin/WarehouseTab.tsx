@@ -25,7 +25,24 @@ import {
     ArrowRight,
     Clock,
     Info,
+    X,
+    Calendar as CalendarIcon,
 } from 'lucide-react';
+import {
+    addDays,
+    addMonths,
+    endOfMonth,
+    endOfWeek,
+    format,
+    isBefore,
+    isSameDay,
+    isSameMonth,
+    isWithinInterval,
+    startOfDay,
+    startOfMonth,
+    startOfWeek,
+    subMonths,
+} from 'date-fns';
 import { toast } from 'sonner';
 import {
     getTomorrowsMenuNumber,
@@ -41,7 +58,6 @@ import {
 
 import { IngredientsManager } from './warehouse/IngredientsManager';
 import { CookingManager } from './warehouse/CookingManager';
-import { CalendarRangeSelector } from '@/components/admin/dashboard/shared/CalendarRangeSelector'
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import type { DateRange } from 'react-day-picker'
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -91,6 +107,29 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         tomorrow.setHours(0, 0, 0, 0)
         return { from: tomorrow, to: tomorrow }
     })
+
+    // Calendar dialog state
+    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+    const [calendarMode, setCalendarMode] = useState<'cooking' | 'calc'>('cooking')
+    const [currentMonth, setCurrentMonth] = useState<Date>(() =>
+        startOfDay(cookingRange?.from ?? calcRange?.from ?? new Date())
+    )
+    const [draftStartDate, setDraftStartDate] = useState<Date>(() =>
+        startOfDay(cookingRange?.from ?? calcRange?.from ?? new Date())
+    )
+    const [draftEndDate, setDraftEndDate] = useState<Date | null>(() =>
+        (cookingRange?.to ?? calcRange?.to) ? startOfDay(cookingRange?.to ?? calcRange?.to ?? new Date()) : null
+    )
+
+    // Lock body scroll when dialog is open
+    useEffect(() => {
+        if (!isDatePickerOpen) return
+        const prev = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+        return () => {
+            document.body.style.overflow = prev
+        }
+    }, [isDatePickerOpen])
     const [selectedCookingDateISO, setSelectedCookingDateISO] = useState<string>(() => {
         const tomorrow = new Date()
         tomorrow.setDate(tomorrow.getDate() + 1)
@@ -153,6 +192,128 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             }
         }
     }, [language])
+
+    const appliedRangeLabel = useMemo(() => {
+        const range = calendarMode === 'cooking' ? cookingRange : calcRange
+        const from = range?.from ?? null
+        const to = range?.to ?? null
+        if (!from) return 'All time'
+        if (to && !isSameDay(from, to)) return `${format(from, 'd-MMM')} - ${format(to, 'd-MMM, yyyy')}`
+        return format(from, 'd-MMM, yyyy')
+    }, [cookingRange, calcRange, calendarMode])
+
+    const openDatePicker = useCallback((mode: 'cooking' | 'calc') => {
+        const range = mode === 'cooking' ? cookingRange : calcRange
+        const from = startOfDay(range?.from ?? new Date())
+        const to = range?.to ? startOfDay(range.to) : null
+        setDraftStartDate(from)
+        setDraftEndDate(to && !isSameDay(from, to) ? to : null)
+        setCurrentMonth(from)
+        setCalendarMode(mode)
+        setIsDatePickerOpen(true)
+    }, [cookingRange, calcRange])
+
+    const closeDatePicker = useCallback(() => setIsDatePickerOpen(false), [])
+
+    const handleDateClick = useCallback(
+        (day: Date) => {
+            const normalized = startOfDay(day)
+            if (!draftStartDate || (draftStartDate && draftEndDate)) {
+                setDraftStartDate(normalized)
+                setDraftEndDate(null)
+                return
+            }
+
+            if (draftStartDate && !draftEndDate) {
+                if (isBefore(normalized, draftStartDate)) {
+                    setDraftStartDate(normalized)
+                    setDraftEndDate(null)
+                    return
+                }
+
+                if (isSameDay(normalized, draftStartDate)) {
+                    return
+                }
+
+                setDraftEndDate(normalized)
+            }
+        },
+        [draftEndDate, draftStartDate]
+    )
+
+    const renderCalendar = useCallback(() => {
+        const monthStart = startOfMonth(currentMonth)
+        const monthEnd = endOfMonth(monthStart)
+        const startDateView = startOfWeek(monthStart, { weekStartsOn: 1 })
+        const endDateView = endOfWeek(monthEnd, { weekStartsOn: 1 })
+
+        const rows: any[] = []
+        let days: any[] = []
+        let day = startDateView
+        const dateFormat = 'd'
+
+        while (day <= endDateView) {
+            for (let i = 0; i < 7; i++) {
+                const cloneDay = day
+                const isSelected =
+                    (draftStartDate && isSameDay(cloneDay, draftStartDate)) || (draftEndDate && isSameDay(cloneDay, draftEndDate))
+                const isInRange =
+                    draftStartDate && draftEndDate && isWithinInterval(cloneDay, { start: draftStartDate, end: draftEndDate })
+                const isCurrentMonth = isSameMonth(cloneDay, monthStart)
+
+                days.push(
+                    <div
+                        key={day.toString()}
+                        className={cn(
+                            'relative p-1 md:p-2 text-center cursor-pointer transition-all duration-200 rounded-lg md:rounded-xl',
+                            !isCurrentMonth ? 'text-gourmet-ink/40 dark:text-dark-text/40' : 'text-gourmet-ink dark:text-dark-text',
+                            isSelected
+                                ? 'bg-dark-green text-gourmet-ink dark:text-dark-text shadow-md z-10'
+                                : 'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40',
+                            isInRange && !isSelected ? 'bg-dark-green/20' : ''
+                        )}
+                        onClick={() => handleDateClick(cloneDay)}
+                    >
+                        <span className="relative z-10 font-bold text-xs md:text-base">{format(cloneDay, dateFormat)}</span>
+                    </div>
+                )
+                day = addDays(day, 1)
+            }
+            rows.push(
+                <div className="grid grid-cols-7 gap-1" key={day.toString()}>
+                    {days}
+                </div>
+            )
+            days = []
+        }
+        return <div className="flex flex-col gap-1">{rows}</div>
+    }, [currentMonth, draftEndDate, draftStartDate, handleDateClick])
+
+    const applyDraftRange = useCallback(() => {
+        const range = { from: draftStartDate, to: draftEndDate ?? draftStartDate }
+        if (calendarMode === 'cooking') {
+            setCookingRange(range)
+        } else {
+            setCalcRange(range)
+        }
+        closeDatePicker()
+    }, [calendarMode, closeDatePicker, draftEndDate, draftStartDate])
+
+    const resetDraftRange = useCallback(() => {
+        const today = startOfDay(new Date())
+        setDraftStartDate(today)
+        setDraftEndDate(null)
+        setCurrentMonth(today)
+
+        const range = { from: today, to: today }
+        if (calendarMode === 'cooking') {
+            setCookingRange(range)
+        } else {
+            setCalcRange(range)
+        }
+
+        closeDatePicker()
+    }, [calendarMode, closeDatePicker])
 
     const cookingRangeDays = useMemo(() => {
         if (!cookingRange?.from) return [] as string[]
@@ -371,7 +532,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
 
                 <div className="flex-1 min-h-0 overflow-auto no-scrollbar pb-10 relative z-10">
                     <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="h-full flex flex-col">
-                        
+
                         <TabsContent value="cooking" className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <StatItem label={auditUiText.planned} value={cookingTotals.planned} sub="Portions total" color="text-gourmet-ink" dot="bg-gourmet-ink" icon={CookingPot} />
@@ -380,13 +541,17 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                             </div>
 
                             <div className="flex flex-wrap items-center gap-4 bg-white/20 dark:bg-dark-green/5 p-4 rounded-3xl border-2 border-dashed border-gourmet-green/20">
-                                <CalendarRangeSelector 
-                                    value={cookingRange} 
-                                    onChange={setCookingRange} 
-                                    locale={dateLocale}
-                                    uiText={auditUiText.calendarUiText}
-                                    className="bg-white/50 dark:bg-dark-green/20 rounded-2xl border-none shadow-inner"
-                                />
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => openDatePicker('cooking')}
+                                    className="bg-white/50 dark:bg-dark-green/20 rounded-2xl border-none shadow-inner px-4 py-2 flex items-center gap-2 cursor-pointer transition-colors"
+                                >
+                                    <CalendarIcon className="w-5 h-5 text-gourmet-ink dark:text-dark-text" />
+                                    <span className="font-bold text-sm text-gourmet-ink dark:text-dark-text">
+                                        {appliedRangeLabel}
+                                    </span>
+                                </motion.button>
                                 <Select value={cookingSelectedSetId} onValueChange={setCookingSelectedSetId}>
                                     <SelectTrigger className="h-12 w-[220px] rounded-2xl bg-white/50 dark:bg-dark-green/20 border-none shadow-inner">
                                         <SelectValue placeholder={auditUiText.setsTab} />
@@ -396,9 +561,9 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                         {availableSets.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
-                                <RefreshIconButton 
-                                    label={auditUiText.refresh} 
-                                    onClick={() => { fetchData(); refreshCookingPlansForRange(); }} 
+                                <RefreshIconButton
+                                    label={auditUiText.refresh}
+                                    onClick={() => { fetchData(); refreshCookingPlansForRange(); }}
                                     isLoading={isCookingPlansLoading}
                                     className="bg-gourmet-green dark:bg-dark-green text-gourmet-cream shadow-lg hover:shadow-2xl transition-all"
                                 />
@@ -415,7 +580,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                     selectedSetId={cookingSelectedSetId}
                                     onSelectedSetIdChange={setCookingSelectedSetId}
                                     selectedCalorieGroup="all"
-                                    onSelectedCalorieGroupChange={() => {}}
+                                    onSelectedCalorieGroupChange={() => { }}
                                     showHeader={false}
                                     showContextInfo={false}
                                     onCook={() => { fetchData(); refreshCookingPlansForRange(); }}
@@ -453,9 +618,19 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-4 p-4 bg-white/30 rounded-[40px] border border-white/40 shadow-xl">
-                                        <CalendarRangeSelector value={calcRange} onChange={setCalcRange} locale={dateLocale} uiText={auditUiText.calendarUiText} className="w-full bg-transparent border-none" />
-                                        <Button 
-                                            onClick={() => calculateForPeriod(calcRangeDays)} 
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={() => openDatePicker('calc')}
+                                            className="w-full bg-transparent border-none px-4 py-2 flex items-center gap-2 cursor-pointer transition-colors"
+                                        >
+                                            <CalendarIcon className="w-5 h-5 text-gourmet-ink dark:text-dark-text" />
+                                            <span className="font-bold text-sm text-gourmet-ink dark:text-dark-text">
+                                                {appliedRangeLabel}
+                                            </span>
+                                        </motion.button>
+                                        <Button
+                                            onClick={() => calculateForPeriod(calcRangeDays)}
                                             className="h-16 rounded-[32px] bg-gourmet-green hover:bg-gourmet-green/90 dark:bg-dark-green text-xl font-black uppercase tracking-widest shadow-2xl hover:scale-[1.02] transition-all"
                                         >
                                             Run Calculation
@@ -466,7 +641,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
 
                                 <AnimatePresence mode="wait">
                                     {calculatedIngredients.size > 0 ? (
-                                        <motion.div 
+                                        <motion.div
                                             key="results"
                                             initial={{ opacity: 0, x: 20 }}
                                             animate={{ opacity: 1, x: 0 }}
@@ -511,7 +686,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                             </div>
                                         </motion.div>
                                     ) : (
-                                        <motion.div 
+                                        <motion.div
                                             key="empty"
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
@@ -519,7 +694,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                         >
                                             <div className="p-10 bg-gourmet-green/5 rounded-full mb-8 relative">
                                                 <PieChart className="w-20 h-20 text-gourmet-green opacity-20" />
-                                                <motion.div 
+                                                <motion.div
                                                     animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                                                     transition={{ duration: 2, repeat: Infinity }}
                                                     className="absolute inset-0 border-4 border-gourmet-green/20 rounded-full"
@@ -535,6 +710,98 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                     </Tabs>
                 </div>
             </motion.div>
+
+            {/* Calendar Dialog */}
+            <AnimatePresence>
+                {isDatePickerOpen && (
+                    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={closeDatePicker}
+                            className="absolute inset-0 bg-black/40 backdrop-blur-md"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative bg-gourmet-cream dark:bg-dark-surface rounded-3xl md:rounded-[40px] shadow-2xl border-2 border-gourmet-green/20 p-6 md:p-10 z-[1000] w-full max-w-[450px] mx-auto overflow-hidden transition-colors duration-300"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label="Calendar"
+                        >
+                            <button
+                                type="button"
+                                onClick={closeDatePicker}
+                                className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-colors"
+                                aria-label="Close"
+                            >
+                                <X className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                            </button>
+
+                            <div className="flex items-center justify-between mb-6 md:mb-8">
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                                >
+                                    <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text" />
+                                </button>
+                                <h3 className="text-xl md:text-2xl font-black text-gourmet-ink dark:text-dark-text">
+                                    {format(currentMonth, 'MMMM yyyy')}
+                                </h3>
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                                >
+                                    <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text" />
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-7 gap-1 md:gap-2 mb-4">
+                                {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map((d) => (
+                                    <div
+                                        key={d}
+                                        className="text-center text-[10px] md:text-sm font-black text-gourmet-ink dark:text-dark-text uppercase tracking-widest py-2"
+                                    >
+                                        {d}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="text-base md:text-lg">{renderCalendar()}</div>
+
+                            <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-gourmet-green/20">
+                                <button
+                                    type="button"
+                                    onClick={resetDraftRange}
+                                    className="text-sm md:text-base font-bold text-gourmet-ink dark:text-dark-text hover:text-gourmet-ink dark:hover:text-dark-text transition-colors"
+                                >
+                                    Reset
+                                </button>
+                                <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full sm:w-auto">
+                                    <button
+                                        type="button"
+                                        onClick={closeDatePicker}
+                                        className="px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-sm md:text-base text-gourmet-ink dark:text-dark-text hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-all border border-gourmet-ink/5 sm:border-none"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={applyDraftRange}
+                                        className="bg-gourmet-green dark:bg-dark-green text-gourmet-ink dark:text-dark-text px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-green-500/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
+                                    >
+                                        Apply
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </TabsContent>
     );
 }
