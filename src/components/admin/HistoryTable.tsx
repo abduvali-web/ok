@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { format } from 'date-fns'
 import { enUS, ru, uz } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, History } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,6 +23,7 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext'
 import { CalendarDateSelector } from '@/components/admin/dashboard/shared/CalendarDateSelector'
 import type { DateRange } from 'react-day-picker'
+import { cn } from '@/lib/utils'
 
 interface ActionLog {
   id: string
@@ -56,9 +58,9 @@ interface HistoryTableProps {
   profileUiText?: any
 }
 
-export function HistoryTable({ 
-  role: _role, 
-  limit = 10, 
+export function HistoryTable({
+  role: _role,
+  limit = 10,
   compactMode = false,
   selectedDate,
   applySelectedDate,
@@ -205,20 +207,50 @@ export function HistoryTable({
   }, [limit, logs.length, page, total])
 
   return (
-    <Card>
-      <CardHeader className="space-y-3 pb-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-1">
-            <CardTitle>{t.admin.actionHistory}</CardTitle>
-            <CardDescription>{t.admin.totalRecords}: {total}</CardDescription>
-          </div>
-        </div>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="content-card flex-1 min-h-0 flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300"
+    >
+      {/* Background Watermark */}
+      <motion.div
+        animate={{ y: [0, -20, 0], rotate: [0, 5, -5, 0] }}
+        transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+        className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none"
+      >
+        <History className="w-56 h-56 md:w-64 md:h-64 text-gourmet-ink dark:text-dark-text" />
+      </motion.div>
 
-        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          {users.length > 0 ? (
-            <div className="min-w-0 md:max-w-[260px]">
+      {/* Title */}
+      <div className="flex flex-col gap-2 relative z-10">
+        <motion.h2
+          initial={{ x: -50, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="text-2xl md:text-4xl font-extrabold text-gourmet-ink dark:text-dark-text tracking-tight"
+        >
+          {t.admin.actionHistory}
+        </motion.h2>
+        <motion.p
+          initial={{ x: -50, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="text-base md:text-lg text-gourmet-ink dark:text-dark-text font-medium"
+        >
+          {t.admin.totalRecords}: {total}
+        </motion.p>
+      </div>
+
+      {/* Controls Bar */}
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 md:gap-6 relative z-10">
+        <motion.div
+          whileHover={{ scale: 1.01 }}
+          className="relative flex-1 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
+        >
+          <div className="rounded-full border-2 border-dashed border-white/30 flex items-center px-4 md:px-6 py-2 md:py-3">
+            {users.length > 0 ? (
               <Select value={selectedUser} onValueChange={setSelectedUser}>
-                <SelectTrigger className="border-border bg-background">
+                <SelectTrigger className="border-0 bg-transparent focus:ring-0">
                   <SelectValue placeholder={t.admin.allUsers} />
                 </SelectTrigger>
                 <SelectContent>
@@ -230,23 +262,20 @@ export function HistoryTable({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          ) : (
-            <div />
-          )}
+            ) : (
+              <span className="text-gourmet-ink/70 dark:text-dark-text/70">{t.admin.allUsers}</span>
+            )}
+          </div>
+        </motion.div>
 
-          {/* Orders-tab style: wrap on mobile so actions never disappear off-screen. */}
-          <div className="flex w-full flex-wrap items-center justify-end gap-2 md:w-auto">
-            <RefreshIconButton
-              label={profileUiText?.refresh ?? 'Refresh'}
-              onClick={() => void fetchLogs()}
-              isLoading={isLoading}
-              iconSize="sm"
-            />
-
-            {applySelectedDate &&
+        <div className="flex items-center gap-2 md:gap-4 overflow-x-auto lg:overflow-visible py-4 lg:py-6 no-scrollbar">
+          {applySelectedDate &&
             (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) &&
             profileUiText ? (
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="relative flex-shrink-0"
+            >
               <CalendarDateSelector
                 selectedDate={selectedDate || null}
                 applySelectedDate={applySelectedDate}
@@ -257,135 +286,148 @@ export function HistoryTable({
                 locale={calendarLocale}
                 profileUiText={profileUiText}
               />
-            ) : null}
+            </motion.div>
+          ) : null}
 
-            <SearchPanel
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder={t.admin.searchPlaceholder || 'Search logs'}
-              className="w-full md:w-[320px] sm:w-[260px] flex-none basis-full sm:basis-auto"
-            />
-          </div>
+          <motion.button
+            whileHover={{ rotate: 180, scale: 1.1, y: 5 }}
+            whileTap={{ scale: 0.8 }}
+            onClick={() => void fetchLogs()}
+            disabled={isLoading}
+            className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+            aria-label={profileUiText?.refresh ?? 'Refresh'}
+            title={profileUiText?.refresh ?? 'Refresh'}
+          >
+            <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+              <Loader2 className={cn('w-5 h-5 text-gourmet-ink dark:text-dark-text', isLoading && 'animate-spin')} />
+            </div>
+          </motion.button>
+
+          <motion.div
+            whileHover={{ scale: 1.01 }}
+            className="relative flex-1 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
+          >
+            <div className="rounded-full border-2 border-dashed border-white/30 flex items-center px-4 md:px-6 py-2 md:py-3">
+              <SearchPanel
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder={t.admin.searchPlaceholder || 'Search logs'}
+                className="w-full bg-transparent border-0 focus:ring-0"
+              />
+            </div>
+          </motion.div>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="space-y-4">
-        <div className="hidden rounded-lg border border-border md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t.common.date}</TableHead>
-                <TableHead>{t.common.user}</TableHead>
-                <TableHead>{t.common.action}</TableHead>
-                <TableHead>Entity</TableHead>
-                <TableHead>{t.common.description}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading && logs.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
-                    <Loader2 className="mx-auto h-6 w-6 animate-spin" />
-                  </TableCell>
+      {/* Sheet */}
+      <div className="flex flex-col gap-4 md:gap-6 relative z-10 flex-1 min-h-0">
+        <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 overflow-hidden relative">
+          <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none text-gourmet-green-light dark:text-gourmet-green">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-dashed border-current" />
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-dashed border-current" />
+          </div>
+
+          <div className="overflow-auto relative flex-1 min-h-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="h-12 bg-gourmet-cream/60 dark:bg-dark-green/20">
+                  <TableHead className="text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text">{t.common.date}</TableHead>
+                  <TableHead className="text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text">{t.common.user}</TableHead>
+                  <TableHead className="text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text">{t.common.action}</TableHead>
+                  <TableHead className="text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text">Entity</TableHead>
+                  <TableHead className="text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text">{t.common.description}</TableHead>
                 </TableRow>
-              ) : filteredLogs.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                    {searchTerm ? t.admin.noMatches : t.admin.emptyHistory}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredLogs.map((log) => (
-                  <TableRow key={log.id} className={compactMode ? 'h-8' : ''}>
-                    <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                      {format(new Date(log.createdAt), 'dd MMM HH:mm', { locale: dateLocale })}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{log.admin.name}</span>
-                        <span className="text-xs text-muted-foreground">{getRoleLabel(log.admin.role)}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className={getActionBadgeColor(log.action)}>
-                        {log.action}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{log.entityType || 'UNKNOWN'}</Badge>
-                    </TableCell>
-                    <TableCell className="max-w-[360px] truncate" title={log.description}>
-                      {log.description}
+              </TableHeader>
+              <TableBody>
+                {isLoading && logs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      <Loader2 className="mx-auto h-6 w-6 animate-spin text-gourmet-ink dark:text-dark-text" />
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : filteredLogs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center text-gourmet-ink/60 dark:text-dark-text/60">
+                      {searchTerm ? t.admin.noMatches : t.admin.emptyHistory}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredLogs.map((log, index) => (
+                    <motion.tr
+                      key={log.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.02 }}
+                      className={cn(
+                        'h-12 transition-colors border-t border-gourmet-green/15 dark:border-white/10',
+                        index % 2 === 0
+                          ? 'bg-gourmet-cream dark:bg-dark-surface'
+                          : 'bg-gourmet-cream/40 dark:bg-dark-green/20',
+                        'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/30'
+                      )}
+                    >
+                      <TableCell className="whitespace-nowrap text-sm text-gourmet-ink dark:text-dark-text">
+                        {format(new Date(log.createdAt), 'dd MMM HH:mm', { locale: dateLocale })}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-gourmet-ink dark:text-dark-text">{log.admin.name}</span>
+                          <span className="text-xs text-gourmet-ink/70 dark:text-dark-text/70">{getRoleLabel(log.admin.role)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className={cn('border-gourmet-green/25 dark:border-white/10 bg-gourmet-cream/50 dark:bg-dark-surface/30', getActionBadgeColor(log.action))}>
+                          {log.action}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="border-gourmet-green/25 dark:border-white/10 bg-gourmet-cream/50 dark:bg-dark-surface/30">{log.entityType || 'UNKNOWN'}</Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[360px] truncate text-gourmet-ink dark:text-dark-text" title={log.description}>
+                        {log.description}
+                      </TableCell>
+                    </motion.tr>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
 
-        <div className="space-y-3 md:hidden">
-          {isLoading && logs.length === 0 ? (
-            <div className="py-8 text-center">
-              <Loader2 className="mx-auto h-6 w-6 animate-spin" />
-            </div>
-          ) : filteredLogs.length === 0 ? (
-            <div className="py-8 text-center text-muted-foreground">
-              {searchTerm ? t.admin.noMatches : t.admin.emptyHistory}
-            </div>
-          ) : (
-            filteredLogs.map((log) => (
-              <Card key={log.id} className="glass-card overflow-hidden">
-                <CardHeader className="bg-muted/30 pb-2">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{log.admin.name}</p>
-                      <p className="text-xs text-muted-foreground">{getRoleLabel(log.admin.role)}</p>
-                    </div>
-                    <span className="whitespace-nowrap text-xs text-muted-foreground">
-                      {format(new Date(log.createdAt), 'dd MMM HH:mm', { locale: dateLocale })}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-2 pt-4">
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary" className={getActionBadgeColor(log.action)}>
-                      {log.action}
-                    </Badge>
-                    <Badge variant="outline">{log.entityType || 'UNKNOWN'}</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{log.description}</p>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
-
-        <div className="flex items-center justify-end gap-2 pt-1">
-          <IconButton
-            label={t.common.back}
-            variant="outline"
-            iconSize="sm"
+        {/* Pagination */}
+        <div className="flex items-center justify-center gap-2 md:gap-4 pt-2">
+          <motion.button
+            whileHover={{ scale: 1.1, y: 5 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => setPage((current) => Math.max(0, current - 1))}
             disabled={page === 0 || isLoading}
+            className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+            aria-label={t.common.back}
+            title={t.common.back}
           >
-            <ChevronLeft className="h-4 w-4" />
-          </IconButton>
-          <div className="text-sm text-muted-foreground">
+            <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+              <ChevronLeft className="w-5 h-5 text-gourmet-ink dark:text-dark-text" />
+            </div>
+          </motion.button>
+          <div className="text-sm md:text-base font-bold text-gourmet-ink dark:text-dark-text">
             {t.common.page} {page + 1} - {pageRangeLabel}
           </div>
-          <IconButton
-            label={t.common.next}
-            variant="outline"
-            iconSize="sm"
+          <motion.button
+            whileHover={{ scale: 1.1, y: 5 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => setPage((current) => current + 1)}
             disabled={!hasMore || isLoading}
+            className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+            aria-label={t.common.next}
+            title={t.common.next}
           >
-            <ChevronRight className="h-4 w-4" />
-          </IconButton>
+            <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+              <ChevronRight className="w-5 h-5 text-gourmet-ink dark:text-dark-text" />
+            </div>
+          </motion.button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </motion.div>
   )
 }
 

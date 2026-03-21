@@ -15,7 +15,9 @@ import {
     Users,
     UtensilsCrossed
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import {
     getTomorrowsMenuNumber,
     getTomorrowsMenu,
@@ -894,278 +896,376 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     );
 
     return (
-        <div className={`space-y-6 ${className}`}>
-            <Card className="glass-card">
-                <CardHeader>
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div>
-                            <CardTitle className="flex items-center gap-2 text-xl">
-                                <Package className="w-5 h-5 text-primary" />
-                                {t.warehouse.title}
-                            </CardTitle>
-                            <CardDescription>
-                                {t.warehouse.description}
-                            </CardDescription>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="flex items-center gap-1 px-3 py-1.5 bg-primary/5">
-                                <ChefHat className="w-4 h-4" />
-                                <span>{t.warehouse.menuFor} {tomorrowMenuNumber}</span>
-                            </Badge>
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-                        <TabsList className="grid w-full grid-cols-5 mb-6">
-                            <TabsTrigger value="cooking" className="flex items-center gap-2">
-                                <ChefHat className="w-4 h-4" />
-                                <span className="hidden sm:inline">{t.warehouse.cooking}</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="sets" className="flex items-center gap-2">
-                                <UtensilsCrossed className="w-4 h-4" />
-                                <span className="hidden sm:inline">{auditUiText.setsTab}</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="inventory" className="flex items-center gap-2">
-                                <Package className="w-4 h-4" />
-                                <span className="hidden sm:inline">{t.warehouse.inventory}</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="calculator" className="flex items-center gap-2">
-                                <Calculator className="w-4 h-4" />
-                                <span className="hidden sm:inline">{t.warehouse.calculator}</span>
-                            </TabsTrigger>
+        <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`content-card flex-1 min-h-0 flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300 ${className}`}
+        >
+            {/* Background Watermark */}
+            <motion.div
+                animate={{ y: [0, -20, 0], rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+                className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none"
+            >
+                <Package className="w-56 h-56 md:w-64 md:h-64 text-gourmet-ink dark:text-dark-text" />
+            </motion.div>
 
-                        </TabsList>
+            {/* Title */}
+            <div className="flex flex-col gap-2 relative z-10">
+                <motion.h2
+                    initial={{ x: -50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-2xl md:text-4xl font-extrabold text-gourmet-ink dark:text-dark-text tracking-tight"
+                >
+                    {t.warehouse.title}
+                </motion.h2>
+                <motion.p
+                    initial={{ x: -50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="text-base md:text-lg text-gourmet-ink dark:text-dark-text font-medium"
+                >
+                    {t.warehouse.description}
+                </motion.p>
+            </div>
 
-                        {/* Cooking Tab - Dishes to prepare for tomorrow */}
-                        <TabsContent value="cooking" className="space-y-4">
-                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <CalendarRangeSelector
-                                        value={cookingRange}
-                                        onChange={setCookingRange}
-                                        uiText={{
-                                            ...calendarRangeUiText,
-                                            calendar: (() => {
-                                                if (!cookingRange?.from) return 'Menu'
-                                                const fromNum = getMenuNumber(cookingRange.from)
-                                                const toNum = getMenuNumber(cookingRange.to ?? cookingRange.from)
-                                                return fromNum === toNum ? `Menu ${fromNum}` : `Menu ${fromNum}-${toNum}`
-                                            })(),
-                                        }}
-                                        locale={dateLocale}
-                                        className="w-[240px] max-w-full min-w-0"
-                                    />
+            {/* Menu Badge */}
+            <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.6, type: 'spring' }}
+                className="relative z-10"
+            >
+                <Badge variant="outline" className="flex items-center gap-2 px-4 py-2 bg-gourmet-green/10 dark:bg-dark-green/20 border-2 border-dashed border-gourmet-green/30 dark:border-white/10 text-gourmet-ink dark:text-dark-text font-semibold">
+                    <ChefHat className="w-4 h-4" />
+                    <span>{t.warehouse.menuFor} {tomorrowMenuNumber}</span>
+                </Badge>
+            </motion.div>
 
-                                    <Select value={cookingSelectedSetId} onValueChange={setCookingSelectedSetId}>
-                                        <SelectTrigger className="h-9 w-[220px] max-w-full">
-                                            <SelectValue placeholder={auditUiText.setsTab} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="active">{auditUiText.activeSet}</SelectItem>
-                                            {availableSets.map((s) => (
-                                                <SelectItem key={String(s.id)} value={String(s.id)}>
-                                                    {s.name} {s.isActive ? '✓' : ''}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+            {/* Tabs */}
+            <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="relative z-10">
+                <TabsList className="grid w-full grid-cols-4 gap-2 bg-gourmet-cream/40 dark:bg-dark-surface/40 p-2 rounded-2xl border-2 border-dashed border-gourmet-green/20 dark:border-white/10">
+                    <TabsTrigger value="cooking" className="flex items-center gap-2 data-[state=active]:bg-gourmet-green dark:data-[state=active]:bg-dark-green data-[state=active]:text-gourmet-ink dark:data-[state=active]:text-dark-text rounded-xl">
+                        <ChefHat className="w-4 h-4" />
+                        <span className="hidden sm:inline">{t.warehouse.cooking}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="sets" className="flex items-center gap-2 data-[state=active]:bg-gourmet-green dark:data-[state=active]:bg-dark-green data-[state=active]:text-gourmet-ink dark:data-[state=active]:text-dark-text rounded-xl">
+                        <UtensilsCrossed className="w-4 h-4" />
+                        <span className="hidden sm:inline">{auditUiText.setsTab}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="inventory" className="flex items-center gap-2 data-[state=active]:bg-gourmet-green dark:data-[state=active]:bg-dark-green data-[state=active]:text-gourmet-ink dark:data-[state=active]:text-dark-text rounded-xl">
+                        <Package className="w-4 h-4" />
+                        <span className="hidden sm:inline">{t.warehouse.inventory}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="calculator" className="flex items-center gap-2 data-[state=active]:bg-gourmet-green dark:data-[state=active]:bg-dark-green data-[state=active]:text-gourmet-ink dark:data-[state=active]:text-dark-text rounded-xl">
+                        <Calculator className="w-4 h-4" />
+                        <span className="hidden sm:inline">{t.warehouse.calculator}</span>
+                    </TabsTrigger>
+                </TabsList>
 
-                                    <RefreshIconButton
-                                        label={auditUiText.refreshCookingPlans ?? 'Refresh'}
-                                        onClick={() => {
-                                            fetchData()
-                                            void refreshCookingPlansForRange()
-                                        }}
-                                        isLoading={isCookingPlansLoading}
-                                        iconSize="md"
-                                    />
-                                </div>
-
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <span>{auditUiText.planned}: <span className="font-semibold text-foreground">{cookingTotals.planned}</span></span>
-                                    <span>·</span>
-                                    <span>{auditUiText.cooked}: <span className="font-semibold text-emerald-600">{cookingTotals.cooked}</span></span>
-                                    <span>·</span>
-                                    <span>{auditUiText.remaining}: <span className="font-semibold text-amber-600">{cookingTotals.remaining}</span></span>
-                                    {isCookingPlansLoading ? <Loader2 className="ml-1 h-3.5 w-3.5 animate-spin" /> : null}
-                                </div>
-                            </div>
-
-                            {cookingPlansError ? (
-                                <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
-                                    {cookingPlansError}
-                                </div>
-                            ) : null}
-
-                            {cookingRangeDays.length > 1 ? (
-                                <div className="flex gap-2 overflow-x-auto rounded-lg border bg-card p-2">
-                                    {cookingRangeDays.map((iso) => (
-                                        <button
-                                            key={iso}
-                                            type="button"
-                                            onClick={() => setSelectedCookingDateISO(iso)}
-                                            className={[
-                                                'shrink-0 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors',
-                                                iso === selectedCookingDateISO
-                                                    ? 'bg-primary text-primary-foreground border-primary'
-                                                    : 'bg-background hover:bg-muted/30 border-border',
-                                            ].join(' ')}
-                                        >
-                                            {iso}
-                                        </button>
-                                    ))}
-                                </div>
-                            ) : null}
-
-                            {/* NEW: Detailed Cooking Manager */}
-                            <CookingManager
-                                date={selectedCookingDateISO}
-                                menuNumber={selectedCookingMenuNumber}
-                                clientsByCalorie={clientsByCalorie}
-                                clients={allClients}
-                                orders={allOrders}
-                                availableSets={availableSets}
-                                selectedSetId={cookingSelectedSetId}
-                                onSelectedSetIdChange={setCookingSelectedSetId}
-                                selectedCalorieGroup="all"
-                                onSelectedCalorieGroupChange={() => {}}
-                                showHeader={false}
-                                showContextInfo={false}
-                                onCook={() => { fetchData(); void refreshCookingPlansForRange(); }} // Refresh inventory + audit summary on cook
-                                orderInfo={{
-                                    total: Object.values(clientsByCalorie).reduce((a, b) => a + b, 0),
-                                    byCalorie: clientsByCalorie
+                {/* Cooking Tab - Dishes to prepare for tomorrow */}
+                <TabsContent value="cooking" className="space-y-4">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="flex flex-col gap-4"
+                    >
+                        {/* Controls Bar */}
+                        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 md:gap-4 overflow-x-auto lg:overflow-visible py-2 no-scrollbar">
+                            <CalendarRangeSelector
+                                value={cookingRange}
+                                onChange={setCookingRange}
+                                uiText={{
+                                    ...calendarRangeUiText,
+                                    calendar: (() => {
+                                        if (!cookingRange?.from) return 'Menu'
+                                        const fromNum = getMenuNumber(cookingRange.from)
+                                        const toNum = getMenuNumber(cookingRange.to ?? cookingRange.from)
+                                        return fromNum === toNum ? `Menu ${fromNum}` : `Menu ${fromNum}-${toNum}`
+                                    })(),
                                 }}
+                                locale={dateLocale}
+                                className="w-[240px] max-w-full min-w-0"
                             />
-                        </TabsContent>
 
-                        {/* Sets Tab */}
-                        <TabsContent value="sets" className="space-y-4">
-                            <SetsTab />
-                        </TabsContent>
+                            <Select value={cookingSelectedSetId} onValueChange={setCookingSelectedSetId}>
+                                <SelectTrigger className="h-10 w-[220px] max-w-full bg-gourmet-cream/60 dark:bg-dark-surface/60 border-gourmet-green/25 dark:border-white/10">
+                                    <SelectValue placeholder={auditUiText.setsTab} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="active">{auditUiText.activeSet}</SelectItem>
+                                    {availableSets.map((s) => (
+                                        <SelectItem key={String(s.id)} value={String(s.id)}>
+                                            {s.name} {s.isActive ? '✓' : ''}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
 
-                        {/* Inventory Tab - Managed by IngredientsManager */}
-                        <TabsContent value="inventory" className="space-y-4">
-                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                                {t.warehouse.inventoryInfo}
-                            </div>
+                            <RefreshIconButton
+                                label={auditUiText.refreshCookingPlans ?? 'Refresh'}
+                                onClick={() => {
+                                    fetchData()
+                                    void refreshCookingPlansForRange()
+                                }}
+                                isLoading={isCookingPlansLoading}
+                                iconSize="md"
+                            />
 
-                            <IngredientsManager onUpdate={fetchData} />
-                        </TabsContent>
+                            {/* Stats */}
+                            <motion.div
+                                whileHover={{ scale: 1.02 }}
+                                className="rounded-full border-2 border-dashed border-gourmet-green/30 dark:border-white/10 flex items-center px-4 md:px-6 py-2 md:py-3 bg-gourmet-cream/60 dark:bg-dark-surface/60 backdrop-blur-sm flex-1 min-w-[200px] justify-center gap-4 md:gap-6"
+                            >
+                                <span className="text-xs md:text-sm text-gourmet-ink/70 dark:text-dark-text/70">
+                                    {auditUiText.planned}: <span className="font-bold text-gourmet-ink dark:text-dark-text">{cookingTotals.planned}</span>
+                                </span>
+                                <span className="text-xs md:text-sm text-gourmet-ink/70 dark:text-dark-text/70">
+                                    {auditUiText.cooked}: <span className="font-bold text-emerald-600 dark:text-emerald-400">{cookingTotals.cooked}</span>
+                                </span>
+                                <span className="text-xs md:text-sm text-gourmet-ink/70 dark:text-dark-text/70">
+                                    {auditUiText.remaining}: <span className="font-bold text-amber-600 dark:text-amber-400">{cookingTotals.remaining}</span>
+                                </span>
+                                {isCookingPlansLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                            </motion.div>
+                        </div>
 
-                        {/* Calculator Tab - Multi-day calculation */}
-                        <TabsContent value="calculator" className="space-y-4">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {/* Left: Date selection */}
-                                <div className="space-y-4">
-                                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
-                                        {t.warehouse.calcDaysInfo}
-                                    </div>
+                        {cookingPlansError ? (
+                            <motion.div
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="rounded-2xl border-2 border-dashed border-rose-300 dark:border-rose-700 bg-rose-50 dark:bg-rose-900/20 p-4 text-sm text-rose-700 dark:text-rose-400"
+                            >
+                                {cookingPlansError}
+                            </motion.div>
+                        ) : null}
 
-                                    <CalendarRangeSelector
-                                        value={calcRange}
-                                        onChange={setCalcRange}
-                                        uiText={{
-                                            ...calendarRangeUiText,
-                                            calendar: (() => {
-                                                if (!calcRange?.from) return 'Menu'
-                                                const fromNum = getMenuNumber(calcRange.from)
-                                                const toNum = getMenuNumber(calcRange.to ?? calcRange.from)
-                                                return fromNum === toNum ? `Menu ${fromNum}` : `Menu ${fromNum}-${toNum}`
-                                            })(),
-                                        }}
-                                        locale={dateLocale}
-                                        className="w-full min-w-0"
-                                    />
-
-                                    <Button
-                                        onClick={() => {
-                                            if (calcRangeDays.length > 0) calculateForPeriod(calcRangeDays)
-                                            else calculateForTomorrow()
-                                        }}
-                                        className="w-full justify-center"
-                                        variant="default"
-                                        size="icon"
-                                        aria-label={
-                                            calcRangeDays.length > 0
-                                                ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
-                                                : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())
-                                        }
-                                        title={
-                                            calcRangeDays.length > 0
-                                                ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
-                                                : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())
-                                        }
+                        {cookingRangeDays.length > 1 ? (
+                            <div className="flex gap-2 overflow-x-auto rounded-2xl border-2 border-dashed border-gourmet-green/25 dark:border-white/10 bg-gourmet-cream/60 dark:bg-dark-surface/60 p-3">
+                                {cookingRangeDays.map((iso) => (
+                                    <motion.button
+                                        key={iso}
+                                        type="button"
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => setSelectedCookingDateISO(iso)}
+                                        className={cn(
+                                            'shrink-0 rounded-xl border-2 border-dashed px-3 py-2 text-xs md:text-sm font-medium transition-all duration-300',
+                                            iso === selectedCookingDateISO
+                                                ? 'bg-gourmet-green dark:bg-dark-green border-gourmet-green/50 dark:border-white/30 text-gourmet-ink dark:text-dark-text shadow-lg'
+                                                : 'bg-gourmet-cream/80 dark:bg-dark-surface/80 border-gourmet-green/20 dark:border-white/10 text-gourmet-ink/70 dark:text-dark-text/70 hover:border-gourmet-green/40 dark:hover:border-white/20'
+                                        )}
                                     >
-                                        <Calculator className="w-4 h-4" />
-                                        <span className="sr-only">
-                                            {calcRangeDays.length > 0
-                                                ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
-                                                : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())}
-                                        </span>
-                                    </Button>
-                                </div>
-
-                                {/* Right: Results */}
-                                <div className="space-y-4">
-                                    {calculatedIngredients.size > 0 && (
-                                        <>
-                                            <div>
-                                                <h4 className="font-medium mb-2 flex items-center gap-2">
-                                                    <Package className="w-4 h-4" />
-                                                    {t.warehouse.requiredIngredients}
-                                                </h4>
-                                                <div className="bg-card rounded-lg border border-border max-h-48 overflow-y-auto">
-                                                    {Array.from(calculatedIngredients.entries()).map(([name, { amount, unit }]) => (
-                                                        <div key={name} className="flex justify-between p-2 border-b last:border-0 text-sm">
-                                                            <span className="text-slate-700">{name}</span>
-                                                            <span className="font-medium">{amount} {unit}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <h4 className="font-medium mb-2 flex items-center gap-2 text-orange-600">
-                                                    <ShoppingCart className="w-4 h-4" />
-                                                    {t.warehouse.shoppingListTitle}
-                                                </h4>
-                                                <div className="bg-orange-50 rounded-lg border border-orange-200 max-h-48 overflow-y-auto">
-                                                    {shoppingList.size > 0 ? (
-                                                        Array.from(shoppingList.entries()).map(([name, { amount, unit }]) => (
-                                                            <div key={name} className="flex justify-between w-full p-2 border-b border-orange-100 last:border-0 text-sm">
-                                                                <span className="text-orange-800">{name}</span>
-                                                                <span className="font-medium text-orange-900">{amount} {unit}</span>
-                                                            </div>
-                                                        ))
-                                                    ) : (
-                                                        <div className="p-4 text-center text-green-600 text-sm">
-                                                            {t.warehouse.allGood}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {calculatedIngredients.size === 0 && (
-                                        <TabEmptyState
-                                            title={t.warehouse.clickToCalc}
-                                            description={t.warehouse.calcDaysInfo}
-                                            icon={<Calculator className="mx-auto mb-3 size-6 text-muted-foreground" />}
-                                        />
-                                    )}
-                                </div>
+                                        {iso}
+                                    </motion.button>
+                                ))}
                             </div>
-                        </TabsContent>
+                        ) : null}
+                    </motion.div>
+
+                    {/* NEW: Detailed Cooking Manager */}
+                    <CookingManager
+                        date={selectedCookingDateISO}
+                        menuNumber={selectedCookingMenuNumber}
+                        clientsByCalorie={clientsByCalorie}
+                        clients={allClients}
+                        orders={allOrders}
+                        availableSets={availableSets}
+                        selectedSetId={cookingSelectedSetId}
+                        onSelectedSetIdChange={setCookingSelectedSetId}
+                        selectedCalorieGroup="all"
+                        onSelectedCalorieGroupChange={() => { }}
+                        showHeader={false}
+                        showContextInfo={false}
+                        onCook={() => { fetchData(); void refreshCookingPlansForRange(); }} // Refresh inventory + audit summary on cook
+                        orderInfo={{
+                            total: Object.values(clientsByCalorie).reduce((a, b) => a + b, 0),
+                            byCalorie: clientsByCalorie
+                        }}
+                    />
+                </TabsContent>
+
+                {/* Sets Tab */}
+                <TabsContent value="sets" className="space-y-4">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                    >
+                        <SetsTab />
+                    </motion.div>
+                </TabsContent>
+
+                {/* Inventory Tab - Managed by IngredientsManager */}
+                <TabsContent value="inventory" className="space-y-4">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="space-y-4"
+                    >
+                        <motion.div
+                            whileHover={{ scale: 1.01 }}
+                            className="rounded-2xl border-2 border-dashed border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-4 text-sm text-amber-800 dark:text-amber-400"
+                        >
+                            {t.warehouse.inventoryInfo}
+                        </motion.div>
+
+                        <IngredientsManager onUpdate={fetchData} />
+                    </motion.div>
+                </TabsContent>
+
+                {/* Calculator Tab - Multi-day calculation */}
+                <TabsContent value="calculator" className="space-y-4">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+                    >
+                        {/* Left: Date selection */}
+                        <div className="space-y-4">
+                            <motion.div
+                                whileHover={{ scale: 1.01 }}
+                                className="rounded-2xl border-2 border-dashed border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20 p-4 text-sm text-green-800 dark:text-green-400"
+                            >
+                                {t.warehouse.calcDaysInfo}
+                            </motion.div>
+
+                            <CalendarRangeSelector
+                                value={calcRange}
+                                onChange={setCalcRange}
+                                uiText={{
+                                    ...calendarRangeUiText,
+                                    calendar: (() => {
+                                        if (!calcRange?.from) return 'Menu'
+                                        const fromNum = getMenuNumber(calcRange.from)
+                                        const toNum = getMenuNumber(calcRange.to ?? calcRange.from)
+                                        return fromNum === toNum ? `Menu ${fromNum}` : `Menu ${fromNum}-${toNum}`
+                                    })(),
+                                }}
+                                locale={dateLocale}
+                                className="w-full min-w-0"
+                            />
+
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => {
+                                    if (calcRangeDays.length > 0) calculateForPeriod(calcRangeDays)
+                                    else calculateForTomorrow()
+                                }}
+                                className="w-full justify-center bg-gourmet-green dark:bg-dark-green rounded-2xl border-b-4 border-black/20 py-4 px-6 font-semibold text-gourmet-ink dark:text-dark-text shadow-lg transition-all duration-300 hover:scale-105"
+                                aria-label={
+                                    calcRangeDays.length > 0
+                                        ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
+                                        : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())
+                                }
+                                title={
+                                    calcRangeDays.length > 0
+                                        ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
+                                        : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())
+                                }
+                            >
+                                <Calculator className="w-5 h-5 mr-2 inline" />
+                                <span>
+                                    {calcRangeDays.length > 0
+                                        ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
+                                        : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())}
+                                </span>
+                            </motion.button>
+                        </div>
+
+                        {/* Right: Results */}
+                        <div className="space-y-4">
+                            {calculatedIngredients.size > 0 && (
+                                <>
+                                    <motion.div
+                                        initial={{ opacity: 0, x: 10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.3 }}
+                                    >
+                                        <h4 className="font-bold mb-3 flex items-center gap-2 text-gourmet-ink dark:text-dark-text">
+                                            <Package className="w-5 h-5" />
+                                            {t.warehouse.requiredIngredients}
+                                        </h4>
+                                        <div className="rounded-2xl border-2 border-dashed border-gourmet-green/25 dark:border-white/10 bg-gourmet-cream/70 dark:bg-dark-green/10 max-h-48 overflow-y-auto">
+                                            {Array.from(calculatedIngredients.entries()).map(([name, { amount, unit }]) => (
+                                                <motion.div
+                                                    key={name}
+                                                    initial={{ opacity: 0, y: 5 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: 0.4 }}
+                                                    className="flex justify-between p-3 border-b border-gourmet-green/10 dark:border-white/5 last:border-0 text-sm"
+                                                >
+                                                    <span className="text-gourmet-ink dark:text-dark-text">{name}</span>
+                                                    <span className="font-bold text-gourmet-ink dark:text-dark-text">{amount} {unit}</span>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+
+                                    <motion.div
+                                        initial={{ opacity: 0, x: 10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.4 }}
+                                    >
+                                        <h4 className="font-bold mb-3 flex items-center gap-2 text-gourmet-orange dark:text-gourmet-orange">
+                                            <ShoppingCart className="w-5 h-5" />
+                                            {t.warehouse.shoppingListTitle}
+                                        </h4>
+                                        <div className="rounded-2xl border-2 border-dashed border-gourmet-orange/30 dark:border-gourmet-orange/30 bg-gourmet-orange/10 dark:bg-gourmet-orange/10 max-h-48 overflow-y-auto">
+                                            {shoppingList.size > 0 ? (
+                                                Array.from(shoppingList.entries()).map(([name, { amount, unit }]) => (
+                                                    <motion.div
+                                                        key={name}
+                                                        initial={{ opacity: 0, y: 5 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ delay: 0.5 }}
+                                                        className="flex justify-between w-full p-3 border-b border-gourmet-orange/20 dark:border-gourmet-orange/20 last:border-0 text-sm"
+                                                    >
+                                                        <span className="text-gourmet-ink dark:text-dark-text">{name}</span>
+                                                        <span className="font-bold text-gourmet-ink dark:text-dark-text">{amount} {unit}</span>
+                                                    </motion.div>
+                                                ))
+                                            ) : (
+                                                <motion.div
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    transition={{ delay: 0.5 }}
+                                                    className="p-6 text-center text-emerald-600 dark:text-emerald-400 text-sm font-medium"
+                                                >
+                                                    {t.warehouse.allGood}
+                                                </motion.div>
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                </>
+                            )}
+
+                            {calculatedIngredients.size === 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.5 }}
+                                >
+                                    <TabEmptyState
+                                        title={t.warehouse.clickToCalc}
+                                        description={t.warehouse.calcDaysInfo}
+                                        icon={<Calculator className="mx-auto mb-3 size-6 text-muted-foreground" />}
+                                    />
+                                </motion.div>
+                            )}
+                        </div>
+                    </motion.div>
+                </TabsContent>
 
 
 
-                    </Tabs>
-                </CardContent>
-            </Card>
-        </div>
+            </Tabs>
+        </motion.div>
     );
 }
 

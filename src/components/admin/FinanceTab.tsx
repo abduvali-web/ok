@@ -18,6 +18,7 @@ import {
     ShoppingCart,
     Trash2,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import {
     Table,
     TableBody,
@@ -49,6 +50,7 @@ import { CalendarDateSelector } from '@/components/admin/dashboard/shared/Calend
 import { RefreshIconButton } from '@/components/admin/dashboard/shared/RefreshIconButton'
 import { SearchPanel } from '@/components/ui/search-panel'
 import type { DateRange } from 'react-day-picker'
+import { cn } from '@/lib/utils'
 
 interface FinanceTabProps {
     className?: string;
@@ -95,7 +97,7 @@ interface Transaction {
     customer?: { name: string; phone: string };
 }
 
-export function FinanceTab({ 
+export function FinanceTab({
     className,
     selectedDate,
     applySelectedDate,
@@ -452,25 +454,61 @@ export function FinanceTab({
     }, [formatDate, historySearchQuery, visibleHistory])
 
     return (
-        <div className={`space-y-6 ${className}`}>
+        <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="content-card flex-1 min-h-0 flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300"
+        >
+            {/* Background Watermark */}
+            <motion.div
+                animate={{ y: [0, -20, 0], rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+                className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none"
+            >
+                <Wallet className="w-56 h-56 md:w-64 md:h-64 text-gourmet-ink dark:text-dark-text" />
+            </motion.div>
+
+            {/* Title */}
+            <div className="flex flex-col gap-2 relative z-10">
+                <motion.h2
+                    initial={{ x: -50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-2xl md:text-4xl font-extrabold text-gourmet-ink dark:text-dark-text tracking-tight"
+                >
+                    {t.finance.title}
+                </motion.h2>
+                <motion.p
+                    initial={{ x: -50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="text-base md:text-lg text-gourmet-ink dark:text-dark-text font-medium"
+                >
+                    {t.finance.description || 'Manage your finances'}
+                </motion.p>
+            </div>
+
             {/* Top Stats Section */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="glass-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-blue-900">
-                            {t.finance.companyBalance}
-                        </CardTitle>
-                        <Wallet className="h-4 w-4 text-blue-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-blue-700">{formatCurrency(companyBalance)}</div>
-                        <div className="flex items-center justify-between mt-4">
-                            <p className="text-xs text-blue-600/80">
-                                {t.finance.currentFunds}
-                            </p>
-                            <Button
-                                size="sm"
-                                className="h-7 bg-blue-600 hover:bg-blue-700"
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 relative z-10">
+                <motion.div
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    className="rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 bg-gourmet-cream/60 dark:bg-dark-surface/30 p-4 md:p-5 transition-all duration-300 hover:shadow-xl hover:border-gourmet-green/45 dark:hover:border-white/15"
+                >
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm md:text-base font-bold uppercase tracking-wider text-gourmet-ink dark:text-dark-text">{t.finance.companyBalance}</h3>
+                        <div className="w-10 h-10 rounded-full bg-gourmet-green dark:bg-dark-green border-b-4 border-black/20 flex items-center justify-center shadow-lg">
+                            <Wallet className="w-5 h-5 text-gourmet-ink dark:text-dark-text" />
+                        </div>
+                    </div>
+                    <div className="text-3xl md:text-4xl font-extrabold text-blue-600">{formatCurrency(companyBalance)}</div>
+                    <div className="flex items-center justify-between mt-4">
+                        <p className="text-xs md:text-sm text-gourmet-ink/70 dark:text-dark-text/70">
+                            {t.finance.currentFunds}
+                        </p>
+                        <div className="flex gap-2">
+                            <motion.button
+                                whileHover={{ scale: 1.1, y: 5 }}
+                                whileTap={{ scale: 0.9 }}
                                 onClick={() => {
                                     setTransactionAmount('');
                                     setTransactionDescription('');
@@ -478,55 +516,65 @@ export function FinanceTab({
                                     setTransactionType('INCOME');
                                     setIsCompanyFundsModalOpen(true);
                                 }}
+                                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300"
+                                aria-label={t.finance.manageBalance}
+                                title={t.finance.manageBalance}
                             >
-                                <Plus className="w-3 h-3 mr-1" />
-                                {t.finance.manageBalance}
-                            </Button>
-                            <Button
-                                size="sm"
-                                className="h-7 bg-indigo-600 hover:bg-indigo-700 ml-2"
+                                <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                                    <Plus className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                                </div>
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.1, y: 5 }}
+                                whileTap={{ scale: 0.9 }}
                                 onClick={() => setIsBuyIngredientsModalOpen(true)}
+                                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300"
+                                aria-label={t.finance.purchase}
+                                title={t.finance.purchase}
                             >
-                                <ShoppingCart className="w-3 h-3 mr-1" />
-                                {t.finance.purchase}
-                            </Button>
+                                <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                                    <ShoppingCart className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                                </div>
+                            </motion.button>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </motion.div>
 
-                <Card className="glass-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">
-                            {t.finance.clientDebt}
-                        </CardTitle>
-                        <TrendingDown className="h-4 w-4 text-red-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-red-600">
-                            {formatCurrency(clients.reduce((sum, c) => c.balance < 0 ? sum + c.balance : sum, 0))}
+                <motion.div
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    className="rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 bg-gourmet-cream/60 dark:bg-dark-surface/30 p-4 md:p-5 transition-all duration-300 hover:shadow-xl hover:border-gourmet-green/45 dark:hover:border-white/15"
+                >
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm md:text-base font-bold uppercase tracking-wider text-gourmet-ink dark:text-dark-text">{t.finance.clientDebt}</h3>
+                        <div className="w-10 h-10 rounded-full bg-gourmet-orange dark:bg-gourmet-orange border-b-4 border-black/20 flex items-center justify-center shadow-lg">
+                            <TrendingDown className="w-5 h-5 text-gourmet-ink dark:text-dark-text" />
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">
-                            {t.finance.negativeBalanceSum}
-                        </p>
-                    </CardContent>
-                </Card>
+                    </div>
+                    <div className="text-3xl md:text-4xl font-extrabold text-rose-600">
+                        {formatCurrency(clients.reduce((sum, c) => c.balance < 0 ? sum + c.balance : sum, 0))}
+                    </div>
+                    <p className="text-xs md:text-sm text-gourmet-ink/60 dark:text-dark-text/60 mt-1">
+                        {t.finance.negativeBalanceSum}
+                    </p>
+                </motion.div>
 
-                <Card className="glass-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">
-                            {t.finance.clientPrepaid}
-                        </CardTitle>
-                        <TrendingUp className="h-4 w-4 text-green-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-green-600">
-                            {formatCurrency(clients.reduce((sum, c) => c.balance > 0 ? sum + c.balance : sum, 0))}
+                <motion.div
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    className="rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 bg-gourmet-cream/60 dark:bg-dark-surface/30 p-4 md:p-5 transition-all duration-300 hover:shadow-xl hover:border-gourmet-green/45 dark:hover:border-white/15"
+                >
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm md:text-base font-bold uppercase tracking-wider text-gourmet-ink dark:text-dark-text">{t.finance.clientPrepaid}</h3>
+                        <div className="w-10 h-10 rounded-full bg-gourmet-green dark:bg-dark-green border-b-4 border-black/20 flex items-center justify-center shadow-lg">
+                            <TrendingUp className="w-5 h-5 text-gourmet-ink dark:text-dark-text" />
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">
-                            {t.finance.positiveBalanceSum}
-                        </p>
-                    </CardContent>
-                </Card>
+                    </div>
+                    <div className="text-3xl md:text-4xl font-extrabold text-emerald-600">
+                        {formatCurrency(clients.reduce((sum, c) => c.balance > 0 ? sum + c.balance : sum, 0))}
+                    </div>
+                    <p className="text-xs md:text-sm text-gourmet-ink/60 dark:text-dark-text/60 mt-1">
+                        {t.finance.positiveBalanceSum}
+                    </p>
+                </motion.div>
             </div>
 
             <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-4">
@@ -539,128 +587,142 @@ export function FinanceTab({
 
                 {/* HISTORY TAB */}
                 <TabsContent value="history">
-                    <Card className="border-none shadow-sm">
-                        <CardHeader>
-                            <CardTitle className="text-lg font-medium">{t.finance.history}</CardTitle>
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-2">
-                                <CardDescription className="flex-1 min-w-0">
-                                    {t.finance.historyDesc}
-                                </CardDescription>
-                                 {/* Orders-tab style: wrap on mobile so actions never disappear off-screen. */}
-                                 <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
-                                     <RefreshIconButton
-                                         label={profileUiText?.refresh ?? 'Refresh'}
-                                         onClick={() => void handleRefreshFinance()}
-                                         isLoading={isFinanceRefreshing}
-                                         iconSize="md"
-                                     />
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="content-card rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 bg-gourmet-cream/60 dark:bg-dark-surface/30 backdrop-blur-xl p-4 md:p-6"
+                    >
+                        <div className="flex flex-col gap-4">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <h3 className="text-lg md:text-xl font-bold text-gourmet-ink dark:text-dark-text">{t.finance.history}</h3>
+                                <p className="text-sm text-gourmet-ink/70 dark:text-dark-text/70">{t.finance.historyDesc}</p>
+                            </div>
 
-                                     {applySelectedDate &&
-                                       (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) &&
-                                       profileUiText ? (
-                                         <CalendarDateSelector
-                                             selectedDate={selectedDate || null}
-                                             applySelectedDate={applySelectedDate}
-                                             shiftSelectedDate={shiftSelectedDate}
-                                             selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
-                                             selectedPeriod={selectedPeriod}
-                                             applySelectedPeriod={applySelectedPeriod}
-                                             locale={calendarLocale}
-                                             profileUiText={profileUiText}
-                                         />
-                                       ) : null}
+                            {/* Controls Bar */}
+                            <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 md:gap-4 overflow-x-auto lg:overflow-visible py-2 no-scrollbar">
+                                <RefreshIconButton
+                                    label={profileUiText?.refresh ?? 'Refresh'}
+                                    onClick={() => void handleRefreshFinance()}
+                                    isLoading={isFinanceRefreshing}
+                                    iconSize="md"
+                                />
 
-                                     <SearchPanel
-                                         value={historySearchQuery}
-                                         onChange={setHistorySearchQuery}
-                                         placeholder={t.admin.searchPlaceholder}
-                                         className="w-full sm:w-[260px] md:w-[320px] flex-none basis-full sm:basis-auto"
-                                     />
+                                {applySelectedDate &&
+                                    (applySelectedPeriod ? Boolean(selectedPeriodLabel) : Boolean(selectedDateLabel)) &&
+                                    profileUiText ? (
+                                    <CalendarDateSelector
+                                        selectedDate={selectedDate || null}
+                                        applySelectedDate={applySelectedDate}
+                                        shiftSelectedDate={shiftSelectedDate}
+                                        selectedDateLabel={selectedPeriodLabel ?? selectedDateLabel}
+                                        selectedPeriod={selectedPeriod}
+                                        applySelectedPeriod={applySelectedPeriod}
+                                        locale={calendarLocale}
+                                        profileUiText={profileUiText}
+                                    />
+                                ) : null}
 
-                                     {/* Category filter removed: search + date period are the primary audit controls. */}
-                                 </div>
-                             </div>
-                         </CardHeader>
-                        <CardContent>
-                            <div className="rounded-md border">
+                                <motion.div
+                                    whileHover={{ scale: 1.02 }}
+                                    className="rounded-full border-2 border-dashed border-white/30 flex items-center px-4 md:px-6 py-2 md:py-3 bg-white/10 backdrop-blur-sm flex-1 min-w-[200px]"
+                                >
+                                    <SearchPanel
+                                        value={historySearchQuery}
+                                        onChange={setHistorySearchQuery}
+                                        placeholder={t.admin.searchPlaceholder}
+                                        className="w-full"
+                                    />
+                                </motion.div>
+                            </div>
+
+                            {/* Table */}
+                            <div className="overflow-auto relative flex-1 min-h-0 rounded-xl border-2 border-dashed border-gourmet-green/25 dark:border-white/10 bg-gourmet-cream/70 dark:bg-dark-green/10">
                                 <Table>
                                     <TableHeader>
-                                        <TableRow>
-                                            <TableHead>{t.finance.date}</TableHead>
-                                            <TableHead>{t.finance.type}</TableHead>
-                                            <TableHead>{t.finance.category}</TableHead>
-                                            <TableHead>{t.finance.description}</TableHead>
-                                            <TableHead>{t.finance.linkedTo}</TableHead>
-                                            <TableHead className="text-right">{t.finance.amount}</TableHead>
+                                        <TableRow className="h-12 bg-gourmet-cream/60 dark:bg-dark-green/20 cursor-pointer select-none hover:bg-gourmet-green/10 dark:hover:bg-dark-green/30">
+                                            <TableHead className="text-gourmet-ink dark:text-dark-text font-semibold">{t.finance.date}</TableHead>
+                                            <TableHead className="text-gourmet-ink dark:text-dark-text font-semibold">{t.finance.type}</TableHead>
+                                            <TableHead className="text-gourmet-ink dark:text-dark-text font-semibold">{t.finance.category}</TableHead>
+                                            <TableHead className="text-gourmet-ink dark:text-dark-text font-semibold">{t.finance.description}</TableHead>
+                                            <TableHead className="text-gourmet-ink dark:text-dark-text font-semibold">{t.finance.linkedTo}</TableHead>
+                                            <TableHead className="text-right text-gourmet-ink dark:text-dark-text font-semibold">{t.finance.amount}</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {visibleHistoryRows.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={6} className="h-24 text-center text-slate-500">
+                                                <TableCell colSpan={6} className="h-24 text-center text-gourmet-ink/60 dark:text-dark-text/60">
                                                     {t.finance.emptyHistory}
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
-                                            visibleHistoryRows.map((tx) => (
-                                                    <TableRow key={tx.id}>
-                                                        <TableCell className="text-xs text-slate-500">
-                                                            {formatDate(tx.createdAt)}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Badge variant={tx.type === 'INCOME' ? 'outline' : 'secondary'} className={
-                                                                tx.type === 'INCOME' ? 'text-green-600 border-green-200 bg-green-50' : 'text-red-600 bg-red-50'
-                                                            }>
-                                                                {tx.type === 'INCOME' ? t.finance.income : t.finance.expense}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell className="text-xs font-medium">
-                                                            {tx.category}
-                                                        </TableCell>
-                                                        <TableCell className="max-w-[200px] truncate" title={tx.description}>
-                                                            {tx.description || '-'}
-                                                        </TableCell>
-                                                        <TableCell className="text-sm">
-                                                            {tx.customer ? (
-                                                                <div className="flex flex-col">
-                                                                    <span className="font-medium">{tx.customer.name}</span>
-                                                                    <span className="text-xs text-slate-400">{t.admin.clients}</span>
-                                                                </div>
-                                                            ) : (
-                                                                <span className="text-slate-500">{t.finance.companyBalance}</span>
-                                                            )}
-                                                        </TableCell>
-                                                        <TableCell className={`text-right font-medium ${tx.type === 'INCOME' ? 'text-green-600' : 'text-red-600'
-                                                            }`}>
-                                                            {tx.type === 'INCOME' ? '+' : '-'}{formatCurrency(tx.amount)}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))
+                                            visibleHistoryRows.map((tx, index) => (
+                                                <motion.tr
+                                                    key={tx.id}
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: index * 0.03 }}
+                                                    className="border-b border-gourmet-green/10 dark:border-white/5 hover:bg-gourmet-green/5 dark:hover:bg-dark-green/10 transition-colors"
+                                                >
+                                                    <TableCell className="text-xs text-gourmet-ink/60 dark:text-dark-text/60">
+                                                        {formatDate(tx.createdAt)}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge variant={tx.type === 'INCOME' ? 'outline' : 'secondary'} className={
+                                                            tx.type === 'INCOME' ? 'text-green-600 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-700' : 'text-red-600 bg-red-50 dark:bg-red-900/20'
+                                                        }>
+                                                            {tx.type === 'INCOME' ? t.finance.income : t.finance.expense}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-xs font-medium text-gourmet-ink dark:text-dark-text">
+                                                        {tx.category}
+                                                    </TableCell>
+                                                    <TableCell className="max-w-[200px] truncate text-gourmet-ink dark:text-dark-text" title={tx.description}>
+                                                        {tx.description || '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-sm text-gourmet-ink dark:text-dark-text">
+                                                        {tx.customer ? (
+                                                            <div className="flex flex-col">
+                                                                <span className="font-medium">{tx.customer.name}</span>
+                                                                <span className="text-xs text-gourmet-ink/60 dark:text-dark-text/60">{t.admin.clients}</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-gourmet-ink/60 dark:text-dark-text/60">{t.finance.companyBalance}</span>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className={`text-right font-medium ${tx.type === 'INCOME' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                                                        }`}>
+                                                        {tx.type === 'INCOME' ? '+' : '-'}{formatCurrency(tx.amount)}
+                                                    </TableCell>
+                                                </motion.tr>
+                                            ))
                                         )}
                                     </TableBody>
                                 </Table>
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </motion.div>
                 </TabsContent>
             </Tabs>
 
             {/* COMPANY FUNDS MODAL */}
             <Dialog open={isCompanyFundsModalOpen} onOpenChange={setIsCompanyFundsModalOpen}>
-                <DialogContent>
+                <DialogContent className="content-card border-2 border-dashed border-gourmet-green/30 dark:border-white/10 bg-gourmet-cream/90 dark:bg-dark-surface/90 backdrop-blur-xl">
                     <DialogHeader>
-                        <DialogTitle>{t.finance.manageBalance}</DialogTitle>
-                        <DialogDescription>
+                        <DialogTitle className="text-xl font-bold text-gourmet-ink dark:text-dark-text">{t.finance.manageBalance}</DialogTitle>
+                        <DialogDescription className="text-gourmet-ink/70 dark:text-dark-text/70">
                             {t.finance.manageBalanceDesc}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">{t.finance.type}</Label>
+                            <Label className="text-right text-gourmet-ink dark:text-dark-text font-medium">{t.finance.type}</Label>
                             <div className="col-span-3 flex gap-2">
-                                <Button
+                                <motion.button
                                     type="button"
-                                    variant={transactionType === 'INCOME' ? 'default' : 'outline'}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
                                     onClick={() => {
                                         setTransactionType('INCOME')
                                         if (transactionCategory === 'SALARY') {
@@ -668,27 +730,38 @@ export function FinanceTab({
                                             setSelectedSalaryAdminId('')
                                         }
                                     }}
-                                    className={transactionType === 'INCOME' ? 'bg-green-600 hover:bg-green-700' : ''}
+                                    className={cn(
+                                        "flex-1 py-3 px-4 rounded-xl border-2 border-dashed font-semibold transition-all duration-300",
+                                        transactionType === 'INCOME'
+                                            ? "bg-gourmet-green dark:bg-dark-green border-gourmet-green/50 text-gourmet-ink dark:text-dark-text shadow-lg"
+                                            : "bg-gourmet-cream/60 dark:bg-dark-surface/60 border-gourmet-green/20 text-gourmet-ink/60 dark:text-dark-text/60 hover:border-gourmet-green/40"
+                                    )}
                                 >
-                                    <Plus className="w-4 h-4 mr-2" />
+                                    <Plus className="w-4 h-4 mr-2 inline" />
                                     {t.finance.topUp}
-                                </Button>
-                                <Button
+                                </motion.button>
+                                <motion.button
                                     type="button"
-                                    variant={transactionType === 'EXPENSE' ? 'default' : 'outline'}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
                                     onClick={() => setTransactionType('EXPENSE')}
-                                    className={transactionType === 'EXPENSE' ? 'bg-red-600 hover:bg-red-700' : ''}
+                                    className={cn(
+                                        "flex-1 py-3 px-4 rounded-xl border-2 border-dashed font-semibold transition-all duration-300",
+                                        transactionType === 'EXPENSE'
+                                            ? "bg-gourmet-orange dark:bg-gourmet-orange border-gourmet-orange/50 text-gourmet-ink dark:text-dark-text shadow-lg"
+                                            : "bg-gourmet-cream/60 dark:bg-dark-surface/60 border-gourmet-orange/20 text-gourmet-ink/60 dark:text-dark-text/60 hover:border-gourmet-orange/40"
+                                    )}
                                 >
-                                    <Minus className="w-4 h-4 mr-2" />
+                                    <Minus className="w-4 h-4 mr-2 inline" />
                                     {t.finance.withdraw}
-                                </Button>
+                                </motion.button>
                             </div>
                         </div>
 
 
                         {/* Category + salary payout selection */}
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="category" className="text-right">{t.finance.category}</Label>
+                            <Label htmlFor="category" className="text-right text-gourmet-ink dark:text-dark-text font-medium">{t.finance.category}</Label>
                             <div className="col-span-3 relative">
                                 <Input
                                     id="category"
@@ -702,6 +775,7 @@ export function FinanceTab({
                                     }}
                                     placeholder={t.finance.category}
                                     list="categories-datalist"
+                                    className="bg-gourmet-cream/60 dark:bg-dark-surface/60 border-gourmet-green/25 dark:border-white/10"
                                 />
                                 <datalist id="categories-datalist">
                                     <option value="COMPANY_FUNDS" />
@@ -718,7 +792,7 @@ export function FinanceTab({
 
                         {transactionType === 'EXPENSE' && transactionCategory === 'SALARY' ? (
                             <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="salary-recipient" className="text-right">{t.finance.staff}</Label>
+                                <Label htmlFor="salary-recipient" className="text-right text-gourmet-ink dark:text-dark-text font-medium">{t.finance.staff}</Label>
                                 <Select
                                     value={selectedSalaryAdminId}
                                     onValueChange={(val) => {
@@ -732,7 +806,7 @@ export function FinanceTab({
                                         }
                                     }}
                                 >
-                                    <SelectTrigger id="salary-recipient" className="col-span-3">
+                                    <SelectTrigger id="salary-recipient" className="col-span-3 bg-gourmet-cream/60 dark:bg-dark-surface/60 border-gourmet-green/25 dark:border-white/10">
                                         <SelectValue placeholder={isSalaryAdminsLoading ? t.common.loading : t.finance.selectStaff} />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -747,7 +821,7 @@ export function FinanceTab({
                         ) : null}
 
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="amount" className="text-right">
+                            <Label htmlFor="amount" className="text-right text-gourmet-ink dark:text-dark-text font-medium">
                                 {t.finance.amount} ({transactionType === 'INCOME' ? '+' : '-'})
                             </Label>
                             <Input
@@ -756,19 +830,19 @@ export function FinanceTab({
                                 min="0"
                                 value={transactionAmount}
                                 onChange={(e) => setTransactionAmount(e.target.value)}
-                                className="col-span-3"
+                                className="col-span-3 bg-gourmet-cream/60 dark:bg-dark-surface/60 border-gourmet-green/25 dark:border-white/10"
                                 placeholder="0"
                             />
                         </div>
 
                         {!(transactionType === 'EXPENSE' && transactionCategory === 'SALARY') ? (
                             <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="description" className="text-right">{t.finance.description}</Label>
+                                <Label htmlFor="description" className="text-right text-gourmet-ink dark:text-dark-text font-medium">{t.finance.description}</Label>
                                 <Input
                                     id="description"
                                     value={transactionDescription}
                                     onChange={(e) => setTransactionDescription(e.target.value)}
-                                    className="col-span-3"
+                                    className="col-span-3 bg-gourmet-cream/60 dark:bg-dark-surface/60 border-gourmet-green/25 dark:border-white/10"
                                     placeholder={t.finance.description}
                                 />
                             </div>
@@ -776,7 +850,7 @@ export function FinanceTab({
 
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsCompanyFundsModalOpen(false)}>Отмена</Button>
+                        <Button variant="outline" onClick={() => setIsCompanyFundsModalOpen(false)} className="border-gourmet-green/25 dark:border-white/10">{t.common.cancel}</Button>
                         <Button onClick={handleTransactionSubmit} disabled={isSubmitting}>
                             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                             Подтвердить
@@ -786,34 +860,39 @@ export function FinanceTab({
             </Dialog>
 
             {/* BUY INGREDIENTS MODAL */}
-            < Dialog open={isBuyIngredientsModalOpen} onOpenChange={setIsBuyIngredientsModalOpen} >
-                <DialogContent className="max-w-3xl">
+            <Dialog open={isBuyIngredientsModalOpen} onOpenChange={setIsBuyIngredientsModalOpen}>
+                <DialogContent className="content-card border-2 border-dashed border-gourmet-green/30 dark:border-white/10 bg-gourmet-cream/90 dark:bg-dark-surface/90 backdrop-blur-xl max-w-3xl">
                     <DialogHeader>
-                        <DialogTitle>{t.finance.buyIngredients}</DialogTitle>
-                        <DialogDescription>
+                        <DialogTitle className="text-xl font-bold text-gourmet-ink dark:text-dark-text">{t.finance.buyIngredients}</DialogTitle>
+                        <DialogDescription className="text-gourmet-ink/70 dark:text-dark-text/70">
                             {t.finance.buyIngredientsDesc}
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto">
                         <div className="flex justify-between items-center px-1">
-                            <Label className="w-1/3">{t.warehouse.ingredient}</Label>
-                            <Label className="w-24">{t.finance.amountKg}</Label>
-                            <Label className="w-24">{t.finance.pricePerKg}</Label>
-                            <Label className="w-24">{t.finance.amount}</Label>
+                            <Label className="w-1/3 text-gourmet-ink dark:text-dark-text font-medium">{t.warehouse.ingredient}</Label>
+                            <Label className="w-24 text-gourmet-ink dark:text-dark-text font-medium">{t.finance.amountKg}</Label>
+                            <Label className="w-24 text-gourmet-ink dark:text-dark-text font-medium">{t.finance.pricePerKg}</Label>
+                            <Label className="w-24 text-gourmet-ink dark:text-dark-text font-medium">{t.finance.amount}</Label>
                             <div className="w-8"></div>
                         </div>
 
                         {purchaseItems.map((item, index) => (
-                            <div key={index} className="flex gap-2 items-center">
+                            <motion.div
+                                key={index}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: index * 0.05 }}
+                                className="flex gap-2 items-center"
+                            >
                                 <div className="w-1/3 relative group">
-                                    {/* Searchable Combobox Input */}
                                     <div className="relative">
                                         <Input
                                             value={item.name}
                                             onChange={(e) => handlePurchaseItemChange(index, 'name', e.target.value)}
                                             placeholder={t.common.name}
-                                            className="w-full"
+                                            className="w-full bg-gourmet-cream/60 dark:bg-dark-surface/60 border-gourmet-green/25 dark:border-white/10"
                                             list={`ingredients-list-${index}`}
                                         />
                                         <datalist id={`ingredients-list-${index}`}>
@@ -828,7 +907,7 @@ export function FinanceTab({
                                     min="0"
                                     step="0.1"
                                     placeholder="0"
-                                    className="w-24"
+                                    className="w-24 bg-gourmet-cream/60 dark:bg-dark-surface/60 border-gourmet-green/25 dark:border-white/10"
                                     value={item.amount}
                                     onChange={(e) => handlePurchaseItemChange(index, 'amount', e.target.value)}
                                 />
@@ -837,36 +916,45 @@ export function FinanceTab({
                                     min="0"
                                     step="100"
                                     placeholder="0"
-                                    className="w-24"
+                                    className="w-24 bg-gourmet-cream/60 dark:bg-dark-surface/60 border-gourmet-green/25 dark:border-white/10"
                                     value={item.costPerUnit}
                                     onChange={(e) => handlePurchaseItemChange(index, 'costPerUnit', e.target.value)}
                                 />
-                                <div className="w-24 text-right font-medium text-sm">
+                                <div className="w-24 text-right font-medium text-sm text-gourmet-ink dark:text-dark-text">
                                     {formatCurrency((parseFloat(item.amount) || 0) * (parseFloat(item.costPerUnit) || 0))}
                                 </div>
-                                <Button
+                                <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
                                     variant="ghost"
                                     size="icon"
-                                    className="w-8 h-8 text-red-500 hover:bg-red-50"
+                                    className="w-8 h-8 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full flex items-center justify-center"
                                     onClick={() => handleRemovePurchaseItem(index)}
                                     disabled={purchaseItems.length === 1}
                                 >
                                     <Trash2 className="w-4 h-4" />
-                                </Button>
-                            </div>
+                                </motion.button>
+                            </motion.div>
                         ))}
 
-                        <Button variant="outline" size="sm" onClick={handleAddPurchaseItem} className="w-full border-dashed">
-                            <Plus className="w-4 h-4 mr-2" /> {t.finance.addRow}
-                        </Button>
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            variant="outline"
+                            size="sm"
+                            onClick={handleAddPurchaseItem}
+                            className="w-full border-2 border-dashed border-gourmet-green/30 dark:border-white/10 py-3 rounded-xl text-gourmet-ink dark:text-dark-text font-medium hover:border-gourmet-green/50 dark:hover:border-white/20 transition-colors"
+                        >
+                            <Plus className="w-4 h-4 mr-2 inline" /> {t.finance.addRow}
+                        </motion.button>
                     </div>
 
-                    <div className="flex justify-between items-center pt-4 border-t">
-                        <div className="text-lg font-bold">
+                    <div className="flex justify-between items-center pt-4 border-t border-gourmet-green/20 dark:border-white/10">
+                        <div className="text-lg font-bold text-gourmet-ink dark:text-dark-text">
                             {t.finance.total}: {formatCurrency(calculateTotalPurchaseCost())}
                         </div>
                         <div className="flex gap-2">
-                            <Button variant="outline" onClick={() => setIsBuyIngredientsModalOpen(false)}>{t.common.cancel}</Button>
+                            <Button variant="outline" onClick={() => setIsBuyIngredientsModalOpen(false)} className="border-gourmet-green/25 dark:border-white/10">{t.common.cancel}</Button>
                             <Button onClick={handleBuyIngredientsSubmit} disabled={isSubmitting}>
                                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                 {t.finance.confirmPurchase}
@@ -874,8 +962,8 @@ export function FinanceTab({
                         </div>
                     </div>
                 </DialogContent>
-            </Dialog >
-        </div >
+            </Dialog>
+        </motion.div >
     );
 }
 
