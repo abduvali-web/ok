@@ -526,10 +526,10 @@ export default function DatabasePage() {
         thisWeek: 'Shu hafta',
         thisMonth: 'Shu oy',
         clearRange: 'Tozalash',
-      database: 'Maʼlumotlar bazasi',
-      scope: 'Qamrov',
-      generatedAt: 'Yaratilgan vaqti',
-      summary: 'Umumiy',
+        database: 'Maʼlumotlar bazasi',
+        scope: 'Qamrov',
+        generatedAt: 'Yaratilgan vaqti',
+        summary: 'Umumiy',
         allNeonSheets: 'Barcha Neon sahifalari',
         allNeonSheetsDescription: 'Sizga ruxsat etilgan qamrovdagi haqiqiy maʼlumotlar bazasi jadvallari.',
         sheet: 'Sahifa',
@@ -934,7 +934,7 @@ export default function DatabasePage() {
     if (value === 'null' || value === '' || value === '""' || value === '{}' || value === '[]') return '-'
     if (value === 'true') return language === 'ru' ? 'да' : 'ha'
     if (value === 'false') return language === 'ru' ? 'нет' : 'yoq'
-    
+
     // Statuses
     const statusDict: Record<string, Record<string, string>> = {
       ru: {
@@ -1324,7 +1324,10 @@ export default function DatabasePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6">
+    <div className="min-h-screen bg-muted dark:bg-muted p-4 sm:p-6 lg:p-10 font-sans transition-colors duration-500 overflow-hidden relative text-foreground">
+      <div className="fixed top-[-20%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
+      <div className="fixed bottom-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
+
       <input
         ref={fileInputRef}
         type="file"
@@ -1341,40 +1344,46 @@ export default function DatabasePage() {
         onChange={(event) => void handleImportAllSheetsFileChosen(event.target.files?.[0] ?? null)}
         aria-hidden
       />
-      <Card className="overflow-hidden">
-        <CardHeader className="border-b">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="h-4 w-4" />
-                {uiText.workspaceTitle}
-              </CardTitle>
-              <CardDescription>
+
+      <div className="mx-auto w-full max-w-[1400px]">
+        <div className="bg-white/50 dark:bg-white/[0.02] backdrop-blur-2xl rounded-[40px] border-2 border-dashed border-border dark:border-white/10 shadow-2xl overflow-hidden relative p-6 md:p-8 lg:p-12 mb-8 content-card">
+          <div className="absolute top-[-10%] right-[-5%] opacity-[0.03] dark:opacity-[0.01] rotate-12 scale-[2] pointer-events-none">
+            <Database className="w-96 h-96 text-foreground dark:text-white" />
+          </div>
+
+          <div className="relative z-10 flex flex-col xl:flex-row xl:items-end justify-between gap-8 mb-8 pb-8 border-b-2 border-dashed border-border dark:border-white/10">
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Button asChild variant="outline" size="icon" className="w-[50px] h-[50px] rounded-full border-b-4 border-black/10 hover:bg-primary hover:text-white transition-all" aria-label={uiText.backToMiddleAdmin} title={uiText.backToMiddleAdmin}>
+                  <Link href="/middle-admin">
+                    <ArrowLeft className="h-5 w-5" />
+                  </Link>
+                </Button>
+                <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter flex items-center gap-4">
+                  <Database className="h-8 w-8 md:h-12 md:w-12 text-primary" />
+                  {uiText.workspaceTitle}
+                </h1>
+              </div>
+              <p className="text-sm font-bold tracking-widest uppercase opacity-50 ml-[66px]">
                 {uiText.workspaceDescription(snapshot?.scope ?? uiText.unknownScope, lastSyncedLabel)}
-              </CardDescription>
+              </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <Button asChild variant="outline" size="icon" aria-label={uiText.backToMiddleAdmin} title={uiText.backToMiddleAdmin}>
-                <Link href="/middle-admin">
-                  <ArrowLeft className="h-4 w-4" />
-                  <span className="sr-only">{uiText.backToMiddleAdmin}</span>
-                </Link>
-              </Button>
-              <div className="hidden text-sm text-muted-foreground sm:block">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="hidden text-sm font-bold uppercase tracking-widest opacity-50 sm:block mr-4 border-r-2 border-dashed border-black/10 dark:border-white/10 pr-4">
                 {tables.length} {uiText.sheetsCount}
               </div>
-              
+
               <CalendarRangeSelector
                 value={date}
                 onChange={setDate}
                 uiText={{
                   calendar: menuChip,
+                  allTime: uiText.allTime,
                   today: uiText.today,
                   thisWeek: uiText.thisWeek,
                   thisMonth: uiText.thisMonth,
                   clearRange: uiText.clearRange,
-                  allTime: uiText.allTime,
                 }}
                 locale={language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'}
               />
@@ -1383,6 +1392,7 @@ export default function DatabasePage() {
                 label={uiText.refresh}
                 variant="outline"
                 iconSize="md"
+                className="h-[50px] rounded-2xl border-b-4 border-black/10"
                 onClick={() => void loadSnapshot(true)}
                 disabled={isRefreshing}
               >
@@ -1392,6 +1402,7 @@ export default function DatabasePage() {
                 label={uiText.downloadAllSheets}
                 variant="outline"
                 iconSize="md"
+                className="h-[50px] rounded-2xl border-b-4 border-black/10"
                 onClick={handleDownloadUnifiedSnapshotClick}
               >
                 <Download className="h-4 w-4" />
@@ -1400,6 +1411,7 @@ export default function DatabasePage() {
                 label={isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}
                 variant="outline"
                 iconSize="md"
+                className="h-[50px] rounded-2xl border-b-4 border-black/10"
                 onClick={handleImportAllSheetsClick}
                 disabled={isImportingAllSheets}
               >
@@ -1409,366 +1421,364 @@ export default function DatabasePage() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <IconButton label="Profile" variant="ghost" iconSize="md">
-                    <CircleUser className="h-4 w-4" />
+                  <IconButton label="Profile" variant="ghost" iconSize="md" className="h-[50px] rounded-2xl border-b-4 border-black/10">
+                    <CircleUser className="h-5 w-5" />
                   </IconButton>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild className="gap-2">
-                    <Link href="/middle-admin?chat=1">
-                      <MessageSquare className="h-4 w-4" />
-                      <span>Chat</span>
-                    </Link>
+                <DropdownMenuContent align="end" className="min-w-[240px] rounded-3xl border-none shadow-2xl p-2 bg-white/90 backdrop-blur-3xl animate-in fade-in zoom-in-95">
+                  <DropdownMenuItem onSelect={() => window.dispatchEvent(new Event("tambo:open-chat"))} className="h-12 rounded-2xl gap-3 font-bold hover:bg-primary/10">
+                    <MessageSquare className="h-5 w-5 opacity-60" />
+                    <span>Chat</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="gap-2">
+                  <DropdownMenuItem asChild className="h-12 rounded-2xl gap-3 font-bold hover:bg-primary/10">
                     <Link href="/middle-admin?settings=1">
-                      <Settings className="h-4 w-4" />
+                      <Settings className="h-5 w-5 opacity-60" />
                       <span>Settings</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={() => void handleLogout()} className="gap-2 text-rose-600 focus:text-rose-600">
-                    <LogOut className="h-4 w-4" />
+                  <DropdownMenuSeparator className="bg-slate-100" />
+                  <DropdownMenuItem onSelect={() => void handleLogout()} className="h-12 rounded-2xl gap-3 text-rose-600 focus:text-rose-600 font-bold hover:bg-rose-50">
+                    <LogOut className="h-5 w-5" />
                     <span>Logout</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
-        </CardHeader>
 
-        <CardContent className="space-y-4 p-4">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <SearchPanel value={tableQuery} onChange={setTableQuery} placeholder={uiText.searchTables} />
+          <div className="space-y-6 relative z-10">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+              <SearchPanel value={tableQuery} onChange={setTableQuery} placeholder={uiText.searchTables} />
 
-            <TabsList className="w-full justify-start overflow-x-auto">
-              <TabsTrigger
-                value="summary"
-                title={uiText.summary}
-                aria-label={uiText.summary}
-                className="h-9 w-9 shrink-0 px-0"
-              >
-                <SheetIcon id="summary" className="h-4 w-4" />
-                <span className="sr-only">{uiText.summary}</span>
-              </TabsTrigger>
-              {visibleTables.map((table) => (
+              <TabsList className="w-full justify-start overflow-x-auto">
                 <TabsTrigger
-                  key={table.id}
-                  value={table.id}
-                  title={tDb(table.title)}
-                  aria-label={tDb(table.title)}
+                  value="summary"
+                  title={uiText.summary}
+                  aria-label={uiText.summary}
                   className="h-9 w-9 shrink-0 px-0"
                 >
-                  <SheetIcon id={table.id} className="h-4 w-4" />
-                  <span className="sr-only">{tDb(table.title)}</span>
+                  <SheetIcon id="summary" className="h-4 w-4" />
+                  <span className="sr-only">{uiText.summary}</span>
                 </TabsTrigger>
-              ))}
-            </TabsList>
+                {visibleTables.map((table) => (
+                  <TabsTrigger
+                    key={table.id}
+                    value={table.id}
+                    title={tDb(table.title)}
+                    aria-label={tDb(table.title)}
+                    className="h-9 w-9 shrink-0 px-0"
+                  >
+                    <SheetIcon id={table.id} className="h-4 w-4" />
+                    <span className="sr-only">{tDb(table.title)}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
 
-            <TabsContent value="summary" className="space-y-4">
-              <div className="rounded-lg border">
-                <div className="border-b p-4">
-                  <p className="text-sm font-semibold">{uiText.allNeonSheets}</p>
-                  <p className="text-xs text-muted-foreground">{uiText.allNeonSheetsDescription}</p>
-                </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{uiText.sheet}</TableHead>
-                      <TableHead>{uiText.rows}</TableHead>
-                      <TableHead>{uiText.columns}</TableHead>
-                      <TableHead>{uiText.description}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {summary.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium">{tDb(item.title)}</TableCell>
-                        <TableCell>{item.rowCount}</TableCell>
-                        <TableCell>{item.columnCount}</TableCell>
-                        <TableCell>{item.description}</TableCell>
+              <TabsContent value="summary" className="space-y-4">
+                <div className="rounded-lg border">
+                  <div className="border-b p-4">
+                    <p className="text-sm font-semibold">{uiText.allNeonSheets}</p>
+                    <p className="text-xs text-muted-foreground">{uiText.allNeonSheetsDescription}</p>
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{uiText.sheet}</TableHead>
+                        <TableHead>{uiText.rows}</TableHead>
+                        <TableHead>{uiText.columns}</TableHead>
+                        <TableHead>{uiText.description}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
-
-            {tables.map((table) => (
-              <TabsContent key={table.id} value={table.id} className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4">
-                  <div>
-                    <p className="text-lg font-semibold">{tDb(table.title)}</p>
-                    <p className="text-sm text-muted-foreground">{table.description}</p>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    <SearchPanel
-                      value={activeTab === table.id ? searchTerm : ''}
-                      onChange={setSearchTerm}
-                      placeholder={uiText.searchInTable(tDb(table.title))}
-                    />
-                    <div className="text-xs tabular-nums text-muted-foreground">
-                      {filteredRows.length} / {table.rowCount} {uiText.rowsCount}
-                    </div>
-                    <IconButton
-                      label={uiText.downloadSheet}
-                      variant="outline"
-                      iconSize="md"
-                      onClick={handleDownloadCurrentTableClick}
-                    >
-                      <Download className="h-4 w-4" />
-                    </IconButton>
-                    <IconButton
-                      label={isImportingSheet ? uiText.importingSheet : uiText.importSheet}
-                      variant="outline"
-                      iconSize="md"
-                      onClick={() => handleImportSheetClick(table.id)}
-                      disabled={isImportingSheet}
-                    >
-                      {isImportingSheet ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    </IconButton>
-                  </div>
-                </div>
-
-                <div className="overflow-hidden rounded-lg border">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          {table.columns.map((column) => (
-                            <TableHead key={column} className="min-w-[160px] whitespace-nowrap">
-                              {tDb(column)}
-                            </TableHead>
-                          ))}
-                          <TableHead className="w-[100px] text-right"></TableHead>
+                    </TableHeader>
+                    <TableBody>
+                      {summary.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">{tDb(item.title)}</TableCell>
+                          <TableCell>{item.rowCount}</TableCell>
+                          <TableCell>{item.columnCount}</TableCell>
+                          <TableCell>{item.description}</TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {draftRowTableId === table.id && draftRow !== null && (
-                          <TableRow className="bg-muted/20">
-                            {table.columns.map((column) => (
-                              <TableCell key={`draft-${column}`}>
-                                {column === 'id' ? (
-                                  <div className="text-xs text-muted-foreground whitespace-nowrap">{uiText.autoGenerated}</div>
-                                ) : column === 'createdAt' || column === 'updatedAt' ? (
-                                  <div className="text-xs text-muted-foreground whitespace-nowrap">{uiText.autoTimed}</div>
-                                ) : (
-                                  <Input
-                                    value={draftRow[column] || ''}
-                                    onChange={(event) =>
-                                      setDraftRow((prev) => ({ ...(prev || {}), [column]: event.target.value }))
-                                    }
-                                    placeholder={uiText.enterValue(tDb(column))}
-                                    className="min-w-[120px] h-8 text-sm"
-                                    disabled={isSavingDraft}
-                                  />
-                                )}
-                              </TableCell>
-                            ))}
-                            <TableCell></TableCell>
-                          </TableRow>
-                        )}
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
 
-                        {pageRows.length > 0 ? (
-                          pageRows.map((row, index) => (
-                            editingRowId === row.id && row.id ? (
-                              <TableRow key={`${table.id}-editing-${index}`} className="bg-muted/20">
-                                {table.columns.map((column) => (
-                                  <TableCell key={`editing-${column}`}>
-                                    {column === 'id' || column === 'createdAt' || column === 'updatedAt' ? (
-                                      <div className="text-xs text-muted-foreground whitespace-nowrap">
-                                        {row[column] || '-'}
-                                      </div>
-                                    ) : (
-                                      <Input
-                                        value={editingRowData?.[column] || ''}
-                                        onChange={(event) =>
-                                          setEditingRowData((prev) => ({
-                                            ...(prev || {}),
-                                            [column]: event.target.value,
-                                          }))
-                                        }
-                                        className="min-w-[120px] h-8 text-sm"
-                                        disabled={isSavingDraft}
-                                      />
-                                    )}
-                                  </TableCell>
-                                ))}
-                                <TableCell className="text-right">
-                                  <div className="flex justify-end gap-2">
-                                    <IconButton label={uiText.saveEdit} iconSize="md" onClick={handleUpdateRow} disabled={isSavingDraft}>
-                                      {isSavingDraft ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                                    </IconButton>
-                                    <IconButton
-                                      label={uiText.cancelEdit}
-                                      variant="outline"
-                                      iconSize="md"
-                                      onClick={() => {
-                                        setEditingRowId(null)
-                                        setEditingRowData(null)
-                                      }}
+              {tables.map((table) => (
+                <TabsContent key={table.id} value={table.id} className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4">
+                    <div>
+                      <p className="text-lg font-semibold">{tDb(table.title)}</p>
+                      <p className="text-sm text-muted-foreground">{table.description}</p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <SearchPanel
+                        value={activeTab === table.id ? searchTerm : ''}
+                        onChange={setSearchTerm}
+                        placeholder={uiText.searchInTable(tDb(table.title))}
+                      />
+                      <div className="text-xs tabular-nums text-muted-foreground">
+                        {filteredRows.length} / {table.rowCount} {uiText.rowsCount}
+                      </div>
+                      <IconButton
+                        label={uiText.downloadSheet}
+                        variant="outline"
+                        iconSize="md"
+                        onClick={handleDownloadCurrentTableClick}
+                      >
+                        <Download className="h-4 w-4" />
+                      </IconButton>
+                      <IconButton
+                        label={isImportingSheet ? uiText.importingSheet : uiText.importSheet}
+                        variant="outline"
+                        iconSize="md"
+                        onClick={() => handleImportSheetClick(table.id)}
+                        disabled={isImportingSheet}
+                      >
+                        {isImportingSheet ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      </IconButton>
+                    </div>
+                  </div>
+
+                  <div className="overflow-hidden rounded-lg border">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            {table.columns.map((column) => (
+                              <TableHead key={column} className="min-w-[160px] whitespace-nowrap">
+                                {tDb(column)}
+                              </TableHead>
+                            ))}
+                            <TableHead className="w-[100px] text-right"></TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {draftRowTableId === table.id && draftRow !== null && (
+                            <TableRow className="bg-muted/20">
+                              {table.columns.map((column) => (
+                                <TableCell key={`draft-${column}`}>
+                                  {column === 'id' ? (
+                                    <div className="text-xs text-muted-foreground whitespace-nowrap">{uiText.autoGenerated}</div>
+                                  ) : column === 'createdAt' || column === 'updatedAt' ? (
+                                    <div className="text-xs text-muted-foreground whitespace-nowrap">{uiText.autoTimed}</div>
+                                  ) : (
+                                    <Input
+                                      value={draftRow[column] || ''}
+                                      onChange={(event) =>
+                                        setDraftRow((prev) => ({ ...(prev || {}), [column]: event.target.value }))
+                                      }
+                                      placeholder={uiText.enterValue(tDb(column))}
+                                      className="min-w-[120px] h-8 text-sm"
                                       disabled={isSavingDraft}
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </IconButton>
-                                  </div>
+                                    />
+                                  )}
                                 </TableCell>
-                              </TableRow>
-                            ) : (
-                              <TableRow key={`${table.id}-${index}`}>
-                                {table.columns.map((column) => (
-                                  <TableCell key={`${table.id}-${index}-${column}`} className="max-w-[320px] align-top">
-                                    <div className="line-clamp-4 whitespace-pre-wrap break-words text-sm">
-                                      {tDbValue(row[column] || '-')}
+                              ))}
+                              <TableCell></TableCell>
+                            </TableRow>
+                          )}
+
+                          {pageRows.length > 0 ? (
+                            pageRows.map((row, index) => (
+                              editingRowId === row.id && row.id ? (
+                                <TableRow key={`${table.id}-editing-${index}`} className="bg-muted/20">
+                                  {table.columns.map((column) => (
+                                    <TableCell key={`editing-${column}`}>
+                                      {column === 'id' || column === 'createdAt' || column === 'updatedAt' ? (
+                                        <div className="text-xs text-muted-foreground whitespace-nowrap">
+                                          {row[column] || '-'}
+                                        </div>
+                                      ) : (
+                                        <Input
+                                          value={editingRowData?.[column] || ''}
+                                          onChange={(event) =>
+                                            setEditingRowData((prev) => ({
+                                              ...(prev || {}),
+                                              [column]: event.target.value,
+                                            }))
+                                          }
+                                          className="min-w-[120px] h-8 text-sm"
+                                          disabled={isSavingDraft}
+                                        />
+                                      )}
+                                    </TableCell>
+                                  ))}
+                                  <TableCell className="text-right">
+                                    <div className="flex justify-end gap-2">
+                                      <IconButton label={uiText.saveEdit} iconSize="md" onClick={handleUpdateRow} disabled={isSavingDraft}>
+                                        {isSavingDraft ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                      </IconButton>
+                                      <IconButton
+                                        label={uiText.cancelEdit}
+                                        variant="outline"
+                                        iconSize="md"
+                                        onClick={() => {
+                                          setEditingRowId(null)
+                                          setEditingRowData(null)
+                                        }}
+                                        disabled={isSavingDraft}
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </IconButton>
                                     </div>
                                   </TableCell>
-                                ))}
-                                <TableCell className="text-right align-top">
-                                  {row.id ? (
-                                    <IconButton
-                                      label={uiText.editRow}
-                                      variant="ghost"
-                                      iconSize="md"
-                                      onClick={() => {
-                                        setEditingRowId(row.id as string)
-                                        setEditingRowData(row as Record<string, string>)
-                                      }}
-                                    >
-                                      <Edit className="h-4 w-4" />
-                                    </IconButton>
-                                  ) : null}
-                                </TableCell>
-                              </TableRow>
-                            )
-                          ))
-                        ) : draftRowTableId !== table.id ? (
-                          <TableRow>
-                            <TableCell
-                              colSpan={table.columns.length + 1}
-                              className="py-10 text-center text-sm text-muted-foreground"
-                            >
-                              {uiText.noRowsMatch}
-                            </TableCell>
-                          </TableRow>
-                        ) : null}
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  <div className="border-t bg-muted/5 p-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <div className="text-xs tabular-nums text-muted-foreground">
-                          {uiText.rowsRange(
-                            filteredRows.length === 0 ? 0 : pageIndex * pageSize + 1,
-                            filteredRows.length === 0
-                              ? 0
-                              : Math.min((pageIndex + 1) * pageSize, filteredRows.length),
-                            filteredRows.length
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">{uiText.rowsPerPage}</span>
-                          <div className="flex items-center gap-1">
-                            {[25, 50, 100].map((size) => (
-                              <Button
-                                key={size}
-                                type="button"
-                                variant={pageSize === size ? 'default' : 'outline'}
-                                size="sm"
-                                className="h-8 px-2"
-                                onClick={() => setPageSize(size as 25 | 50 | 100)}
-                                disabled={
-                                  isSavingDraft ||
-                                  editingRowId !== null ||
-                                  (draftRowTableId === table.id && draftRow !== null)
-                                }
+                                </TableRow>
+                              ) : (
+                                <TableRow key={`${table.id}-${index}`}>
+                                  {table.columns.map((column) => (
+                                    <TableCell key={`${table.id}-${index}-${column}`} className="max-w-[320px] align-top">
+                                      <div className="line-clamp-4 whitespace-pre-wrap break-words text-sm">
+                                        {tDbValue(row[column] || '-')}
+                                      </div>
+                                    </TableCell>
+                                  ))}
+                                  <TableCell className="text-right align-top">
+                                    {row.id ? (
+                                      <IconButton
+                                        label={uiText.editRow}
+                                        variant="ghost"
+                                        iconSize="md"
+                                        onClick={() => {
+                                          setEditingRowId(row.id as string)
+                                          setEditingRowData(row as Record<string, string>)
+                                        }}
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </IconButton>
+                                    ) : null}
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            ))
+                          ) : draftRowTableId !== table.id ? (
+                            <TableRow>
+                              <TableCell
+                                colSpan={table.columns.length + 1}
+                                className="py-10 text-center text-sm text-muted-foreground"
                               >
-                                {size}
-                              </Button>
-                            ))}
+                                {uiText.noRowsMatch}
+                              </TableCell>
+                            </TableRow>
+                          ) : null}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    <div className="border-t bg-muted/5 p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="text-xs tabular-nums text-muted-foreground">
+                            {uiText.rowsRange(
+                              filteredRows.length === 0 ? 0 : pageIndex * pageSize + 1,
+                              filteredRows.length === 0
+                                ? 0
+                                : Math.min((pageIndex + 1) * pageSize, filteredRows.length),
+                              filteredRows.length
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">{uiText.rowsPerPage}</span>
+                            <div className="flex items-center gap-1">
+                              {[25, 50, 100].map((size) => (
+                                <Button
+                                  key={size}
+                                  type="button"
+                                  variant={pageSize === size ? 'default' : 'outline'}
+                                  size="sm"
+                                  className="h-8 px-2"
+                                  onClick={() => setPageSize(size as 25 | 50 | 100)}
+                                  disabled={
+                                    isSavingDraft ||
+                                    editingRowId !== null ||
+                                    (draftRowTableId === table.id && draftRow !== null)
+                                  }
+                                >
+                                  {size}
+                                </Button>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="flex flex-wrap items-center justify-end gap-2">
-                        <IconButton
-                          label={uiText.previous}
-                          variant="outline"
-                          iconSize="sm"
-                          onClick={() => setPageIndex((current) => Math.max(0, current - 1))}
-                          disabled={
-                            pageIndex === 0 ||
-                            isSavingDraft ||
-                            editingRowId !== null ||
-                            (draftRowTableId === table.id && draftRow !== null)
-                          }
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </IconButton>
-                        <IconButton
-                          label={uiText.next}
-                          variant="outline"
-                          iconSize="sm"
-                          onClick={() => setPageIndex((current) => Math.min(pageCount - 1, current + 1))}
-                          disabled={
-                            pageIndex >= pageCount - 1 ||
-                            isSavingDraft ||
-                            editingRowId !== null ||
-                            (draftRowTableId === table.id && draftRow !== null)
-                          }
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </IconButton>
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+                          <IconButton
+                            label={uiText.previous}
+                            variant="outline"
+                            iconSize="sm"
+                            onClick={() => setPageIndex((current) => Math.max(0, current - 1))}
+                            disabled={
+                              pageIndex === 0 ||
+                              isSavingDraft ||
+                              editingRowId !== null ||
+                              (draftRowTableId === table.id && draftRow !== null)
+                            }
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </IconButton>
+                          <IconButton
+                            label={uiText.next}
+                            variant="outline"
+                            iconSize="sm"
+                            onClick={() => setPageIndex((current) => Math.min(pageCount - 1, current + 1))}
+                            disabled={
+                              pageIndex >= pageCount - 1 ||
+                              isSavingDraft ||
+                              editingRowId !== null ||
+                              (draftRowTableId === table.id && draftRow !== null)
+                            }
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </IconButton>
 
-                        {draftRowTableId === table.id && draftRow !== null ? (
-                          <>
+                          {draftRowTableId === table.id && draftRow !== null ? (
+                            <>
+                              <IconButton
+                                label={uiText.cancelRow}
+                                variant="outline"
+                                iconSize="sm"
+                                onClick={() => {
+                                  setDraftRow(null)
+                                  setDraftRowTableId(null)
+                                }}
+                                disabled={isSavingDraft}
+                              >
+                                <X className="h-4 w-4" />
+                              </IconButton>
+                              <IconButton
+                                label={uiText.saveRow}
+                                iconSize="sm"
+                                onClick={() => void handleSaveDraftRow()}
+                                disabled={isSavingDraft}
+                              >
+                                {isSavingDraft ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                              </IconButton>
+                            </>
+                          ) : (
                             <IconButton
-                              label={uiText.cancelRow}
+                              label={uiText.addRow}
                               variant="outline"
                               iconSize="sm"
                               onClick={() => {
-                                setDraftRow(null)
-                                setDraftRowTableId(null)
+                                setDraftRow({})
+                                setDraftRowTableId(table.id)
                               }}
-                              disabled={isSavingDraft}
+                              disabled={isSavingDraft || editingRowId !== null}
                             >
-                              <X className="h-4 w-4" />
+                              <Plus className="h-4 w-4" />
                             </IconButton>
-                            <IconButton
-                              label={uiText.saveRow}
-                              iconSize="sm"
-                              onClick={() => void handleSaveDraftRow()}
-                              disabled={isSavingDraft}
-                            >
-                              {isSavingDraft ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                            </IconButton>
-                          </>
-                        ) : (
-                          <IconButton
-                            label={uiText.addRow}
-                            variant="outline"
-                            iconSize="sm"
-                            onClick={() => {
-                              setDraftRow({})
-                              setDraftRowTableId(table.id)
-                            }}
-                            disabled={isSavingDraft || editingRowId !== null}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </IconButton>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
-        </CardContent>
-      </Card>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

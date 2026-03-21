@@ -50,7 +50,7 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
         className={cn(
           ICON_BUTTON_INNER_SIZE[iconSize],
           'rounded-full border-2 border-dashed border-white/10 flex items-center justify-center',
-          effectiveVariant === 'destructive' ? 'text-white' : 'text-gourmet-ink dark:text-dark-text'
+          effectiveVariant === 'destructive' ? 'text-white' : 'text-foreground'
         )}
       >
         {children}

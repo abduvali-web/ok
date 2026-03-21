@@ -3,7 +3,6 @@ export const CANONICAL_TABS = [
   'clients',
   'admins',
   'bin',
-  'statistics',
   'history',
   'warehouse',
   'finance',

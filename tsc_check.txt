@@ -1,0 +1,72 @@
+﻿[96msrc/components/admin/dashboard/tabs-content/AdminsTab.tsx[0m:[93m534[0m:[93m17[0m - [91merror[0m[90m TS2503: [0mCannot find namespace 'JSX'.
+
+[7m534[0m     const rows: JSX.Element[] = []
+[7m   [0m [91m                ~~~[0m
+
+[96msrc/components/admin/dashboard/tabs-content/AdminsTab.tsx[0m:[93m535[0m:[93m15[0m - [91merror[0m[90m TS2503: [0mCannot find namespace 'JSX'.
+
+[7m535[0m     let days: JSX.Element[] = []
+[7m   [0m [91m              ~~~[0m
+
+[96msrc/components/admin/StatsCards.tsx[0m:[93m92[0m:[93m21[0m - [91merror[0m[90m TS2322: [0mType '{ hidden: { opacity: number; y: number; scale: number; }; show: { opacity: number; y: number; scale: number; transition: { type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'show' is incompatible with index signature.
+    Type '{ opacity: number; y: number; scale: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '{ opacity: number; y: number; scale: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ opacity: number; y: number; scale: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'type' are incompatible.
+                    Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+
+[7m92[0m                     variants={item}
+[7m  [0m [91m                    ~~~~~~~~[0m
+
+  [96mnode_modules/motion-dom/dist/index.d.ts[0m:[93m1792[0m:[93m5[0m
+    [7m1792[0m     variants?: Variants;
+    [7m    [0m [96m    ~~~~~~~~[0m
+    The expected type comes from property 'variants' which is declared here on type 'IntrinsicAttributes & Omit<HTMLMotionProps<"div">, "ref"> & RefAttributes<HTMLDivElement>'
+
+[96msrc/components/admin/WarehouseTab.tsx[0m:[93m361[0m:[93m176[0m - [91merror[0m[90m TS2552: [0mCannot find name 'Clock'. Did you mean 'Lock'?
+
+[7m361[0m                                 <StatItem label={auditUiText.remaining} value={cookingTotals.remaining} sub="Still to be done" color="text-amber-600" dot="bg-amber-500" icon={Clock} />
+[7m   [0m [91m                                                                                                                                                                               ~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.dom.d.ts[0m:[93m19392[0m:[93m13[0m
+    [7m19392[0m declare var Lock: {
+    [7m     [0m [96m            ~~~~[0m
+    'Lock' is declared here.
+
+[96msrc/components/admin/WarehouseTab.tsx[0m:[93m365[0m:[93m34[0m - [91merror[0m[90m TS2741: [0mProperty 'uiText' is missing in type '{ value: DateRange | undefined; onChange: Dispatch<SetStateAction<DateRange | undefined>>; locale: string; className: string; }' but required in type '{ value: DateRange | undefined; onChange: (next: DateRange | undefined) => void; uiText: CalendarRangeSelectorUiText; locale?: string | undefined; className?: string | undefined; customTrigger?: ((open: () => void, isOpen: boolean) => ReactNode) | undefined; }'.
+
+[7m365[0m                                 <CalendarRangeSelector
+[7m   [0m [91m                                 ~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/components/admin/dashboard/shared/CalendarRangeSelector.tsx[0m:[93m74[0m:[93m3[0m
+    [7m74[0m   uiText: CalendarRangeSelectorUiText
+    [7m  [0m [96m  ~~~~~~[0m
+    'uiText' is declared here.
+
+[96msrc/components/admin/WarehouseTab.tsx[0m:[93m414[0m:[93m38[0m - [91merror[0m[90m TS2304: [0mCannot find name 'Info'.
+
+[7m414[0m                                     <Info className="w-8 h-8" />
+[7m   [0m [91m                                     ~~~~[0m
+
+[96msrc/components/admin/WarehouseTab.tsx[0m:[93m437[0m:[93m42[0m - [91merror[0m[90m TS2741: [0mProperty 'uiText' is missing in type '{ value: DateRange | undefined; onChange: Dispatch<SetStateAction<DateRange | undefined>>; locale: string; className: string; }' but required in type '{ value: DateRange | undefined; onChange: (next: DateRange | undefined) => void; uiText: CalendarRangeSelectorUiText; locale?: string | undefined; className?: string | undefined; customTrigger?: ((open: () => void, isOpen: boolean) => ReactNode) | undefined; }'.
+
+[7m437[0m                                         <CalendarRangeSelector value={calcRange} onChange={setCalcRange} locale={dateLocale} className="w-full bg-transparent border-none" />
+[7m   [0m [91m                                         ~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/components/admin/dashboard/shared/CalendarRangeSelector.tsx[0m:[93m74[0m:[93m3[0m
+    [7m74[0m   uiText: CalendarRangeSelectorUiText
+    [7m  [0m [96m  ~~~~~~[0m
+    'uiText' is declared here.
+
+
+Found 7 errors in 3 files.
+
+Errors  Files
+     2  src/components/admin/dashboard/tabs-content/AdminsTab.tsx[90m:534[0m
+     1  src/components/admin/StatsCards.tsx[90m:92[0m
+     4  src/components/admin/WarehouseTab.tsx[90m:361[0m

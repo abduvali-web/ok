@@ -5,16 +5,16 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-lg border px-2.5 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none transition-all duration-200",
+  "inline-flex items-center justify-center rounded-md border px-2.5 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none transition-colors duration-150",
   {
     variants: {
       variant: {
-        default: "border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/[0.06] text-zinc-900 dark:text-white/90 shadow-sm backdrop-blur-md",
-        secondary: "border-black/5 dark:border-white/[0.07] bg-white/50 dark:bg-white/[0.03] text-zinc-600 dark:text-white/70 backdrop-blur-md",
-        destructive: "border-red-500/20 bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 dark:shadow-[0_0_12px_-3px_rgba(239,68,68,0.2)]",
-        success: "border-emerald-500/20 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 dark:shadow-[0_0_12px_-3px_rgba(52,211,153,0.2)]",
-        warning: "border-amber-500/20 bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 dark:shadow-[0_0_12px_-3px_rgba(251,191,36,0.2)]",
-        outline: "border-black/20 dark:border-white/10 text-zinc-800 dark:text-white/70 bg-transparent",
+        default: "border-border bg-secondary text-secondary-foreground",
+        secondary: "border-border bg-muted text-muted-foreground",
+        destructive: "border-destructive/50 bg-destructive/10 text-destructive",
+        success: "border-success/50 bg-success/10 text-success",
+        warning: "border-warning/50 bg-warning/10 text-warning",
+        outline: "border-border text-foreground bg-transparent",
       },
     },
     defaultVariants: {

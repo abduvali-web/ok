@@ -531,8 +531,8 @@ export function AdminsTab({
     const startDateView = startOfWeek(monthStart, { weekStartsOn: 1 })
     const endDateView = endOfWeek(monthEnd, { weekStartsOn: 1 })
 
-    const rows: JSX.Element[] = []
-    let days: JSX.Element[] = []
+    const rows: any[] = []
+    let days: any[] = []
     let day = startDateView
     const dateFormat = 'd'
 
@@ -550,11 +550,11 @@ export function AdminsTab({
             key={day.toString()}
             className={cn(
               'relative p-1 md:p-2 text-center cursor-pointer transition-all duration-200 rounded-lg md:rounded-xl',
-              !isCurrentMonth ? 'text-gourmet-ink/40 dark:text-dark-text/40' : 'text-gourmet-ink dark:text-dark-text',
+              !isCurrentMonth ? 'text-muted-foreground/40' : 'text-foreground',
               isSelected
-                ? 'bg-dark-green text-gourmet-ink dark:text-dark-text shadow-md z-10'
-                : 'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40',
-              isInRange && !isSelected ? 'bg-dark-green/20' : ''
+                ? 'bg-primary text-foreground shadow-md z-10'
+                : 'hover:bg-muted',
+              isInRange && !isSelected ? 'bg-primary/20' : ''
             )}
             onClick={() => handleDateClick(cloneDay)}
           >
@@ -623,7 +623,7 @@ export function AdminsTab({
             transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
             className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none"
           >
-            <CookingPot className="w-56 h-56 md:w-64 md:h-64 text-gourmet-ink dark:text-dark-text" />
+            <CookingPot className="w-56 h-56 md:w-64 md:h-64 text-foreground" />
           </motion.div>
 
           {/* Title */}
@@ -632,7 +632,7 @@ export function AdminsTab({
               initial={{ x: -50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.4 }}
-              className="text-2xl md:text-4xl font-extrabold text-gourmet-ink dark:text-dark-text tracking-tight"
+              className="text-2xl md:text-4xl font-extrabold text-foreground tracking-tight"
             >
               {t.admin.manageLowAdmins}
             </motion.h2>
@@ -640,7 +640,7 @@ export function AdminsTab({
               initial={{ x: -50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="text-base md:text-lg text-gourmet-ink dark:text-dark-text font-medium"
+              className="text-base md:text-lg text-foreground font-medium"
             >
               {t.admin.manageLowAdminsDesc}
             </motion.p>
@@ -650,17 +650,17 @@ export function AdminsTab({
           <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 md:gap-6 relative z-10">
             <motion.div
               whileHover={{ scale: 1.01 }}
-              className="relative flex-1 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
+              className="relative flex-1 bg-primary rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
             >
               <div className="rounded-full border-2 border-dashed border-white/30 flex items-center px-4 md:px-6 py-2 md:py-3">
-                <Search className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text mr-3 md:mr-4" />
+                <Search className="w-5 h-5 md:w-6 md:h-6 text-foreground mr-3 md:mr-4" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
                   placeholder="Qidirish..."
                   aria-label={t.admin.searchPlaceholder}
-                  className="w-full bg-transparent py-0 !text-base md:!text-lg focus:outline-none text-gourmet-ink dark:text-dark-text placeholder:text-gourmet-ink dark:placeholder:text-dark-text"
+                  className="w-full bg-transparent py-0 !text-base md:!text-lg focus:outline-none text-foreground placeholder:text-muted-foreground"
                 />
               </div>
             </motion.div>
@@ -675,11 +675,11 @@ export function AdminsTab({
                   }}
                   whileTap={{ x: 0 }}
                   onClick={openDatePicker}
-                  className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
+                  className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-primary rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
                 >
                   <div className="w-[42px] h-[42px] md:w-full md:h-full rounded-full border-2 border-dashed border-white/10 flex items-center justify-center md:px-6">
-                    <CalendarIcon className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text md:mr-3" />
-                    <span className="hidden md:inline font-bold text-sm md:text-lg text-gourmet-ink dark:text-dark-text whitespace-nowrap">
+                    <CalendarIcon className="w-5 h-5 md:w-6 md:h-6 text-foreground md:mr-3" />
+                    <span className="hidden md:inline font-bold text-sm md:text-lg text-foreground whitespace-nowrap">
                       {appliedRangeLabel}
                     </span>
                   </div>
@@ -694,12 +694,12 @@ export function AdminsTab({
                     whileTap={{ scale: 0.9 }}
                     onClick={openCreateModal}
                     disabled={isBulkMutating}
-                    className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                    className="w-[50px] h-[50px] bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
                     aria-label={t.admin.create}
                     title={t.admin.create}
                   >
                     <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                      <Plus className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                      <Plus className="w-6 h-6 text-foreground" />
                     </div>
                   </motion.button>
 
@@ -709,15 +709,15 @@ export function AdminsTab({
                     whileTap={{ scale: 0.9 }}
                     onClick={() => void handleBulkToggleStatus()}
                     disabled={selectedAdminIds.size === 0 || isBulkMutating}
-                    className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                    className="w-[50px] h-[50px] bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
                     aria-label={shouldPauseSelectedAdmins ? t.admin.pause : t.admin.resume}
                     title={shouldPauseSelectedAdmins ? t.admin.pause : t.admin.resume}
                   >
                     <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
                       {shouldPauseSelectedAdmins ? (
-                        <Pause className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                        <Pause className="w-6 h-6 text-foreground" />
                       ) : (
-                        <Play className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                        <Play className="w-6 h-6 text-foreground" />
                       )}
                     </div>
                   </motion.button>
@@ -728,12 +728,12 @@ export function AdminsTab({
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setIsBulkDeleteOpen(true)}
                     disabled={selectedAdminIds.size === 0 || isBulkMutating}
-                    className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                    className="w-[50px] h-[50px] bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
                     aria-label={t.admin.deleteSelected}
                     title={t.admin.deleteSelected}
                   >
                     <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                      <Trash2 className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                      <Trash2 className="w-6 h-6 text-foreground" />
                     </div>
                   </motion.button>
 
@@ -743,12 +743,12 @@ export function AdminsTab({
                     whileTap={{ scale: 0.8 }}
                     onClick={() => void handleRefresh()}
                     disabled={isRefreshing}
-                    className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                    className="w-[50px] h-[50px] bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
                     aria-label={profileUiText?.refresh ?? 'Refresh'}
                     title={profileUiText?.refresh ?? 'Refresh'}
                   >
                     <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                      <RotateCcw className={cn('w-5 h-5 text-gourmet-ink dark:text-dark-text', isRefreshing && 'animate-spin')} />
+                      <RotateCcw className={cn('w-5 h-5 text-foreground', isRefreshing && 'animate-spin')} />
                     </div>
                   </motion.button>
                 </div>
@@ -759,12 +759,12 @@ export function AdminsTab({
                   whileTap={{ scale: 0.8 }}
                   onClick={() => void handleRefresh()}
                   disabled={isRefreshing}
-                  className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                  className="w-[50px] h-[50px] bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
                   aria-label={profileUiText?.refresh ?? 'Refresh'}
                   title={profileUiText?.refresh ?? 'Refresh'}
                 >
                   <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                    <RotateCcw className={cn('w-5 h-5 text-gourmet-ink dark:text-dark-text', isRefreshing && 'animate-spin')} />
+                    <RotateCcw className={cn('w-5 h-5 text-foreground', isRefreshing && 'animate-spin')} />
                   </div>
                 </motion.button>
               )}
@@ -781,12 +781,12 @@ export function AdminsTab({
                 toggleSelectAllFilteredAdmins(!allSelected)
               }
 
-              const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text'
-              const cellBorder = 'border-l-2 border-dashed border-gourmet-green/25 dark:border-white/10'
+              const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-foreground'
+              const cellBorder = 'border-l-2 border-dashed border-border'
 
               return (
-                <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 overflow-hidden relative">
-                  <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none text-gourmet-green-light dark:text-gourmet-green">
+                <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-border overflow-hidden relative">
+                  <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none text-primary">
                     <Cherry className="w-10 h-10 md:w-14 md:h-14 rotate-12" />
                     <Utensils className="w-10 h-10 md:w-14 md:h-14 -rotate-12" />
                   </div>
@@ -796,8 +796,8 @@ export function AdminsTab({
                       <TableHeader>
                         <TableRow
                           className={cn(
-                            'h-12 bg-gourmet-cream/60 dark:bg-dark-green/20 cursor-pointer select-none',
-                            !isLowAdminView ? 'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/30' : 'cursor-default'
+                            'h-12 bg-muted/60 dark:bg-muted/20 cursor-pointer select-none',
+                            !isLowAdminView ? 'hover:bg-muted' : 'cursor-default'
                           )}
                           onClick={toggleSelectAll}
                         >
@@ -826,13 +826,13 @@ export function AdminsTab({
                             <TableRow
                               key={admin.id}
                               className={cn(
-                                'h-12 transition-colors border-t border-gourmet-green/15 dark:border-white/10',
+                                'h-12 transition-colors border-t border-border',
                                 index % 2 === 0
-                                  ? 'bg-gourmet-cream dark:bg-dark-surface'
-                                  : 'bg-gourmet-cream/40 dark:bg-dark-green/20',
+                                  ? 'bg-card'
+                                  : 'bg-muted/40',
                                 !isLowAdminView &&
-                                  'cursor-pointer hover:bg-gourmet-green/10 dark:hover:bg-dark-green/30',
-                                isSelected && 'bg-gourmet-green/10 dark:bg-dark-green/30'
+                                'cursor-pointer hover:bg-muted',
+                                isSelected && 'bg-muted'
                               )}
                               onClick={() => {
                                 if (isLowAdminView) return
@@ -846,16 +846,16 @@ export function AdminsTab({
                             >
                               <TableCell className="w-[18px] px-0">
                                 <div className="h-full flex items-center justify-start">
-                                  {isSelected ? <div className="w-1.5 h-8 bg-gourmet-orange rounded-r-full" /> : null}
+                                  {isSelected ? <div className="w-1.5 h-8 bg-accent rounded-r-full" /> : null}
                                 </div>
                               </TableCell>
-                              <TableCell className="pl-4 md:pl-6 font-bold text-gourmet-ink dark:text-dark-text">
+                              <TableCell className="pl-4 md:pl-6 font-bold text-foreground">
                                 {admin.name}
                               </TableCell>
-                              <TableCell className={cn('font-medium text-gourmet-ink/70 dark:text-dark-text/70', cellBorder)}>
+                              <TableCell className={cn('font-medium text-muted-foreground/70', cellBorder)}>
                                 {admin.email}
                               </TableCell>
-                              <TableCell className={cn('font-medium text-gourmet-ink dark:text-dark-text', cellBorder)}>
+                              <TableCell className={cn('font-medium text-foreground', cellBorder)}>
                                 {roleLabel[normalizedRole]}
                               </TableCell>
                               <TableCell className={cn('font-bold text-emerald-600', cellBorder)}>
@@ -871,7 +871,7 @@ export function AdminsTab({
                                   inactiveLabel={t.admin.table.paused}
                                 />
                               </TableCell>
-                              <TableCell className={cn('font-medium text-gourmet-ink dark:text-dark-text', cellBorder)}>
+                              <TableCell className={cn('font-medium text-foreground', cellBorder)}>
                                 {admin.salary && admin.salary > 0 ? `${salaryFormatter.format(admin.salary)} UZS` : '-'}
                               </TableCell>
                               <TableCell className={cn('text-right tabular-nums', cellBorder)}>
@@ -882,7 +882,7 @@ export function AdminsTab({
                                         ? 'font-bold text-rose-600'
                                         : salaryLedgerByAdminId[admin.id].balance < 0
                                           ? 'font-bold text-emerald-600'
-                                          : 'text-gourmet-ink/60 dark:text-dark-text/60'
+                                          : 'text-muted-foreground/60'
                                     }
                                     title={`Days: ${salaryLedgerByAdminId[admin.id].days}; Accrued: ${salaryFormatter.format(salaryLedgerByAdminId[admin.id].accrued)} UZS; Paid: ${salaryFormatter.format(salaryLedgerByAdminId[admin.id].paid)} UZS`}
                                   >
@@ -890,7 +890,7 @@ export function AdminsTab({
                                     {salaryFormatter.format(Math.round(salaryLedgerByAdminId[admin.id].balance))} UZS
                                   </span>
                                 ) : (
-                                  <span className="text-gourmet-ink/60 dark:text-dark-text/60">-</span>
+                                  <span className="text-muted-foreground/60">-</span>
                                 )}
                               </TableCell>
                               {!isLowAdminView && (
@@ -901,12 +901,12 @@ export function AdminsTab({
                                     whileTap={{ scale: 0.9 }}
                                     onClick={() => openEditModal(admin)}
                                     disabled={Boolean(pendingAction) || isBulkMutating}
-                                    className="ml-auto w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                                    className="ml-auto w-[50px] h-[50px] bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
                                     aria-label={t.admin.edit}
                                     title={t.admin.edit}
                                   >
                                     <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                                      <Edit className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                                      <Edit className="w-6 h-6 text-foreground" />
                                     </div>
                                   </motion.button>
                                 </TableCell>
@@ -918,7 +918,7 @@ export function AdminsTab({
                         {filteredAdmins.length === 0 && (
                           <TableRow>
                             <TableCell colSpan={!isLowAdminView ? 10 : 9} className="h-20 text-center">
-                              <div className="inline-flex items-center gap-2 text-sm font-bold text-gourmet-ink/60 dark:text-dark-text/60">
+                              <div className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground/60">
                                 <Users className="size-4" />
                                 {t.admin.noAdminsFound}
                               </div>
@@ -949,7 +949,7 @@ export function AdminsTab({
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative bg-gourmet-cream dark:bg-dark-surface rounded-3xl md:rounded-[40px] shadow-2xl border-2 border-gourmet-green/20 p-6 md:p-10 z-[1000] w-full max-w-[450px] mx-auto overflow-hidden transition-colors duration-300"
+                className="relative bg-card rounded-3xl md:rounded-[40px] shadow-2xl border-2 border-border p-6 md:p-10 z-[1000] w-full max-w-[450px] mx-auto overflow-hidden transition-colors duration-300"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Calendar"
@@ -957,29 +957,29 @@ export function AdminsTab({
                 <button
                   type="button"
                   onClick={closeDatePicker}
-                  className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-colors"
+                  className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
                   aria-label="Close"
                 >
-                  <X className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                  <X className="w-6 h-6 text-foreground" />
                 </button>
 
                 <div className="flex items-center justify-between mb-6 md:mb-8">
                   <button
                     type="button"
                     onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-muted rounded-full transition-colors"
                   >
-                    <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text" />
+                    <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
                   </button>
-                  <h3 className="text-xl md:text-2xl font-black text-gourmet-ink dark:text-dark-text">
+                  <h3 className="text-xl md:text-2xl font-black text-foreground">
                     {format(currentMonth, 'MMMM yyyy')}
                   </h3>
                   <button
                     type="button"
                     onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-muted rounded-full transition-colors"
                   >
-                    <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text" />
+                    <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
                   </button>
                 </div>
 
@@ -987,7 +987,7 @@ export function AdminsTab({
                   {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map((d) => (
                     <div
                       key={d}
-                      className="text-center text-[10px] md:text-sm font-black text-gourmet-ink dark:text-dark-text uppercase tracking-widest py-2"
+                      className="text-center text-[10px] md:text-sm font-black text-foreground uppercase tracking-widest py-2"
                     >
                       {d}
                     </div>
@@ -996,11 +996,11 @@ export function AdminsTab({
 
                 <div className="text-base md:text-lg">{renderCalendar()}</div>
 
-                <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-gourmet-green/20">
+                <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-border">
                   <button
                     type="button"
                     onClick={resetDraftRange}
-                    className="text-sm md:text-base font-bold text-gourmet-ink dark:text-dark-text hover:text-gourmet-ink dark:hover:text-dark-text transition-colors"
+                    className="text-sm md:text-base font-bold text-foreground hover:text-foreground transition-colors"
                   >
                     Reset
                   </button>
@@ -1008,14 +1008,14 @@ export function AdminsTab({
                     <button
                       type="button"
                       onClick={closeDatePicker}
-                      className="px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-sm md:text-base text-gourmet-ink dark:text-dark-text hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-all border border-gourmet-ink/5 sm:border-none"
+                      className="px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-sm md:text-base text-foreground hover:bg-muted transition-all border border-border sm:border-none"
                     >
                       Bekor qilish
                     </button>
                     <button
                       type="button"
                       onClick={applyDraftRange}
-                      className="bg-gourmet-green dark:bg-dark-green text-gourmet-ink dark:text-dark-text px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-green-500/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
+                      className="bg-primary text-foreground px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
                     >
                       Tayyor
                     </button>
@@ -1089,112 +1089,112 @@ export function AdminsTab({
 
           <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col gap-4">
             <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pr-1">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <FormField label={t.admin.table.name} htmlFor="admin-form-name">
-                <Input
-                  id="admin-form-name"
-                  value={formData.name}
-                  onChange={(event) => setFormData((prev) => ({ ...prev, name: event.target.value }))}
-                  required
-                />
-              </FormField>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <FormField label={t.admin.table.name} htmlFor="admin-form-name">
+                  <Input
+                    id="admin-form-name"
+                    value={formData.name}
+                    onChange={(event) => setFormData((prev) => ({ ...prev, name: event.target.value }))}
+                    required
+                  />
+                </FormField>
 
-              <FormField label={t.auth.email} htmlFor="admin-form-email">
-                <Input
-                  id="admin-form-email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(event) => setFormData((prev) => ({ ...prev, email: event.target.value }))}
-                  required
-                />
-              </FormField>
+                <FormField label={t.auth.email} htmlFor="admin-form-email">
+                  <Input
+                    id="admin-form-email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(event) => setFormData((prev) => ({ ...prev, email: event.target.value }))}
+                    required
+                  />
+                </FormField>
 
-              <FormField
-                label={t.admin.table.password}
-                htmlFor="admin-form-password"
-                hint={formMode === 'edit' ? t.admin.leaveEmpty : undefined}
-              >
-                <Input
-                  id="admin-form-password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(event) => setFormData((prev) => ({ ...prev, password: event.target.value }))}
-                  required={formMode === 'create' && formData.role !== 'WORKER'}
-                />
-              </FormField>
-
-              <FormField label={t.admin.table.role} htmlFor="admin-form-role">
-                <Select
-                  value={formData.role}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      role: value as AdminRoleOption,
-                      allowedTabs: value === 'LOW_ADMIN' ? prev.allowedTabs : [],
-                    }))
-                  }
+                <FormField
+                  label={t.admin.table.password}
+                  htmlFor="admin-form-password"
+                  hint={formMode === 'edit' ? t.admin.leaveEmpty : undefined}
                 >
-                  <SelectTrigger id="admin-form-role" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="LOW_ADMIN">{roleLabel.LOW_ADMIN}</SelectItem>
-                    <SelectItem value="COURIER">{roleLabel.COURIER}</SelectItem>
-                    <SelectItem value="WORKER">{roleLabel.WORKER}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormField>
+                  <Input
+                    id="admin-form-password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(event) => setFormData((prev) => ({ ...prev, password: event.target.value }))}
+                    required={formMode === 'create' && formData.role !== 'WORKER'}
+                  />
+                </FormField>
 
-              <FormField label={t.finance.salary} htmlFor="admin-form-salary">
-                <Input
-                  id="admin-form-salary"
-                  type="number"
-                  min={0}
-                  value={formData.salary || 0}
-                  onChange={(event) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      salary: parseSalaryInput(event.target.value),
-                    }))
-                  }
-                />
-              </FormField>
-            </div>
+                <FormField label={t.admin.table.role} htmlFor="admin-form-role">
+                  <Select
+                    value={formData.role}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        role: value as AdminRoleOption,
+                        allowedTabs: value === 'LOW_ADMIN' ? prev.allowedTabs : [],
+                      }))
+                    }
+                  >
+                    <SelectTrigger id="admin-form-role" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="LOW_ADMIN">{roleLabel.LOW_ADMIN}</SelectItem>
+                      <SelectItem value="COURIER">{roleLabel.COURIER}</SelectItem>
+                      <SelectItem value="WORKER">{roleLabel.WORKER}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormField>
 
-            {formData.role === 'LOW_ADMIN' && (
-              <div className="rounded-md border bg-muted/20 p-3">
-                <Label className="mb-2 block text-sm font-medium">{t.admin.interface}</Label>
-                <AllowedTabsPicker
-                  idPrefix="admin-form-tab"
-                  value={formData.allowedTabs}
-                  onChange={(next) => setFormData((prev) => ({ ...prev, allowedTabs: next }))}
-                  copy={tabsCopy}
-                />
+                <FormField label={t.finance.salary} htmlFor="admin-form-salary">
+                  <Input
+                    id="admin-form-salary"
+                    type="number"
+                    min={0}
+                    value={formData.salary || 0}
+                    onChange={(event) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        salary: parseSalaryInput(event.target.value),
+                      }))
+                    }
+                  />
+                </FormField>
               </div>
-            )}
 
-            {formMode === 'edit' && (
-              <div className="flex items-center justify-between rounded-md border bg-muted/20 px-3 py-2">
-                <div className="text-sm">
-                  <p className="font-medium">{t.common.status}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formData.isActive ? t.admin.table.active : t.admin.table.paused}
-                  </p>
+              {formData.role === 'LOW_ADMIN' && (
+                <div className="rounded-md border bg-muted/20 p-3">
+                  <Label className="mb-2 block text-sm font-medium">{t.admin.interface}</Label>
+                  <AllowedTabsPicker
+                    idPrefix="admin-form-tab"
+                    value={formData.allowedTabs}
+                    onChange={(next) => setFormData((prev) => ({ ...prev, allowedTabs: next }))}
+                    copy={tabsCopy}
+                  />
                 </div>
-                <Checkbox
-                  checked={formData.isActive}
-                  onCheckedChange={(checked) =>
-                    setFormData((prev) => ({ ...prev, isActive: checked === true }))
-                  }
-                />
-              </div>
-            )}
+              )}
 
-            {formError && (
-              <Alert variant="destructive">
-                <AlertDescription>{formError}</AlertDescription>
-              </Alert>
-            )}
+              {formMode === 'edit' && (
+                <div className="flex items-center justify-between rounded-md border bg-muted/20 px-3 py-2">
+                  <div className="text-sm">
+                    <p className="font-medium">{t.common.status}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formData.isActive ? t.admin.table.active : t.admin.table.paused}
+                    </p>
+                  </div>
+                  <Checkbox
+                    checked={formData.isActive}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, isActive: checked === true }))
+                    }
+                  />
+                </div>
+              )}
+
+              {formError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{formError}</AlertDescription>
+                </Alert>
+              )}
             </div>
 
             <DialogFooter className="shrink-0">
