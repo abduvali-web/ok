@@ -2,19 +2,19 @@
 
 import type { ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { 
-  BarChart3, 
-  ChefHat, 
-  CookingPot, 
-  Database, 
-  LogOut, 
-  MessageSquare, 
-  Moon, 
-  Settings, 
-  ShoppingCart, 
-  Sun, 
-  Users, 
-  Utensils, 
+import {
+  BarChart3,
+  ChefHat,
+  CookingPot,
+  Database,
+  LogOut,
+  MessageSquare,
+  Moon,
+  Settings,
+  ShoppingCart,
+  Sun,
+  Users,
+  Utensils,
   LayoutDashboard,
   ShieldCheck,
   Zap,
@@ -77,62 +77,62 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
   return (
     <div
       className={cn(
-        'min-h-screen flex flex-col selection:bg-gourmet-green/20 overflow-hidden',
-        'bg-[#FDFCF9] dark:bg-dark-bg text-gourmet-ink dark:text-dark-text transition-colors duration-500'
+        'min-h-screen flex flex-col selection:bg-primary/20 overflow-hidden',
+        'bg-background text-foreground transition-colors duration-500'
       )}
     >
       <motion.header
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-        className="h-24 md:h-32 bg-gourmet-green dark:bg-dark-green flex items-center justify-between px-6 md:px-16 rounded-b-[60px] shadow-2xl z-50 transition-all duration-300 relative border-b-8 border-black/10"
+        className="h-24 md:h-32 bg-primary flex items-center justify-between px-6 md:px-16 rounded-b-[60px] shadow-2xl z-50 transition-all duration-300 relative border-b-8 border-black/10"
       >
         <div className="flex items-center gap-6">
-           <Button 
-             variant="ghost" 
-             size="icon" 
-             className="md:hidden text-white h-12 w-12 rounded-full hover:bg-white/10"
-             onClick={() => setIsSidebarOpen(true)}
-           >
-              <Menu className="w-8 h-8" />
-           </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden text-white h-12 w-12 rounded-full hover:bg-white/10"
+            onClick={() => setIsSidebarOpen(true)}
+          >
+            <Menu className="w-8 h-8" />
+          </Button>
 
-           <motion.div 
-             whileHover={{ scale: 1.05, rotate: -2 }} 
-             className="flex items-center gap-4 cursor-pointer group"
-             onClick={() => router.push('/admin')}
-           >
-             <div className="bg-white/10 backdrop-blur-xl p-4 rounded-[28px] shadow-inner border-2 border-dashed border-white/20 group-hover:border-white/40 transition-all duration-500">
-                <LayoutDashboard className="w-8 h-8 md:w-10 md:h-10 text-white" />
-             </div>
-             <div className="hidden sm:block">
-                <h1 className="text-2xl md:text-3xl font-black text-white tracking-tighter uppercase leading-none">
-                  Gourmet
-                </h1>
-                <div className="flex items-center gap-2 mt-1">
-                   <ShieldCheck className="w-3 h-3 text-white/40" />
-                   <p className="text-[10px] font-black text-white/40 tracking-[0.3em] uppercase">
-                     Central Command
-                   </p>
-                </div>
-             </div>
-           </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05, rotate: -2 }}
+            className="flex items-center gap-4 cursor-pointer group"
+            onClick={() => router.push('/admin')}
+          >
+            <div className="bg-white/10 backdrop-blur-xl p-4 rounded-[28px] shadow-inner border-2 border-dashed border-white/20 group-hover:border-white/40 transition-all duration-500">
+              <LayoutDashboard className="w-8 h-8 md:w-10 md:h-10 text-white" />
+            </div>
+            <div className="hidden sm:block">
+              <h1 className="text-2xl md:text-3xl font-black text-white tracking-tighter uppercase leading-none">
+                Gourmet
+              </h1>
+              <div className="flex items-center gap-2 mt-1">
+                <ShieldCheck className="w-3 h-3 text-white/40" />
+                <p className="text-[10px] font-black text-white/40 tracking-[0.3em] uppercase">
+                  Central Command
+                </p>
+              </div>
+            </div>
+          </motion.div>
         </div>
 
         <div className="flex items-center gap-4 md:gap-8">
           <div className="hidden lg:flex items-center gap-6 px-8 py-3 bg-white/10 rounded-full border border-white/10 backdrop-blur-md">
-             <div className="flex flex-col items-end">
-                <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Status</span>
-                <span className="text-sm font-bold text-white flex items-center gap-2">
-                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                   Operational
-                </span>
-             </div>
-             <Separator orientation="vertical" className="h-8 bg-white/10" />
-             <div className="flex flex-col items-end text-white">
-                <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Mode</span>
-                <span className="text-sm font-bold uppercase tracking-tight">{mode === 'middle' ? 'Master' : 'Associate'} Admin</span>
-             </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Status</span>
+              <span className="text-sm font-bold text-white flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                Operational
+              </span>
+            </div>
+            <Separator orientation="vertical" className="h-8 bg-white/10" />
+            <div className="flex flex-col items-end text-white">
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Mode</span>
+              <span className="text-sm font-bold uppercase tracking-tight">{mode === 'middle' ? 'Master' : 'Associate'} Admin</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -173,16 +173,16 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
               <DropdownMenuContent align="end" className="min-w-[240px] rounded-3xl border-none shadow-2xl p-2 bg-white/90 backdrop-blur-3xl animate-in fade-in zoom-in-95">
                 <DropdownMenuLabel className="px-4 py-3 text-[10px] font-black uppercase tracking-widest opacity-40">System Access</DropdownMenuLabel>
                 {showDatabase && (
-                  <DropdownMenuItem onSelect={() => router.push('/middle-admin/database')} className="h-12 rounded-2xl gap-3 font-bold hover:bg-gourmet-green/10">
+                  <DropdownMenuItem onSelect={() => router.push('/middle-admin/database')} className="h-12 rounded-2xl gap-3 font-bold hover:bg-primary/10">
                     <Database className="h-5 w-5 opacity-60" />
                     <span>Database Engine</span>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onSelect={() => window.dispatchEvent(new Event("tambo:open-chat"))} className="h-12 rounded-2xl gap-3 font-bold hover:bg-gourmet-green/10">
+                <DropdownMenuItem onSelect={() => window.dispatchEvent(new Event("tambo:open-chat"))} className="h-12 rounded-2xl gap-3 font-bold hover:bg-primary/10">
                   <MessageSquare className="h-5 w-5 opacity-60" />
                   <span>Communication Hub</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => openModalParam('settings')} className="h-12 rounded-2xl gap-3 font-bold hover:bg-gourmet-green/10">
+                <DropdownMenuItem onSelect={() => openModalParam('settings')} className="h-12 rounded-2xl gap-3 font-bold hover:bg-primary/10">
                   <Settings className="h-5 w-5 opacity-60" />
                   <span>Interface Engine</span>
                 </DropdownMenuItem>
@@ -198,13 +198,13 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
       </motion.header>
 
       <div className="flex flex-col md:flex-row flex-1 py-6 md:py-10 px-4 md:px-10 gap-6 md:gap-14 pb-28 md:pb-10 relative">
-        <Sidebar 
-          activeTab={activeTab} 
-          onTabChange={onTabChange} 
-          isOpen={isSidebarOpen} 
-          onClose={() => setIsSidebarOpen(false)} 
-          onLogout={onLogout} 
-          className="z-[60]" 
+        <Sidebar
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          onLogout={onLogout}
+          className="z-[60]"
         />
 
         <main className="flex-1 relative min-w-0 flex flex-col min-h-0 z-10">
@@ -223,7 +223,7 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
         </main>
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 flex flex-row justify-around gap-2 bg-gourmet-green/95 dark:bg-dark-green/95 backdrop-blur-2xl p-4 rounded-t-[40px] shadow-[0_-20px_50px_rgba(0,0,0,0.2)] border-t-2 border-white/10 md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 flex flex-row justify-around gap-2 bg-primary/95 backdrop-blur-2xl p-4 rounded-t-[40px] shadow-[0_-20px_50px_rgba(0,0,0,0.2)] border-t-2 border-white/10 md:hidden">
         {[
           { key: 'orders', label: 'Orders', icon: ShoppingCart },
           { key: 'statistics', label: 'Stats', icon: BarChart3 },
@@ -244,10 +244,10 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
               />
             )}
             <div className={cn(
-                "p-3 rounded-full transition-all duration-300 relative z-10",
-                activeTab === item.key ? "bg-white text-gourmet-green scale-110 shadow-xl" : "text-white/40"
+              "p-3 rounded-full transition-all duration-300 relative z-10",
+              activeTab === item.key ? "bg-white text-primary scale-110 shadow-xl" : "text-white/40"
             )}>
-               <item.icon className="w-6 h-6" />
+              <item.icon className="w-6 h-6" />
             </div>
             <span className={cn(
               "text-[9px] font-black uppercase tracking-widest relative z-10",

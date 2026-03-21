@@ -266,11 +266,11 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                         key={day.toString()}
                         className={cn(
                             'relative p-1 md:p-2 text-center cursor-pointer transition-all duration-200 rounded-lg md:rounded-xl',
-                            !isCurrentMonth ? 'text-gourmet-ink/40 dark:text-dark-text/40' : 'text-gourmet-ink dark:text-dark-text',
+                            !isCurrentMonth ? 'text-muted-foreground/40 dark:text-muted-foreground/40' : 'text-foreground dark:text-foreground',
                             isSelected
-                                ? 'bg-dark-green text-gourmet-ink dark:text-dark-text shadow-md z-10'
-                                : 'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40',
-                            isInRange && !isSelected ? 'bg-dark-green/20' : ''
+                                ? 'bg-primary text-foreground dark:text-foreground shadow-md z-10'
+                                : 'hover:bg-muted dark:hover:bg-muted',
+                            isInRange && !isSelected ? 'bg-primary/20' : ''
                         )}
                         onClick={() => handleDateClick(cloneDay)}
                     >
@@ -473,17 +473,17 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     const StatItem = ({ label, value, sub, color, dot, icon: Icon }: any) => (
         <motion.div
             whileHover={{ y: -5, scale: 1.02 }}
-            className="group relative rounded-3xl border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-6 bg-white/40 dark:bg-dark-green/10 hover:bg-gourmet-green/10 transition-all duration-300 overflow-hidden"
+            className="group relative rounded-3xl border-2 border-dashed border-border dark:border-border p-6 bg-white/40 dark:bg-muted/10 hover:bg-muted/10 transition-all duration-300 overflow-hidden"
         >
             <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                {Icon && <Icon className="w-10 h-10 text-gourmet-ink dark:text-dark-text" />}
+                {Icon && <Icon className="w-10 h-10 text-foreground dark:text-foreground" />}
             </div>
             <div className="flex items-center gap-2 mb-3">
                 <span className={cn("h-2 w-2 rounded-full", dot)} />
-                <span className="text-xs font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">{label}</span>
+                <span className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 dark:text-muted-foreground/60">{label}</span>
             </div>
             <div className={cn("text-3xl font-black tracking-tighter", color)}>{value}</div>
-            <p className="text-xs font-bold text-gourmet-ink/40 dark:text-dark-text/40 mt-1">{sub}</p>
+            <p className="text-xs font-bold text-muted-foreground/40 dark:text-muted-foreground/40 mt-1">{sub}</p>
         </motion.div>
     );
 
@@ -492,7 +492,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             <motion.div
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="content-card flex-1 min-h-0 flex flex-col gap-8 md:gap-14 relative overflow-hidden px-4 md:px-14 py-8 md:py-16 transition-colors duration-300"
+                className="bg-card flex-1 min-h-0 flex flex-col gap-8 md:gap-14 relative overflow-hidden px-4 md:px-14 py-8 md:py-16 transition-colors duration-300"
             >
                 {/* Background Watermark */}
                 <motion.div
@@ -500,11 +500,11 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                     transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
                     className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none"
                 >
-                    <Package className="w-64 h-64 text-gourmet-ink dark:text-dark-text" />
+                    <Package className="w-64 h-64 text-foreground dark:text-foreground" />
                 </motion.div>
 
                 {/* Title Section */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10 text-gourmet-ink dark:text-dark-text">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10 text-foreground dark:text-foreground">
                     <div className="flex flex-col gap-2">
                         <motion.h2 className="text-3xl md:text-5xl font-extrabold tracking-tight uppercase">
                             {auditUiText.statsHeader}
@@ -514,17 +514,17 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                         </motion.p>
                     </div>
 
-                    <TabsList className="bg-white/40 dark:bg-dark-green/20 backdrop-blur-xl border border-white/20 p-1 rounded-[32px] h-14 md:h-16 flex items-center md:px-6 shadow-xl">
-                        <TabsTrigger value="cooking" className="rounded-full px-6 h-full data-[state=active]:bg-gourmet-green dark:data-[state=active]:bg-dark-green font-bold uppercase tracking-widest text-xs transition-all duration-500">
+                    <TabsList className="bg-white/40 dark:bg-muted/20 backdrop-blur-xl border border-border p-1 rounded-[32px] h-14 md:h-16 flex items-center md:px-6 shadow-xl">
+                        <TabsTrigger value="cooking" className="rounded-full px-6 h-full data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-bold uppercase tracking-widest text-xs transition-all duration-500">
                             {t.warehouse.cooking}
                         </TabsTrigger>
-                        <TabsTrigger value="sets" className="rounded-full px-6 h-full data-[state=active]:bg-gourmet-green dark:data-[state=active]:bg-dark-green font-bold uppercase tracking-widest text-xs transition-all duration-500">
+                        <TabsTrigger value="sets" className="rounded-full px-6 h-full data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-bold uppercase tracking-widest text-xs transition-all duration-500">
                             {auditUiText.setsTab}
                         </TabsTrigger>
-                        <TabsTrigger value="inventory" className="rounded-full px-6 h-full data-[state=active]:bg-gourmet-green dark:data-[state=active]:bg-dark-green font-bold uppercase tracking-widest text-xs transition-all duration-500">
+                        <TabsTrigger value="inventory" className="rounded-full px-6 h-full data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-bold uppercase tracking-widest text-xs transition-all duration-500">
                             {t.warehouse.inventory}
                         </TabsTrigger>
-                        <TabsTrigger value="calculator" className="rounded-full px-6 h-full data-[state=active]:bg-gourmet-green dark:data-[state=active]:bg-dark-green font-bold uppercase tracking-widest text-xs transition-all duration-500">
+                        <TabsTrigger value="calculator" className="rounded-full px-6 h-full data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-bold uppercase tracking-widest text-xs transition-all duration-500">
                             {t.warehouse.calculator}
                         </TabsTrigger>
                     </TabsList>
@@ -535,25 +535,25 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
 
                         <TabsContent value="cooking" className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <StatItem label={auditUiText.planned} value={cookingTotals.planned} sub="Portions total" color="text-gourmet-ink" dot="bg-gourmet-ink" icon={CookingPot} />
+                                <StatItem label={auditUiText.planned} value={cookingTotals.planned} sub="Portions total" color="text-foreground" dot="bg-foreground" icon={CookingPot} />
                                 <StatItem label={auditUiText.cooked} value={cookingTotals.cooked} sub="Successfully prepared" color="text-emerald-600" dot="bg-emerald-500" icon={ChefHat} />
                                 <StatItem label={auditUiText.remaining} value={cookingTotals.remaining} sub="Still to be done" color="text-amber-600" dot="bg-amber-500" icon={Clock} />
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-4 bg-white/20 dark:bg-dark-green/5 p-4 rounded-3xl border-2 border-dashed border-gourmet-green/20">
+                            <div className="flex flex-wrap items-center gap-4 bg-white/20 dark:bg-muted/5 p-4 rounded-3xl border-2 border-dashed border-border">
                                 <motion.button
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     onClick={() => openDatePicker('cooking')}
-                                    className="bg-white/50 dark:bg-dark-green/20 rounded-2xl border-none shadow-inner px-4 py-2 flex items-center gap-2 cursor-pointer transition-colors"
+                                    className="bg-white/50 dark:bg-muted/20 rounded-2xl border-none shadow-inner px-4 py-2 flex items-center gap-2 cursor-pointer transition-colors"
                                 >
-                                    <CalendarIcon className="w-5 h-5 text-gourmet-ink dark:text-dark-text" />
-                                    <span className="font-bold text-sm text-gourmet-ink dark:text-dark-text">
+                                    <CalendarIcon className="w-5 h-5 text-foreground dark:text-foreground" />
+                                    <span className="font-bold text-sm text-foreground dark:text-foreground">
                                         {appliedRangeLabel}
                                     </span>
                                 </motion.button>
                                 <Select value={cookingSelectedSetId} onValueChange={setCookingSelectedSetId}>
-                                    <SelectTrigger className="h-12 w-[220px] rounded-2xl bg-white/50 dark:bg-dark-green/20 border-none shadow-inner">
+                                    <SelectTrigger className="h-12 w-[220px] rounded-2xl bg-white/50 dark:bg-muted/20 border-none shadow-inner">
                                         <SelectValue placeholder={auditUiText.setsTab} />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-2xl border-none shadow-2xl backdrop-blur-xl">
@@ -565,11 +565,11 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                     label={auditUiText.refresh}
                                     onClick={() => { fetchData(); refreshCookingPlansForRange(); }}
                                     isLoading={isCookingPlansLoading}
-                                    className="bg-gourmet-green dark:bg-dark-green text-gourmet-cream shadow-lg hover:shadow-2xl transition-all"
+                                    className="bg-primary dark:bg-primary text-card-foreground shadow-lg hover:shadow-2xl transition-all"
                                 />
                             </div>
 
-                            <div className="rounded-[40px] border-2 border-dashed border-gourmet-green/20 bg-white/10 p-6">
+                            <div className="rounded-[40px] border-2 border-dashed border-border bg-white/10 p-6">
                                 <CookingManager
                                     date={selectedCookingDateISO}
                                     menuNumber={selectedCookingMenuNumber}
@@ -608,30 +608,30 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                         <TabsContent value="calculator" className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                                 <div className="space-y-6 flex flex-col justify-center">
-                                    <div className="bg-gourmet-green/10 border-2 border-dashed border-gourmet-green/30 rounded-[40px] p-8 flex items-center gap-6">
-                                        <div className="p-4 bg-gourmet-green/20 rounded-3xl text-gourmet-green">
+                                    <div className="bg-primary/10 border-2 border-dashed border-border rounded-[40px] p-8 flex items-center gap-6">
+                                        <div className="p-4 bg-primary/20 rounded-3xl text-primary">
                                             <Calculator className="w-8 h-8" />
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-black text-gourmet-ink/80 dark:text-dark-text/80 uppercase tracking-tight">Provisioning</h3>
-                                            <p className="text-gourmet-ink/40 dark:text-dark-text/40 font-medium">Forecast ingredients based on expected menu cycle.</p>
+                                            <h3 className="text-xl font-black text-foreground/80 dark:text-foreground/80 uppercase tracking-tight">Provisioning</h3>
+                                            <p className="text-foreground/40 dark:text-foreground/40 font-medium">Forecast ingredients based on expected menu cycle.</p>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col gap-4 p-4 bg-white/30 rounded-[40px] border border-white/40 shadow-xl">
+                                    <div className="flex flex-col gap-4 p-4 bg-white/30 rounded-[40px] border border-border shadow-xl">
                                         <motion.button
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                             onClick={() => openDatePicker('calc')}
                                             className="w-full bg-transparent border-none px-4 py-2 flex items-center gap-2 cursor-pointer transition-colors"
                                         >
-                                            <CalendarIcon className="w-5 h-5 text-gourmet-ink dark:text-dark-text" />
-                                            <span className="font-bold text-sm text-gourmet-ink dark:text-dark-text">
+                                            <CalendarIcon className="w-5 h-5 text-foreground dark:text-foreground" />
+                                            <span className="font-bold text-sm text-foreground dark:text-foreground">
                                                 {appliedRangeLabel}
                                             </span>
                                         </motion.button>
                                         <Button
                                             onClick={() => calculateForPeriod(calcRangeDays)}
-                                            className="h-16 rounded-[32px] bg-gourmet-green hover:bg-gourmet-green/90 dark:bg-dark-green text-xl font-black uppercase tracking-widest shadow-2xl hover:scale-[1.02] transition-all"
+                                            className="h-16 rounded-[32px] bg-primary hover:bg-primary/90 dark:bg-primary text-xl font-black uppercase tracking-widest shadow-2xl hover:scale-[1.02] transition-all"
                                         >
                                             Run Calculation
                                             <ArrowRight className="ml-4 w-6 h-6" />
@@ -648,16 +648,16 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                             exit={{ opacity: 0, x: -20 }}
                                             className="grid grid-cols-1 md:grid-cols-2 gap-6"
                                         >
-                                            <div className="bg-white/40 dark:bg-dark-green/10 backdrop-blur-xl rounded-[40px] border-2 border-dashed border-gourmet-green/20 p-8 flex flex-col gap-6">
-                                                <h4 className="flex items-center gap-3 text-lg font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">
+                                            <div className="bg-white/40 dark:bg-muted/10 backdrop-blur-xl rounded-[40px] border-2 border-dashed border-border p-8 flex flex-col gap-6">
+                                                <h4 className="flex items-center gap-3 text-lg font-black uppercase tracking-widest text-muted-foreground/60 dark:text-muted-foreground/60">
                                                     <CookingPot className="w-6 h-6" />
                                                     Groceries
                                                 </h4>
                                                 <div className="flex-1 overflow-auto pr-2 custom-scrollbar space-y-3">
                                                     {Array.from(calculatedIngredients.entries()).map(([k, v]) => (
-                                                        <div key={k} className="flex justify-between items-center bg-white/40 p-3 rounded-2xl border border-white/20">
-                                                            <span className="font-bold text-gourmet-ink/70 dark:text-dark-text/70">{k}</span>
-                                                            <Badge variant="secondary" className="rounded-lg bg-gourmet-green/10 text-gourmet-green font-black">{v.amount} {v.unit}</Badge>
+                                                        <div key={k} className="flex justify-between items-center bg-white/40 p-3 rounded-2xl border border-border">
+                                                            <span className="font-bold text-foreground/70 dark:text-foreground/70">{k}</span>
+                                                            <Badge variant="secondary" className="rounded-lg bg-primary/10 text-primary font-black">{v.amount} {v.unit}</Badge>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -690,18 +690,18 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                             key="empty"
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
-                                            className="h-full flex flex-col items-center justify-center bg-white/40 rounded-[60px] border-4 border-dashed border-gourmet-green/10 p-20 text-center"
+                                            className="h-full flex flex-col items-center justify-center bg-white/40 rounded-[60px] border-4 border-dashed border-border p-20 text-center"
                                         >
-                                            <div className="p-10 bg-gourmet-green/5 rounded-full mb-8 relative">
-                                                <PieChart className="w-20 h-20 text-gourmet-green opacity-20" />
+                                            <div className="p-10 bg-primary/5 rounded-full mb-8 relative">
+                                                <PieChart className="w-20 h-20 text-primary opacity-20" />
                                                 <motion.div
                                                     animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                                                     transition={{ duration: 2, repeat: Infinity }}
-                                                    className="absolute inset-0 border-4 border-gourmet-green/20 rounded-full"
+                                                    className="absolute inset-0 border-4 border-primary/20 rounded-full"
                                                 />
                                             </div>
-                                            <h4 className="text-2xl font-black text-gourmet-ink/60 uppercase tracking-tighter mb-2">Ready for planning?</h4>
-                                            <p className="text-gourmet-ink/30 font-bold max-w-sm">Select a date range to calculate needed ingredients and shopping list.</p>
+                                            <h4 className="text-2xl font-black text-muted-foreground/60 uppercase tracking-tighter mb-2">Ready for planning?</h4>
+                                            <p className="text-muted-foreground/30 font-bold max-w-sm">Select a date range to calculate needed ingredients and shopping list.</p>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
@@ -726,7 +726,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative bg-gourmet-cream dark:bg-dark-surface rounded-3xl md:rounded-[40px] shadow-2xl border-2 border-gourmet-green/20 p-6 md:p-10 z-[1000] w-full max-w-[450px] mx-auto overflow-hidden transition-colors duration-300"
+                            className="relative bg-card dark:bg-card rounded-3xl md:rounded-[40px] shadow-2xl border-2 border-border p-6 md:p-10 z-[1000] w-full max-w-[450px] mx-auto overflow-hidden transition-colors duration-300"
                             role="dialog"
                             aria-modal="true"
                             aria-label="Calendar"
@@ -734,29 +734,29 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                             <button
                                 type="button"
                                 onClick={closeDatePicker}
-                                className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-colors"
+                                className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted dark:hover:bg-muted transition-colors"
                                 aria-label="Close"
                             >
-                                <X className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                                <X className="w-6 h-6 text-foreground dark:text-foreground" />
                             </button>
 
                             <div className="flex items-center justify-between mb-6 md:mb-8">
                                 <button
                                     type="button"
                                     onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-muted dark:hover:bg-muted rounded-full transition-colors"
                                 >
-                                    <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text" />
+                                    <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-foreground dark:text-foreground" />
                                 </button>
-                                <h3 className="text-xl md:text-2xl font-black text-gourmet-ink dark:text-dark-text">
+                                <h3 className="text-xl md:text-2xl font-black text-foreground dark:text-foreground">
                                     {format(currentMonth, 'MMMM yyyy')}
                                 </h3>
                                 <button
                                     type="button"
                                     onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-muted dark:hover:bg-muted rounded-full transition-colors"
                                 >
-                                    <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text" />
+                                    <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-foreground dark:text-foreground" />
                                 </button>
                             </div>
 
@@ -764,7 +764,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map((d) => (
                                     <div
                                         key={d}
-                                        className="text-center text-[10px] md:text-sm font-black text-gourmet-ink dark:text-dark-text uppercase tracking-widest py-2"
+                                        className="text-center text-[10px] md:text-sm font-black text-foreground dark:text-foreground uppercase tracking-widest py-2"
                                     >
                                         {d}
                                     </div>
@@ -773,11 +773,11 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
 
                             <div className="text-base md:text-lg">{renderCalendar()}</div>
 
-                            <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-gourmet-green/20">
+                            <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-border">
                                 <button
                                     type="button"
                                     onClick={resetDraftRange}
-                                    className="text-sm md:text-base font-bold text-gourmet-ink dark:text-dark-text hover:text-gourmet-ink dark:hover:text-dark-text transition-colors"
+                                    className="text-sm md:text-base font-bold text-foreground dark:text-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
                                 >
                                     Reset
                                 </button>
@@ -785,14 +785,14 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                     <button
                                         type="button"
                                         onClick={closeDatePicker}
-                                        className="px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-sm md:text-base text-gourmet-ink dark:text-dark-text hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-all border border-gourmet-ink/5 sm:border-none"
+                                        className="px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-sm md:text-base text-foreground dark:text-foreground hover:bg-muted dark:hover:bg-muted transition-all border border-border sm:border-none"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="button"
                                         onClick={applyDraftRange}
-                                        className="bg-gourmet-green dark:bg-dark-green text-gourmet-ink dark:text-dark-text px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-green-500/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
+                                        className="bg-primary dark:bg-primary text-foreground dark:text-foreground px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
                                     >
                                         Apply
                                     </button>

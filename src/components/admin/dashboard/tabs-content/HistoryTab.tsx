@@ -228,11 +228,11 @@ export function HistoryTab({
             key={day.toString()}
             className={cn(
               'relative p-1 md:p-2 text-center cursor-pointer transition-all duration-200 rounded-lg md:rounded-xl',
-              !isCurrentMonth ? 'text-gourmet-ink/40 dark:text-dark-text/40' : 'text-gourmet-ink dark:text-dark-text',
+              !isCurrentMonth ? 'text-muted-foreground/40 dark:text-muted-foreground/40' : 'text-foreground dark:text-foreground',
               isSelected
-                ? 'bg-dark-green text-gourmet-ink dark:text-dark-text shadow-md z-10'
-                : 'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40',
-              isInRange && !isSelected ? 'bg-dark-green/20' : ''
+                ? 'bg-primary text-foreground dark:text-foreground shadow-md z-10'
+                : 'hover:bg-muted dark:hover:bg-muted',
+              isInRange && !isSelected ? 'bg-primary/20' : ''
             )}
             onClick={() => handleDateClick(cloneDay)}
           >
@@ -279,15 +279,15 @@ export function HistoryTab({
     closeDatePicker()
   }, [applySelectedDate, applySelectedPeriod, closeDatePicker])
 
-  const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text'
-  const cellBorder = 'border-l-2 border-dashed border-gourmet-green/25 dark:border-white/10'
+  const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-foreground dark:text-foreground'
+  const cellBorder = 'border-l-2 border-dashed border-border dark:border-border'
 
   return (
     <TabsContent value="history" className="min-h-0">
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="content-card flex-1 min-h-0 flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300"
+        className="bg-card flex-1 min-h-0 flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300"
       >
         {/* Background Watermark */}
         <motion.div
@@ -295,7 +295,7 @@ export function HistoryTab({
           transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
           className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none"
         >
-          <Activity className="w-56 h-56 md:w-64 md:h-64 text-gourmet-ink dark:text-dark-text" />
+          <Activity className="w-56 h-56 md:w-64 md:h-64 text-foreground dark:text-foreground" />
         </motion.div>
 
         {/* Title */}
@@ -304,7 +304,7 @@ export function HistoryTab({
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-2xl md:text-4xl font-extrabold text-gourmet-ink dark:text-dark-text tracking-tight"
+            className="text-2xl md:text-4xl font-extrabold text-foreground dark:text-foreground tracking-tight"
           >
             System Audit
           </motion.h2>
@@ -312,7 +312,7 @@ export function HistoryTab({
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="text-base md:text-lg text-gourmet-ink dark:text-dark-text font-medium"
+            className="text-base md:text-lg text-foreground dark:text-foreground font-medium"
           >
             Operational Transparency Log
           </motion.p>
@@ -322,16 +322,16 @@ export function HistoryTab({
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 md:gap-6 relative z-10">
           <motion.div
             whileHover={{ scale: 1.01 }}
-            className="relative flex-1 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
+            className="relative flex-1 bg-primary dark:bg-primary rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
           >
             <div className="rounded-full border-2 border-dashed border-white/30 flex items-center px-4 md:px-6 py-2 md:py-3">
-              <Search className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text mr-3 md:mr-4" />
+              <Search className="w-5 h-5 md:w-6 md:h-6 text-foreground dark:text-foreground mr-3 md:mr-4" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Filter events..."
-                className="w-full bg-transparent py-0 !text-base md:!text-lg focus:outline-none text-gourmet-ink dark:text-dark-text placeholder:text-gourmet-ink dark:placeholder:text-dark-text"
+                className="w-full bg-transparent py-0 !text-base md:!text-lg focus:outline-none text-foreground dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground"
               />
             </div>
           </motion.div>
@@ -345,11 +345,11 @@ export function HistoryTab({
                 }}
                 whileTap={{ x: 0 }}
                 onClick={openDatePicker}
-                className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
+                className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-primary dark:bg-primary rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
               >
                 <div className="w-[42px] h-[42px] md:w-full md:h-full rounded-full border-2 border-dashed border-white/10 flex items-center justify-center md:px-6">
-                  <CalendarIcon className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text md:mr-3" />
-                  <span className="hidden md:inline font-bold text-sm md:text-lg text-gourmet-ink dark:text-dark-text whitespace-nowrap">
+                  <CalendarIcon className="w-5 h-5 md:w-6 md:h-6 text-foreground dark:text-foreground md:mr-3" />
+                  <span className="hidden md:inline font-bold text-sm md:text-lg text-foreground dark:text-foreground whitespace-nowrap">
                     {appliedRangeLabel}
                   </span>
                 </div>
@@ -360,10 +360,10 @@ export function HistoryTab({
               {/* User filter button */}
               <div className="relative flex-shrink-0">
                 <Select value={selectedUser} onValueChange={setSelectedUser}>
-                  <SelectTrigger className="w-[50px] h-[50px] md:w-auto md:h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 border-none p-0 transition-colors duration-300 [&>svg]:hidden">
+                  <SelectTrigger className="w-[50px] h-[50px] md:w-auto md:h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl border-b-4 border-black/20 border-none p-0 transition-colors duration-300 [&>svg]:hidden">
                     <div className="w-[42px] h-[42px] md:w-full md:h-full rounded-full border-2 border-dashed border-white/10 flex items-center justify-center md:px-6">
-                      <User className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text md:mr-3" />
-                      <span className="hidden md:inline font-bold text-sm text-gourmet-ink dark:text-dark-text whitespace-nowrap">
+                      <User className="w-5 h-5 md:w-6 md:h-6 text-foreground dark:text-foreground md:mr-3" />
+                      <span className="hidden md:inline font-bold text-sm text-foreground dark:text-foreground whitespace-nowrap">
                         <SelectValue placeholder="All Admins" />
                       </span>
                     </div>
@@ -381,12 +381,12 @@ export function HistoryTab({
                 whileTap={{ scale: 0.8 }}
                 onClick={() => void fetchLogs()}
                 disabled={isLoading}
-                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
                 aria-label="Refresh"
                 title="Refresh"
               >
                 <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                  <RotateCcw className={cn('w-5 h-5 text-gourmet-ink dark:text-dark-text', isLoading && 'animate-spin')} />
+                  <RotateCcw className={cn('w-5 h-5 text-foreground dark:text-foreground', isLoading && 'animate-spin')} />
                 </div>
               </motion.button>
             </div>
@@ -397,40 +397,40 @@ export function HistoryTab({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 relative z-10">
           <motion.div
             whileHover={{ y: -5, scale: 1.02 }}
-            className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-6 md:p-8 bg-gourmet-cream/40 dark:bg-dark-green/10 hover:bg-gourmet-green/10 dark:hover:bg-dark-green/20 transition-all duration-300 overflow-hidden"
+            className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-border dark:border-border p-6 md:p-8 bg-muted/40 dark:bg-muted/10 hover:bg-muted/10 dark:hover:bg-muted/20 transition-all duration-300 overflow-hidden"
           >
             <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <History className="w-12 h-12 text-gourmet-ink dark:text-dark-text" />
+              <History className="w-12 h-12 text-foreground dark:text-foreground" />
             </div>
             <div className="flex items-center gap-3 mb-4">
               <span className="inline-block h-3 w-3 rounded-full shadow-lg bg-blue-500" />
-              <span className="text-xs md:text-sm font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">Action Count</span>
+              <span className="text-xs md:text-sm font-black uppercase tracking-widest text-muted-foreground/60 dark:text-muted-foreground/60">Action Count</span>
             </div>
-            <div className="text-3xl md:text-5xl font-black tracking-tighter text-gourmet-ink dark:text-dark-text">{total}</div>
-            <p className="text-sm md:text-lg font-bold text-gourmet-ink/40 dark:text-dark-text/40 mt-2">Total operations recorded</p>
+            <div className="text-3xl md:text-5xl font-black tracking-tighter text-foreground dark:text-foreground">{total}</div>
+            <p className="text-sm md:text-lg font-bold text-muted-foreground/40 dark:text-muted-foreground/40 mt-2">Total operations recorded</p>
             <div className="absolute bottom-0 left-0 h-2 w-0 group-hover:w-full transition-all duration-500 bg-blue-500" />
           </motion.div>
           <motion.div
             whileHover={{ y: -5, scale: 1.02 }}
-            className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-6 md:p-8 bg-gourmet-cream/40 dark:bg-dark-green/10 hover:bg-gourmet-green/10 dark:hover:bg-dark-green/20 transition-all duration-300 overflow-hidden"
+            className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-border dark:border-border p-6 md:p-8 bg-muted/40 dark:bg-muted/10 hover:bg-muted/10 dark:hover:bg-muted/20 transition-all duration-300 overflow-hidden"
           >
             <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Shield className="w-12 h-12 text-gourmet-ink dark:text-dark-text" />
+              <Shield className="w-12 h-12 text-foreground dark:text-foreground" />
             </div>
             <div className="flex items-center gap-3 mb-4">
               <span className="inline-block h-3 w-3 rounded-full shadow-lg bg-emerald-500" />
-              <span className="text-xs md:text-sm font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">Active Admins</span>
+              <span className="text-xs md:text-sm font-black uppercase tracking-widest text-muted-foreground/60 dark:text-muted-foreground/60">Active Admins</span>
             </div>
-            <div className="text-3xl md:text-5xl font-black tracking-tighter text-gourmet-ink dark:text-dark-text">{users.length}</div>
-            <p className="text-sm md:text-lg font-bold text-gourmet-ink/40 dark:text-dark-text/40 mt-2">Staff members tracked</p>
+            <div className="text-3xl md:text-5xl font-black tracking-tighter text-foreground dark:text-foreground">{users.length}</div>
+            <p className="text-sm md:text-lg font-bold text-muted-foreground/40 dark:text-muted-foreground/40 mt-2">Staff members tracked</p>
             <div className="absolute bottom-0 left-0 h-2 w-0 group-hover:w-full transition-all duration-500 bg-emerald-500" />
           </motion.div>
         </div>
 
         {/* Table Sheet */}
         <div className="flex flex-col gap-4 md:gap-6 relative z-10 flex-1 min-h-0">
-          <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 overflow-hidden relative flex-1 flex flex-col min-h-0">
-            <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none text-gourmet-green-light dark:text-gourmet-green">
+          <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-border dark:border-border overflow-hidden relative flex-1 flex flex-col min-h-0">
+            <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none text-muted-foreground dark:text-muted-foreground">
               <Cherry className="w-10 h-10 md:w-14 md:h-14 rotate-12" />
               <Utensils className="w-10 h-10 md:w-14 md:h-14 -rotate-12" />
             </div>
@@ -438,7 +438,7 @@ export function HistoryTab({
             <div className="overflow-auto relative flex-1 min-h-0">
               <Table className="min-w-[900px]">
                 <TableHeader>
-                  <TableRow className="h-12 bg-gourmet-cream/60 dark:bg-dark-green/20 cursor-default">
+                  <TableRow className="h-12 bg-muted/60 dark:bg-muted/20 cursor-default">
                     <TableHead className={cn('w-[200px]', headCell, 'pl-4 md:pl-6')}>Execution Time</TableHead>
                     <TableHead className={cn(headCell, cellBorder)}>Initiator</TableHead>
                     <TableHead className={cn('w-[180px]', headCell, cellBorder)}>Operation</TableHead>
@@ -454,28 +454,28 @@ export function HistoryTab({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.05 }}
                         className={cn(
-                          'h-12 transition-colors border-t border-gourmet-green/15 dark:border-white/10',
+                          'h-12 transition-colors border-t border-border dark:border-border',
                           idx % 2 === 0
-                            ? 'bg-gourmet-cream dark:bg-dark-surface'
-                            : 'bg-gourmet-cream/40 dark:bg-dark-green/20',
-                          'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/30'
+                            ? 'bg-muted dark:bg-muted'
+                            : 'bg-muted/40 dark:bg-muted/20',
+                          'hover:bg-muted/10 dark:hover:bg-muted/30'
                         )}
                       >
-                        <TableCell className="pl-4 md:pl-6 font-medium text-xs text-gourmet-ink/60 dark:text-dark-text/60">
+                        <TableCell className="pl-4 md:pl-6 font-medium text-xs text-muted-foreground/60 dark:text-muted-foreground/60">
                           {format(new Date(log.createdAt), 'dd MMM HH:mm:ss', { locale: dateLocale })}
                         </TableCell>
                         <TableCell className={cn(cellBorder)}>
                           <div className="flex flex-col">
-                            <span className="font-bold text-sm text-gourmet-ink dark:text-dark-text tracking-tight">{log.admin.name}</span>
-                            <span className="text-[10px] text-gourmet-ink/40 dark:text-dark-text/40 uppercase font-black tracking-widest">{log.admin.role}</span>
+                            <span className="font-bold text-sm text-foreground dark:text-foreground tracking-tight">{log.admin.name}</span>
+                            <span className="text-[10px] text-muted-foreground/40 dark:text-muted-foreground/40 uppercase font-black tracking-widest">{log.admin.role}</span>
                           </div>
                         </TableCell>
                         <TableCell className={cn(cellBorder)}>
-                          <Badge variant="outline" className="rounded-full border-gourmet-ink/10 dark:border-white/10 bg-gourmet-cream/40 dark:bg-dark-green/20 px-3 uppercase text-[9px] font-black text-gourmet-ink dark:text-dark-text">
+                          <Badge variant="outline" className="rounded-full border-border dark:border-border bg-muted/40 dark:bg-muted/20 px-3 uppercase text-[9px] font-black text-foreground dark:text-foreground">
                             {log.action}
                           </Badge>
                         </TableCell>
-                        <TableCell className={cn('max-w-sm truncate font-medium text-sm text-gourmet-ink/80 dark:text-dark-text/80', cellBorder)} title={log.description}>
+                        <TableCell className={cn('max-w-sm truncate font-medium text-sm text-foreground/80 dark:text-foreground/80', cellBorder)} title={log.description}>
                           {log.description}
                         </TableCell>
                       </motion.tr>
@@ -484,7 +484,7 @@ export function HistoryTab({
                   {filteredLogs.length === 0 && !isLoading && (
                     <TableRow>
                       <TableCell colSpan={4} className="h-20 text-center">
-                        <div className="inline-flex items-center gap-2 text-sm font-bold text-gourmet-ink/60 dark:text-dark-text/60">
+                        <div className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground/60 dark:text-muted-foreground/60">
                           <Activity className="size-4" />
                           No records found matching criteria.
                         </div>
@@ -494,7 +494,7 @@ export function HistoryTab({
                   {isLoading && logs.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={4} className="h-20 text-center">
-                        <Loader2 className="w-8 h-8 animate-spin mx-auto text-gourmet-ink/20 dark:text-dark-text/20" />
+                        <Loader2 className="w-8 h-8 animate-spin mx-auto text-muted-foreground/20 dark:text-muted-foreground/20" />
                       </TableCell>
                     </TableRow>
                   )}
@@ -505,7 +505,7 @@ export function HistoryTab({
 
           {/* Pagination */}
           <div className="flex items-center justify-between">
-            <div className="text-[10px] font-black uppercase tracking-widest text-gourmet-ink/30 dark:text-dark-text/30">Showing {logs.length} of {total} events</div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/30 dark:text-muted-foreground/30">Showing {logs.length} of {total} events</div>
             <div className="flex gap-2 md:gap-4">
               <motion.button
                 type="button"
@@ -513,7 +513,7 @@ export function HistoryTab({
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setPage(p => Math.max(0, p - 1))}
                 disabled={page === 0 || isLoading}
-                className="h-[42px] px-6 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none font-bold text-sm text-gourmet-ink dark:text-dark-text"
+                className="h-[42px] px-6 bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none font-bold text-sm text-foreground dark:text-foreground"
               >
                 <ChevronLeft className="mr-2 w-4 h-4" /> Previous
               </motion.button>
@@ -523,7 +523,7 @@ export function HistoryTab({
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setPage(p => p + 1)}
                 disabled={!hasMore || isLoading}
-                className="h-[42px] px-6 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none font-bold text-sm text-gourmet-ink dark:text-dark-text"
+                className="h-[42px] px-6 bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none font-bold text-sm text-foreground dark:text-foreground"
               >
                 Next <ChevronRight className="ml-2 w-4 h-4" />
               </motion.button>
@@ -547,7 +547,7 @@ export function HistoryTab({
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative bg-gourmet-cream dark:bg-dark-surface rounded-3xl md:rounded-[40px] shadow-2xl border-2 border-gourmet-green/20 p-6 md:p-10 z-[1000] w-full max-w-[450px] mx-auto overflow-hidden transition-colors duration-300"
+              className="relative bg-card dark:bg-card rounded-3xl md:rounded-[40px] shadow-2xl border-2 border-border p-6 md:p-10 z-[1000] w-full max-w-[450px] mx-auto overflow-hidden transition-colors duration-300"
               role="dialog"
               aria-modal="true"
               aria-label="Calendar"
@@ -555,29 +555,29 @@ export function HistoryTab({
               <button
                 type="button"
                 onClick={closeDatePicker}
-                className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-colors"
+                className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted dark:hover:bg-muted transition-colors"
                 aria-label="Close"
               >
-                <X className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                <X className="w-6 h-6 text-foreground dark:text-foreground" />
               </button>
 
               <div className="flex items-center justify-between mb-6 md:mb-8">
                 <button
                   type="button"
                   onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-muted dark:hover:bg-muted rounded-full transition-colors"
                 >
-                  <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text" />
+                  <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-foreground dark:text-foreground" />
                 </button>
-                <h3 className="text-xl md:text-2xl font-black text-gourmet-ink dark:text-dark-text">
+                <h3 className="text-xl md:text-2xl font-black text-foreground dark:text-foreground">
                   {format(currentMonth, 'MMMM yyyy')}
                 </h3>
                 <button
                   type="button"
                   onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-muted dark:hover:bg-muted rounded-full transition-colors"
                 >
-                  <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text" />
+                  <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-foreground dark:text-foreground" />
                 </button>
               </div>
 
@@ -585,7 +585,7 @@ export function HistoryTab({
                 {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map((d) => (
                   <div
                     key={d}
-                    className="text-center text-[10px] md:text-sm font-black text-gourmet-ink dark:text-dark-text uppercase tracking-widest py-2"
+                    className="text-center text-[10px] md:text-sm font-black text-foreground dark:text-foreground uppercase tracking-widest py-2"
                   >
                     {d}
                   </div>
@@ -594,11 +594,11 @@ export function HistoryTab({
 
               <div className="text-base md:text-lg">{renderCalendar()}</div>
 
-              <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-gourmet-green/20">
+              <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-border">
                 <button
                   type="button"
                   onClick={resetDraftRange}
-                  className="text-sm md:text-base font-bold text-gourmet-ink dark:text-dark-text hover:text-gourmet-ink dark:hover:text-dark-text transition-colors"
+                  className="text-sm md:text-base font-bold text-foreground dark:text-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
                 >
                   Reset
                 </button>
@@ -606,14 +606,14 @@ export function HistoryTab({
                   <button
                     type="button"
                     onClick={closeDatePicker}
-                    className="px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-sm md:text-base text-gourmet-ink dark:text-dark-text hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-all border border-gourmet-ink/5 sm:border-none"
+                    className="px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-sm md:text-base text-foreground dark:text-foreground hover:bg-muted dark:hover:bg-muted transition-all border border-border sm:border-none"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={applyDraftRange}
-                    className="bg-gourmet-green dark:bg-dark-green text-gourmet-ink dark:text-dark-text px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-green-500/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
+                    className="bg-primary dark:bg-primary text-foreground dark:text-foreground px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
                   >
                     Apply
                   </button>

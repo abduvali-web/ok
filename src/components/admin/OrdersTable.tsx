@@ -68,18 +68,18 @@ export function OrdersTable({
     const { t, language } = useLanguage()
 
     if (isGourmetStyle) {
-        const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text'
-        const cellBorder = 'border-l-2 border-dashed border-gourmet-green/25 dark:border-white/10'
+        const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-foreground'
+        const cellBorder = 'border-l-2 border-dashed border-border'
 
         return (
             <Table className="min-w-[1550px]">
                 <TableHeader>
-                    <TableRow className="h-12 bg-gourmet-cream/60 dark:bg-dark-green/20">
+                    <TableRow className="h-12 bg-muted/60 dark:bg-muted/20">
                         <TableHead className="w-[60px] px-6">
                             <Checkbox
                                 checked={orders.length > 0 && selectedOrders.size === orders.length}
                                 onCheckedChange={onSelectAll}
-                                className="border-gourmet-ink/20 dark:border-white/20"
+                                className="border-border"
                             />
                         </TableHead>
                         <TableHead className={headCell}>{t.admin.table.number}</TableHead>
@@ -101,34 +101,34 @@ export function OrdersTable({
                 </TableHeader>
                 <TableBody>
                     {orders.map((order) => (
-                        <TableRow key={order.id} className="h-16 border-b-2 border-dashed border-gourmet-green/15 dark:border-white/5 hover:bg-gourmet-green/5 dark:hover:bg-dark-green/10 transition-colors">
+                        <TableRow key={order.id} className="h-16 border-b-2 border-dashed border-border hover:bg-muted/5 dark:hover:bg-muted/10 transition-colors">
                             <TableCell className="px-6">
                                 <Checkbox
                                     checked={selectedOrders.has(order.id)}
                                     onCheckedChange={() => onSelectOrder(order.id)}
-                                    className="border-gourmet-ink/20 dark:border-white/20"
+                                    className="border-border"
                                 />
                             </TableCell>
-                            <TableCell className="font-bold text-gourmet-ink dark:text-dark-text">#{order.orderNumber}</TableCell>
+                            <TableCell className="font-bold text-foreground">#{order.orderNumber}</TableCell>
                             <TableCell className={cn('max-w-[200px]', cellBorder)}>
-                                <div className="font-bold text-gourmet-ink dark:text-dark-text truncate">{order.customer.name}</div>
-                                <div className="text-sm font-medium text-gourmet-ink/60 dark:text-dark-text/60 truncate">{order.customer.phone}</div>
+                                <div className="font-bold text-foreground truncate">{order.customer.name}</div>
+                                <div className="text-sm font-medium text-muted-foreground/60 truncate">{order.customer.phone}</div>
                             </TableCell>
-                            <TableCell className={cn('max-w-[250px] truncate font-medium text-gourmet-ink dark:text-dark-text', cellBorder)}>
+                            <TableCell className={cn('max-w-[250px] truncate font-medium text-foreground', cellBorder)}>
                                 {order.deliveryAddress}
                             </TableCell>
-                            <TableCell className={cn('font-bold text-gourmet-ink dark:text-dark-text', cellBorder)}>{order.deliveryTime}</TableCell>
+                            <TableCell className={cn('font-bold text-foreground', cellBorder)}>{order.deliveryTime}</TableCell>
                             <TableCell className={cellBorder}>
-                                <Badge variant="outline" className="border-gourmet-ink/20 text-gourmet-ink dark:border-white/20 dark:text-dark-text font-bold">
+                                <Badge variant="outline" className="border-border text-foreground font-bold">
                                     {order.isAutoOrder ? t.admin.auto : t.admin.manual}
                                 </Badge>
                             </TableCell>
-                            <TableCell className={cn('font-bold text-gourmet-ink dark:text-dark-text', cellBorder)}>{order.quantity}</TableCell>
-                            <TableCell className={cn('font-bold text-gourmet-ink dark:text-dark-text', cellBorder)}>{order.calories}</TableCell>
-                            <TableCell className={cn('max-w-[150px] truncate font-medium text-gourmet-ink dark:text-dark-text', cellBorder)}>
+                            <TableCell className={cn('font-bold text-foreground', cellBorder)}>{order.quantity}</TableCell>
+                            <TableCell className={cn('font-bold text-foreground', cellBorder)}>{order.calories}</TableCell>
+                            <TableCell className={cn('max-w-[150px] truncate font-medium text-foreground', cellBorder)}>
                                 {order.specialFeatures || '-'}
                             </TableCell>
-                            <TableCell className={cn('max-w-[160px] truncate font-bold text-gourmet-ink dark:text-dark-text', cellBorder)}>
+                            <TableCell className={cn('max-w-[160px] truncate font-bold text-foreground', cellBorder)}>
                                 {order.courierName || '-'}
                             </TableCell>
                             <TableCell className={cellBorder}>
@@ -140,11 +140,11 @@ export function OrdersTable({
                                     {order.orderStatus}
                                 </Badge>
                             </TableCell>
-                            <TableCell className={cn('font-bold text-gourmet-ink dark:text-dark-text', cellBorder)}>{order.priority ?? 3}</TableCell>
-                            <TableCell className={cn('font-bold text-gourmet-ink dark:text-dark-text', cellBorder)}>
+                            <TableCell className={cn('font-bold text-foreground', cellBorder)}>{order.priority ?? 3}</TableCell>
+                            <TableCell className={cn('font-bold text-foreground', cellBorder)}>
                                 {order.etaMinutes ? `${order.etaMinutes} min` : '-'}
                             </TableCell>
-                            <TableCell className={cn('text-xs font-bold text-gourmet-ink/60 dark:text-dark-text/60', cellBorder)}>
+                            <TableCell className={cn('text-xs font-bold text-muted-foreground/60', cellBorder)}>
                                 {order.statusChangedAt
                                     ? new Date(order.statusChangedAt).toLocaleString(language === 'ru' ? 'ru-RU' : 'en-US', {
                                         day: '2-digit',
@@ -164,16 +164,16 @@ export function OrdersTable({
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => onEditOrder?.(order)}
-                                    className="hover:bg-gourmet-green/20 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                                    className="hover:bg-muted/20 dark:hover:bg-muted/40 rounded-full transition-colors"
                                 >
-                                    <Edit className="size-5 text-gourmet-ink dark:text-dark-text" />
+                                    <Edit className="size-5 text-foreground" />
                                 </Button>
                             </TableCell>
                         </TableRow>
                     ))}
                     {orders.length === 0 && (
                         <TableRow>
-                            <TableCell colSpan={16} className="h-40 text-center font-bold text-gourmet-ink dark:text-dark-text text-xl">
+                            <TableCell colSpan={16} className="h-40 text-center font-bold text-foreground text-xl">
                                 {t.admin.noOrders}
                             </TableCell>
                         </TableRow>

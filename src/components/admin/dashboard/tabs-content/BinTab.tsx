@@ -69,7 +69,7 @@ export function BinTab({
     const q = searchTerm.trim().toLowerCase()
     if (!q) return deletedOrders
     return deletedOrders.filter((o) => (
-      o.customer?.name?.toLowerCase().includes(q) || 
+      o.customer?.name?.toLowerCase().includes(q) ||
       o.deliveryAddress?.toLowerCase().includes(q) ||
       String(o.orderNumber).includes(q)
     ))
@@ -79,13 +79,13 @@ export function BinTab({
     const q = searchTerm.trim().toLowerCase()
     if (!q) return deletedClients
     return deletedClients.filter((c) => (
-      c.name?.toLowerCase().includes(q) || 
+      c.name?.toLowerCase().includes(q) ||
       c.phone?.toLowerCase().includes(q)
     ))
   }, [deletedClients, searchTerm])
 
-  const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text'
-  const cellBorder = 'border-l-2 border-dashed border-gourmet-green/25 dark:border-white/10'
+  const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-foreground'
+  const cellBorder = 'border-l-2 border-dashed border-border'
 
   return (
     <TabsContent value="bin" className="min-h-0">
@@ -100,7 +100,7 @@ export function BinTab({
           transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
           className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none"
         >
-          <Archive className="w-56 h-56 md:w-64 md:h-64 text-gourmet-ink dark:text-dark-text" />
+          <Archive className="w-56 h-56 md:w-64 md:h-64 text-foreground" />
         </motion.div>
 
         {/* Title */}
@@ -109,7 +109,7 @@ export function BinTab({
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-2xl md:text-4xl font-extrabold text-gourmet-ink dark:text-dark-text tracking-tight"
+            className="text-2xl md:text-4xl font-extrabold text-foreground tracking-tight"
           >
             Data Archive
           </motion.h2>
@@ -117,7 +117,7 @@ export function BinTab({
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="text-base md:text-lg text-gourmet-ink dark:text-dark-text font-medium"
+            className="text-base md:text-lg text-foreground font-medium"
           >
             Safety Net & Recovery Center
           </motion.p>
@@ -127,31 +127,31 @@ export function BinTab({
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 md:gap-6 relative z-10">
           <motion.div
             whileHover={{ scale: 1.01 }}
-            className="relative flex-1 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
+            className="relative flex-1 bg-primary rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
           >
             <div className="rounded-full border-2 border-dashed border-white/30 flex items-center px-4 md:px-6 py-2 md:py-3">
-              <Search className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text mr-3 md:mr-4" />
+              <Search className="w-5 h-5 md:w-6 md:h-6 text-foreground mr-3 md:mr-4" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Search archive..."
-                className="w-full bg-transparent py-0 !text-base md:!text-lg focus:outline-none text-gourmet-ink dark:text-dark-text placeholder:text-gourmet-ink dark:placeholder:text-dark-text"
+                className="w-full bg-transparent py-0 !text-base md:!text-lg focus:outline-none text-foreground placeholder:text-muted-foreground"
               />
             </div>
           </motion.div>
 
           <div className="flex items-center gap-2 md:gap-4 overflow-x-auto lg:overflow-visible py-4 lg:py-6 no-scrollbar">
             {/* Sub-tab toggle */}
-            <div className="flex bg-gourmet-green/80 dark:bg-dark-green/80 rounded-full shadow-xl border-b-4 border-black/20 p-1 flex-shrink-0">
+            <div className="flex bg-primary/80 rounded-full shadow-xl border-b-4 border-black/20 p-1 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => setActiveSubTab('orders')}
                 className={cn(
                   'px-4 md:px-6 py-2 md:py-3 rounded-full font-bold text-xs md:text-sm uppercase tracking-widest transition-all duration-300',
                   activeSubTab === 'orders'
-                    ? 'bg-white/20 text-gourmet-ink dark:text-dark-text shadow-lg'
-                    : 'text-gourmet-ink/60 dark:text-dark-text/60 hover:text-gourmet-ink dark:hover:text-dark-text'
+                    ? 'bg-white/20 text-foreground shadow-lg'
+                    : 'text-muted-foreground/60 hover:text-foreground'
                 )}
               >
                 Orders
@@ -162,8 +162,8 @@ export function BinTab({
                 className={cn(
                   'px-4 md:px-6 py-2 md:py-3 rounded-full font-bold text-xs md:text-sm uppercase tracking-widest transition-all duration-300',
                   activeSubTab === 'clients'
-                    ? 'bg-white/20 text-gourmet-ink dark:text-dark-text shadow-lg'
-                    : 'text-gourmet-ink/60 dark:text-dark-text/60 hover:text-gourmet-ink dark:hover:text-dark-text'
+                    ? 'bg-white/20 text-foreground shadow-lg'
+                    : 'text-muted-foreground/60 hover:text-foreground'
                 )}
               >
                 Clients
@@ -207,12 +207,12 @@ export function BinTab({
                 whileTap={{ scale: 0.8 }}
                 onClick={onRefresh}
                 disabled={isRefreshing}
-                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                className="w-[50px] h-[50px] bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
                 aria-label="Refresh"
                 title="Refresh"
               >
                 <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                  <RotateCcw className={cn('w-5 h-5 text-gourmet-ink dark:text-dark-text', isRefreshing && 'animate-spin')} />
+                  <RotateCcw className={cn('w-5 h-5 text-foreground', isRefreshing && 'animate-spin')} />
                 </div>
               </motion.button>
             </div>
@@ -223,40 +223,40 @@ export function BinTab({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 relative z-10">
           <motion.div
             whileHover={{ y: -5, scale: 1.02 }}
-            className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-6 md:p-8 bg-gourmet-cream/40 dark:bg-dark-green/10 hover:bg-gourmet-green/10 dark:hover:bg-dark-green/20 transition-all duration-300 overflow-hidden"
+            className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-border p-6 md:p-8 bg-muted/40 dark:bg-muted/10 hover:bg-muted/10 dark:hover:bg-muted/20 transition-all duration-300 overflow-hidden"
           >
             <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Utensils className="w-12 h-12 text-gourmet-ink dark:text-dark-text" />
+              <Utensils className="w-12 h-12 text-foreground" />
             </div>
             <div className="flex items-center gap-3 mb-4">
               <span className="inline-block h-3 w-3 rounded-full shadow-lg bg-amber-500" />
-              <span className="text-xs md:text-sm font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">Archived Orders</span>
+              <span className="text-xs md:text-sm font-black uppercase tracking-widest text-muted-foreground/60">Archived Orders</span>
             </div>
-            <div className="text-3xl md:text-5xl font-black tracking-tighter text-gourmet-ink dark:text-dark-text">{deletedOrders.length}</div>
-            <p className="text-sm md:text-lg font-bold text-gourmet-ink/40 dark:text-dark-text/40 mt-2">Pending permanent cleanup</p>
+            <div className="text-3xl md:text-5xl font-black tracking-tighter text-foreground">{deletedOrders.length}</div>
+            <p className="text-sm md:text-lg font-bold text-muted-foreground/40 mt-2">Pending permanent cleanup</p>
             <div className="absolute bottom-0 left-0 h-2 w-0 group-hover:w-full transition-all duration-500 bg-amber-500" />
           </motion.div>
           <motion.div
             whileHover={{ y: -5, scale: 1.02 }}
-            className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-6 md:p-8 bg-gourmet-cream/40 dark:bg-dark-green/10 hover:bg-gourmet-green/10 dark:hover:bg-dark-green/20 transition-all duration-300 overflow-hidden"
+            className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-border p-6 md:p-8 bg-muted/40 dark:bg-muted/10 hover:bg-muted/10 dark:hover:bg-muted/20 transition-all duration-300 overflow-hidden"
           >
             <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Users className="w-12 h-12 text-gourmet-ink dark:text-dark-text" />
+              <Users className="w-12 h-12 text-foreground" />
             </div>
             <div className="flex items-center gap-3 mb-4">
               <span className="inline-block h-3 w-3 rounded-full shadow-lg bg-rose-500" />
-              <span className="text-xs md:text-sm font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">Archived Clients</span>
+              <span className="text-xs md:text-sm font-black uppercase tracking-widest text-muted-foreground/60">Archived Clients</span>
             </div>
-            <div className="text-3xl md:text-5xl font-black tracking-tighter text-gourmet-ink dark:text-dark-text">{deletedClients.length}</div>
-            <p className="text-sm md:text-lg font-bold text-gourmet-ink/40 dark:text-dark-text/40 mt-2">Exited from system</p>
+            <div className="text-3xl md:text-5xl font-black tracking-tighter text-foreground">{deletedClients.length}</div>
+            <p className="text-sm md:text-lg font-bold text-muted-foreground/40 mt-2">Exited from system</p>
             <div className="absolute bottom-0 left-0 h-2 w-0 group-hover:w-full transition-all duration-500 bg-rose-500" />
           </motion.div>
         </div>
 
         {/* Table Sheet */}
         <div className="flex flex-col gap-4 md:gap-6 relative z-10 flex-1 min-h-0">
-          <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 overflow-hidden relative flex-1 flex flex-col min-h-0">
-            <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none text-gourmet-green-light dark:text-gourmet-green">
+          <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-border overflow-hidden relative flex-1 flex flex-col min-h-0">
+            <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none text-primary">
               <Cherry className="w-10 h-10 md:w-14 md:h-14 rotate-12" />
               <CookingPot className="w-10 h-10 md:w-14 md:h-14 -rotate-12" />
             </div>
@@ -266,12 +266,12 @@ export function BinTab({
                 <TabsContent value="orders" className="m-0 h-full">
                   <Table className="min-w-[800px]">
                     <TableHeader>
-                      <TableRow className="h-12 bg-gourmet-cream/60 dark:bg-dark-green/20 cursor-default">
+                      <TableRow className="h-12 bg-muted/60 dark:bg-muted/20 cursor-default">
                         <TableHead className="w-[60px] px-6">
-                          <Checkbox 
+                          <Checkbox
                             checked={deletedOrders.length > 0 && selectedDeletedOrders.size === deletedOrders.length}
                             onCheckedChange={() => onSelectAllDeletedOrders()}
-                            className="border-gourmet-ink/20 dark:border-white/20"
+                            className="border-border"
                           />
                         </TableHead>
                         <TableHead className={cn(headCell, 'pl-4')}>Order #</TableHead>
@@ -283,29 +283,29 @@ export function BinTab({
                     <TableBody>
                       <AnimatePresence>
                         {filteredOrders.map((o, idx) => (
-                          <motion.tr 
+                          <motion.tr
                             key={o.id}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className={cn(
-                              'h-12 transition-colors border-t border-gourmet-green/15 dark:border-white/10',
+                              'h-12 transition-colors border-t border-border',
                               idx % 2 === 0
-                                ? 'bg-gourmet-cream dark:bg-dark-surface'
-                                : 'bg-gourmet-cream/40 dark:bg-dark-green/20',
-                              'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/30',
-                              selectedDeletedOrders.has(o.id) && 'bg-gourmet-green/10 dark:bg-dark-green/30'
+                                ? 'bg-card'
+                                : 'bg-muted/40',
+                              'hover:bg-muted',
+                              selectedDeletedOrders.has(o.id) && 'bg-muted'
                             )}
                           >
                             <TableCell className="px-6">
-                              <Checkbox 
+                              <Checkbox
                                 checked={selectedDeletedOrders.has(o.id)}
                                 onCheckedChange={() => onSelectDeletedOrder(o.id)}
-                                className="border-gourmet-ink/20 dark:border-white/20"
+                                className="border-border"
                               />
                             </TableCell>
-                            <TableCell className="pl-4 font-bold text-gourmet-ink dark:text-dark-text tracking-tighter">#{o.orderNumber}</TableCell>
-                            <TableCell className={cn('font-medium text-gourmet-ink dark:text-dark-text', cellBorder)}>{o.customer?.name || 'Unknown'}</TableCell>
-                            <TableCell className={cn('text-sm font-medium text-gourmet-ink/70 dark:text-dark-text/70 max-w-xs truncate', cellBorder)}>{o.deliveryAddress}</TableCell>
+                            <TableCell className="pl-4 font-bold text-foreground tracking-tighter">#{o.orderNumber}</TableCell>
+                            <TableCell className={cn('font-medium text-foreground', cellBorder)}>{o.customer?.name || 'Unknown'}</TableCell>
+                            <TableCell className={cn('text-sm font-medium text-muted-foreground/70 max-w-xs truncate', cellBorder)}>{o.deliveryAddress}</TableCell>
                             <TableCell className={cellBorder}>
                               <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none uppercase text-[10px] font-black dark:bg-amber-500/20 dark:text-amber-400">Archived</Badge>
                             </TableCell>
@@ -315,7 +315,7 @@ export function BinTab({
                       {filteredOrders.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={5} className="h-20 text-center">
-                            <div className="inline-flex items-center gap-2 text-sm font-bold text-gourmet-ink/60 dark:text-dark-text/60">
+                            <div className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground/60">
                               <Package className="size-4" />
                               No deleted orders
                             </div>
@@ -329,12 +329,12 @@ export function BinTab({
                 <TabsContent value="clients" className="m-0 h-full">
                   <Table className="min-w-[800px]">
                     <TableHeader>
-                      <TableRow className="h-12 bg-gourmet-cream/60 dark:bg-dark-green/20 cursor-default">
+                      <TableRow className="h-12 bg-muted/60 dark:bg-muted/20 cursor-default">
                         <TableHead className="w-[60px] px-6">
-                          <Checkbox 
+                          <Checkbox
                             checked={deletedClients.length > 0 && selectedDeletedClients.size === deletedClients.length}
                             onCheckedChange={() => onSelectAllDeletedClients()}
-                            className="border-gourmet-ink/20 dark:border-white/20"
+                            className="border-border"
                           />
                         </TableHead>
                         <TableHead className={cn(headCell, 'pl-4')}>Full Name</TableHead>
@@ -346,30 +346,30 @@ export function BinTab({
                     <TableBody>
                       <AnimatePresence>
                         {filteredClients.map((c, idx) => (
-                          <motion.tr 
+                          <motion.tr
                             key={c.id}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className={cn(
-                              'h-12 transition-colors border-t border-gourmet-green/15 dark:border-white/10',
+                              'h-12 transition-colors border-t border-border',
                               idx % 2 === 0
-                                ? 'bg-gourmet-cream dark:bg-dark-surface'
-                                : 'bg-gourmet-cream/40 dark:bg-dark-green/20',
-                              'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/30',
-                              selectedDeletedClients.has(c.id) && 'bg-gourmet-green/10 dark:bg-dark-green/30'
+                                ? 'bg-card'
+                                : 'bg-muted/40',
+                              'hover:bg-muted',
+                              selectedDeletedClients.has(c.id) && 'bg-muted'
                             )}
                           >
                             <TableCell className="px-6">
-                              <Checkbox 
+                              <Checkbox
                                 checked={selectedDeletedClients.has(c.id)}
                                 onCheckedChange={() => onSelectDeletedClient(c.id)}
-                                className="border-gourmet-ink/20 dark:border-white/20"
+                                className="border-border"
                               />
                             </TableCell>
-                            <TableCell className="pl-4 font-bold text-gourmet-ink dark:text-dark-text tracking-tight">{c.name}</TableCell>
-                            <TableCell className={cn('font-medium text-gourmet-ink/70 dark:text-dark-text/70', cellBorder)}>{c.phone}</TableCell>
+                            <TableCell className="pl-4 font-bold text-foreground tracking-tight">{c.name}</TableCell>
+                            <TableCell className={cn('font-medium text-muted-foreground/70', cellBorder)}>{c.phone}</TableCell>
                             <TableCell className={cellBorder}>
-                              <Badge variant="outline" className="border-gourmet-ink/20 text-gourmet-ink dark:border-white/20 dark:text-dark-text font-bold">
+                              <Badge variant="outline" className="border-border text-foreground font-bold">
                                 {c.calories} kcal
                               </Badge>
                             </TableCell>
@@ -382,7 +382,7 @@ export function BinTab({
                       {filteredClients.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={5} className="h-20 text-center">
-                            <div className="inline-flex items-center gap-2 text-sm font-bold text-gourmet-ink/60 dark:text-dark-text/60">
+                            <div className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground/60">
                               <Users className="size-4" />
                               No deleted clients
                             </div>

@@ -270,11 +270,11 @@ export function FinanceTab({
                         key={day.toString()}
                         className={cn(
                             'relative p-1 md:p-2 text-center cursor-pointer transition-all duration-200 rounded-lg md:rounded-xl',
-                            !isCurrentMonth ? 'text-gourmet-ink/40 dark:text-dark-text/40' : 'text-gourmet-ink dark:text-dark-text',
+                            !isCurrentMonth ? 'text-muted-foreground/40 dark:text-muted-foreground/40' : 'text-foreground dark:text-foreground',
                             isSelected
-                                ? 'bg-dark-green text-gourmet-ink dark:text-dark-text shadow-md z-10'
-                                : 'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40',
-                            isInRange && !isSelected ? 'bg-dark-green/20' : ''
+                                ? 'bg-primary text-foreground dark:text-foreground shadow-md z-10'
+                                : 'hover:bg-muted dark:hover:bg-muted',
+                            isInRange && !isSelected ? 'bg-primary/20' : ''
                         )}
                         onClick={() => handleDateClick(cloneDay)}
                     >
@@ -321,15 +321,15 @@ export function FinanceTab({
         closeDatePicker()
     }, [applySelectedDate, applySelectedPeriod, closeDatePicker])
 
-    const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text'
-    const cellBorder = 'border-l-2 border-dashed border-gourmet-green/25 dark:border-white/10'
+    const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-foreground dark:text-foreground'
+    const cellBorder = 'border-l-2 border-dashed border-border dark:border-border'
 
     return (
         <TabsContent value="finance" className="min-h-0">
             <motion.div
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="content-card flex-1 min-h-0 flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300"
+                className="bg-card flex-1 min-h-0 flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300"
             >
                 {/* Background Watermark */}
                 <motion.div
@@ -337,7 +337,7 @@ export function FinanceTab({
                     transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
                     className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none"
                 >
-                    <Wallet className="w-56 h-56 md:w-64 md:h-64 text-gourmet-ink dark:text-dark-text" />
+                    <Wallet className="w-56 h-56 md:w-64 md:h-64 text-foreground dark:text-foreground" />
                 </motion.div>
 
                 {/* Title */}
@@ -346,7 +346,7 @@ export function FinanceTab({
                         initial={{ x: -50, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: 0.4 }}
-                        className="text-2xl md:text-4xl font-extrabold text-gourmet-ink dark:text-dark-text tracking-tight"
+                        className="text-2xl md:text-4xl font-extrabold text-foreground dark:text-foreground tracking-tight"
                     >
                         Financial Audit
                     </motion.h2>
@@ -354,7 +354,7 @@ export function FinanceTab({
                         initial={{ x: -50, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: 0.5 }}
-                        className="text-base md:text-lg text-gourmet-ink dark:text-dark-text font-medium"
+                        className="text-base md:text-lg text-foreground dark:text-foreground font-medium"
                     >
                         Cashflow & Balance Statement
                     </motion.p>
@@ -364,16 +364,16 @@ export function FinanceTab({
                 <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 md:gap-6 relative z-10">
                     <motion.div
                         whileHover={{ scale: 1.01 }}
-                        className="relative flex-1 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
+                        className="relative flex-1 bg-primary dark:bg-primary rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
                     >
                         <div className="rounded-full border-2 border-dashed border-white/30 flex items-center px-4 md:px-6 py-2 md:py-3">
-                            <Search className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text mr-3 md:mr-4" />
+                            <Search className="w-5 h-5 md:w-6 md:h-6 text-foreground dark:text-foreground mr-3 md:mr-4" />
                             <input
                                 type="text"
                                 value={historySearchQuery}
                                 onChange={(event) => setHistorySearchQuery(event.target.value)}
                                 placeholder="Search transactions..."
-                                className="w-full bg-transparent py-0 !text-base md:!text-lg focus:outline-none text-gourmet-ink dark:text-dark-text placeholder:text-gourmet-ink dark:placeholder:text-dark-text"
+                                className="w-full bg-transparent py-0 !text-base md:!text-lg focus:outline-none text-foreground dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground"
                             />
                         </div>
                     </motion.div>
@@ -387,11 +387,11 @@ export function FinanceTab({
                                 }}
                                 whileTap={{ x: 0 }}
                                 onClick={openDatePicker}
-                                className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
+                                className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-primary dark:bg-primary rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
                             >
                                 <div className="w-[42px] h-[42px] md:w-full md:h-full rounded-full border-2 border-dashed border-white/10 flex items-center justify-center md:px-6">
-                                    <CalendarIcon className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text md:mr-3" />
-                                    <span className="hidden md:inline font-bold text-sm md:text-lg text-gourmet-ink dark:text-dark-text whitespace-nowrap">
+                                    <CalendarIcon className="w-5 h-5 md:w-6 md:h-6 text-foreground dark:text-foreground md:mr-3" />
+                                    <span className="hidden md:inline font-bold text-sm md:text-lg text-foreground dark:text-foreground whitespace-nowrap">
                                         {appliedRangeLabel}
                                     </span>
                                 </div>
@@ -404,12 +404,12 @@ export function FinanceTab({
                                 whileHover={{ scale: 1.15, y: 5 }}
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => setIsCompanyFundsModalOpen(true)}
-                                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300"
+                                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300"
                                 aria-label="Manage Funds"
                                 title="Manage Funds"
                             >
                                 <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                                    <Plus className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                                    <Plus className="w-6 h-6 text-foreground dark:text-foreground" />
                                 </div>
                             </motion.button>
 
@@ -419,12 +419,12 @@ export function FinanceTab({
                                 whileTap={{ scale: 0.8 }}
                                 onClick={handleRefresh}
                                 disabled={isFinanceRefreshing}
-                                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
+                                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50 disabled:pointer-events-none"
                                 aria-label="Refresh"
                                 title="Refresh"
                             >
                                 <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                                    <RotateCcw className={cn('w-5 h-5 text-gourmet-ink dark:text-dark-text', isFinanceRefreshing && 'animate-spin')} />
+                                    <RotateCcw className={cn('w-5 h-5 text-foreground dark:text-foreground', isFinanceRefreshing && 'animate-spin')} />
                                 </div>
                             </motion.button>
                         </div>
@@ -435,63 +435,63 @@ export function FinanceTab({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 relative z-10">
                     <motion.div
                         whileHover={{ y: -5, scale: 1.02 }}
-                        className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-6 md:p-8 bg-gourmet-cream/40 dark:bg-dark-green/10 hover:bg-gourmet-green/10 dark:hover:bg-dark-green/20 transition-all duration-300 overflow-hidden"
+                        className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-border dark:border-border p-6 md:p-8 bg-muted/40 dark:bg-muted/10 hover:bg-muted/10 dark:hover:bg-muted/20 transition-all duration-300 overflow-hidden"
                     >
                         <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <Wallet className="w-12 h-12 text-gourmet-ink dark:text-dark-text" />
+                            <Wallet className="w-12 h-12 text-foreground dark:text-foreground" />
                         </div>
                         <div className="flex items-center gap-3 mb-4">
-                            <span className="inline-block h-3 w-3 rounded-full shadow-lg bg-gourmet-ink dark:bg-dark-text" />
-                            <span className="text-xs md:text-sm font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">Current Balance</span>
+                            <span className="inline-block h-3 w-3 rounded-full shadow-lg bg-foreground dark:bg-foreground" />
+                            <span className="text-xs md:text-sm font-black uppercase tracking-widest text-muted-foreground/60 dark:text-muted-foreground/60">Current Balance</span>
                         </div>
-                        <div className="text-3xl md:text-5xl font-black tracking-tighter text-gourmet-ink dark:text-dark-text">{formatCurrency(companyBalance)}</div>
-                        <p className="text-sm md:text-lg font-bold text-gourmet-ink/40 dark:text-dark-text/40 mt-2">System cash on hand</p>
-                        <div className="absolute bottom-0 left-0 h-2 w-0 group-hover:w-full transition-all duration-500 bg-gourmet-ink dark:bg-dark-text" />
+                        <div className="text-3xl md:text-5xl font-black tracking-tighter text-foreground dark:text-foreground">{formatCurrency(companyBalance)}</div>
+                        <p className="text-sm md:text-lg font-bold text-muted-foreground/40 dark:text-muted-foreground/40 mt-2">System cash on hand</p>
+                        <div className="absolute bottom-0 left-0 h-2 w-0 group-hover:w-full transition-all duration-500 bg-foreground dark:bg-foreground" />
                     </motion.div>
                     <motion.div
                         whileHover={{ y: -5, scale: 1.02 }}
-                        className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-6 md:p-8 bg-gourmet-cream/40 dark:bg-dark-green/10 hover:bg-gourmet-green/10 dark:hover:bg-dark-green/20 transition-all duration-300 overflow-hidden"
+                        className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-border dark:border-border p-6 md:p-8 bg-muted/40 dark:bg-muted/10 hover:bg-muted/10 dark:hover:bg-muted/20 transition-all duration-300 overflow-hidden"
                     >
                         <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <TrendingUp className="w-12 h-12 text-gourmet-ink dark:text-dark-text" />
+                            <TrendingUp className="w-12 h-12 text-foreground dark:text-foreground" />
                         </div>
                         <div className="flex items-center gap-3 mb-4">
                             <span className="inline-block h-3 w-3 rounded-full shadow-lg bg-emerald-500" />
-                            <span className="text-xs md:text-sm font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">Floating Prepaid</span>
+                            <span className="text-xs md:text-sm font-black uppercase tracking-widest text-muted-foreground/60 dark:text-muted-foreground/60">Floating Prepaid</span>
                         </div>
                         <div className="text-3xl md:text-5xl font-black tracking-tighter text-emerald-600 dark:text-emerald-400">{formatCurrency(incomeSum)}</div>
-                        <p className="text-sm md:text-lg font-bold text-gourmet-ink/40 dark:text-dark-text/40 mt-2">Customer prepayments</p>
+                        <p className="text-sm md:text-lg font-bold text-muted-foreground/40 mt-2">Customer prepayments</p>
                         <div className="absolute bottom-0 left-0 h-2 w-0 group-hover:w-full transition-all duration-500 bg-emerald-500" />
                     </motion.div>
                     <motion.div
                         whileHover={{ y: -5, scale: 1.02 }}
-                        className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-gourmet-green/20 dark:border-white/10 p-6 md:p-8 bg-gourmet-cream/40 dark:bg-dark-green/10 hover:bg-gourmet-green/10 dark:hover:bg-dark-green/20 transition-all duration-300 overflow-hidden"
+                        className="group relative rounded-3xl md:rounded-[40px] border-2 border-dashed border-border dark:border-border p-6 md:p-8 bg-muted/40 dark:bg-muted/10 hover:bg-muted/10 dark:hover:bg-muted/20 transition-all duration-300 overflow-hidden"
                     >
                         <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <TrendingDown className="w-12 h-12 text-gourmet-ink dark:text-dark-text" />
+                            <TrendingDown className="w-12 h-12 text-foreground dark:text-foreground" />
                         </div>
                         <div className="flex items-center gap-3 mb-4">
                             <span className="inline-block h-3 w-3 rounded-full shadow-lg bg-rose-500" />
-                            <span className="text-xs md:text-sm font-black uppercase tracking-widest text-gourmet-ink/60 dark:text-dark-text/60">Accounts Receivable</span>
+                            <span className="text-xs md:text-sm font-black uppercase tracking-widest text-muted-foreground/60 dark:text-muted-foreground/60">Accounts Receivable</span>
                         </div>
                         <div className="text-3xl md:text-5xl font-black tracking-tighter text-rose-600 dark:text-rose-400">{formatCurrency(debtSum)}</div>
-                        <p className="text-sm md:text-lg font-bold text-gourmet-ink/40 dark:text-dark-text/40 mt-2">Pending customer debts</p>
+                        <p className="text-sm md:text-lg font-bold text-muted-foreground/40 dark:text-muted-foreground/40 mt-2">Pending customer debts</p>
                         <div className="absolute bottom-0 left-0 h-2 w-0 group-hover:w-full transition-all duration-500 bg-rose-500" />
                     </motion.div>
                 </div>
 
                 {/* Table Sheet */}
                 <div className="flex flex-col gap-4 md:gap-6 relative z-10 flex-1 min-h-0">
-                    <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 overflow-hidden relative flex-1 flex flex-col min-h-0">
-                        <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none text-gourmet-green-light dark:text-gourmet-green">
+                    <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-border dark:border-border overflow-hidden relative flex-1 flex flex-col min-h-0">
+                        <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none text-muted-foreground dark:text-muted-foreground">
                             <Cherry className="w-10 h-10 md:w-14 md:h-14 rotate-12" />
                             <CookingPot className="w-10 h-10 md:w-14 md:h-14 -rotate-12" />
                         </div>
 
                         <div className="overflow-auto relative flex-1 min-h-0">
-                            <Table className="min-w-[900px] text-gourmet-ink dark:text-dark-text">
+                            <Table className="min-w-[900px] text-foreground dark:text-foreground">
                                 <TableHeader>
-                                    <TableRow className="h-12 bg-gourmet-cream/60 dark:bg-dark-green/20 cursor-default">
+                                    <TableRow className="h-12 bg-muted/60 dark:bg-muted/20 cursor-default">
                                         <TableHead className={cn('w-[200px]', headCell, 'pl-4 md:pl-6')}>Execution Date</TableHead>
                                         <TableHead className={cn(headCell, cellBorder)}>Entity/Reason</TableHead>
                                         <TableHead className={cn('w-[160px]', headCell, cellBorder)}>Classification</TableHead>
@@ -507,26 +507,26 @@ export function FinanceTab({
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: idx * 0.05 }}
                                                 className={cn(
-                                                    'h-12 transition-colors border-t border-gourmet-green/15 dark:border-white/10',
+                                                    'h-12 transition-colors border-t border-border dark:border-border',
                                                     idx % 2 === 0
-                                                        ? 'bg-gourmet-cream dark:bg-dark-surface'
-                                                        : 'bg-gourmet-cream/40 dark:bg-dark-green/20',
-                                                    'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/30'
+                                                        ? 'bg-muted dark:bg-muted'
+                                                        : 'bg-muted/40 dark:bg-muted/20',
+                                                    'hover:bg-muted/10 dark:hover:bg-muted/30'
                                                 )}
                                             >
-                                                <TableCell className="pl-4 md:pl-6 font-medium text-xs text-gourmet-ink/60 dark:text-dark-text/60">
+                                                <TableCell className="pl-4 md:pl-6 font-medium text-xs text-muted-foreground/60 dark:text-muted-foreground/60">
                                                     {new Date(tx.createdAt).toLocaleString(language === 'ru' ? 'ru-RU' : 'uz-UZ')}
                                                 </TableCell>
                                                 <TableCell className={cn(cellBorder)}>
                                                     <div className="flex flex-col">
                                                         <span className="font-bold text-sm tracking-tight">{tx.description || tx.customer?.name || 'Company Operation'}</span>
-                                                        <span className="text-[10px] text-gourmet-ink/40 dark:text-dark-text/40 uppercase font-black tracking-widest">
+                                                        <span className="text-[10px] text-muted-foreground/40 dark:text-muted-foreground/40 uppercase font-black tracking-widest">
                                                             {tx.customer ? 'Customer Ledger' : 'Internal Funds'}
                                                         </span>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className={cn(cellBorder)}>
-                                                    <Badge variant="outline" className="rounded-full border-gourmet-ink/10 dark:border-white/10 bg-gourmet-cream/40 dark:bg-dark-green/20 px-3 uppercase text-[9px] font-black">
+                                                    <Badge variant="outline" className="rounded-full border-border dark:border-border bg-muted/40 dark:bg-muted/20 px-3 uppercase text-[9px] font-black">
                                                         {tx.category}
                                                     </Badge>
                                                 </TableCell>
@@ -541,7 +541,7 @@ export function FinanceTab({
                                     {visibleHistoryRows.length === 0 && (
                                         <TableRow>
                                             <TableCell colSpan={4} className="h-20 text-center">
-                                                <div className="inline-flex items-center gap-2 text-sm font-bold text-gourmet-ink/60 dark:text-dark-text/60">
+                                                <div className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground/60 dark:text-muted-foreground/60">
                                                     <History className="size-4" />
                                                     No monetary movements found.
                                                 </div>
@@ -557,10 +557,10 @@ export function FinanceTab({
 
             {/* Fund Management Modal */}
             <Dialog open={isCompanyFundsModalOpen} onOpenChange={setIsCompanyFundsModalOpen}>
-                <DialogContent className="rounded-[40px] border-none shadow-2xl backdrop-blur-3xl bg-white/90 dark:bg-dark-surface/90 p-10 max-w-lg">
+                <DialogContent className="rounded-[40px] border-none shadow-2xl backdrop-blur-3xl bg-white/90 dark:bg-card/90 p-10 max-w-lg">
                     <DialogHeader className="mb-6">
-                        <DialogTitle className="text-3xl font-black uppercase tracking-tighter text-gourmet-ink dark:text-dark-text">Adjust Liquidity</DialogTitle>
-                        <DialogDescription className="text-slate-500 dark:text-dark-text/60 font-medium">Record a company cashflow event manually.</DialogDescription>
+                        <DialogTitle className="text-3xl font-black uppercase tracking-tighter text-foreground dark:text-foreground">Adjust Liquidity</DialogTitle>
+                        <DialogDescription className="text-slate-500 dark:text-muted-foreground/60 font-medium">Record a company cashflow event manually.</DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-6">
@@ -593,7 +593,7 @@ export function FinanceTab({
                                 type="number"
                                 value={transactionAmount}
                                 onChange={e => setTransactionAmount(e.target.value)}
-                                className="h-16 rounded-[28px] bg-white dark:bg-dark-green/20 border-2 border-dashed border-slate-200 dark:border-white/10 text-2xl font-black px-8 focus:border-gourmet-green"
+                                className="h-16 rounded-[28px] bg-white dark:bg-muted/20 border-2 border-dashed border-slate-200 dark:border-border text-2xl font-black px-8 focus:border-primary"
                                 placeholder="0"
                             />
                         </div>
@@ -603,7 +603,7 @@ export function FinanceTab({
                             <Input
                                 value={transactionDescription}
                                 onChange={e => setTransactionDescription(e.target.value)}
-                                className="h-14 rounded-[24px] bg-white dark:bg-dark-green/20 border-none shadow-inner px-6 font-medium"
+                                className="h-14 rounded-[24px] bg-white dark:bg-muted/20 border-none shadow-inner px-6 font-medium"
                                 placeholder="E.g. Office rent, Investment..."
                             />
                         </div>
@@ -611,7 +611,7 @@ export function FinanceTab({
 
                     <DialogFooter className="mt-10 sm:justify-start gap-4">
                         <Button
-                            className="flex-1 h-14 rounded-[28px] bg-gourmet-green dark:bg-dark-green text-white font-black uppercase tracking-widest shadow-xl"
+                            className="flex-1 h-14 rounded-[28px] bg-primary dark:bg-primary text-white font-black uppercase tracking-widest shadow-xl"
                             onClick={async () => {
                                 if (!transactionAmount) return;
                                 setIsSubmitting(true);
@@ -656,7 +656,7 @@ export function FinanceTab({
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative bg-gourmet-cream dark:bg-dark-surface rounded-3xl md:rounded-[40px] shadow-2xl border-2 border-gourmet-green/20 p-6 md:p-10 z-[1000] w-full max-w-[450px] mx-auto overflow-hidden transition-colors duration-300"
+                            className="relative bg-card dark:bg-card rounded-3xl md:rounded-[40px] shadow-2xl border-2 border-border p-6 md:p-10 z-[1000] w-full max-w-[450px] mx-auto overflow-hidden transition-colors duration-300"
                             role="dialog"
                             aria-modal="true"
                             aria-label="Calendar"
@@ -664,29 +664,29 @@ export function FinanceTab({
                             <button
                                 type="button"
                                 onClick={closeDatePicker}
-                                className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-colors"
+                                className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted dark:hover:bg-muted transition-colors"
                                 aria-label="Close"
                             >
-                                <X className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                                <X className="w-6 h-6 text-foreground dark:text-foreground" />
                             </button>
 
                             <div className="flex items-center justify-between mb-6 md:mb-8">
                                 <button
                                     type="button"
                                     onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-muted dark:hover:bg-muted rounded-full transition-colors"
                                 >
-                                    <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text" />
+                                    <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-foreground dark:text-foreground" />
                                 </button>
-                                <h3 className="text-xl md:text-2xl font-black text-gourmet-ink dark:text-dark-text">
+                                <h3 className="text-xl md:text-2xl font-black text-foreground dark:text-foreground">
                                     {format(currentMonth, 'MMMM yyyy')}
                                 </h3>
                                 <button
                                     type="button"
                                     onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-muted dark:hover:bg-muted rounded-full transition-colors"
                                 >
-                                    <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text" />
+                                    <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-foreground dark:text-foreground" />
                                 </button>
                             </div>
 
@@ -694,7 +694,7 @@ export function FinanceTab({
                                 {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map((d) => (
                                     <div
                                         key={d}
-                                        className="text-center text-[10px] md:text-sm font-black text-gourmet-ink dark:text-dark-text uppercase tracking-widest py-2"
+                                        className="text-center text-[10px] md:text-sm font-black text-foreground dark:text-foreground uppercase tracking-widest py-2"
                                     >
                                         {d}
                                     </div>
@@ -703,11 +703,11 @@ export function FinanceTab({
 
                             <div className="text-base md:text-lg">{renderCalendar()}</div>
 
-                            <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-gourmet-green/20">
+                            <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-border">
                                 <button
                                     type="button"
                                     onClick={resetDraftRange}
-                                    className="text-sm md:text-base font-bold text-gourmet-ink dark:text-dark-text hover:text-gourmet-ink dark:hover:text-dark-text transition-colors"
+                                    className="text-sm md:text-base font-bold text-foreground dark:text-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
                                 >
                                     Reset
                                 </button>
@@ -715,14 +715,14 @@ export function FinanceTab({
                                     <button
                                         type="button"
                                         onClick={closeDatePicker}
-                                        className="px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-sm md:text-base text-gourmet-ink dark:text-dark-text hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-all border border-gourmet-ink/5 sm:border-none"
+                                        className="px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-sm md:text-base text-foreground dark:text-foreground hover:bg-muted dark:hover:bg-muted transition-all border border-border sm:border-none"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="button"
                                         onClick={applyDraftRange}
-                                        className="bg-gourmet-green dark:bg-dark-green text-gourmet-ink dark:text-dark-text px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-green-500/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
+                                        className="bg-primary dark:bg-primary text-foreground dark:text-foreground px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
                                     >
                                         Apply
                                     </button>

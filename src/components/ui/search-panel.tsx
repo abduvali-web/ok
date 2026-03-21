@@ -29,8 +29,8 @@ export function SearchPanel({
 }) {
   const wrapperTone =
     tone === 'orange'
-      ? 'bg-gourmet-orange'
-      : 'bg-gourmet-green dark:bg-dark-green'
+      ? 'bg-orange-500'
+      : 'bg-primary'
 
   return (
     <div
@@ -42,7 +42,7 @@ export function SearchPanel({
       )}
     >
       <div className="rounded-full border-2 border-dashed border-white/20 dark:border-white/10 flex items-center px-4 md:px-6 py-2 md:py-3">
-        <Search className="pointer-events-none mr-3 md:mr-4 size-5 md:size-6 text-gourmet-ink dark:text-dark-text" />
+        <Search className="pointer-events-none mr-3 md:mr-4 size-5 md:size-6 text-foreground" />
         <Input
           ref={inputRef}
           value={value}
@@ -52,7 +52,7 @@ export function SearchPanel({
           disabled={disabled}
           className={cn(
             'h-auto border-0 bg-transparent px-0 py-0 text-base md:text-lg font-bold shadow-none backdrop-blur-0 rounded-none',
-            'text-gourmet-ink dark:text-dark-text placeholder:text-gourmet-ink/70 dark:placeholder:text-dark-text/70',
+            'text-foreground placeholder:text-muted-foreground/70',
             'focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0 focus-visible:bg-transparent',
             'hover:bg-transparent',
             inputClassName

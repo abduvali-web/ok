@@ -62,8 +62,8 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-50 w-72 -translate-x-full transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]',
-          'bg-[#FDFCF9]/95 dark:bg-dark-green/90 backdrop-blur-2xl',
-          'md:relative md:translate-x-0 md:w-[136px] md:m-4 md:rounded-[50px] md:bg-white/50 md:dark:bg-white/5 md:border-2 md:border-dashed md:border-gourmet-green/20 md:dark:border-white/10 md:p-4 md:shadow-2xl md:self-start md:h-fit',
+          'bg-background/95 backdrop-blur-2xl',
+          'md:relative md:translate-x-0 md:w-[136px] md:m-4 md:rounded-[50px] md:bg-white/50 md:dark:bg-white/5 md:border-2 md:border-dashed md:border-primary/20 md:dark:border-white/10 md:p-4 md:shadow-2xl md:self-start md:h-fit',
           isOpen && 'translate-x-0',
           className
         )}
@@ -71,12 +71,12 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between px-6 py-6 md:hidden">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gourmet-green dark:bg-dark-surface text-white shadow-lg shadow-black/10 border-2 border-gourmet-green/30 dark:border-white/20 shrink-0">
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-black/10 border-2 border-primary/30 dark:border-white/20 shrink-0">
                 <LayoutDashboard className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <p className="text-lg font-black tracking-tight text-gourmet-ink dark:text-white truncate">AutoFood</p>
-                <p className="text-[10px] font-black text-gourmet-ink/40 dark:text-white/40 tracking-[0.2em] uppercase truncate">
+                <p className="text-lg font-black tracking-tight text-foreground dark:text-white truncate">AutoFood</p>
+                <p className="text-[10px] font-black text-muted-foreground/40 dark:text-white/40 tracking-[0.2em] uppercase truncate">
                   {language === 'ru' ? 'Панель' : 'Dashboard'}
                 </p>
               </div>
@@ -85,7 +85,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
             <Button
               variant="ghost"
               size="icon"
-              className="text-gourmet-ink/50 hover:text-gourmet-ink hover:bg-black/5 dark:text-white/70 dark:hover:text-white dark:hover:bg-white/10 rounded-xl"
+              className="text-muted-foreground/50 hover:text-foreground hover:bg-black/5 dark:text-white/70 dark:hover:text-white dark:hover:bg-white/10 rounded-xl"
               onClick={onClose}
             >
               <X className="h-5 w-5" />
@@ -99,7 +99,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                   return (
                     <div
                       key={item.id}
-                      className="self-stretch my-2 h-[2px] border-t-2 border-dashed border-gourmet-green/20 dark:border-white/10"
+                      className="self-stretch my-2 h-[2px] border-t-2 border-dashed border-primary/20 dark:border-white/10"
                     />
                   );
                 }
@@ -121,7 +121,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                     {isActive && (
                       <motion.div
                         layoutId="active-nav-bg"
-                        className="absolute inset-0 bg-gourmet-green/10 dark:bg-dark-green/60 rounded-[30px] md:rounded-[40px] z-0 shadow-lg border-b-4 border-black/5 dark:border-black/20"
+                        className="absolute inset-0 bg-primary/10 dark:bg-primary/60 rounded-[30px] md:rounded-[40px] z-0 shadow-lg border-b-4 border-black/5 dark:border-black/20"
                         transition={{ type: 'spring', stiffness: 200, damping: 30 }}
                       />
                     )}
@@ -132,21 +132,21 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                       className={cn(
                         'w-12 h-12 md:w-[72px] md:h-[72px] rounded-full flex items-center justify-center relative transition-all overflow-hidden z-10',
                         isActive
-                          ? 'bg-gourmet-green text-white dark:bg-white dark:text-gourmet-green shadow-xl'
+                          ? 'bg-primary text-white dark:bg-white dark:text-primary shadow-xl'
                           : 'bg-[#dcfce7] text-emerald-800 hover:bg-[#bbf7d0] dark:bg-white/10 dark:text-white/60 dark:hover:text-white dark:hover:bg-white/20'
                       )}
                     >
-                        <div className={cn(
-                          'w-10 h-10 md:w-[60px] md:h-[60px] rounded-full flex items-center justify-center border-2 border-dashed relative z-10',
-                          isActive ? 'border-white/20 dark:border-gourmet-green/20' : 'border-emerald-700/20 dark:border-white/10'
-                        )}>
-                           <Icon className="w-5 h-5 md:w-7 md:h-7" />
-                        </div>
+                      <div className={cn(
+                        'w-10 h-10 md:w-[60px] md:h-[60px] rounded-full flex items-center justify-center border-2 border-dashed relative z-10',
+                        isActive ? 'border-white/20 dark:border-primary/20' : 'border-emerald-700/20 dark:border-white/10'
+                      )}>
+                        <Icon className="w-5 h-5 md:w-7 md:h-7" />
+                      </div>
                     </motion.div>
 
                     <span className={cn(
-                        "text-[10px] md:text-[11px] font-black uppercase tracking-widest relative z-10 text-center px-1 w-full truncate transition-all duration-300",
-                        isActive ? 'text-gourmet-ink dark:text-white' : 'text-gourmet-ink/60 group-hover:text-gourmet-ink dark:text-white/40 dark:group-hover:text-white/60'
+                      "text-[10px] md:text-[11px] font-black uppercase tracking-widest relative z-10 text-center px-1 w-full truncate transition-all duration-300",
+                      isActive ? 'text-foreground dark:text-white' : 'text-muted-foreground/60 group-hover:text-foreground dark:text-white/40 dark:group-hover:text-white/60'
                     )}>
                       {item.label}
                     </span>

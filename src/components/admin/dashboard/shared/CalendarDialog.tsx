@@ -145,12 +145,12 @@ export function CalendarDialog({
                     <div
                         key={day.toString()}
                         className={cn(
-                            'relative p-1 md:p-2 text-center cursor-pointer transition-all duration-200 rounded-lg md:rounded-xl',
-                            !isCurrentMonth ? 'text-gourmet-ink/40 dark:text-dark-text/40' : 'text-gourmet-ink dark:text-dark-text',
+                            'relative p-1 md:p-2 text-center cursor-pointer transition-all duration-150 rounded-lg md:rounded-xl',
+                            !isCurrentMonth ? 'text-muted-foreground/40' : 'text-foreground',
                             isSelected
-                                ? 'bg-dark-green text-gourmet-ink dark:text-dark-text shadow-md z-10'
-                                : 'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40',
-                            isInRange && !isSelected ? 'bg-dark-green/20' : ''
+                                ? 'bg-primary text-primary-foreground shadow-md z-10'
+                                : 'hover:bg-accent/10',
+                            isInRange && !isSelected ? 'bg-primary/20' : ''
                         )}
                         onClick={() => handleDateClick(cloneDay)}
                     >
@@ -206,13 +206,13 @@ export function CalendarDialog({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-black/40 backdrop-blur-md"
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                     />
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="relative bg-gourmet-cream dark:bg-dark-surface rounded-3xl md:rounded-[40px] shadow-2xl border-2 border-gourmet-green/20 p-6 md:p-10 z-[1000] w-full max-w-[450px] mx-auto overflow-hidden transition-colors duration-300"
+                        className="relative bg-card rounded-lg shadow-lg border border-border p-6 md:p-10 z-[1000] w-full max-w-[450px] mx-auto overflow-hidden transition-colors duration-150"
                         role="dialog"
                         aria-modal="true"
                         aria-label="Calendar"
@@ -220,29 +220,29 @@ export function CalendarDialog({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-colors"
+                            className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-accent/10 transition-colors duration-150"
                             aria-label="Close"
                         >
-                            <X className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                            <X className="w-6 h-6 text-foreground" />
                         </button>
 
                         <div className="flex items-center justify-between mb-6 md:mb-8">
                             <button
                                 type="button"
                                 onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                                className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                                className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-accent/10 rounded-full transition-colors duration-150"
                             >
-                                <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text" />
+                                <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
                             </button>
-                            <h3 className="text-xl md:text-2xl font-black text-gourmet-ink dark:text-dark-text">
+                            <h3 className="text-xl md:text-2xl font-bold text-foreground">
                                 {format(currentMonth, 'MMMM yyyy')}
                             </h3>
                             <button
                                 type="button"
                                 onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                                className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                                className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-accent/10 rounded-full transition-colors duration-150"
                             >
-                                <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text" />
+                                <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
                             </button>
                         </div>
 
@@ -250,7 +250,7 @@ export function CalendarDialog({
                             {dayLabels.map((d) => (
                                 <div
                                     key={d}
-                                    className="text-center text-[10px] md:text-sm font-black text-gourmet-ink dark:text-dark-text uppercase tracking-widest py-2"
+                                    className="text-center text-[10px] md:text-sm font-bold text-foreground uppercase tracking-widest py-2"
                                 >
                                     {d}
                                 </div>
@@ -259,11 +259,11 @@ export function CalendarDialog({
 
                         <div className="text-base md:text-lg">{renderCalendar()}</div>
 
-                        <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-gourmet-green/20">
+                        <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-border">
                             <button
                                 type="button"
                                 onClick={resetDraftRange}
-                                className="text-sm md:text-base font-bold text-gourmet-ink dark:text-dark-text hover:text-gourmet-ink dark:hover:text-dark-text transition-colors"
+                                className="text-sm md:text-base font-medium text-foreground hover:text-foreground transition-colors duration-150"
                             >
                                 {uiText.reset}
                             </button>
@@ -271,14 +271,14 @@ export function CalendarDialog({
                                 <button
                                     type="button"
                                     onClick={onClose}
-                                    className="px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-sm md:text-base text-gourmet-ink dark:text-dark-text hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-all border border-gourmet-ink/5 sm:border-none"
+                                    className="px-6 md:px-8 py-2 md:py-3 rounded-lg font-medium text-sm md:text-base text-foreground hover:bg-accent/10 transition-all duration-150 border border-border sm:border-none"
                                 >
                                     {uiText.cancel}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={applyDraftRange}
-                                    className="bg-gourmet-green dark:bg-dark-green text-gourmet-ink dark:text-dark-text px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-green-500/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
+                                    className="bg-primary text-primary-foreground px-8 md:px-10 py-2 md:py-3 rounded-lg font-medium text-sm md:text-base shadow-md hover:bg-primary/90 active:scale-95 transition-all duration-150"
                                 >
                                     {uiText.apply}
                                 </button>

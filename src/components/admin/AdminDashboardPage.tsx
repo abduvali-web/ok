@@ -313,23 +313,23 @@ const AdminDashboardPage = ({ mode }: { mode?: 'middle' | 'low' }) => {
   const handleCreateOrder = () => {
     setEditingOrderId(null)
     setOrderFormData({
-        customerName: '',
-        customerPhone: '',
-        deliveryAddress: '',
-        deliveryTime: '08:00',
-        quantity: 1,
-        calories: 1600,
-        specialFeatures: '',
-        paymentStatus: 'PENDING',
-        paymentMethod: 'CASH',
-        isPrepaid: false,
-        amountReceived: null,
-        selectedClientId: 'manual',
-        latitude: null,
-        longitude: null,
-        courierId: '',
-        assignedSetId: '',
-      })
+      customerName: '',
+      customerPhone: '',
+      deliveryAddress: '',
+      deliveryTime: '08:00',
+      quantity: 1,
+      calories: 1600,
+      specialFeatures: '',
+      paymentStatus: 'PENDING',
+      paymentMethod: 'CASH',
+      isPrepaid: false,
+      amountReceived: null,
+      selectedClientId: 'manual',
+      latitude: null,
+      longitude: null,
+      courierId: '',
+      assignedSetId: '',
+    })
     setIsOrderModalOpen(true)
   }
 
@@ -337,23 +337,23 @@ const AdminDashboardPage = ({ mode }: { mode?: 'middle' | 'low' }) => {
     setSelectedOrder(order)
     setEditingOrderId(order.id)
     setOrderFormData({
-        customerName: order.customer?.name || order.customerName || '',
-        customerPhone: order.customer?.phone || order.customerPhone || '',
-        deliveryAddress: order.deliveryAddress || '',
-        deliveryTime: order.deliveryTime || '08:00',
-        quantity: order.quantity || 1,
-        calories: order.calories || 1600,
-        specialFeatures: order.specialFeatures || '',
-        paymentStatus: order.paymentStatus || 'PENDING',
-        paymentMethod: order.paymentMethod || 'CASH',
-        isPrepaid: !!order.isPrepaid,
-        amountReceived: order.amountReceived === 0 ? 0 : (order.amountReceived || null),
-        selectedClientId: order.clientId || 'manual',
-        latitude: order.latitude || null,
-        longitude: order.longitude || null,
-        courierId: order.courierId || '',
-        assignedSetId: order.assignedSetId || '',
-      })
+      customerName: order.customer?.name || order.customerName || '',
+      customerPhone: order.customer?.phone || order.customerPhone || '',
+      deliveryAddress: order.deliveryAddress || '',
+      deliveryTime: order.deliveryTime || '08:00',
+      quantity: order.quantity || 1,
+      calories: order.calories || 1600,
+      specialFeatures: order.specialFeatures || '',
+      paymentStatus: order.paymentStatus || 'PENDING',
+      paymentMethod: order.paymentMethod || 'CASH',
+      isPrepaid: !!order.isPrepaid,
+      amountReceived: order.amountReceived === 0 ? 0 : (order.amountReceived || null),
+      selectedClientId: order.clientId || 'manual',
+      latitude: order.latitude || null,
+      longitude: order.longitude || null,
+      courierId: order.courierId || '',
+      assignedSetId: order.assignedSetId || '',
+    })
     setIsOrderModalOpen(true)
   }
 
@@ -387,23 +387,23 @@ const AdminDashboardPage = ({ mode }: { mode?: 'middle' | 'low' }) => {
 
   const handleClientSelectForOrder = (clientId: string) => {
     if (clientId === 'manual') {
-        setOrderFormData(prev => ({ ...prev, selectedClientId: 'manual' }))
-        return
+      setOrderFormData(prev => ({ ...prev, selectedClientId: 'manual' }))
+      return
     }
     const client = clients.find(c => c.id === clientId)
     if (client) {
-         setOrderFormData(prev => ({
-             ...prev,
-             selectedClientId: clientId,
-             customerName: client.name || '',
-             customerPhone: client.phone || '',
-             deliveryAddress: client.address || '',
-             calories: client.calories || 1600,
-             specialFeatures: client.specialFeatures || '',
-             assignedSetId: client.assignedSetId || prev.assignedSetId,
-             latitude: client.latitude || null,
-             longitude: client.longitude || null,
-         }))
+      setOrderFormData(prev => ({
+        ...prev,
+        selectedClientId: clientId,
+        customerName: client.name || '',
+        customerPhone: client.phone || '',
+        deliveryAddress: client.address || '',
+        calories: client.calories || 1600,
+        specialFeatures: client.specialFeatures || '',
+        assignedSetId: client.assignedSetId || prev.assignedSetId,
+        latitude: client.latitude || null,
+        longitude: client.longitude || null,
+      }))
     }
   }
 
@@ -587,8 +587,8 @@ const AdminDashboardPage = ({ mode }: { mode?: 'middle' | 'low' }) => {
   const filteredOrders = useMemo(() => {
     let result = orders
     if (selectedPeriod?.from) {
-      const start = new Date(selectedPeriod.from).setHours(0,0,0,0)
-      const end = new Date(selectedPeriod.to ?? selectedPeriod.from).setHours(23,59,59,999)
+      const start = new Date(selectedPeriod.from).setHours(0, 0, 0, 0)
+      const end = new Date(selectedPeriod.to ?? selectedPeriod.from).setHours(23, 59, 59, 999)
       result = result.filter(o => {
         const d = new Date(o.deliveryDate).getTime()
         return d >= start && d <= end
@@ -620,14 +620,14 @@ const AdminDashboardPage = ({ mode }: { mode?: 'middle' | 'low' }) => {
   const DispatchActionIcon = MapIcon
 
   return (
-      <AdminLayout 
-        mode={meRole === 'MIDDLE_ADMIN' ? 'middle' : 'low'}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        onLogout={() => signOut()}
-      >
-      <div className="flex flex-col h-full bg-gourmet-cream dark:bg-dark-surface transition-colors duration-500 overflow-hidden">
-        
+    <AdminLayout
+      mode={meRole === 'MIDDLE_ADMIN' ? 'middle' : 'low'}
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
+      onLogout={() => signOut()}
+    >
+      <div className="flex flex-col h-full bg-background transition-colors duration-150 overflow-hidden">
+
         {/* Main Dashboard Tabs Container */}
         <div className="flex-1 min-h-0 flex flex-col p-4 md:p-8 lg:p-12">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col min-h-0">
@@ -865,17 +865,17 @@ const AdminDashboardPage = ({ mode }: { mode?: 'middle' | 'low' }) => {
           )}
 
           <Dialog open={isDeleteClientsDialogOpen} onOpenChange={setIsDeleteClientsDialogOpen}>
-            <DialogContent className="rounded-[40px] border-none shadow-2xl bg-white/90 backdrop-blur-3xl p-10">
+            <DialogContent className="rounded-lg border border-border shadow-lg bg-card p-6">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-black uppercase tracking-tight">Archive Confirmation</DialogTitle>
-                <DialogDescription className="font-medium text-slate-500">
+                <DialogTitle className="text-xl font-bold">Archive Confirmation</DialogTitle>
+                <DialogDescription className="font-medium text-muted-foreground">
                   Moving {selectedClients.size} clients to the recycle bin. They can be restored later.
                 </DialogDescription>
               </DialogHeader>
-              <DialogFooter className="mt-8 gap-4">
-                <Button variant="ghost" className="rounded-full font-bold" onClick={() => setIsDeleteClientsDialogOpen(false)}>Cancel</Button>
-                <Button 
-                  className="rounded-full bg-rose-600 hover:bg-rose-700 text-white font-black uppercase tracking-widest px-8"
+              <DialogFooter className="mt-6 gap-4">
+                <Button variant="ghost" className="rounded-lg font-medium" onClick={() => setIsDeleteClientsDialogOpen(false)}>Cancel</Button>
+                <Button
+                  className="rounded-lg bg-destructive hover:bg-destructive/90 text-destructive-foreground font-medium px-8"
                   onClick={handleDeleteSelectedClients}
                   disabled={isMutatingClients}
                 >

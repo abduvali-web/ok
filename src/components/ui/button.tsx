@@ -5,17 +5,17 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring/30 aria-invalid:border-destructive active:scale-[0.97]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background aria-invalid:border-destructive",
   {
     variants: {
       variant: {
-        default: "border border-transparent dark:border-white/20 bg-gourmet-green dark:bg-dark-green text-gourmet-ink dark:text-dark-text shadow-xl border-b-4 border-black/20 hover:shadow-2xl hover:bg-gourmet-green/90 dark:hover:bg-dark-green/90",
-        success: "border border-emerald-500/30 dark:border-emerald-500/30 bg-emerald-500 dark:bg-emerald-600 text-white shadow-[0_1px_12px_rgba(52,211,153,0.25)] hover:shadow-[0_2px_20px_rgba(52,211,153,0.35)] hover:bg-emerald-600 dark:hover:bg-emerald-500",
-        warning: "border border-amber-500/30 dark:border-amber-500/30 bg-amber-500 dark:bg-amber-500 text-white dark:text-black shadow-[0_1px_12px_rgba(251,191,36,0.25)] hover:shadow-[0_2px_20px_rgba(251,191,36,0.35)] hover:bg-amber-600 dark:hover:bg-amber-400",
-        destructive: "border border-red-500/30 dark:border-red-500/30 bg-red-500 dark:bg-red-600 text-white shadow-[0_1px_12px_rgba(239,68,68,0.25)] hover:shadow-[0_2px_20px_rgba(239,68,68,0.35)] hover:bg-red-600 dark:hover:bg-red-500",
-        outline: "border border-gourmet-green/25 dark:border-white/10 bg-gourmet-cream/70 dark:bg-dark-surface/40 text-gourmet-ink dark:text-dark-text backdrop-blur-md hover:bg-gourmet-cream/90 dark:hover:bg-dark-surface/55 hover:border-gourmet-green/35 dark:hover:border-white/20 shadow-sm",
-        secondary: "border border-gourmet-green/15 dark:border-white/10 bg-gourmet-cream/45 dark:bg-dark-surface/30 text-gourmet-ink dark:text-dark-text backdrop-blur-md hover:bg-gourmet-cream/65 dark:hover:bg-dark-surface/45 shadow-sm",
-        ghost: "border border-transparent text-gourmet-ink/70 dark:text-dark-text/70 hover:bg-gourmet-green/10 dark:hover:bg-dark-green/30 hover:text-gourmet-ink dark:hover:text-dark-text",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        success: "bg-success text-white hover:bg-success/90",
+        warning: "bg-warning text-white hover:bg-warning/90",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

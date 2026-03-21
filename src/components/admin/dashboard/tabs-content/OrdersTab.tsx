@@ -14,6 +14,9 @@ import {
   Save,
   Play,
   CalendarDays,
+  X,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import {
   addDays,
@@ -200,11 +203,11 @@ export function OrdersTab({
             key={day.toString()}
             className={cn(
               'relative p-1 md:p-2 text-center cursor-pointer transition-all duration-200 rounded-lg md:rounded-xl',
-              !isCurrentMonth ? 'text-gourmet-ink/40 dark:text-dark-text/40' : 'text-gourmet-ink dark:text-dark-text',
+              !isCurrentMonth ? 'text-muted-foreground/40 dark:text-muted-foreground/40' : 'text-foreground dark:text-foreground',
               isSelected
-                ? 'bg-dark-green text-gourmet-ink dark:text-dark-text shadow-md z-10'
-                : 'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40',
-              isInRange && !isSelected ? 'bg-dark-green/20' : ''
+                ? 'bg-primary text-foreground dark:text-foreground shadow-md z-10'
+                : 'hover:bg-muted dark:hover:bg-muted',
+              isInRange && !isSelected ? 'bg-primary/20' : ''
             )}
             onClick={() => handleDateClick(cloneDay)}
           >
@@ -256,7 +259,7 @@ export function OrdersTab({
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="content-card flex-1 min-h-0 flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300"
+        className="bg-card flex-1 min-h-0 flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300"
       >
         {/* Background Watermark */}
         <motion.div
@@ -264,7 +267,7 @@ export function OrdersTab({
           transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
           className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none"
         >
-          <Utensils className="w-56 h-56 md:w-64 md:h-64 text-gourmet-ink dark:text-dark-text" />
+          <Utensils className="w-56 h-56 md:w-64 md:h-64 text-foreground dark:text-foreground" />
         </motion.div>
 
         {/* Title */}
@@ -273,7 +276,7 @@ export function OrdersTab({
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-2xl md:text-4xl font-extrabold text-gourmet-ink dark:text-dark-text tracking-tight"
+            className="text-2xl md:text-4xl font-extrabold text-foreground dark:text-foreground tracking-tight"
           >
             {t.admin.manageOrders}
           </motion.h2>
@@ -281,7 +284,7 @@ export function OrdersTab({
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="text-base md:text-lg text-gourmet-ink dark:text-dark-text font-medium"
+            className="text-base md:text-lg text-foreground dark:text-foreground font-medium"
           >
             {t.admin.manageOrdersDesc}
           </motion.p>
@@ -291,16 +294,16 @@ export function OrdersTab({
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 md:gap-6 relative z-10">
           <motion.div
             whileHover={{ scale: 1.01 }}
-            className="relative flex-1 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
+            className="relative flex-1 bg-primary dark:bg-primary rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
           >
             <div className="rounded-full border-2 border-dashed border-white/30 flex items-center px-4 md:px-6 py-2 md:py-3">
-              <Search className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text mr-3 md:mr-4" />
+              <Search className="w-5 h-5 md:w-6 md:h-6 text-foreground dark:text-foreground mr-3 md:mr-4" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder={profileUiText.searchOrdersPlaceholder || "Qidirish..."}
-                className="w-full bg-transparent py-0 !text-base md:!text-lg focus:outline-none text-gourmet-ink dark:text-dark-text placeholder:text-gourmet-ink dark:placeholder:text-dark-text"
+                className="w-full bg-transparent py-0 !text-base md:!text-lg focus:outline-none text-foreground dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground"
               />
             </div>
           </motion.div>
@@ -313,11 +316,11 @@ export function OrdersTab({
               }}
               whileTap={{ x: 0 }}
               onClick={openDatePicker}
-              className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
+              className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-primary dark:bg-primary rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
             >
               <div className="w-[42px] h-[42px] md:w-full md:h-full rounded-full border-2 border-dashed border-white/10 flex items-center justify-center md:px-6">
-                <CalendarIcon className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text md:mr-3" />
-                <span className="hidden md:inline font-bold text-sm md:text-lg text-gourmet-ink dark:text-dark-text whitespace-nowrap">
+                <CalendarIcon className="w-5 h-5 md:w-6 md:h-6 text-foreground dark:text-foreground md:mr-3" />
+                <span className="hidden md:inline font-bold text-sm md:text-lg text-foreground dark:text-foreground whitespace-nowrap">
                   {appliedRangeLabel}
                 </span>
               </div>
@@ -329,12 +332,12 @@ export function OrdersTab({
                 whileHover={{ scale: 1.15, y: 5 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={onCreateOrder}
-                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300"
+                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300"
                 aria-label={t.admin.createOrder}
                 title={t.admin.createOrder}
               >
                 <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                  <Plus className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                  <Plus className="w-6 h-6 text-foreground dark:text-foreground" />
                 </div>
               </motion.button>
 
@@ -344,12 +347,12 @@ export function OrdersTab({
                 whileTap={{ scale: 0.9 }}
                 onClick={onDispatchOpen}
                 disabled={!selectedDate}
-                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
+                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
                 aria-label={dispatchActionLabel}
                 title={dispatchActionLabel}
               >
                 <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                  <DispatchActionIcon className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                  <DispatchActionIcon className="w-6 h-6 text-foreground dark:text-foreground" />
                 </div>
               </motion.button>
 
@@ -359,12 +362,12 @@ export function OrdersTab({
                 whileTap={{ scale: 0.9 }}
                 onClick={onDeleteSelected}
                 disabled={selectedOrders.size === 0 || isDeleting}
-                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
+                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
                 aria-label={t.admin.deleteSelected}
                 title={t.admin.deleteSelected}
               >
                 <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                  <Trash2 className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                  <Trash2 className="w-6 h-6 text-foreground dark:text-foreground" />
                 </div>
               </motion.button>
 
@@ -374,12 +377,12 @@ export function OrdersTab({
                 whileTap={{ scale: 0.8 }}
                 onClick={onRefresh}
                 disabled={isRefreshing}
-                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
+                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
                 aria-label={profileUiText.refresh || 'Refresh'}
                 title={profileUiText.refresh || 'Refresh'}
               >
                 <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                  <RotateCcw className={cn('w-5 h-5 text-gourmet-ink dark:text-dark-text', isRefreshing && 'animate-spin')} />
+                  <RotateCcw className={cn('w-5 h-5 text-foreground dark:text-foreground', isRefreshing && 'animate-spin')} />
                 </div>
               </motion.button>
             </div>
@@ -388,8 +391,8 @@ export function OrdersTab({
 
         {/* Sheet */}
         <div className="flex flex-col gap-4 md:gap-6 relative z-10 flex-1 min-h-0">
-          <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 overflow-hidden relative flex-1 flex flex-col min-h-0">
-            <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none text-gourmet-green-light dark:text-gourmet-green">
+          <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-border dark:border-border overflow-hidden relative flex-1 flex flex-col min-h-0">
+            <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none text-muted-foreground dark:text-muted-foreground">
               <Cherry className="w-10 h-10 md:w-14 md:h-14 rotate-12" />
               <Utensils className="w-10 h-10 md:w-14 md:h-14 -rotate-12" />
             </div>
@@ -424,7 +427,7 @@ export function OrdersTab({
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative bg-gourmet-cream dark:bg-dark-surface rounded-3xl md:rounded-[40px] shadow-2xl border-2 border-gourmet-green/20 p-6 md:p-10 z-[1000] w-full max-w-[450px] mx-auto overflow-hidden transition-colors duration-300"
+              className="relative bg-card dark:bg-card rounded-3xl md:rounded-[40px] shadow-2xl border-2 border-border p-6 md:p-10 z-[1000] w-full max-w-[450px] mx-auto overflow-hidden transition-colors duration-300"
               role="dialog"
               aria-modal="true"
               aria-label="Calendar"
@@ -432,29 +435,29 @@ export function OrdersTab({
               <button
                 type="button"
                 onClick={closeDatePicker}
-                className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-colors"
+                className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted dark:hover:bg-muted transition-colors"
                 aria-label="Close"
               >
-                <RotateCcw className="w-6 h-6 text-gourmet-ink dark:text-dark-text rotate-45" />
+                <X className="w-6 h-6 text-foreground dark:text-foreground" />
               </button>
 
               <div className="flex items-center justify-between mb-6 md:mb-8">
                 <button
                   type="button"
                   onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-muted dark:hover:bg-muted rounded-full transition-colors"
                 >
-                  <RotateCcw className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text" />
+                  <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-foreground dark:text-foreground" />
                 </button>
-                <h3 className="text-xl md:text-2xl font-black text-gourmet-ink dark:text-dark-text">
+                <h3 className="text-xl md:text-2xl font-black text-foreground dark:text-foreground">
                   {format(currentMonth, 'MMMM yyyy')}
                 </h3>
                 <button
                   type="button"
                   onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-muted dark:hover:bg-muted rounded-full transition-colors"
                 >
-                  <RotateCcw className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text -rotate-180" />
+                  <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-foreground dark:text-foreground" />
                 </button>
               </div>
 
@@ -462,7 +465,7 @@ export function OrdersTab({
                 {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map((d) => (
                   <div
                     key={d}
-                    className="text-center text-[10px] md:text-sm font-black text-gourmet-ink dark:text-dark-text uppercase tracking-widest py-2"
+                    className="text-center text-[10px] md:text-sm font-black text-foreground dark:text-foreground uppercase tracking-widest py-2"
                   >
                     {d}
                   </div>
@@ -471,11 +474,11 @@ export function OrdersTab({
 
               <div className="text-base md:text-lg">{renderCalendar()}</div>
 
-              <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-gourmet-green/20">
+              <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-border">
                 <button
                   type="button"
                   onClick={resetDraftRange}
-                  className="text-sm md:text-base font-bold text-gourmet-ink dark:text-dark-text hover:text-gourmet-ink dark:hover:text-dark-text transition-colors"
+                  className="text-sm md:text-base font-bold text-foreground dark:text-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
                 >
                   Reset
                 </button>
@@ -483,14 +486,14 @@ export function OrdersTab({
                   <button
                     type="button"
                     onClick={closeDatePicker}
-                    className="px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-sm md:text-base text-gourmet-ink dark:text-dark-text hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-all border border-gourmet-ink/5 sm:border-none"
+                    className="px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-sm md:text-base text-foreground dark:text-foreground hover:bg-muted dark:hover:bg-muted transition-all border border-border sm:border-none"
                   >
                     Bekor qilish
                   </button>
                   <button
                     type="button"
                     onClick={applyDraftRange}
-                    className="bg-gourmet-green dark:bg-dark-green text-gourmet-ink dark:text-dark-text px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-green-500/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
+                    className="bg-primary dark:bg-primary text-foreground dark:text-foreground px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
                   >
                     Tayyor
                   </button>

@@ -4,8 +4,8 @@ export default function Loading() {
       <div className="flex flex-col items-center gap-8">
         {/* Animated Logo Pulse */}
         <div className="relative">
-          <div className="w-24 h-24 rounded-full bg-gourmet-green/20 dark:bg-dark-green/20 animate-ping absolute inset-0" />
-          <div className="w-24 h-24 rounded-full bg-gourmet-green dark:bg-dark-green flex items-center justify-center relative border-b-4 border-black/20 shadow-2xl">
+          <div className="w-24 h-24 rounded-full bg-primary/20 animate-ping absolute inset-0" />
+          <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center relative border-b-4 border-black/20 shadow-2xl">
             <div className="w-20 h-20 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center">
               <div className="w-8 h-8 rounded-full bg-white/30 animate-pulse" />
             </div>
@@ -14,17 +14,17 @@ export default function Loading() {
 
         {/* Skeleton cards */}
         <div className="flex flex-col items-center gap-3">
-          <div className="h-3 w-40 bg-gourmet-green/20 dark:bg-dark-green/20 rounded-full animate-pulse" />
-          <div className="h-2 w-28 bg-gourmet-green/10 dark:bg-dark-green/10 rounded-full animate-pulse" />
+          <div className="h-3 w-40 bg-primary/20 rounded-full animate-pulse" />
+          <div className="h-2 w-28 bg-primary/10 rounded-full animate-pulse" />
         </div>
 
         {/* Loading bar */}
-        <div className="w-64 h-2 bg-gourmet-green/10 dark:bg-dark-green/10 rounded-full overflow-hidden">
-          <div className="h-full w-1/2 bg-gourmet-green dark:bg-dark-green rounded-full animate-[loading_1.5s_ease-in-out_infinite]" 
-               style={{ animation: 'loading 1.5s ease-in-out infinite' }} />
+        <div className="w-64 h-2 bg-primary/10 rounded-full overflow-hidden">
+          <div className="h-full w-1/2 bg-primary rounded-full animate-[loading_1.5s_ease-in-out_infinite]"
+            style={{ animation: 'loading 1.5s ease-in-out infinite' }} />
         </div>
 
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gourmet-ink/30 dark:text-dark-text/30">
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">
           Loading Dashboard
         </p>
       </div>

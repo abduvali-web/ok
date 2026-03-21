@@ -15,6 +15,9 @@ import {
   Play,
   Edit,
   Utensils,
+  X,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import {
   addDays,
@@ -204,11 +207,11 @@ export function ClientsTab({
             key={day.toString()}
             className={cn(
               'relative p-1 md:p-2 text-center cursor-pointer transition-all duration-200 rounded-lg md:rounded-xl',
-              !isCurrentMonth ? 'text-gourmet-ink/40 dark:text-dark-text/40' : 'text-gourmet-ink dark:text-dark-text',
+              !isCurrentMonth ? 'text-muted-foreground/40 dark:text-muted-foreground/40' : 'text-foreground dark:text-foreground',
               isSelected
-                ? 'bg-dark-green text-gourmet-ink dark:text-dark-text shadow-md z-10'
-                : 'hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40',
-              isInRange && !isSelected ? 'bg-dark-green/20' : ''
+                ? 'bg-primary text-foreground dark:text-foreground shadow-md z-10'
+                : 'hover:bg-muted dark:hover:bg-muted',
+              isInRange && !isSelected ? 'bg-primary/20' : ''
             )}
             onClick={() => handleDateClick(cloneDay)}
           >
@@ -255,15 +258,15 @@ export function ClientsTab({
     closeDatePicker()
   }, [applySelectedDate, applySelectedPeriod, closeDatePicker])
 
-  const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-gourmet-ink dark:text-dark-text'
-  const cellBorder = 'border-l-2 border-dashed border-gourmet-green/25 dark:border-white/10'
+  const headCell = 'text-xs md:text-sm font-black uppercase tracking-[0.14em] text-foreground dark:text-foreground'
+  const cellBorder = 'border-l-2 border-dashed border-border dark:border-border'
 
   return (
     <TabsContent value="clients" className="min-h-0">
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="content-card flex-1 min-h-0 flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300"
+        className="bg-card flex-1 min-h-0 flex flex-col gap-6 md:gap-10 relative overflow-hidden px-4 md:px-14 py-6 md:py-10 transition-colors duration-300"
       >
         {/* Background Watermark */}
         <motion.div
@@ -271,7 +274,7 @@ export function ClientsTab({
           transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
           className="absolute top-10 right-10 opacity-5 dark:opacity-10 pointer-events-none"
         >
-          <Users className="w-56 h-56 md:w-64 md:h-64 text-gourmet-ink dark:text-dark-text" />
+          <Users className="w-56 h-56 md:w-64 md:h-64 text-foreground dark:text-foreground" />
         </motion.div>
 
         {/* Title */}
@@ -280,7 +283,7 @@ export function ClientsTab({
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-2xl md:text-4xl font-extrabold text-gourmet-ink dark:text-dark-text tracking-tight"
+            className="text-2xl md:text-4xl font-extrabold text-foreground dark:text-foreground tracking-tight"
           >
             {t.admin.manageClients}
           </motion.h2>
@@ -288,7 +291,7 @@ export function ClientsTab({
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="text-base md:text-lg text-gourmet-ink dark:text-dark-text font-medium"
+            className="text-base md:text-lg text-foreground dark:text-foreground font-medium"
           >
             {t.admin.manageClientsDesc}
           </motion.p>
@@ -298,16 +301,16 @@ export function ClientsTab({
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 md:gap-6 relative z-10">
           <motion.div
             whileHover={{ scale: 1.01 }}
-            className="relative flex-1 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
+            className="relative flex-1 bg-primary dark:bg-primary rounded-full shadow-xl border-b-4 border-black/20 p-1 transition-colors duration-300"
           >
             <div className="rounded-full border-2 border-dashed border-white/30 flex items-center px-4 md:px-6 py-2 md:py-3">
-              <Search className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text mr-3 md:mr-4" />
+              <Search className="w-5 h-5 md:w-6 md:h-6 text-foreground dark:text-foreground mr-3 md:mr-4" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder={profileUiText.searchClientPlaceholder || "Qidirish..."}
-                className="w-full bg-transparent py-0 !text-base md:!text-lg focus:outline-none text-gourmet-ink dark:text-dark-text placeholder:text-gourmet-ink dark:placeholder:text-dark-text"
+                className="w-full bg-transparent py-0 !text-base md:!text-lg focus:outline-none text-foreground dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground"
               />
             </div>
           </motion.div>
@@ -320,11 +323,11 @@ export function ClientsTab({
               }}
               whileTap={{ x: 0 }}
               onClick={openDatePicker}
-              className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
+              className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-primary dark:bg-primary rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
             >
               <div className="w-[42px] h-[42px] md:w-full md:h-full rounded-full border-2 border-dashed border-white/10 flex items-center justify-center md:px-6">
-                <CalendarIcon className="w-5 h-5 md:w-6 md:h-6 text-gourmet-ink dark:text-dark-text md:mr-3" />
-                <span className="hidden md:inline font-bold text-sm md:text-lg text-gourmet-ink dark:text-dark-text whitespace-nowrap">
+                <CalendarIcon className="w-5 h-5 md:w-6 md:h-6 text-foreground dark:text-foreground md:mr-3" />
+                <span className="hidden md:inline font-bold text-sm md:text-lg text-foreground dark:text-foreground whitespace-nowrap">
                   {appliedRangeLabel}
                 </span>
               </div>
@@ -336,12 +339,12 @@ export function ClientsTab({
                 whileHover={{ scale: 1.15, y: 5 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={onCreateClient}
-                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300"
+                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300"
                 aria-label={profileUiText.createClient}
                 title={profileUiText.createClient}
               >
                 <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                  <Plus className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                  <Plus className="w-6 h-6 text-foreground dark:text-foreground" />
                 </div>
               </motion.button>
 
@@ -351,15 +354,15 @@ export function ClientsTab({
                 whileTap={{ scale: 0.9 }}
                 onClick={onToggleStatus}
                 disabled={selectedClients.size === 0 || isMutating}
-                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
+                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
                 aria-label={shouldPauseSelectedClients ? t.admin.pause : t.admin.resume}
                 title={shouldPauseSelectedClients ? t.admin.pause : t.admin.resume}
               >
                 <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
                   {shouldPauseSelectedClients ? (
-                    <Pause className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                    <Pause className="w-6 h-6 text-foreground dark:text-foreground" />
                   ) : (
-                    <Play className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                    <Play className="w-6 h-6 text-foreground dark:text-foreground" />
                   )}
                 </div>
               </motion.button>
@@ -370,12 +373,12 @@ export function ClientsTab({
                 whileTap={{ scale: 0.9 }}
                 onClick={onDeleteSelected}
                 disabled={selectedClients.size === 0 || isMutating}
-                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
+                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
                 aria-label={t.admin.deleteSelected}
                 title={t.admin.deleteSelected}
               >
                 <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                  <Trash2 className="w-6 h-6 text-gourmet-ink dark:text-dark-text" />
+                  <Trash2 className="w-6 h-6 text-foreground dark:text-foreground" />
                 </div>
               </motion.button>
 
@@ -385,12 +388,12 @@ export function ClientsTab({
                 whileTap={{ scale: 0.8 }}
                 onClick={onRefresh}
                 disabled={isRefreshing}
-                className="w-[50px] h-[50px] bg-gourmet-green dark:bg-dark-green rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
+                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
                 aria-label={profileUiText.refresh || 'Refresh'}
                 title={profileUiText.refresh || 'Refresh'}
               >
                 <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                  <RotateCcw className={cn('w-5 h-5 text-gourmet-ink dark:text-dark-text', isRefreshing && 'animate-spin')} />
+                  <RotateCcw className={cn('w-5 h-5 text-foreground dark:text-foreground', isRefreshing && 'animate-spin')} />
                 </div>
               </motion.button>
             </div>
@@ -399,8 +402,8 @@ export function ClientsTab({
 
         {/* Sheet */}
         <div className="flex flex-col gap-4 md:gap-6 relative z-10 flex-1 min-h-0">
-          <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-gourmet-green/30 dark:border-white/10 overflow-hidden relative flex-1 flex flex-col min-h-0">
-            <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none text-gourmet-green-light dark:text-gourmet-green">
+          <div className="rounded-2xl md:rounded-3xl border-2 border-dashed border-border dark:border-border overflow-hidden relative flex-1 flex flex-col min-h-0">
+            <div className="absolute inset-0 flex justify-between px-10 md:px-20 opacity-5 pointer-events-none text-muted-foreground dark:text-muted-foreground">
               <CookingPot className="w-10 h-10 md:w-14 md:h-14 rotate-12" />
               <Utensils className="w-10 h-10 md:w-14 md:h-14 -rotate-12" />
             </div>
@@ -408,12 +411,12 @@ export function ClientsTab({
             <div className="overflow-auto relative flex-1 min-h-0">
               <Table className="min-w-[1200px]">
                 <TableHeader>
-                  <TableRow className="h-12 bg-gourmet-cream/60 dark:bg-dark-green/20">
+                  <TableRow className="h-12 bg-muted/60 dark:bg-muted/20">
                     <TableHead className="w-[60px] px-6">
                       <Checkbox
                         checked={clients.length > 0 && selectedClients.size === clients.length}
                         onCheckedChange={onSelectAll}
-                        className="border-gourmet-ink/20 dark:border-white/20"
+                        className="border-border dark:border-border"
                       />
                     </TableHead>
                     <TableHead className={headCell}>{t.common.name}</TableHead>
@@ -429,24 +432,24 @@ export function ClientsTab({
                   {filteredClients.map((client) => {
                     const finance = clientFinanceById[client.id]
                     return (
-                      <TableRow key={client.id} className="h-16 border-b-2 border-dashed border-gourmet-green/15 dark:border-white/5 hover:bg-gourmet-green/5 dark:hover:bg-dark-green/10 transition-colors">
+                      <TableRow key={client.id} className="h-16 border-b-2 border-dashed border-border dark:border-border hover:bg-muted/5 dark:hover:bg-muted/10 transition-colors">
                         <TableCell className="px-6">
                           <Checkbox
                             checked={selectedClients.has(client.id)}
                             onCheckedChange={() => onSelectClient(client.id)}
-                            className="border-gourmet-ink/20 dark:border-white/20"
+                            className="border-border dark:border-border"
                           />
                         </TableCell>
                         <TableCell>
-                          <div className="font-bold text-gourmet-ink dark:text-dark-text">{client.name}</div>
-                          {client.nickName && <div className="text-sm font-medium text-gourmet-ink/40 dark:text-dark-text/40">{client.nickName}</div>}
+                          <div className="font-bold text-foreground dark:text-foreground">{client.name}</div>
+                          {client.nickName && <div className="text-sm font-medium text-muted-foreground/40 dark:text-muted-foreground/40">{client.nickName}</div>}
                         </TableCell>
-                        <TableCell className={cn('font-bold text-gourmet-ink dark:text-dark-text', cellBorder)}>{client.phone}</TableCell>
-                        <TableCell className={cn('max-w-[300px] truncate font-medium text-gourmet-ink dark:text-dark-text', cellBorder)} title={client.address}>
+                        <TableCell className={cn('font-bold text-foreground dark:text-foreground', cellBorder)}>{client.phone}</TableCell>
+                        <TableCell className={cn('max-w-[300px] truncate font-medium text-foreground dark:text-foreground', cellBorder)} title={client.address}>
                           {client.address}
                         </TableCell>
-                        <TableCell className={cn('font-bold text-gourmet-ink dark:text-dark-text', cellBorder)}>
-                          <Badge variant="outline" className="border-gourmet-ink/20 text-gourmet-ink dark:border-white/20 dark:text-dark-text font-bold">
+                        <TableCell className={cn('font-bold text-foreground dark:text-foreground', cellBorder)}>
+                          <Badge variant="outline" className="border-border text-foreground dark:border-border dark:text-foreground font-bold">
                             {client.calories}
                           </Badge>
                         </TableCell>
@@ -472,9 +475,9 @@ export function ClientsTab({
                             variant="ghost"
                             size="icon"
                             onClick={() => onEditClient(client)}
-                            className="hover:bg-gourmet-green/20 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                            className="hover:bg-muted dark:hover:bg-muted rounded-full transition-colors"
                           >
-                            <Edit className="size-5 text-gourmet-ink dark:text-dark-text" />
+                            <Edit className="size-5 text-foreground dark:text-foreground" />
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -482,7 +485,7 @@ export function ClientsTab({
                   })}
                   {filteredClients.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} className="h-40 text-center font-bold text-gourmet-ink dark:text-dark-text text-xl">
+                      <TableCell colSpan={8} className="h-40 text-center font-bold text-foreground dark:text-foreground text-xl">
                         {profileUiText.noOrdersFound || "Mijozlar topilmadi"}
                       </TableCell>
                     </TableRow>
@@ -509,7 +512,7 @@ export function ClientsTab({
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative bg-gourmet-cream dark:bg-dark-surface rounded-3xl md:rounded-[40px] shadow-2xl border-2 border-gourmet-green/20 p-6 md:p-10 z-[1000] w-full max-w-[450px] mx-auto overflow-hidden transition-colors duration-300"
+              className="relative bg-card dark:bg-card rounded-3xl md:rounded-[40px] shadow-2xl border-2 border-border p-6 md:p-10 z-[1000] w-full max-w-[450px] mx-auto overflow-hidden transition-colors duration-300"
               role="dialog"
               aria-modal="true"
               aria-label="Calendar"
@@ -517,29 +520,29 @@ export function ClientsTab({
               <button
                 type="button"
                 onClick={closeDatePicker}
-                className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-colors"
+                className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted dark:hover:bg-muted transition-colors"
                 aria-label="Close"
               >
-                <RotateCcw className="w-6 h-6 text-gourmet-ink dark:text-dark-text rotate-45" />
+                <X className="w-6 h-6 text-foreground dark:text-foreground" />
               </button>
 
               <div className="flex items-center justify-between mb-6 md:mb-8">
                 <button
                   type="button"
                   onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-muted dark:hover:bg-muted rounded-full transition-colors"
                 >
-                  <RotateCcw className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text" />
+                  <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-foreground dark:text-foreground" />
                 </button>
-                <h3 className="text-xl md:text-2xl font-black text-gourmet-ink dark:text-dark-text">
+                <h3 className="text-xl md:text-2xl font-black text-foreground dark:text-foreground">
                   {format(currentMonth, 'MMMM yyyy')}
                 </h3>
                 <button
                   type="button"
                   onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 rounded-full transition-colors"
+                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-muted dark:hover:bg-muted rounded-full transition-colors"
                 >
-                  <RotateCcw className="w-6 h-6 md:w-8 md:h-8 text-gourmet-ink dark:text-dark-text -rotate-180" />
+                  <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-foreground dark:text-foreground" />
                 </button>
               </div>
 
@@ -547,7 +550,7 @@ export function ClientsTab({
                 {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map((d) => (
                   <div
                     key={d}
-                    className="text-center text-[10px] md:text-sm font-black text-gourmet-ink dark:text-dark-text uppercase tracking-widest py-2"
+                    className="text-center text-[10px] md:text-sm font-black text-foreground dark:text-foreground uppercase tracking-widest py-2"
                   >
                     {d}
                   </div>
@@ -556,11 +559,11 @@ export function ClientsTab({
 
               <div className="text-base md:text-lg">{renderCalendar()}</div>
 
-              <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-gourmet-green/20">
+              <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-border">
                 <button
                   type="button"
                   onClick={resetDraftRange}
-                  className="text-sm md:text-base font-bold text-gourmet-ink dark:text-dark-text hover:text-gourmet-ink dark:hover:text-dark-text transition-colors"
+                  className="text-sm md:text-base font-bold text-foreground dark:text-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
                 >
                   Reset
                 </button>
@@ -568,14 +571,14 @@ export function ClientsTab({
                   <button
                     type="button"
                     onClick={closeDatePicker}
-                    className="px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-sm md:text-base text-gourmet-ink dark:text-dark-text hover:bg-gourmet-green/10 dark:hover:bg-dark-green/40 transition-all border border-gourmet-ink/5 sm:border-none"
+                    className="px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-sm md:text-base text-foreground dark:text-foreground hover:bg-muted dark:hover:bg-muted transition-all border border-border sm:border-none"
                   >
                     Bekor qilish
                   </button>
                   <button
                     type="button"
                     onClick={applyDraftRange}
-                    className="bg-gourmet-green dark:bg-dark-green text-gourmet-ink dark:text-dark-text px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-green-500/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
+                    className="bg-primary dark:bg-primary text-foreground dark:text-foreground px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
                   >
                     Tayyor
                   </button>

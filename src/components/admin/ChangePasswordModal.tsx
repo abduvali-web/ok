@@ -98,7 +98,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
         }
     }
 
-    const strengthColors = ['bg-rose-500', 'bg-orange-500', 'bg-amber-500', 'bg-emerald-500', 'bg-gourmet-green']
+    const strengthColors = ['bg-rose-500', 'bg-orange-500', 'bg-amber-500', 'bg-emerald-500', 'bg-primary']
     const strengthLabels = ['Vulnerable', 'Weak', 'Acceptable', 'Secure', 'Fortified']
 
     return (
@@ -106,14 +106,14 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
             <DialogContent className="max-w-md rounded-[40px] border-none bg-white/90 backdrop-blur-3xl p-0 overflow-hidden shadow-2xl transition-all duration-500">
                 <div className="relative p-10">
                     <div className="absolute top-6 right-6">
-                         <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 transition-colors">
+                        <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 transition-colors">
                             <X className="w-5 h-5 text-slate-400" />
-                         </button>
+                        </button>
                     </div>
 
                     <DialogHeader className="mb-8">
-                        <div className="w-16 h-16 bg-gourmet-green/10 rounded-3xl flex items-center justify-center mb-4 border-2 border-dashed border-gourmet-green/20">
-                            <Key className="w-8 h-8 text-gourmet-green" />
+                        <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center mb-4 border-2 border-dashed border-primary/20">
+                            <Key className="w-8 h-8 text-primary" />
                         </div>
                         <DialogTitle className="text-3xl font-black uppercase tracking-tight text-slate-800">
                             Security Credentials
@@ -124,10 +124,10 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
                     </DialogHeader>
 
                     {error && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="mb-8 p-4 bg-rose-50 border-2 border-dashed border-rose-200 rounded-2xl flex items-center gap-3 text-rose-600 font-bold text-sm"
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mb-8 p-4 bg-rose-50 border-2 border-dashed border-rose-200 rounded-2xl flex items-center gap-3 text-rose-600 font-bold text-sm"
                         >
                             <AlertCircle className="h-5 w-5" />
                             <span>{error}</span>
@@ -141,7 +141,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                                 <Input
                                     type="password"
-                                    className="h-14 rounded-2xl bg-white border-2 border-slate-100 focus:border-gourmet-green pl-12 font-bold"
+                                    className="h-14 rounded-2xl bg-white border-2 border-slate-100 focus:border-primary pl-12 font-bold"
                                     value={passwords.currentPassword}
                                     onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })}
                                     required
@@ -155,34 +155,34 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
                                 <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                                 <Input
                                     type="password"
-                                    className="h-14 rounded-2xl bg-white border-2 border-slate-100 focus:border-gourmet-green pl-12 font-bold"
+                                    className="h-14 rounded-2xl bg-white border-2 border-slate-100 focus:border-primary pl-12 font-bold"
                                     value={passwords.newPassword}
                                     onChange={(e) => handleNewPasswordChange(e.target.value)}
                                     required
                                 />
                             </div>
-                            
+
                             <AnimatePresence>
                                 {passwords.newPassword && (
-                                    <motion.div 
-                                      initial={{ opacity: 0, height: 0 }}
-                                      animate={{ opacity: 1, height: 'auto' }}
-                                      className="px-4 py-2 space-y-2"
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        className="px-4 py-2 space-y-2"
                                     >
                                         <div className="flex gap-1.5 h-1.5">
                                             {[...Array(5)].map((_, i) => (
                                                 <div
                                                     key={i}
                                                     className={cn(
-                                                      "flex-1 rounded-full transition-all duration-500",
-                                                      i < passwordStrength ? strengthColors[passwordStrength - 1] : 'bg-slate-100'
+                                                        "flex-1 rounded-full transition-all duration-500",
+                                                        i < passwordStrength ? strengthColors[passwordStrength - 1] : 'bg-slate-100'
                                                     )}
                                                 />
                                             ))}
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Entropy Strength</span>
-                                            <span className={cn("text-[10px] font-black uppercase tracking-widest", 
+                                            <span className={cn("text-[10px] font-black uppercase tracking-widest",
                                                 passwordStrength > 0 ? strengthColors[passwordStrength - 1].replace('bg-', 'text-') : 'text-slate-400'
                                             )}>
                                                 {strengthLabels[passwordStrength - 1] || 'Inadequate'}
@@ -199,7 +199,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
                                 <CheckCircle2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                                 <Input
                                     type="password"
-                                    className="h-14 rounded-2xl bg-white border-2 border-slate-100 focus:border-gourmet-green pl-12 font-bold"
+                                    className="h-14 rounded-2xl bg-white border-2 border-slate-100 focus:border-primary pl-12 font-bold"
                                     value={passwords.confirmPassword}
                                     onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
                                     required
@@ -208,10 +208,10 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
                         </div>
 
                         <DialogFooter className="pt-6 sm:justify-start">
-                            <Button 
-                              type="submit" 
-                              disabled={isLoading}
-                              className="w-full h-16 rounded-[28px] bg-gourmet-green dark:bg-dark-green text-white font-black uppercase tracking-widest shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all"
+                            <Button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full h-16 rounded-[28px] bg-primary text-white font-black uppercase tracking-widest shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all"
                             >
                                 {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Apply Security Update'}
                             </Button>
