@@ -1386,58 +1386,96 @@ export default function DatabasePage() {
                   clearRange: uiText.clearRange,
                 }}
                 locale={language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'}
+                customTrigger={(open) => {
+                  const label = date?.from 
+                    ? `${date.from.toLocaleDateString()} ${date.to && date.to.getTime() !== date.from.getTime() ? '- ' + date.to.toLocaleDateString() : ''}`
+                    : uiText.allTime
+
+                  return (
+                    <button
+                      type="button"
+                      onClick={open}
+                      className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-primary dark:bg-primary rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
+                    >
+                      <div className="w-[42px] h-[42px] md:w-full md:h-full rounded-full border-2 border-dashed border-white/10 flex items-center justify-center md:px-6">
+                        <CalendarDays className="w-5 h-5 md:w-6 md:h-6 text-foreground dark:text-foreground md:mr-3" />
+                        <span className="hidden md:inline font-bold text-sm md:text-lg text-foreground dark:text-foreground whitespace-nowrap">
+                          {label}
+                        </span>
+                      </div>
+                    </button>
+                  )
+                }}
               />
 
-              <IconButton
-                label={uiText.refresh}
-                variant="outline"
-                iconSize="md"
-                className="h-[50px] rounded-2xl border-b-4 border-black/10"
+              <button
+                type="button"
                 onClick={() => void loadSnapshot(true)}
                 disabled={isRefreshing}
+                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
+                aria-label={uiText.refresh}
+                title={uiText.refresh}
               >
-                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              </IconButton>
-              <IconButton
-                label={uiText.downloadAllSheets}
-                variant="outline"
-                iconSize="md"
-                className="h-[50px] rounded-2xl border-b-4 border-black/10"
+                <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                  <RefreshCw className={`w-5 h-5 text-foreground dark:text-foreground ${isRefreshing ? 'animate-spin' : ''}`} />
+                </div>
+              </button>
+
+              <button
+                type="button"
                 onClick={handleDownloadUnifiedSnapshotClick}
+                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
+                aria-label={uiText.downloadAllSheets}
+                title={uiText.downloadAllSheets}
               >
-                <Download className="h-4 w-4" />
-              </IconButton>
-              <IconButton
-                label={isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}
-                variant="outline"
-                iconSize="md"
-                className="h-[50px] rounded-2xl border-b-4 border-black/10"
+                <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                  <Download className="w-5 h-5 text-foreground dark:text-foreground" />
+                </div>
+              </button>
+
+              <button
+                type="button"
                 onClick={handleImportAllSheetsClick}
                 disabled={isImportingAllSheets}
+                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
+                aria-label={isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}
+                title={isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}
               >
-                {isImportingAllSheets ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-              </IconButton>
+                <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                  {isImportingAllSheets ? <Loader2 className="w-5 h-5 text-foreground dark:text-foreground animate-spin" /> : <Upload className="w-5 h-5 text-foreground dark:text-foreground" />}
+                </div>
+              </button>
+
               <LanguageSwitcher />
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <IconButton label="Profile" variant="ghost" iconSize="md" className="h-[50px] rounded-2xl border-b-4 border-black/10">
-                    <CircleUser className="h-5 w-5" />
-                  </IconButton>
+                  <button
+                    type="button"
+                    className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300"
+                    aria-label="Profile"
+                    title="Profile"
+                  >
+                    <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                      <CircleUser className="w-5 h-5 text-foreground dark:text-foreground" />
+                    </div>
+                  </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-[240px] rounded-3xl border-none shadow-2xl p-2 bg-white/90 backdrop-blur-3xl animate-in fade-in zoom-in-95">
-                  <DropdownMenuItem onSelect={() => window.dispatchEvent(new Event("tambo:open-chat"))} className="h-12 rounded-2xl gap-3 font-bold hover:bg-primary/10">
-                    <MessageSquare className="h-5 w-5 opacity-60" />
-                    <span>Chat</span>
+                  <DropdownMenuItem asChild className="h-12 rounded-2xl gap-3 font-bold hover:bg-primary/10 cursor-pointer">
+                    <Link href="/middle-admin?chat=1">
+                      <MessageSquare className="h-5 w-5 opacity-60" />
+                      <span>Chat</span>
+                    </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="h-12 rounded-2xl gap-3 font-bold hover:bg-primary/10">
+                  <DropdownMenuItem asChild className="h-12 rounded-2xl gap-3 font-bold hover:bg-primary/10 cursor-pointer">
                     <Link href="/middle-admin?settings=1">
                       <Settings className="h-5 w-5 opacity-60" />
                       <span>Settings</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-slate-100" />
-                  <DropdownMenuItem onSelect={() => void handleLogout()} className="h-12 rounded-2xl gap-3 text-rose-600 focus:text-rose-600 font-bold hover:bg-rose-50">
+                  <DropdownMenuItem onSelect={() => void handleLogout()} className="h-12 rounded-2xl gap-3 text-rose-600 focus:text-rose-600 font-bold hover:bg-rose-50 cursor-pointer">
                     <LogOut className="h-5 w-5" />
                     <span>Logout</span>
                   </DropdownMenuItem>
@@ -1520,23 +1558,29 @@ export default function DatabasePage() {
                       <div className="text-xs tabular-nums text-muted-foreground">
                         {filteredRows.length} / {table.rowCount} {uiText.rowsCount}
                       </div>
-                      <IconButton
-                        label={uiText.downloadSheet}
-                        variant="outline"
-                        iconSize="md"
+                      <button
+                        type="button"
+                        className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300"
+                        title={uiText.downloadSheet}
+                        aria-label={uiText.downloadSheet}
                         onClick={handleDownloadCurrentTableClick}
                       >
-                        <Download className="h-4 w-4" />
-                      </IconButton>
-                      <IconButton
-                        label={isImportingSheet ? uiText.importingSheet : uiText.importSheet}
-                        variant="outline"
-                        iconSize="md"
+                        <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                          <Download className="w-5 h-5 text-foreground dark:text-foreground" />
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
+                        title={isImportingSheet ? uiText.importingSheet : uiText.importSheet}
+                        aria-label={isImportingSheet ? uiText.importingSheet : uiText.importSheet}
                         onClick={() => handleImportSheetClick(table.id)}
                         disabled={isImportingSheet}
                       >
-                        {isImportingSheet ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                      </IconButton>
+                        <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
+                          {isImportingSheet ? <Loader2 className="w-5 h-5 text-foreground dark:text-foreground animate-spin" /> : <Upload className="w-5 h-5 text-foreground dark:text-foreground" />}
+                        </div>
+                      </button>
                     </div>
                   </div>
 

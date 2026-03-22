@@ -49,6 +49,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
+const ChatCenter = dynamic(() => import('@/components/chat/ChatCenter').then(mod => mod.ChatCenter), { ssr: false });
 const CourierMap = dynamic(() => import('@/components/courier/CourierMap'), {
   ssr: false,
   loading: () => (
@@ -110,6 +111,7 @@ export default function CourierPage() {
   const [lastOrdersSyncAt, setLastOrdersSyncAt] = useState<Date | null>(null)
   const [orderStatusFilter, setOrderStatusFilter] = useState<'ALL' | 'PENDING' | 'IN_DELIVERY' | 'PAUSED'>('ALL')
   const [showHistory, setShowHistory] = useState(false)
+  const [showChat, setShowChat] = useState(false)
   const lastSentLocationRef = useRef<{ lat: number; lng: number; at: number } | null>(null)
   const isSendingLocationRef = useRef(false)
   const watchIdRef = useRef<number | null>(null)
@@ -166,6 +168,7 @@ export default function CourierPage() {
         amount: 'Amount (UZS)',
         withdrawSuccess: 'Withdrawal successful',
         withdrawError: 'Withdrawal failed',
+        chat: 'Chat',
       },
       uz: {
         notSynced: 'Sinxronlanmagan',
@@ -206,6 +209,7 @@ export default function CourierPage() {
         amount: 'Summa (UZS)',
         withdrawSuccess: 'Muvaffaqiyatli yechildi',
         withdrawError: 'Yechishda xatolik',
+        chat: 'Chat',
       },
       ru: {
         notSynced: 'Не синхронизировано',
@@ -246,6 +250,7 @@ export default function CourierPage() {
         amount: 'Сумма (UZS)',
         withdrawSuccess: 'Вывод успешен',
         withdrawError: 'Ошибка вывода',
+        chat: 'Чат',
       },
     })[language],
     [language]
@@ -590,7 +595,67 @@ export default function CourierPage() {
 
       {/* Main Content */}
       <main className="max-w-5xl mx-auto px-4 py-6 space-y-6 relative z-10">
-        {/* Stats Row */}
+        {showChat ? (
+          <div className="flex flex-col h-[calc(100vh-180px)]">
+            <div className="flex items-center gap-4 mb-4">
+              <Button variant="outline" size="icon" onClick={() => setShowChat(false)} className="rounded-full h-12 w-12 border-2 border-dashed">
+                <X className="w-5 h-5" />
+              </Button>
+              <h2 className="text-2xl font-black">{uiText.chat}</h2>
+            </div>
+            <div className="flex-1 bg-card/80 dark:bg-card/40 backdrop-blur-3xl rounded-[32px] border-2 border-dashed border-border overflow-hidden shadow-2xl">
+              <ChatCenter />
+            </div>
+          </div>
+        ) : showHistory ? (
+          <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <Button variant="outline" size="icon" onClick={() => setShowHistory(false)} className="rounded-full h-12 w-12 border-2 border-dashed">
+                  <X className="w-5 h-5" />
+                </Button>
+                <h2 className="text-2xl font-black">{uiText.history}</h2>
+              </div>
+              <CalendarRangeSelector
+                value={dateRange}
+                onChange={setDateRange}
+                uiText={uiText}
+                className="bg-card/80 dark:bg-card/40 backdrop-blur-xl border-2 border-dashed rounded-[20px]"
+              />
+            </div>
+            {/* History Table/List */}
+            <div className="bg-card/80 dark:bg-card/40 backdrop-blur-3xl rounded-[32px] border-2 border-dashed border-border p-6 shadow-2xl">
+              <div className="space-y-4">
+                {allOrders.filter(o => o.orderStatus === 'DELIVERED').length === 0 ? (
+                  <div className="text-center py-20">
+                    <History className="w-20 h-20 text-muted-foreground/20 mx-auto mb-4" />
+                    <p className="text-muted-foreground font-bold">{uiText.noOrdersInStatus}</p>
+                  </div>
+                ) : (
+                  allOrders.filter(o => o.orderStatus === 'DELIVERED').map((o) => (
+                    <div key={o.id} className="flex items-center justify-between p-4 rounded-3xl border border-dashed border-border hover:bg-muted/30 transition-colors" onClick={() => handleOpenOrder(o)}>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center border-2 border-dashed border-emerald-500/20">
+                          <CheckCircle className="w-6 h-6 text-emerald-500" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-lg">#{o.orderNumber}</p>
+                          <p className="text-xs text-muted-foreground font-medium">{o.customer.name}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-lg">{o.createdAt ? new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">{o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '—'}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {[
             { label: uiText.active, value: activeOrdersCount, dot: 'bg-blue-500', color: 'text-blue-600 dark:text-blue-400' },
@@ -756,9 +821,10 @@ export default function CourierPage() {
                   </div>
                 </motion.div>
               </motion.div>
-            ))
-          )}
-        </AnimatePresence>
+            )))}
+            </AnimatePresence>
+          </div>
+        )}
       </main>
 
       {/* Order Detail Sheet */}
