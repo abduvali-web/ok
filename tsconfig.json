@@ -38,6 +38,8 @@
   "exclude": [
     "node_modules",
     "temp_menus.ts",
-    ".next"
+    ".next",
+    "Universal Dash _ Google AI Studio_files",
+    "Universal Dash _ Google AI Studio_files/**"
   ]
 }

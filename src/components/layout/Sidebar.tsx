@@ -3,17 +3,22 @@
 import type React from 'react';
 import { motion } from 'framer-motion';
 import {
-  ChefHat,
+  CookingPot,
+  Calculator,
+  Layers,
   DollarSign,
   History,
   Package,
   ShoppingCart,
+  MessageSquare,
+  Settings,
+  Database,
   Users,
   X,
-  BarChart3,
   Archive,
   LayoutDashboard,
 } from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -23,7 +28,7 @@ type DividerItem = { id: string; type: 'divider' };
 type NavItem = {
   id: string;
   label: string;
-  icon: any;
+  icon: React.ElementType<{ className?: string }>;
   badge?: number | null;
 };
 type MenuItem = NavItem | DividerItem;
@@ -34,10 +39,36 @@ interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   isOpen: boolean;
   onClose: () => void;
   onLogout: () => void;
+  showDatabase?: boolean;
 }
 
-export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, onLogout: _onLogout }: SidebarProps) {
+export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, onLogout: _onLogout, showDatabase }: SidebarProps) {
   const { t, language } = useLanguage();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const openModalParam = (key: 'chat' | 'settings') => {
+    const params = new URLSearchParams(searchParams?.toString());
+    params.delete('chat');
+    params.delete('settings');
+    params.set(key, '1');
+    params.set('v', String(Date.now()));
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const warehouseSubItems = [
+    { id: 'cooking', label: t.warehouse.cooking, icon: CookingPot },
+    { id: 'sets', label: language === 'ru' ? 'Сеты' : language === 'uz' ? 'Setlar' : 'Sets', icon: Layers },
+    { id: 'inventory', label: t.warehouse.inventory, icon: Package },
+    { id: 'calculator', label: t.warehouse.calculator, icon: Calculator },
+  ];
+
+  const adminSubItems = [
+    ...(showDatabase ? [{ id: 'database', label: 'Database', icon: Database }] : []),
+    { id: 'chat', label: 'Chat', icon: MessageSquare },
+    { id: 'settings', label: 'Settings', icon: Settings },
+  ];
 
   const menuItems: MenuItem[] = [
     { id: 'orders', label: t.admin.orders, icon: ShoppingCart, badge: 0 },
@@ -150,6 +181,66 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                     )}>
                       {item.label}
                     </span>
+
+                    {item.id === 'warehouse' && (isActive || isOpen) ? (
+                      <div className="relative z-10 mt-2 w-full px-2">
+                        <div className="rounded-3xl border-2 border-dashed border-primary/15 dark:border-white/10 bg-white/40 dark:bg-white/5 p-2 space-y-1">
+                          {warehouseSubItems.map((sub) => {
+                            const SubIcon = sub.icon;
+                            return (
+                              <button
+                                key={sub.id}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    localStorage.setItem('warehouseSubTab', sub.id);
+                                    window.dispatchEvent(new CustomEvent('warehouse:set-subtab', { detail: { subTab: sub.id } }));
+                                  } catch { /* ignore */ }
+                                  onTabChange('warehouse');
+                                  onClose();
+                                }}
+                                className="w-full flex items-center gap-2 rounded-2xl px-3 py-2 text-left text-xs font-black uppercase tracking-widest transition-colors hover:bg-primary/10"
+                              >
+                                <SubIcon className="h-4 w-4 opacity-70" />
+                                <span className="truncate">{sub.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {item.id === 'admins' && (isActive || isOpen) ? (
+                      <div className="relative z-10 mt-2 w-full px-2">
+                        <div className="rounded-3xl border-2 border-dashed border-primary/15 dark:border-white/10 bg-white/40 dark:bg-white/5 p-2 space-y-1">
+                          {adminSubItems.map((sub) => {
+                            const SubIcon = sub.icon;
+                            return (
+                              <button
+                                key={sub.id}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (sub.id === 'database') {
+                                    router.push('/middle-admin/database');
+                                  } else if (sub.id === 'chat') {
+                                    openModalParam('chat');
+                                  } else if (sub.id === 'settings') {
+                                    openModalParam('settings');
+                                  }
+                                  onClose();
+                                }}
+                                className="w-full flex items-center gap-2 rounded-2xl px-3 py-2 text-left text-xs font-black uppercase tracking-widest transition-colors hover:bg-primary/10"
+                              >
+                                <SubIcon className="h-4 w-4 opacity-70" />
+                                <span className="truncate">{sub.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
                   </button>
                 );
               })}

@@ -39,7 +39,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Sidebar } from './Sidebar';
-import { useState } from 'react';
+import { ChatSheet } from '@/components/chat/ChatSheet';
+import { useEffect, useState } from 'react';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -57,6 +58,7 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const systemPrefersDark =
     typeof window !== 'undefined' && typeof window.matchMedia === 'function'
@@ -73,6 +75,21 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
     params.set('v', String(Date.now()));
     router.push(`${pathname}?${params.toString()}`);
   };
+
+  const closeModalParam = (key: 'chat' | 'settings') => {
+    const params = new URLSearchParams(searchParams?.toString());
+    params.delete(key);
+    params.delete('v');
+    router.push(`${pathname}${params.toString() ? `?${params.toString()}` : ''}`);
+  };
+
+  const chatParam = searchParams?.get('chat');
+
+  // Sync query-param driven modals (so sidebar/header buttons work consistently)
+  useEffect(() => {
+    if (chatParam === '1') setIsChatOpen(true);
+    if (chatParam !== '1') setIsChatOpen(false);
+  }, [chatParam]);
 
   return (
     <div
@@ -178,7 +195,7 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
                     <span>Database Engine</span>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onSelect={() => window.dispatchEvent(new Event("tambo:open-chat"))} className="h-12 rounded-2xl gap-3 font-bold hover:bg-primary/10">
+                <DropdownMenuItem onSelect={() => openModalParam('chat')} className="h-12 rounded-2xl gap-3 font-bold hover:bg-primary/10">
                   <MessageSquare className="h-5 w-5 opacity-60" />
                   <span>Communication Hub</span>
                 </DropdownMenuItem>
@@ -204,6 +221,7 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
           onLogout={onLogout}
+          showDatabase={showDatabase}
           className="z-[60]"
         />
 
@@ -256,6 +274,14 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
           </button>
         ))}
       </nav>
+
+      <ChatSheet
+        open={isChatOpen}
+        onOpenChange={(open) => {
+          setIsChatOpen(open);
+          if (!open && chatParam === '1') closeModalParam('chat');
+        }}
+      />
     </div>
   );
 }

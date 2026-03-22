@@ -55,6 +55,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { CalendarRangeSelector } from '@/components/admin/dashboard/shared/CalendarRangeSelector'
 import { SearchPanel } from '@/components/ui/search-panel'
+import { ChatSheet } from '@/components/chat/ChatSheet'
 import { getMenuNumber } from '@/lib/menuData'
 
 type DatabaseTable = {
@@ -402,6 +403,7 @@ export default function DatabasePage() {
   const [importTargetTableId, setImportTargetTableId] = useState<string | null>(null)
   const [isImportingSheet, setIsImportingSheet] = useState(false)
   const [isImportingAllSheets, setIsImportingAllSheets] = useState(false)
+  const [isChatOpen, setIsChatOpen] = useState(false)
 
   const [editingRowId, setEditingRowId] = useState<string | null>(null)
   const [editingRowData, setEditingRowData] = useState<Record<string, string> | null>(null)
@@ -1388,45 +1390,45 @@ export default function DatabasePage() {
                 locale={language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'}
               />
 
-              <IconButton
-                label={uiText.refresh}
-                variant="outline"
-                iconSize="md"
-                className="h-[50px] rounded-2xl border-b-4 border-black/10"
-                onClick={() => void loadSnapshot(true)}
-                disabled={isRefreshing}
-              >
+                <IconButton
+                  label={uiText.refresh}
+                  variant="outline"
+                  iconSize="md"
+                  className="h-[50px] rounded-full border-b-4 border-black/10"
+                  onClick={() => void loadSnapshot(true)}
+                  disabled={isRefreshing}
+                >
                 <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               </IconButton>
-              <IconButton
-                label={uiText.downloadAllSheets}
-                variant="outline"
-                iconSize="md"
-                className="h-[50px] rounded-2xl border-b-4 border-black/10"
-                onClick={handleDownloadUnifiedSnapshotClick}
-              >
+                <IconButton
+                  label={uiText.downloadAllSheets}
+                  variant="outline"
+                  iconSize="md"
+                  className="h-[50px] rounded-full border-b-4 border-black/10"
+                  onClick={handleDownloadUnifiedSnapshotClick}
+                >
                 <Download className="h-4 w-4" />
               </IconButton>
-              <IconButton
-                label={isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}
-                variant="outline"
-                iconSize="md"
-                className="h-[50px] rounded-2xl border-b-4 border-black/10"
-                onClick={handleImportAllSheetsClick}
-                disabled={isImportingAllSheets}
-              >
+                <IconButton
+                  label={isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}
+                  variant="outline"
+                  iconSize="md"
+                  className="h-[50px] rounded-full border-b-4 border-black/10"
+                  onClick={handleImportAllSheetsClick}
+                  disabled={isImportingAllSheets}
+                >
                 {isImportingAllSheets ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               </IconButton>
               <LanguageSwitcher />
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <IconButton label="Profile" variant="ghost" iconSize="md" className="h-[50px] rounded-2xl border-b-4 border-black/10">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                  <IconButton label="Profile" variant="ghost" iconSize="md" className="h-[50px] rounded-full border-b-4 border-black/10">
                     <CircleUser className="h-5 w-5" />
                   </IconButton>
-                </DropdownMenuTrigger>
+                  </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-[240px] rounded-3xl border-none shadow-2xl p-2 bg-white/90 backdrop-blur-3xl animate-in fade-in zoom-in-95">
-                  <DropdownMenuItem onSelect={() => window.dispatchEvent(new Event("tambo:open-chat"))} className="h-12 rounded-2xl gap-3 font-bold hover:bg-primary/10">
+                  <DropdownMenuItem onSelect={() => setIsChatOpen(true)} className="h-12 rounded-2xl gap-3 font-bold hover:bg-primary/10">
                     <MessageSquare className="h-5 w-5 opacity-60" />
                     <span>Chat</span>
                   </DropdownMenuItem>
@@ -1450,14 +1452,14 @@ export default function DatabasePage() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
               <SearchPanel value={tableQuery} onChange={setTableQuery} placeholder={uiText.searchTables} />
 
-              <TabsList className="w-full justify-start overflow-x-auto">
+              <TabsList className="w-full justify-start overflow-x-auto rounded-[32px] border-2 border-dashed border-border bg-card/60 backdrop-blur-xl p-2 gap-2">
                 <TabsTrigger
                   value="summary"
                   title={uiText.summary}
                   aria-label={uiText.summary}
-                  className="h-9 w-9 shrink-0 px-0"
+                  className="h-[50px] w-[50px] shrink-0 px-0 rounded-full border-b-4 border-black/10 bg-white/50 dark:bg-muted/40 hover:bg-muted/60 data-[state=active]:bg-primary data-[state=active]:text-white transition-colors"
                 >
-                  <SheetIcon id="summary" className="h-4 w-4" />
+                  <SheetIcon id="summary" className="h-5 w-5" />
                   <span className="sr-only">{uiText.summary}</span>
                 </TabsTrigger>
                 {visibleTables.map((table) => (
@@ -1466,9 +1468,9 @@ export default function DatabasePage() {
                     value={table.id}
                     title={tDb(table.title)}
                     aria-label={tDb(table.title)}
-                    className="h-9 w-9 shrink-0 px-0"
+                    className="h-[50px] w-[50px] shrink-0 px-0 rounded-full border-b-4 border-black/10 bg-white/50 dark:bg-muted/40 hover:bg-muted/60 data-[state=active]:bg-primary data-[state=active]:text-white transition-colors"
                   >
-                    <SheetIcon id={table.id} className="h-4 w-4" />
+                    <SheetIcon id={table.id} className="h-5 w-5" />
                     <span className="sr-only">{tDb(table.title)}</span>
                   </TabsTrigger>
                 ))}
@@ -1779,6 +1781,13 @@ export default function DatabasePage() {
           </div>
         </div>
       </div>
+
+      <ChatSheet
+        open={isChatOpen}
+        onOpenChange={setIsChatOpen}
+        title="Chat"
+        description="Courier + admin conversations (Tambo AI is inside the chat list)."
+      />
     </div>
   )
 }

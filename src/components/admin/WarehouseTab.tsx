@@ -121,6 +121,30 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         (cookingRange?.to ?? calcRange?.to) ? startOfDay(cookingRange?.to ?? calcRange?.to ?? new Date()) : null
     )
 
+    // Keep warehouse sub-tab in sync with sidebar "tree" shortcuts
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        const valid = new Set(['cooking', 'sets', 'inventory', 'calculator'])
+        try {
+            const saved = localStorage.getItem('warehouseSubTab')
+            if (saved && valid.has(saved)) setActiveSubTab(saved)
+        } catch { /* ignore */ }
+
+        const onSet = (event: Event) => {
+            const detail = (event as CustomEvent<any>)?.detail
+            const next = typeof detail?.subTab === 'string' ? detail.subTab : null
+            if (next && valid.has(next)) setActiveSubTab(next)
+        }
+        window.addEventListener('warehouse:set-subtab', onSet as EventListener)
+        return () => window.removeEventListener('warehouse:set-subtab', onSet as EventListener)
+    }, [])
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('warehouseSubTab', activeSubTab)
+        } catch { /* ignore */ }
+    }, [activeSubTab])
+
     // Lock body scroll when dialog is open
     useEffect(() => {
         if (!isDatePickerOpen) return
@@ -520,19 +544,19 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                         <TabsList className="
                             fixed bottom-4 left-4 right-4 z-50 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto
                             flex flex-row md:flex-col justify-around md:justify-start
-                            bg-card/80 dark:bg-muted/40 backdrop-blur-2xl border-2 border-border p-2 md:p-4 rounded-[32px] md:rounded-[40px]
+                            bg-card/80 dark:bg-muted/40 backdrop-blur-2xl border-2 border-dashed border-border p-2 md:p-4 rounded-[32px] md:rounded-[40px]
                             md:w-64 h-20 md:h-auto shadow-2xl md:shadow-xl shrink-0 gap-2 overflow-x-auto md:overflow-visible no-scrollbar
                         ">
-                            <TabsTrigger value="cooking" className="flex-1 md:flex-none justify-center md:justify-start rounded-full md:rounded-3xl px-6 py-3 data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-black uppercase tracking-widest text-[10px] md:text-sm data-[state=active]:text-white transition-all duration-300 gap-2 md:gap-3">
+                            <TabsTrigger value="cooking" className="flex-1 md:flex-none justify-center md:justify-start h-[50px] rounded-full px-6 data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-black uppercase tracking-widest text-[10px] md:text-sm data-[state=active]:text-white transition-all duration-300 gap-2 md:gap-3 border-b-4 border-black/10 dark:border-black/20 bg-white/40 dark:bg-white/5 hover:bg-white/60">
                                 <CookingPot className="w-5 h-5 hidden md:block" /> {t.warehouse.cooking}
                             </TabsTrigger>
-                            <TabsTrigger value="sets" className="flex-1 md:flex-none justify-center md:justify-start rounded-full md:rounded-3xl px-6 py-3 data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-black uppercase tracking-widest text-[10px] md:text-sm data-[state=active]:text-white transition-all duration-300 gap-2 md:gap-3">
+                            <TabsTrigger value="sets" className="flex-1 md:flex-none justify-center md:justify-start h-[50px] rounded-full px-6 data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-black uppercase tracking-widest text-[10px] md:text-sm data-[state=active]:text-white transition-all duration-300 gap-2 md:gap-3 border-b-4 border-black/10 dark:border-black/20 bg-white/40 dark:bg-white/5 hover:bg-white/60">
                                 <UtensilsCrossed className="w-5 h-5 hidden md:block" /> {auditUiText.setsTab}
                             </TabsTrigger>
-                            <TabsTrigger value="inventory" className="flex-1 md:flex-none justify-center md:justify-start rounded-full md:rounded-3xl px-6 py-3 data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-black uppercase tracking-widest text-[10px] md:text-sm data-[state=active]:text-white transition-all duration-300 gap-2 md:gap-3">
+                            <TabsTrigger value="inventory" className="flex-1 md:flex-none justify-center md:justify-start h-[50px] rounded-full px-6 data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-black uppercase tracking-widest text-[10px] md:text-sm data-[state=active]:text-white transition-all duration-300 gap-2 md:gap-3 border-b-4 border-black/10 dark:border-black/20 bg-white/40 dark:bg-white/5 hover:bg-white/60">
                                 <Package className="w-5 h-5 hidden md:block" /> {t.warehouse.inventory}
                             </TabsTrigger>
-                            <TabsTrigger value="calculator" className="flex-1 md:flex-none justify-center md:justify-start rounded-full md:rounded-3xl px-6 py-3 data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-black uppercase tracking-widest text-[10px] md:text-sm data-[state=active]:text-white transition-all duration-300 gap-2 md:gap-3">
+                            <TabsTrigger value="calculator" className="flex-1 md:flex-none justify-center md:justify-start h-[50px] rounded-full px-6 data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-black uppercase tracking-widest text-[10px] md:text-sm data-[state=active]:text-white transition-all duration-300 gap-2 md:gap-3 border-b-4 border-black/10 dark:border-black/20 bg-white/40 dark:bg-white/5 hover:bg-white/60">
                                 <Calculator className="w-5 h-5 hidden md:block" /> {t.warehouse.calculator}
                             </TabsTrigger>
                         </TabsList>

@@ -39,6 +39,7 @@ import { toast } from 'sonner';
 import { SearchPanel } from '@/components/ui/search-panel';
 import { IconButton } from '@/components/ui/icon-button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils'
 import { MENUS, MEAL_TYPES, type Dish, type Ingredient } from '@/lib/menuData';
 
 // Types for custom sets
@@ -1290,7 +1291,7 @@ export function SetsTab() {
                                     label={uiText.newSet}
                                     variant="outline"
                                     iconSize="md"
-                                    className="h-10 w-10 rounded-full border-2 border-dashed bg-white/50 text-foreground hover:bg-muted"
+                                    className="h-[50px] w-[50px] rounded-full border-b-4 border-black/10 border-2 border-dashed bg-white/50 text-foreground hover:bg-muted"
                                     onClick={() => setIsCreateModalOpen(true)}
                                 >
                                     <Plus className="h-4 w-4" />
@@ -1300,7 +1301,7 @@ export function SetsTab() {
                                     label={uiText.delete}
                                     variant="outline"
                                     iconSize="md"
-                                    className="h-10 w-10 rounded-full border-2 border-dashed border-red-200 bg-red-50 text-red-500 hover:bg-red-100 dark:border-red-900/30 dark:bg-red-900/10"
+                                    className="h-[50px] w-[50px] rounded-full border-b-4 border-black/10 border-2 border-dashed border-red-200 bg-red-50 text-red-500 hover:bg-red-100 dark:border-red-900/30 dark:bg-red-900/10"
                                     disabled={!selectedSet}
                                     onClick={() => selectedSet ? void deleteSet(selectedSet.id) : undefined}
                                 >
@@ -1312,35 +1313,20 @@ export function SetsTab() {
                 </div>
 
                 {selectedSet ? (
-                    <div className="space-y-6">
-                        {/* Day Selector Row */}
-                        <div className="rounded-[32px] border-2 border-dashed border-border bg-card/60 backdrop-blur-xl p-4 shadow-sm overflow-hidden">
-                            <div className="overflow-x-auto no-scrollbar">
-                                <div className="flex items-center gap-2 min-w-max pb-2">
-                                    <span className="text-xs font-black uppercase tracking-widest px-4 text-muted-foreground/60 flex items-center gap-2 bg-muted/30 rounded-full h-10">
-                                        <Calendar className="w-4 h-4" />
+                    <div className="grid grid-cols-1 xl:grid-cols-[340px_1fr] gap-6 items-start">
+                        <Card className="rounded-[40px] border-2 border-dashed border-border bg-card/60 backdrop-blur-xl shadow-sm overflow-hidden xl:sticky xl:top-6">
+                            <CardHeader className="border-b-2 border-dashed border-border bg-muted/10">
+                                <CardTitle className="flex items-center justify-between gap-3">
+                                    <span className="flex items-center gap-2 text-base font-black uppercase tracking-widest">
+                                        <Calendar className="h-5 w-5 text-primary" />
                                         {uiText.days}
                                     </span>
-                                    {dayKeys.map((day) => (
-                                        <button
-                                            key={day}
-                                            onClick={() => setActiveDay(day.toString())}
-                                            className={`
-                                                w-10 h-10 rounded-full flex items-center justify-center text-sm font-black transition-all border-2
-                                                ${activeDay === String(day)
-                                                    ? 'bg-primary border-primary text-white shadow-lg scale-110'
-                                                    : 'bg-white/40 dark:bg-muted/40 border-dashed border-border/50 hover:border-primary/40 text-foreground'}
-                                            `}
-                                        >
-                                            {day}
-                                        </button>
-                                    ))}
-                                    <div className="flex items-center gap-1 ml-4 border-l-2 border-dashed border-border pl-4">
+                                    <div className="flex items-center gap-2">
                                         <IconButton
                                             label={uiText.addDay}
                                             variant="outline"
                                             iconSize="md"
-                                            className="h-10 w-10 rounded-full border-2 border-dashed bg-primary/10 border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
+                                            className="h-[50px] w-[50px] rounded-full border-b-4 border-black/10 border-2 border-dashed bg-primary/10 border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
                                             onClick={() => void (async () => {
                                                 if (!selectedSet) return
                                                 const maxDay = Math.max(...dayKeys.map((d) => Number(d)).filter((n) => Number.isFinite(n) && n > 0))
@@ -1386,18 +1372,38 @@ export function SetsTab() {
                                             label={uiText.delete}
                                             variant="outline"
                                             iconSize="md"
-                                            className="h-10 w-10 rounded-full border-2 border-dashed border-red-200 bg-red-50 text-red-500 hover:bg-red-100 dark:border-red-900/30 dark:bg-red-900/10"
+                                            className="h-[50px] w-[50px] rounded-full border-b-4 border-black/10 border-2 border-dashed border-red-200 bg-red-50 text-red-500 hover:bg-red-100 dark:border-red-900/30 dark:bg-red-900/10"
                                             disabled={dayKeys.length <= 1}
                                             onClick={() => void deleteDay(activeDay)}
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </IconButton>
                                     </div>
+                                </CardTitle>
+                                <CardDescription className="font-bold uppercase tracking-widest opacity-60 truncate">
+                                    {selectedSet.name}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-4">
+                                <div className="grid grid-cols-6 sm:grid-cols-8 xl:grid-cols-2 gap-2">
+                                    {dayKeys.map((day) => (
+                                        <button
+                                            key={day}
+                                            type="button"
+                                            onClick={() => setActiveDay(day.toString())}
+                                            className={cn(
+                                                'h-[50px] rounded-full flex items-center justify-center text-sm font-black transition-all border-2 border-dashed border-border/60 bg-white/40 dark:bg-muted/40 hover:border-primary/40',
+                                                activeDay === String(day) ? 'bg-primary border-primary text-white shadow-lg scale-[1.02]' : 'text-foreground'
+                                            )}
+                                        >
+                                            {day}
+                                        </button>
+                                    ))}
                                 </div>
-                            </div>
-                        </div>
+                            </CardContent>
+                        </Card>
 
-                            <Card className="min-h-[600px] flex flex-col rounded-[40px] border-2 border-dashed border-border bg-card shadow-lg overflow-hidden">
+                        <Card className="min-h-[600px] flex flex-col rounded-[40px] border-2 border-dashed border-border bg-card shadow-lg overflow-hidden">
                                 <CardHeader className="border-b-2 border-dashed border-border bg-muted/10 flex flex-row items-center justify-between p-6">
                                     <div className="flex items-center gap-4">
                                         <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary font-black text-2xl border-2 border-primary/20 shadow-inner">

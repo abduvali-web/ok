@@ -48,6 +48,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { ChatSheet } from '@/components/chat/ChatSheet'
 
 const CourierMap = dynamic(() => import('@/components/courier/CourierMap'), {
   ssr: false,
@@ -120,6 +121,7 @@ export default function CourierPage() {
   const [withdrawAmount, setWithdrawAmount] = useState('')
   const [isWithdrawing, setIsWithdrawing] = useState(false)
   const [courierBalance, setCourierBalance] = useState(0)
+  const [isChatOpen, setIsChatOpen] = useState(false)
 
   useEffect(() => {
     dateRangeRef.current = dateRange
@@ -570,7 +572,7 @@ export default function CourierPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[220px] rounded-3xl border-none shadow-2xl p-2 bg-white/90 dark:bg-card/90 backdrop-blur-3xl animate-in fade-in zoom-in-95">
               <DropdownMenuLabel className="px-4 py-3 text-[10px] font-black uppercase tracking-widest opacity-40">Courier</DropdownMenuLabel>
-              <DropdownMenuItem onSelect={() => window.dispatchEvent(new Event("tambo:open-chat"))} className="h-12 rounded-2xl gap-3 font-bold hover:bg-primary/10">
+              <DropdownMenuItem onSelect={() => setIsChatOpen(true)} className="h-12 rounded-2xl gap-3 font-bold hover:bg-primary/10">
                 <MessageSquare className="h-5 w-5 opacity-60" />
                 <span>Chat</span>
               </DropdownMenuItem>
@@ -879,6 +881,13 @@ export default function CourierPage() {
           </div>
         )}
       </AnimatePresence>
+
+      <ChatSheet
+        open={isChatOpen}
+        onOpenChange={setIsChatOpen}
+        title="Chat"
+        description="Courier conversations (Tambo AI is inside the chat list)."
+      />
     </div>
   )
 }
