@@ -79,9 +79,13 @@ interface WarehouseTabProps {
     className?: string;
 }
 
-export function WarehouseTab({ className }: WarehouseTabProps) {
+export function WarehouseTab({ className, initialSubTab = 'cooking' }: WarehouseTabProps & { initialSubTab?: string }) {
     const { t, language } = useLanguage();
-    const [activeSubTab, setActiveSubTab] = useState('cooking');
+    const [activeSubTab, setActiveSubTab] = useState(initialSubTab);
+
+    useEffect(() => {
+        setActiveSubTab(initialSubTab);
+    }, [initialSubTab]);
     const [tomorrowMenu, setTomorrowMenu] = useState<DailyMenu | undefined>(undefined);
     const [tomorrowMenuNumber, setTomorrowMenuNumber] = useState<number>(0);
     const [dishQuantities, setDishQuantities] = useState<Record<number, number>>({});

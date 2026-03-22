@@ -29,6 +29,7 @@ import {
   type LatLng,
 } from '@/lib/geo'
 import { getCourierColor } from '@/lib/courier-colors'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -1342,20 +1343,24 @@ export function DispatchMapPanel({
             </Button>
 
             <Button
-              size="sm"
-              className="min-w-[140px]"
+              size="lg"
+              className={cn(
+                "min-w-[200px] h-14 rounded-[30px] font-black uppercase tracking-[0.2em] shadow-2xl transition-all duration-500",
+                "bg-primary hover:bg-primary/90 text-white border-b-4 border-black/20 hover:scale-[1.02] active:scale-[0.98] active:border-b-0 active:translate-y-1",
+                (isSaving || isStarting) && "opacity-80 pointer-events-none"
+              )}
               onClick={() => void primaryAction()}
               disabled={isSaving || isStarting}
               aria-busy={isSaving || isStarting}
             >
               {isSaving || isStarting ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className="w-6 h-6 mr-3 animate-spin" />
               ) : isDayActive ? (
-                <Save className="w-4 h-4 mr-2" />
+                <Save className="w-6 h-6 mr-3" />
               ) : isTodaySelected ? (
-                <Play className="w-4 h-4 mr-2" />
+                <Play className="w-6 h-6 mr-3" />
               ) : (
-                <Save className="w-4 h-4 mr-2" />
+                <Save className="w-6 h-6 mr-3" />
               )}
 
               {isDayActive

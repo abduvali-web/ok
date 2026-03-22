@@ -299,7 +299,7 @@ const AdminDashboardPage = ({ mode }: { mode?: 'middle' | 'low' }) => {
   // Handle Tab changes
   useEffect(() => {
     const saved = localStorage.getItem('adminDashboardTab')
-    if (saved && ['statistics', 'orders', 'clients', 'admins', 'history', 'bin', 'warehouse', 'finance'].includes(saved)) {
+    if (saved && ['statistics', 'orders', 'clients', 'admins', 'history', 'bin', 'warehouse', 'finance', 'chat', 'cooking', 'ingredients', 'sets'].includes(saved)) {
       setActiveTab(saved)
     }
   }, [])
@@ -740,7 +740,17 @@ const AdminDashboardPage = ({ mode }: { mode?: 'middle' | 'low' }) => {
                 />
 
                 {/* Warehouse Tab */}
-                <WarehouseTab key="warehouse" />
+                {['warehouse', 'cooking', 'ingredients', 'sets'].includes(activeTab) && (
+                  <WarehouseTab
+                    key="warehouse"
+                    initialSubTab={
+                      activeTab === 'warehouse' ? 'cooking' :
+                      activeTab === 'cooking' ? 'cooking' :
+                      activeTab === 'ingredients' ? 'inventory' :
+                      activeTab === 'sets' ? 'sets' : 'cooking'
+                    }
+                  />
+                )}
 
                 {/* Finance Tab */}
                 <FinanceTab
@@ -821,6 +831,18 @@ const AdminDashboardPage = ({ mode }: { mode?: 'middle' | 'low' }) => {
                   onRefresh={fetchBinData}
                   isRefreshing={isBinLoading}
                 />
+
+                {/* Chat Tab */}
+                <TabsContent value="chat" className="flex-1 min-h-0 m-0 p-0 border-none outline-none overflow-hidden">
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="h-full flex flex-col"
+                  >
+                    <ChatCenter />
+                  </motion.div>
+                </TabsContent>
 
               </AnimatePresence>
             </div>

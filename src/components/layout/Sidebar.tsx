@@ -1,74 +1,82 @@
-'use client';
+'use client'
 
-import type React from 'react';
-import { motion } from 'framer-motion';
+import type React from 'react'
+import { motion } from 'framer-motion'
 import {
-  CookingPot,
+  Archive,
   Calculator,
-  Layers,
+  CookingPot,
+  Database,
   DollarSign,
   History,
-  Package,
-  ShoppingCart,
+  Layers,
+  LayoutDashboard,
   MessageSquare,
+  Package,
   Settings,
-  Database,
+  ShoppingCart,
   Users,
   X,
-  Archive,
-  LayoutDashboard,
-} from 'lucide-react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+} from 'lucide-react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { useLanguage } from '@/contexts/LanguageContext'
 
-type DividerItem = { id: string; type: 'divider' };
+type DividerItem = { id: string; type: 'divider' }
 type NavItem = {
-  id: string;
-  label: string;
-  icon: React.ElementType<{ className?: string }>;
-  badge?: number | null;
-};
-type MenuItem = NavItem | DividerItem;
+  id: string
+  label: string
+  icon: React.ElementType<{ className?: string }>
+  badge?: number | null
+}
+type MenuItem = NavItem | DividerItem
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-  isOpen: boolean;
-  onClose: () => void;
-  onLogout: () => void;
-  showDatabase?: boolean;
+  activeTab: string
+  onTabChange: (tab: string) => void
+  isOpen: boolean
+  onClose: () => void
+  onLogout: () => void
+  showDatabase?: boolean
 }
 
-export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, onLogout: _onLogout, showDatabase }: SidebarProps) {
-  const { t, language } = useLanguage();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+export function Sidebar({
+  className,
+  activeTab,
+  onTabChange,
+  isOpen,
+  onClose,
+  onLogout: _onLogout,
+  showDatabase,
+}: SidebarProps) {
+  const { t, language } = useLanguage()
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   const openModalParam = (key: 'chat' | 'settings') => {
-    const params = new URLSearchParams(searchParams?.toString());
-    params.delete('chat');
-    params.delete('settings');
-    params.set(key, '1');
-    params.set('v', String(Date.now()));
-    router.push(`${pathname}?${params.toString()}`);
-  };
+    const params = new URLSearchParams(searchParams?.toString())
+    params.delete('chat')
+    params.delete('settings')
+    params.set(key, '1')
+    params.set('v', String(Date.now()))
+    router.push(`${pathname}?${params.toString()}`)
+  }
 
   const warehouseSubItems = [
     { id: 'cooking', label: t.warehouse.cooking, icon: CookingPot },
     { id: 'sets', label: language === 'ru' ? 'Сеты' : language === 'uz' ? 'Setlar' : 'Sets', icon: Layers },
     { id: 'inventory', label: t.warehouse.inventory, icon: Package },
     { id: 'calculator', label: t.warehouse.calculator, icon: Calculator },
-  ];
+  ]
 
   const adminSubItems = [
     ...(showDatabase ? [{ id: 'database', label: 'Database', icon: Database }] : []),
     { id: 'chat', label: 'Chat', icon: MessageSquare },
     { id: 'settings', label: 'Settings', icon: Settings },
-  ];
+  ]
 
   const menuItems: MenuItem[] = [
     { id: 'orders', label: t.admin.orders, icon: ShoppingCart, badge: 0 },
@@ -79,16 +87,16 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
     { id: 'finance', label: t.finance?.title || 'Finance', icon: DollarSign, badge: null },
     { id: 'history', label: t.admin.history, icon: History, badge: null },
     { id: 'bin', label: t.admin.bin || 'Archive', icon: Archive, badge: null },
-  ];
+  ]
 
   return (
     <>
-      {isOpen && (
+      {isOpen ? (
         <div
           className="fixed inset-0 z-40 bg-black/30 dark:bg-black/60 backdrop-blur-md lg:hidden transition-opacity duration-300"
           onClick={onClose}
         />
-      )}
+      ) : null}
 
       <aside
         className={cn(
@@ -132,80 +140,91 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                       key={item.id}
                       className="self-stretch my-2 h-[2px] border-t-2 border-dashed border-primary/20 dark:border-white/10"
                     />
-                  );
+                  )
                 }
 
-                const Icon = item.icon;
-                const isActive = activeTab === item.id;
+                const Icon = item.icon
+                const isActive = activeTab === item.id
 
                 return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      onTabChange(item.id);
-                      onClose();
-                    }}
-                    className={cn(
-                      'flex flex-col items-center gap-2 group relative py-3 md:py-4 transition-all duration-300 w-full md:w-[100px] rounded-[30px] md:rounded-[40px] overflow-hidden'
-                    )}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="active-nav-bg"
-                        className="absolute inset-0 bg-primary/10 dark:bg-primary/60 rounded-[30px] md:rounded-[40px] z-0 shadow-lg border-b-4 border-black/5 dark:border-black/20"
-                        transition={{ type: 'spring', stiffness: 200, damping: 30 }}
-                      />
-                    )}
-
-                    <motion.div
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      whileTap={{ scale: 0.9 }}
+                  <div key={item.id} className="w-full flex flex-col items-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onTabChange(item.id)
+                        onClose()
+                      }}
                       className={cn(
-                        'w-12 h-12 md:w-[72px] md:h-[72px] rounded-full flex items-center justify-center relative transition-all overflow-hidden z-10',
-                        isActive
-                          ? 'bg-primary text-white dark:bg-white dark:text-primary shadow-xl'
-                          : 'bg-[#dcfce7] text-emerald-800 hover:bg-[#bbf7d0] dark:bg-white/10 dark:text-white/60 dark:hover:text-white dark:hover:bg-white/20'
+                        'flex flex-col items-center gap-2 group relative py-3 md:py-4 transition-all duration-300 w-full md:w-[100px] rounded-[30px] md:rounded-[40px] overflow-hidden'
                       )}
                     >
-                      <div className={cn(
-                        'w-10 h-10 md:w-[60px] md:h-[60px] rounded-full flex items-center justify-center border-2 border-dashed relative z-10',
-                        isActive ? 'border-white/20 dark:border-primary/20' : 'border-emerald-700/20 dark:border-white/10'
-                      )}>
-                        <Icon className="w-5 h-5 md:w-7 md:h-7" />
-                      </div>
-                    </motion.div>
+                      {isActive ? (
+                        <motion.div
+                          layoutId="active-nav-bg"
+                          className="absolute inset-0 bg-primary/10 dark:bg-primary/60 rounded-[30px] md:rounded-[40px] z-0 shadow-lg border-b-4 border-black/5 dark:border-black/20"
+                          transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+                        />
+                      ) : null}
 
-                    <span className={cn(
-                      "text-[10px] md:text-[11px] font-black uppercase tracking-widest relative z-10 text-center px-1 w-full truncate transition-all duration-300",
-                      isActive ? 'text-foreground dark:text-white' : 'text-muted-foreground/60 group-hover:text-foreground dark:text-white/40 dark:group-hover:text-white/60'
-                    )}>
-                      {item.label}
-                    </span>
+                      <motion.div
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        whileTap={{ scale: 0.9 }}
+                        className={cn(
+                          'w-12 h-12 md:w-[72px] md:h-[72px] rounded-full flex items-center justify-center relative transition-all overflow-hidden z-10',
+                          isActive
+                            ? 'bg-primary text-white dark:bg-white dark:text-primary shadow-xl'
+                            : 'bg-[#dcfce7] text-emerald-800 hover:bg-[#bbf7d0] dark:bg-white/10 dark:text-white/60 dark:hover:text-white dark:hover:bg-white/20'
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            'w-10 h-10 md:w-[60px] md:h-[60px] rounded-full flex items-center justify-center border-2 border-dashed relative z-10',
+                            isActive ? 'border-white/20 dark:border-primary/20' : 'border-emerald-700/20 dark:border-white/10'
+                          )}
+                        >
+                          <Icon className="w-5 h-5 md:w-7 md:h-7" />
+                        </div>
+                      </motion.div>
+
+                      <span
+                        className={cn(
+                          'text-[10px] md:text-[11px] font-black uppercase tracking-widest relative z-10 text-center px-1 w-full truncate transition-all duration-300',
+                          isActive
+                            ? 'text-foreground dark:text-white'
+                            : 'text-muted-foreground/60 group-hover:text-foreground dark:text-white/40 dark:group-hover:text-white/60'
+                        )}
+                      >
+                        {item.label}
+                      </span>
+                    </button>
 
                     {item.id === 'warehouse' && (isActive || isOpen) ? (
                       <div className="relative z-10 mt-2 w-full px-2">
                         <div className="rounded-3xl border-2 border-dashed border-primary/15 dark:border-white/10 bg-white/40 dark:bg-white/5 p-2 space-y-1">
                           {warehouseSubItems.map((sub) => {
-                            const SubIcon = sub.icon;
+                            const SubIcon = sub.icon
                             return (
                               <button
                                 key={sub.id}
                                 type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
+                                onClick={() => {
                                   try {
-                                    localStorage.setItem('warehouseSubTab', sub.id);
-                                    window.dispatchEvent(new CustomEvent('warehouse:set-subtab', { detail: { subTab: sub.id } }));
-                                  } catch { /* ignore */ }
-                                  onTabChange('warehouse');
-                                  onClose();
+                                    localStorage.setItem('warehouseSubTab', sub.id)
+                                    window.dispatchEvent(
+                                      new CustomEvent('warehouse:set-subtab', { detail: { subTab: sub.id } })
+                                    )
+                                  } catch {
+                                    // ignore
+                                  }
+                                  onTabChange('warehouse')
+                                  onClose()
                                 }}
                                 className="w-full flex items-center gap-2 rounded-2xl px-3 py-2 text-left text-xs font-black uppercase tracking-widest transition-colors hover:bg-primary/10"
                               >
                                 <SubIcon className="h-4 w-4 opacity-70" />
                                 <span className="truncate">{sub.label}</span>
                               </button>
-                            );
+                            )
                           })}
                         </div>
                       </div>
@@ -215,39 +234,35 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                       <div className="relative z-10 mt-2 w-full px-2">
                         <div className="rounded-3xl border-2 border-dashed border-primary/15 dark:border-white/10 bg-white/40 dark:bg-white/5 p-2 space-y-1">
                           {adminSubItems.map((sub) => {
-                            const SubIcon = sub.icon;
+                            const SubIcon = sub.icon
                             return (
                               <button
                                 key={sub.id}
                                 type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (sub.id === 'database') {
-                                    router.push('/middle-admin/database');
-                                  } else if (sub.id === 'chat') {
-                                    openModalParam('chat');
-                                  } else if (sub.id === 'settings') {
-                                    openModalParam('settings');
-                                  }
-                                  onClose();
+                                onClick={() => {
+                                  if (sub.id === 'database') router.push('/middle-admin/database')
+                                  if (sub.id === 'chat') openModalParam('chat')
+                                  if (sub.id === 'settings') openModalParam('settings')
+                                  onClose()
                                 }}
                                 className="w-full flex items-center gap-2 rounded-2xl px-3 py-2 text-left text-xs font-black uppercase tracking-widest transition-colors hover:bg-primary/10"
                               >
                                 <SubIcon className="h-4 w-4 opacity-70" />
                                 <span className="truncate">{sub.label}</span>
                               </button>
-                            );
+                            )
                           })}
                         </div>
                       </div>
                     ) : null}
-                  </button>
-                );
+                  </div>
+                )
               })}
             </nav>
           </div>
         </div>
       </aside>
     </>
-  );
+  )
 }
+

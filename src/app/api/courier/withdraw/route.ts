@@ -29,41 +29,57 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No owner admin found' }, { status: 400 })
     }
 
-    // Get courier's current salary (balance)
+    // Calculate current balance (accrued - paid)
+    const asOf = new Date()
+    const diffDaysInclusiveUtc = (from: Date, to: Date) => {
+      const fromDay = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate())).getTime()
+      const toDay = new Date(Date.UTC(to.getUTCFullYear(), to.getUTCMonth(), to.getUTCDate())).getTime()
+      const diff = Math.floor((toDay - fromDay) / (24 * 60 * 60 * 1000))
+      return Math.max(0, diff + 1)
+    }
+
     const courier = await db.admin.findUnique({
       where: { id: user.id },
-      select: { id: true, name: true, salary: true },
+      select: { id: true, name: true, salary: true, createdAt: true },
     })
 
     if (!courier) {
       return NextResponse.json({ error: 'Courier not found' }, { status: 404 })
     }
 
-    if (courier.salary < amount) {
+    const days = diffDaysInclusiveUtc(courier.createdAt, asOf)
+    const accrued = Number(courier.salary ?? 0) * days
+
+    // Sum all prior payments
+    const payments = await db.transaction.aggregate({
+      where: {
+        category: 'SALARY',
+        salaryRecipientAdminId: user.id,
+      },
+      _sum: { amount: true },
+    })
+    const paid = payments._sum.amount ?? 0
+    const balance = accrued - paid
+
+    if (balance < amount) {
       return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 })
     }
 
-    // Use transaction: deduct from courier salary + create transaction record
+    // Use transaction: deduct from company balance + create transaction record
     const result = await db.$transaction(async (tx) => {
-      // Deduct from courier's salary (balance)
-      await tx.admin.update({
-        where: { id: user.id },
-        data: { salary: { decrement: amount } },
-      })
-
-      // Deduct from company balance
+      // Deduct from company balance (who pays this courier)
       await tx.admin.update({
         where: { id: ownerAdminId },
         data: { companyBalance: { decrement: amount } },
       })
 
-      // Create transaction record for finance history
+      // Create Transaction Record (Category: SALARY affects balance calculation)
       const transaction = await tx.transaction.create({
         data: {
           amount,
           type: 'EXPENSE',
           description: `Courier withdrawal: ${courier.name}`,
-          category: 'COURIER_WITHDRAWAL',
+          category: 'SALARY',
           adminId: ownerAdminId,
           salaryRecipientAdminId: user.id,
         },
@@ -71,6 +87,16 @@ export async function POST(request: NextRequest) {
 
       return transaction
     })
+
+    const newPayments = await db.transaction.aggregate({
+      where: {
+        category: 'SALARY',
+        salaryRecipientAdminId: user.id,
+      },
+      _sum: { amount: true },
+    })
+    const newPaid = newPayments._sum.amount ?? 0
+    const newBalance = accrued - newPaid
 
     // Log action
     try {
@@ -87,14 +113,9 @@ export async function POST(request: NextRequest) {
       // ignore logging failures
     }
 
-    const updatedCourier = await db.admin.findUnique({
-      where: { id: user.id },
-      select: { salary: true },
-    })
-
     return NextResponse.json({
       success: true,
-      newBalance: updatedCourier?.salary ?? 0,
+      newBalance,
       transactionId: result.id,
     })
   } catch (error) {

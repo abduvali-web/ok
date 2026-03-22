@@ -308,6 +308,9 @@ export const translations = {
                 multiPortion: '2+ порции',
             }
         },
+        chat: {
+            title: 'Чат',
+        },
         warehouse: {
             title: 'Управление складом',
             description: 'Планирование готовки и расчёт ингредиентов',
@@ -316,6 +319,7 @@ export const translations = {
             calculator: 'Калькулятор',
             dishes: 'Блюда',
             catalog: 'Справочник',
+            sets: 'Сеты',
 
             menuFor: 'Меню на',
             cookingPlan: 'План готовки',
@@ -727,6 +731,9 @@ export const translations = {
                 multiPortion: '2+ porsiya',
             }
         },
+        chat: {
+            title: 'Chat',
+        },
         warehouse: {
             title: 'Ombor boshqaruvi',
             description: 'Pishirishni rejalashtirish va masalliqlarni hisoblash',
@@ -735,6 +742,7 @@ export const translations = {
             calculator: 'Kalkulyator',
             dishes: 'Taomlar',
             catalog: 'Ma\'lumotnoma',
+            sets: 'Setlar',
 
             menuFor: 'Menyu',
             cookingPlan: 'Pishirish rejasi',
@@ -1145,6 +1153,9 @@ export const translations = {
                 multiPortion: '2+ portions',
             }
         },
+        chat: {
+            title: 'Chat',
+        },
         warehouse: {
             title: 'Warehouse Management',
             description: 'Cooking planning and ingredient calculation',
@@ -1153,6 +1164,7 @@ export const translations = {
             calculator: 'Calculator',
             dishes: 'Dishes',
             catalog: 'Catalog',
+            sets: 'Sets',
 
             menuFor: 'Menu for',
             cookingPlan: 'Cooking Plan',
