@@ -503,35 +503,42 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                     <Package className="w-64 h-64 text-foreground dark:text-foreground" />
                 </motion.div>
 
-                {/* Title Section */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10 text-foreground dark:text-foreground">
-                    <div className="flex flex-col gap-2">
-                        <motion.h2 className="text-3xl md:text-5xl font-extrabold tracking-tight uppercase">
-                            {auditUiText.statsHeader}
-                        </motion.h2>
-                        <motion.p className="text-sm md:text-base opacity-40 font-bold uppercase tracking-[0.3em]">
-                            {auditUiText.statsSub}
-                        </motion.p>
-                    </div>
-
-                    <TabsList className="bg-white/40 dark:bg-muted/20 backdrop-blur-xl border border-border p-1 rounded-[32px] h-14 md:h-16 flex items-center md:px-6 shadow-xl">
-                        <TabsTrigger value="cooking" className="rounded-full px-6 h-full data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-bold uppercase tracking-widest text-xs transition-all duration-500">
-                            {t.warehouse.cooking}
-                        </TabsTrigger>
-                        <TabsTrigger value="sets" className="rounded-full px-6 h-full data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-bold uppercase tracking-widest text-xs transition-all duration-500">
-                            {auditUiText.setsTab}
-                        </TabsTrigger>
-                        <TabsTrigger value="inventory" className="rounded-full px-6 h-full data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-bold uppercase tracking-widest text-xs transition-all duration-500">
-                            {t.warehouse.inventory}
-                        </TabsTrigger>
-                        <TabsTrigger value="calculator" className="rounded-full px-6 h-full data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-bold uppercase tracking-widest text-xs transition-all duration-500">
-                            {t.warehouse.calculator}
-                        </TabsTrigger>
-                    </TabsList>
+                {/* Title Section (Moved above tabs) */}
+                <div className="flex flex-col mb-4 md:mb-8 relative z-10 text-foreground dark:text-foreground px-4 md:px-0">
+                    <motion.h2 className="text-3xl md:text-5xl font-extrabold tracking-tight uppercase">
+                        {auditUiText.statsHeader}
+                    </motion.h2>
+                    <motion.p className="text-sm md:text-base opacity-40 font-bold uppercase tracking-[0.3em] mt-2">
+                        {auditUiText.statsSub}
+                    </motion.p>
                 </div>
 
-                <div className="flex-1 min-h-0 overflow-auto no-scrollbar pb-10 relative z-10">
-                    <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="h-full flex flex-col">
+                <div className="flex-1 min-h-0 relative z-10 flex flex-col md:flex-row pb-20 md:pb-0">
+                    <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="h-full w-full flex flex-col md:flex-row gap-6 md:gap-10 items-stretch">
+                        
+                        {/* Sidebar (PC) / Bottom Panel (Mobile) */}
+                        <TabsList className="
+                            fixed bottom-4 left-4 right-4 z-50 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto
+                            flex flex-row md:flex-col justify-around md:justify-start
+                            bg-card/80 dark:bg-muted/40 backdrop-blur-2xl border-2 border-border p-2 md:p-4 rounded-[32px] md:rounded-[40px]
+                            md:w-64 h-20 md:h-auto shadow-2xl md:shadow-xl shrink-0 gap-2 overflow-x-auto md:overflow-visible no-scrollbar
+                        ">
+                            <TabsTrigger value="cooking" className="flex-1 md:flex-none justify-center md:justify-start rounded-full md:rounded-3xl px-6 py-3 data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-black uppercase tracking-widest text-[10px] md:text-sm data-[state=active]:text-white transition-all duration-300 gap-2 md:gap-3">
+                                <CookingPot className="w-5 h-5 hidden md:block" /> {t.warehouse.cooking}
+                            </TabsTrigger>
+                            <TabsTrigger value="sets" className="flex-1 md:flex-none justify-center md:justify-start rounded-full md:rounded-3xl px-6 py-3 data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-black uppercase tracking-widest text-[10px] md:text-sm data-[state=active]:text-white transition-all duration-300 gap-2 md:gap-3">
+                                <UtensilsCrossed className="w-5 h-5 hidden md:block" /> {auditUiText.setsTab}
+                            </TabsTrigger>
+                            <TabsTrigger value="inventory" className="flex-1 md:flex-none justify-center md:justify-start rounded-full md:rounded-3xl px-6 py-3 data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-black uppercase tracking-widest text-[10px] md:text-sm data-[state=active]:text-white transition-all duration-300 gap-2 md:gap-3">
+                                <Package className="w-5 h-5 hidden md:block" /> {t.warehouse.inventory}
+                            </TabsTrigger>
+                            <TabsTrigger value="calculator" className="flex-1 md:flex-none justify-center md:justify-start rounded-full md:rounded-3xl px-6 py-3 data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-black uppercase tracking-widest text-[10px] md:text-sm data-[state=active]:text-white transition-all duration-300 gap-2 md:gap-3">
+                                <Calculator className="w-5 h-5 hidden md:block" /> {t.warehouse.calculator}
+                            </TabsTrigger>
+                        </TabsList>
+
+                        {/* Content Area */}
+                        <div className="flex-1 min-w-0 h-full overflow-y-auto custom-scrollbar px-2 md:px-0">
 
                         <TabsContent value="cooking" className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -540,32 +547,32 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 <StatItem label={auditUiText.remaining} value={cookingTotals.remaining} sub="Still to be done" color="text-amber-600" dot="bg-amber-500" icon={Clock} />
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-4 bg-white/20 dark:bg-muted/5 p-4 rounded-3xl border-2 border-dashed border-border">
+                            <div className="flex flex-wrap items-center gap-4 bg-card/60 dark:bg-muted/10 p-4 shrink-0 rounded-[32px] border-2 border-dashed border-border backdrop-blur-xl">
                                 <motion.button
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     onClick={() => openDatePicker('cooking')}
-                                    className="bg-white/50 dark:bg-muted/20 rounded-2xl border-none shadow-inner px-4 py-2 flex items-center gap-2 cursor-pointer transition-colors"
+                                    className="h-12 bg-white/50 dark:bg-muted/40 rounded-full border-2 border-dashed border-border/50 shadow-sm px-6 flex items-center gap-2 cursor-pointer transition-all hover:bg-muted/80 hover:border-border"
                                 >
-                                    <CalendarIcon className="w-5 h-5 text-foreground dark:text-foreground" />
-                                    <span className="font-bold text-sm text-foreground dark:text-foreground">
+                                    <CalendarIcon className="w-5 h-5 text-primary" />
+                                    <span className="font-bold text-sm text-foreground">
                                         {appliedRangeLabel}
                                     </span>
                                 </motion.button>
                                 <Select value={cookingSelectedSetId} onValueChange={setCookingSelectedSetId}>
-                                    <SelectTrigger className="h-12 w-[220px] rounded-2xl bg-white/50 dark:bg-muted/20 border-none shadow-inner">
+                                    <SelectTrigger className="h-12 w-[220px] rounded-full bg-white/50 dark:bg-muted/40 border-2 border-dashed border-border/50 shadow-sm font-bold px-6">
                                         <SelectValue placeholder={auditUiText.setsTab} />
                                     </SelectTrigger>
-                                    <SelectContent className="rounded-2xl border-none shadow-2xl backdrop-blur-xl">
-                                        <SelectItem value="active">{auditUiText.activeSet}</SelectItem>
-                                        {availableSets.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                                    <SelectContent className="rounded-3xl border-2 border-dashed border-border shadow-2xl backdrop-blur-xl p-2">
+                                        <SelectItem value="active" className="rounded-xl font-bold">{auditUiText.activeSet}</SelectItem>
+                                        {availableSets.map(s => <SelectItem key={s.id} value={s.id} className="rounded-xl font-bold">{s.name}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                                 <RefreshIconButton
                                     label={auditUiText.refresh}
                                     onClick={() => { fetchData(); refreshCookingPlansForRange(); }}
                                     isLoading={isCookingPlansLoading}
-                                    className="bg-primary dark:bg-primary text-card-foreground shadow-lg hover:shadow-2xl transition-all"
+                                    className="h-12 rounded-full border-2 border-dashed border-primary/20 bg-primary/10 text-primary shadow-sm hover:shadow-md hover:bg-primary hover:text-white transition-all font-bold px-6 py-0 ml-auto"
                                 />
                             </div>
 
@@ -622,16 +629,17 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                             onClick={() => openDatePicker('calc')}
-                                            className="w-full bg-transparent border-none px-4 py-2 flex items-center gap-2 cursor-pointer transition-colors"
+                                            className="h-16 w-full bg-white/50 dark:bg-muted/40 rounded-full border-2 border-dashed border-border shadow-sm px-6 flex items-center justify-center gap-3 cursor-pointer transition-colors hover:bg-muted"
                                         >
-                                            <CalendarIcon className="w-5 h-5 text-foreground dark:text-foreground" />
-                                            <span className="font-bold text-sm text-foreground dark:text-foreground">
+                                            <CalendarIcon className="w-6 h-6 text-primary" />
+                                            <span className="font-black text-lg text-foreground">
                                                 {appliedRangeLabel}
                                             </span>
                                         </motion.button>
                                         <Button
                                             onClick={() => calculateForPeriod(calcRangeDays)}
-                                            className="h-16 rounded-[32px] bg-primary hover:bg-primary/90 dark:bg-primary text-xl font-black uppercase tracking-widest shadow-2xl hover:scale-[1.02] transition-all"
+                                            size="lg"
+                                            className="h-16 rounded-full bg-primary hover:bg-primary/90 text-white text-xl font-black uppercase tracking-widest shadow-xl border-2 border-dashed border-primary-foreground/20 hover:scale-[1.02] transition-all"
                                         >
                                             Run Calculation
                                             <ArrowRight className="ml-4 w-6 h-6" />
@@ -707,6 +715,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                 </AnimatePresence>
                             </div>
                         </TabsContent>
+                        </div>
                     </Tabs>
                 </div>
             </motion.div>

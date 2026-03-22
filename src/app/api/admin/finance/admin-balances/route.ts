@@ -27,8 +27,12 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url)
     const asOfRaw = searchParams.get('asOf')
-    const asOf =
-      asOfRaw && !Number.isNaN(new Date(asOfRaw).getTime()) ? new Date(asOfRaw) : new Date()
+    const asOf = asOfRaw && !Number.isNaN(new Date(asOfRaw).getTime()) ? new Date(asOfRaw) : new Date()
+
+    const fromRaw = searchParams.get('from')
+    const toRaw = searchParams.get('to')
+    const fromDate = fromRaw ? new Date(fromRaw) : undefined
+    const toDate = toRaw ? new Date(toRaw) : undefined
 
     const effectiveAdminId =
       session.user.role === 'LOW_ADMIN'
@@ -78,11 +82,39 @@ export async function GET(req: Request) {
       }
     }
 
+    // Now calculate period-specific withdrawals
+    const periodWhere: any = {
+      category: 'SALARY',
+      salaryRecipientAdminId: { in: adminIds },
+    }
+    if (fromDate && toDate) {
+      periodWhere.createdAt = {
+        gte: startOfDayUtc(fromDate),
+        lte: startOfDayUtc(toDate),
+      }
+      // If same day, we need local end of day instead of UTC, or just +24h if it's startOfDay
+      periodWhere.createdAt.lte = new Date(startOfDayUtc(toDate).getTime() + 24 * 60 * 60 * 1000 - 1)
+    }
+
+    const periodWithdrawals = adminIds.length ? await prisma.transaction.groupBy({
+      by: ['salaryRecipientAdminId'],
+      where: periodWhere,
+      _sum: { amount: true },
+    }) : []
+
+    const withdrawnPeriodById = new Map<string, number>()
+    for (const row of periodWithdrawals) {
+      if (row.salaryRecipientAdminId) {
+        withdrawnPeriodById.set(row.salaryRecipientAdminId, row._sum.amount ?? 0)
+      }
+    }
+
     const payload = admins.map((admin) => {
       const days = diffDaysInclusiveUtc(admin.createdAt, asOf)
       const accrued = Number(admin.salary ?? 0) * days
       const paid = paidById.get(admin.id) ?? 0
       const balance = accrued - paid
+      const withdrawnPeriod = withdrawnPeriodById.get(admin.id) ?? 0
 
       return {
         id: admin.id,
@@ -95,6 +127,7 @@ export async function GET(req: Request) {
         accrued,
         paid,
         balance,
+        withdrawnPeriod,
       }
     })
 

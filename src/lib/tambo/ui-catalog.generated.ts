@@ -58,6 +58,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "source": "components/ui/badge.tsx"
   },
   {
+    "name": "BinTab",
+    "purpose": "UI component from components admin dashboard tabs content BinTab",
+    "source": "components/admin/dashboard/tabs-content/BinTab.tsx"
+  },
+  {
     "name": "breadcrumb",
     "purpose": "UI component from components ui breadcrumb",
     "source": "components/ui/breadcrumb.tsx"
@@ -76,6 +81,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "name": "CalendarDateSelector",
     "purpose": "UI component from components admin dashboard shared CalendarDateSelector",
     "source": "components/admin/dashboard/shared/CalendarDateSelector.tsx"
+  },
+  {
+    "name": "CalendarDialog",
+    "purpose": "UI component from components admin dashboard shared CalendarDialog",
+    "source": "components/admin/dashboard/shared/CalendarDialog.tsx"
   },
   {
     "name": "CalendarRangeSelector",
@@ -126,6 +136,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "name": "checkbox",
     "purpose": "UI component from components ui checkbox",
     "source": "components/ui/checkbox.tsx"
+  },
+  {
+    "name": "ClientsTab",
+    "purpose": "UI component from components admin dashboard tabs content ClientsTab",
+    "source": "components/admin/dashboard/tabs-content/ClientsTab.tsx"
   },
   {
     "name": "collapsible",
@@ -238,6 +253,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "source": "components/admin/dashboard/shared/FormField.tsx"
   },
   {
+    "name": "HistoryTab",
+    "purpose": "UI component from components admin dashboard tabs content HistoryTab",
+    "source": "components/admin/dashboard/tabs-content/HistoryTab.tsx"
+  },
+  {
     "name": "HistoryTable",
     "purpose": "UI component from components admin HistoryTable",
     "source": "components/admin/HistoryTable.tsx"
@@ -321,6 +341,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "name": "OrderModal",
     "purpose": "UI component from components admin dashboard modals OrderModal",
     "source": "components/admin/dashboard/modals/OrderModal.tsx"
+  },
+  {
+    "name": "OrdersTab",
+    "purpose": "UI component from components admin dashboard tabs content OrdersTab",
+    "source": "components/admin/dashboard/tabs-content/OrdersTab.tsx"
   },
   {
     "name": "OrdersTable",
@@ -476,6 +501,11 @@ export const SITE_UI_COMPONENT_CATALOG = [
     "name": "sonner",
     "purpose": "UI component from components ui sonner",
     "source": "components/ui/sonner.tsx"
+  },
+  {
+    "name": "StatisticsTab",
+    "purpose": "UI component from components admin dashboard tabs content StatisticsTab",
+    "source": "components/admin/dashboard/tabs-content/StatisticsTab.tsx"
   },
   {
     "name": "StatsCards",

@@ -1229,33 +1229,36 @@ export function SetsTab() {
     if (isLoading) return <div className="p-8"><div className="animate-spin h-8 w-8 border-2 border-primary rounded-full border-t-transparent mx-auto"></div></div>;
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <div className="min-w-0">
-                    <h2 className="text-2xl font-bold">{uiText.title}</h2>
-                    <p className="text-sm text-muted-foreground">{uiText.subtitle}</p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between bg-card p-6 rounded-[32px] border-2 border-dashed border-border shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] pointer-events-none" />
+                <div className="min-w-0 z-10">
+                    <h2 className="text-3xl font-black uppercase tracking-tight flex items-center gap-3">
+                        <UtensilsCrossed className="w-8 h-8 text-primary" />
+                        {uiText.title}
+                    </h2>
+                    <p className="text-sm text-muted-foreground/60 font-bold uppercase tracking-widest mt-1">{uiText.subtitle}</p>
                 </div>
 
-                {/* Orders-tab style: wrap on mobile so actions never disappear off-screen. */}
-                <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+                <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto z-10">
                     <SearchPanel
                         value={setSearch}
                         onChange={setSetSearch}
                         placeholder={uiText.search}
-                        className="w-full sm:w-[260px] md:w-[320px] flex-none basis-full sm:basis-auto"
+                        className="w-full sm:w-[260px] md:w-[320px] flex-none basis-full sm:basis-auto rounded-full border-2 border-dashed"
                     />
                 </div>
             </div>
 
-            <div className="space-y-4">
-                {/* Sets Selector Row (replaces sidebar) */}
-                <Card className="border-none shadow-sm bg-slate-900 text-white overflow-hidden">
-                    <div className="p-2 overflow-x-auto">
-                        <div className="flex items-center gap-1 min-w-max">
-                            <span className="text-xs font-medium px-2 text-slate-400 mr-2 flex items-center gap-1">
+            <div className="space-y-6">
+                {/* Sets Selector Row */}
+                <div className="rounded-[32px] border-2 border-dashed border-border bg-card/60 backdrop-blur-xl p-4 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto no-scrollbar">
+                        <div className="flex items-center gap-2 min-w-max pb-2">
+                            <span className="text-xs font-black uppercase tracking-widest px-4 text-muted-foreground/60 flex items-center gap-2 bg-muted/30 rounded-full h-10">
                                 <Scale className="w-4 h-4" />
-                                {uiText.setsList}:
+                                {uiText.setsList}
                             </span>
 
                             {visibleSets.map((set) => {
@@ -1266,150 +1269,154 @@ export function SetsTab() {
                                         type="button"
                                         onClick={() => setSelectedSet(set)}
                                         className={[
-                                            "h-9 min-w-[140px] max-w-[220px] px-3 rounded-full flex items-center gap-2 transition-all",
-                                            isSelected ? "bg-primary text-white shadow-lg" : "hover:bg-slate-700 text-slate-200",
+                                            "h-10 min-w-[140px] max-w-[220px] px-4 rounded-full flex items-center justify-between gap-3 transition-all border-2",
+                                            isSelected ? "bg-primary border-primary text-white shadow-lg scale-105 font-bold" : "bg-white/40 dark:bg-muted/40 border-dashed border-border/50 hover:border-primary/40 hover:bg-muted/60 font-medium text-foreground",
                                         ].join(" ")}
                                         title={set.name}
                                     >
-                                        <span className="truncate text-sm font-medium flex-1 text-left">{set.name}</span>
+                                        <span className="truncate text-sm flex-1 text-left">{set.name}</span>
                                         <span
                                             className={[
-                                                "w-2 h-2 rounded-full shrink-0",
-                                                set.isActive ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-slate-400",
+                                                "w-2.5 h-2.5 rounded-full shrink-0 shadow-sm transition-all",
+                                                set.isActive ? "bg-emerald-500 shadow-emerald-500/40" : "bg-slate-300 dark:bg-slate-600",
                                             ].join(" ")}
                                         />
                                     </button>
                                 );
                             })}
 
-                            <IconButton
-                                label={uiText.newSet}
-                                variant="ghost"
-                                iconSize="md"
-                                className={`${rowIconBtnClass} bg-white text-slate-900 hover:bg-slate-100`}
-                                onClick={() => setIsCreateModalOpen(true)}
-                            >
-                                <Plus className="h-4 w-4" />
-                            </IconButton>
+                            <div className="flex items-center gap-1 ml-4 border-l-2 border-dashed border-border pl-4">
+                                <IconButton
+                                    label={uiText.newSet}
+                                    variant="outline"
+                                    iconSize="md"
+                                    className="h-10 w-10 rounded-full border-2 border-dashed bg-white/50 text-foreground hover:bg-muted"
+                                    onClick={() => setIsCreateModalOpen(true)}
+                                >
+                                    <Plus className="h-4 w-4" />
+                                </IconButton>
 
-                            <IconButton
-                                label={uiText.delete}
-                                variant="ghost"
-                                iconSize="md"
-                                className={rowIconBtnDeleteClass}
-                                disabled={!selectedSet}
-                                onClick={() => selectedSet ? void deleteSet(selectedSet.id) : undefined}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </IconButton>
+                                <IconButton
+                                    label={uiText.delete}
+                                    variant="outline"
+                                    iconSize="md"
+                                    className="h-10 w-10 rounded-full border-2 border-dashed border-red-200 bg-red-50 text-red-500 hover:bg-red-100 dark:border-red-900/30 dark:bg-red-900/10"
+                                    disabled={!selectedSet}
+                                    onClick={() => selectedSet ? void deleteSet(selectedSet.id) : undefined}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </IconButton>
+                            </div>
                         </div>
                     </div>
-                </Card>
+                </div>
 
                 {selectedSet ? (
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         {/* Day Selector Row */}
-                        <Card className="border-none shadow-sm bg-slate-900 text-white overflow-hidden">
-                            <div className="p-2 overflow-x-auto">
-                                <div className="flex items-center gap-1 min-w-max">
-                                    <span className="text-xs font-medium px-2 text-slate-400 mr-2 flex items-center gap-1">
+                        <div className="rounded-[32px] border-2 border-dashed border-border bg-card/60 backdrop-blur-xl p-4 shadow-sm overflow-hidden">
+                            <div className="overflow-x-auto no-scrollbar">
+                                <div className="flex items-center gap-2 min-w-max pb-2">
+                                    <span className="text-xs font-black uppercase tracking-widest px-4 text-muted-foreground/60 flex items-center gap-2 bg-muted/30 rounded-full h-10">
                                         <Calendar className="w-4 h-4" />
-                                        {uiText.days}:
+                                        {uiText.days}
                                     </span>
                                     {dayKeys.map((day) => (
                                         <button
                                             key={day}
                                             onClick={() => setActiveDay(day.toString())}
                                             className={`
-                                                w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-all
+                                                w-10 h-10 rounded-full flex items-center justify-center text-sm font-black transition-all border-2
                                                 ${activeDay === String(day)
-                                                    ? 'bg-primary text-white shadow-lg scale-110'
-                                                    : 'hover:bg-slate-700 text-slate-300'}
+                                                    ? 'bg-primary border-primary text-white shadow-lg scale-110'
+                                                    : 'bg-white/40 dark:bg-muted/40 border-dashed border-border/50 hover:border-primary/40 text-foreground'}
                                             `}
                                         >
                                             {day}
                                         </button>
                                     ))}
-                                    <IconButton
-                                        label={uiText.addDay}
-                                        variant="ghost"
-                                        iconSize="md"
-                                        className={`${rowIconBtnClass} bg-primary text-white hover:bg-primary/90`}
-                                        onClick={() => void (async () => {
-                                            if (!selectedSet) return
-                                            const maxDay = Math.max(...dayKeys.map((d) => Number(d)).filter((n) => Number.isFinite(n) && n > 0))
-                                            const nextDay = maxDay + 1
-                                            if (nextDay > DEFAULT_MAX_DAYS) {
-                                                toast.error(uiText.maxDaysReached(DEFAULT_MAX_DAYS))
-                                                return
-                                            }
+                                    <div className="flex items-center gap-1 ml-4 border-l-2 border-dashed border-border pl-4">
+                                        <IconButton
+                                            label={uiText.addDay}
+                                            variant="outline"
+                                            iconSize="md"
+                                            className="h-10 w-10 rounded-full border-2 border-dashed bg-primary/10 border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
+                                            onClick={() => void (async () => {
+                                                if (!selectedSet) return
+                                                const maxDay = Math.max(...dayKeys.map((d) => Number(d)).filter((n) => Number.isFinite(n) && n > 0))
+                                                const nextDay = maxDay + 1
+                                                if (nextDay > DEFAULT_MAX_DAYS) {
+                                                    toast.error(uiText.maxDaysReached(DEFAULT_MAX_DAYS))
+                                                    return
+                                                }
 
-                                            const baseGroups = getBaseGroups(selectedSet)
-                                            const meta = getMeta(selectedSet)
+                                                const baseGroups = getBaseGroups(selectedSet)
+                                                const meta = getMeta(selectedSet)
 
-                                            const nextDayData =
-                                                buildStandardDayData(nextDay) ??
-                                                (baseGroups[String(maxDay)]
-                                                    ? JSON.parse(JSON.stringify(baseGroups[String(maxDay)]))
-                                                    : CALORIE_OPTIONS.map((cal) => ({ id: String(cal), calories: cal, name: `${cal} kcal`, price: null, dishes: [] })))
+                                                const nextDayData =
+                                                    buildStandardDayData(nextDay) ??
+                                                    (baseGroups[String(maxDay)]
+                                                        ? JSON.parse(JSON.stringify(baseGroups[String(maxDay)]))
+                                                        : CALORIE_OPTIONS.map((cal) => ({ id: String(cal), calories: cal, name: `${cal} kcal`, price: null, dishes: [] })))
 
-                                            const updatedGroups = {
-                                                ...baseGroups,
-                                                [String(nextDay)]: nextDayData,
-                                                _meta: {
-                                                    ...meta,
-                                                    dayOrder: (() => {
-                                                        const existing = Array.isArray(meta.dayOrder) ? meta.dayOrder.map(String) : dayKeys.slice();
-                                                        if (existing.includes(String(nextDay))) return existing;
-                                                        return [...existing, String(nextDay)];
-                                                    })(),
-                                                },
-                                            }
+                                                const updatedGroups = {
+                                                    ...baseGroups,
+                                                    [String(nextDay)]: nextDayData,
+                                                    _meta: {
+                                                        ...meta,
+                                                        dayOrder: (() => {
+                                                            const existing = Array.isArray(meta.dayOrder) ? meta.dayOrder.map(String) : dayKeys.slice();
+                                                            if (existing.includes(String(nextDay))) return existing;
+                                                            return [...existing, String(nextDay)];
+                                                        })(),
+                                                    },
+                                                }
 
-                                            const updatedSet = { ...selectedSet, calorieGroups: updatedGroups }
-                                            setSelectedSet(updatedSet)
-                                            setSets((prev) => prev.map((s) => (s.id === updatedSet.id ? updatedSet : s)))
-                                            setActiveDay(String(nextDay))
-                                            await saveSet(updatedSet)
-                                        })()}
-                                    >
-                                        <Plus className="h-4 w-4" />
-                                    </IconButton>
+                                                const updatedSet = { ...selectedSet, calorieGroups: updatedGroups }
+                                                setSelectedSet(updatedSet)
+                                                setSets((prev) => prev.map((s) => (s.id === updatedSet.id ? updatedSet : s)))
+                                                setActiveDay(String(nextDay))
+                                                await saveSet(updatedSet)
+                                            })()}
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                        </IconButton>
 
-                                    <IconButton
-                                        label={uiText.delete}
-                                        variant="ghost"
-                                        iconSize="md"
-                                        className={rowIconBtnDeleteClass}
-                                        disabled={dayKeys.length <= 1}
-                                        onClick={() => void deleteDay(activeDay)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </IconButton>
+                                        <IconButton
+                                            label={uiText.delete}
+                                            variant="outline"
+                                            iconSize="md"
+                                            className="h-10 w-10 rounded-full border-2 border-dashed border-red-200 bg-red-50 text-red-500 hover:bg-red-100 dark:border-red-900/30 dark:bg-red-900/10"
+                                            disabled={dayKeys.length <= 1}
+                                            onClick={() => void deleteDay(activeDay)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </IconButton>
+                                    </div>
                                 </div>
                             </div>
-                        </Card>
+                        </div>
 
-                            <Card className="min-h-[600px] flex flex-col">
-                                <CardHeader className="border-b border-border bg-muted/30 flex flex-row items-center justify-between py-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary font-bold text-lg">
+                            <Card className="min-h-[600px] flex flex-col rounded-[40px] border-2 border-dashed border-border bg-card shadow-lg overflow-hidden">
+                                <CardHeader className="border-b-2 border-dashed border-border bg-muted/10 flex flex-row items-center justify-between p-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary font-black text-2xl border-2 border-primary/20 shadow-inner">
                                             {activeDay}
                                         </div>
                                         <div>
-                                            <CardTitle>{uiText.dayMenuTitle(activeDay)}</CardTitle>
-                                            <CardDescription className="truncate">{selectedSet.name}</CardDescription>
+                                            <CardTitle className="text-2xl font-black">{uiText.dayMenuTitle(activeDay)}</CardTitle>
+                                            <CardDescription className="font-bold uppercase tracking-widest mt-1 opacity-70 truncate max-w-[200px] sm:max-w-none">{selectedSet.name}</CardDescription>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-3">
                                         {activeDayGroup ? (
                                             <div className="hidden sm:flex items-center gap-2">
-                                                <Badge variant="outline" className="text-[10px] tabular-nums">
+                                                <Badge variant="outline" className="text-xs font-black px-3 py-1 rounded-full border-2 border-dashed tabular-nums">
                                                     {activeDayGroup.calories} kcal
                                                 </Badge>
                                                 {typeof activeDayGroup.price === 'number' && Number.isFinite(activeDayGroup.price) ? (
-                                                    <Badge variant="secondary" className="text-[10px] tabular-nums">
+                                                    <Badge className="text-xs font-black px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 tabular-nums">
                                                         {formatUzs(activeDayGroup.price)} UZS
                                                     </Badge>
                                                 ) : null}

@@ -343,17 +343,25 @@ export function OrdersTab({
 
               <motion.button
                 type="button"
-                whileHover={{ scale: 1.15, y: 5 }}
-                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={onDispatchOpen}
                 disabled={!selectedDate}
-                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
+                className="group relative h-[50px] overflow-hidden rounded-full border-2 border-emerald-400/50 bg-gradient-to-r from-emerald-500 to-teal-400 px-6 shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all duration-300 disabled:opacity-50 hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]"
                 aria-label={dispatchActionLabel}
                 title={dispatchActionLabel}
               >
-                <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                  <DispatchActionIcon className="w-6 h-6 text-foreground dark:text-foreground" />
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 group-hover:opacity-30 transition-opacity" />
+                <div className="relative z-10 flex flex-row items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 backdrop-blur-md shadow-inner">
+                    <DispatchActionIcon className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="font-extrabold text-white tracking-widest uppercase text-sm drop-shadow-md">
+                    {dispatchActionLabel}
+                  </span>
                 </div>
+                {/* Shine effect */}
+                <div className="absolute inset-0 -translate-x-[150%] skew-x-12 bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out" />
               </motion.button>
 
               <motion.button

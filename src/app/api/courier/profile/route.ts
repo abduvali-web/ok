@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
                 name: true,
                 email: true,
                 role: true,
-                phone: true
+                phone: true,
+                salary: true
             }
         })
 
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Пользователь не найден' }, { status: 404 })
         }
 
-        return NextResponse.json(admin)
+        return NextResponse.json({ ...admin, balance: admin.salary ?? 0 })
     } catch (error) {
         console.error('Error fetching profile:', error)
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

@@ -180,22 +180,24 @@ export function AdminsTab({
   }, [language])
 
   const [salaryLedgerByAdminId, setSalaryLedgerByAdminId] = useState<
-    Record<string, { balance: number; paid: number; accrued: number; days: number }>
+    Record<string, { balance: number; paid: number; accrued: number; days: number; withdrawnPeriod: number }>
   >({})
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     const controller = new AbortController()
     const asOf = (selectedPeriod?.to ?? selectedPeriod?.from ?? selectedDate ?? new Date()).toISOString()
+    const from = (selectedPeriod?.from ?? selectedDate ?? new Date()).toISOString()
+    const to = (selectedPeriod?.to ?? selectedDate ?? new Date()).toISOString()
 
-    void fetch(`/api/admin/finance/admin-balances?asOf=${encodeURIComponent(asOf)}`, {
+    void fetch(`/api/admin/finance/admin-balances?asOf=${encodeURIComponent(asOf)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, {
       signal: controller.signal,
     })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (controller.signal.aborted) return
         const rows: any[] = Array.isArray(data?.admins) ? data.admins : []
-        const next: Record<string, { balance: number; paid: number; accrued: number; days: number }> = {}
+        const next: Record<string, { balance: number; paid: number; accrued: number; days: number; withdrawnPeriod: number }> = {}
         for (const row of rows) {
           if (!row || typeof row !== 'object') continue
           const id = (row as any).id
@@ -204,11 +206,13 @@ export function AdminsTab({
           const paid = Number((row as any).paid ?? 0)
           const accrued = Number((row as any).accrued ?? 0)
           const days = Number((row as any).days ?? 0)
+          const withdrawnPeriod = Number((row as any).withdrawnPeriod ?? 0)
           next[id] = {
             balance: Number.isFinite(balance) ? balance : 0,
             paid: Number.isFinite(paid) ? paid : 0,
             accrued: Number.isFinite(accrued) ? accrued : 0,
             days: Number.isFinite(days) ? days : 0,
+            withdrawnPeriod: Number.isFinite(withdrawnPeriod) ? withdrawnPeriod : 0,
           }
         }
         setSalaryLedgerByAdminId(next)
@@ -809,6 +813,7 @@ export function AdminsTab({
                           <TableHead className={cn('w-[130px]', headCell, cellBorder)}>Not Delivered</TableHead>
                           <TableHead className={cn('w-[140px]', headCell, cellBorder)}>{t.common.status}</TableHead>
                           <TableHead className={cn('w-[140px]', headCell, cellBorder)}>{t.finance.salary}</TableHead>
+                          <TableHead className={cn('w-[140px] text-right', headCell, cellBorder)}>Withdrawn</TableHead>
                           <TableHead className={cn('w-[170px] text-right', headCell, cellBorder)}>
                             {profileUiText.balance ?? 'Balance'}
                           </TableHead>
@@ -873,6 +878,11 @@ export function AdminsTab({
                               </TableCell>
                               <TableCell className={cn('font-medium text-foreground', cellBorder)}>
                                 {admin.salary && admin.salary > 0 ? `${salaryFormatter.format(admin.salary)} UZS` : '-'}
+                              </TableCell>
+                              <TableCell className={cn('text-right tabular-nums font-bold text-amber-600', cellBorder)}>
+                                {salaryLedgerByAdminId[admin.id]?.withdrawnPeriod > 0
+                                  ? `${salaryFormatter.format(salaryLedgerByAdminId[admin.id].withdrawnPeriod)} UZS`
+                                  : '-'}
                               </TableCell>
                               <TableCell className={cn('text-right tabular-nums', cellBorder)}>
                                 {salaryLedgerByAdminId[admin.id] ? (
