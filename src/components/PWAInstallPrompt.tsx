@@ -140,14 +140,16 @@ export function PWAInstallPrompt() {
                                 </p>
                             </div>
                         </div>
-                        <button
+                            <Button
                             type="button"
+                            variant="ghost"
+                            size="refIcon"
                             onClick={handleDismiss}
-                            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                             aria-label="Dismiss PWA prompt"
+                            className="text-muted-foreground hover:text-foreground"
                         >
                             <X className="h-4 w-4" />
-                        </button>
+                        </Button>
                     </div>
 
                     {!justInstalled ? (

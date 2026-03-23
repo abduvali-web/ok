@@ -488,8 +488,7 @@ export default function SuperAdminPage() {
           <div className="flex items-center gap-2 sm:gap-3">
             <Button
               variant="outline"
-              size="icon"
-              className="h-9 w-9"
+              size="refIcon"
               onClick={() => loadDashboardData(true)}
               disabled={isRefreshing}
             >
@@ -502,7 +501,7 @@ export default function SuperAdminPage() {
               <DialogTrigger asChild>
                 <Button
                   variant="outline"
-                  className="hidden h-9 md:inline-flex"
+                  className="hidden md:inline-flex"
                 >
                   <User className="mr-2 h-4 w-4" />
                   {adminName}
@@ -687,7 +686,7 @@ export default function SuperAdminPage() {
 
                     <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
                       <DialogTrigger asChild>
-                        <Button className="h-10 rounded-md">
+                        <Button>
                           <Plus className="mr-2 h-4 w-4" />
                           Create
                         </Button>
@@ -1111,7 +1110,7 @@ function StatusFilterButton({
       type="button"
       variant="outline"
       className={cn(
-        'h-9 rounded-md px-3',
+        'px-6',
         active && 'border-primary bg-primary/10 text-primary'
       )}
       onClick={onClick}

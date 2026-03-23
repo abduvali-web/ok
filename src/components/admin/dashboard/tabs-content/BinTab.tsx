@@ -144,30 +144,34 @@ export function BinTab({
           <div className="flex items-center gap-2 md:gap-4 overflow-x-auto lg:overflow-visible py-4 lg:py-6 no-scrollbar">
             {/* Sub-tab toggle */}
             <div className="flex bg-primary/80 rounded-full shadow-xl border-b-4 border-black/20 p-1 flex-shrink-0">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="refSm"
                 onClick={() => setActiveSubTab('orders')}
                 className={cn(
-                  'px-4 md:px-6 py-2 md:py-3 rounded-full font-bold text-xs md:text-sm uppercase tracking-widest transition-all duration-300',
+                  'uppercase tracking-widest',
                   activeSubTab === 'orders'
                     ? 'bg-white/20 text-foreground shadow-lg'
                     : 'text-muted-foreground/60 hover:text-foreground'
                 )}
               >
                 Orders
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
+                size="refSm"
                 onClick={() => setActiveSubTab('clients')}
                 className={cn(
-                  'px-4 md:px-6 py-2 md:py-3 rounded-full font-bold text-xs md:text-sm uppercase tracking-widest transition-all duration-300',
+                  'uppercase tracking-widest',
                   activeSubTab === 'clients'
                     ? 'bg-white/20 text-foreground shadow-lg'
                     : 'text-muted-foreground/60 hover:text-foreground'
                 )}
               >
                 Clients
-              </button>
+              </Button>
             </div>
 
             <div className="flex gap-2 md:gap-4 items-center flex-shrink-0">

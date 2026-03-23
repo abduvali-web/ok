@@ -20,6 +20,7 @@ import {
 } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 export interface CalendarDialogProps {
     isOpen: boolean
@@ -217,33 +218,37 @@ export function CalendarDialog({
                         aria-modal="true"
                         aria-label="Calendar"
                     >
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
+                            size="refIconSm"
                             onClick={onClose}
-                            className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-accent/10 transition-colors duration-150"
+                            className="absolute top-4 right-4"
                             aria-label="Close"
                         >
                             <X className="w-6 h-6 text-foreground" />
-                        </button>
+                        </Button>
 
                         <div className="flex items-center justify-between mb-6 md:mb-8">
-                            <button
+                            <Button
                                 type="button"
+                                variant="ghost"
+                                size="refIconSm"
                                 onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                                className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-accent/10 rounded-full transition-colors duration-150"
                             >
                                 <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
-                            </button>
+                            </Button>
                             <h3 className="text-xl md:text-2xl font-bold text-foreground">
                                 {format(currentMonth, 'MMMM yyyy')}
                             </h3>
-                            <button
+                            <Button
                                 type="button"
+                                variant="ghost"
+                                size="refIconSm"
                                 onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                                className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-accent/10 rounded-full transition-colors duration-150"
                             >
                                 <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
-                            </button>
+                            </Button>
                         </div>
 
                         <div className="grid grid-cols-7 gap-1 md:gap-2 mb-4">
@@ -260,28 +265,16 @@ export function CalendarDialog({
                         <div className="text-base md:text-lg">{renderCalendar()}</div>
 
                         <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-border">
-                            <button
-                                type="button"
-                                onClick={resetDraftRange}
-                                className="text-sm md:text-base font-medium text-foreground hover:text-foreground transition-colors duration-150"
-                            >
+                            <Button type="button" variant="link" size="refSm" onClick={resetDraftRange}>
                                 {uiText.reset}
-                            </button>
+                            </Button>
                             <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full sm:w-auto">
-                                <button
-                                    type="button"
-                                    onClick={onClose}
-                                    className="px-6 md:px-8 py-2 md:py-3 rounded-lg font-medium text-sm md:text-base text-foreground hover:bg-accent/10 transition-all duration-150 border border-border sm:border-none"
-                                >
+                                <Button type="button" variant="outline" size="ref" onClick={onClose}>
                                     {uiText.cancel}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={applyDraftRange}
-                                    className="bg-primary text-primary-foreground px-8 md:px-10 py-2 md:py-3 rounded-lg font-medium text-sm md:text-base shadow-md hover:bg-primary/90 active:scale-95 transition-all duration-150"
-                                >
+                                </Button>
+                                <Button type="button" size="ref" onClick={applyDraftRange}>
                                     {uiText.apply}
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     </motion.div>

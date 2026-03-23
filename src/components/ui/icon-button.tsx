@@ -5,22 +5,16 @@ import * as React from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-const ICON_BUTTON_SIZE = {
-  sm: 'h-8 w-8',
-  md: 'h-9 w-9',
-  lg: 'h-10 w-10',
-} as const
-
 const ICON_BUTTON_INNER_SIZE = {
-  sm: 'h-7 w-7',
-  md: 'h-8 w-8',
-  lg: 'h-9 w-9',
+  sm: 'h-[38px] w-[38px]',
+  md: 'h-[42px] w-[42px]',
+  lg: 'h-[46px] w-[46px]',
 } as const
 
 export type IconButtonProps = Omit<ButtonProps, 'size' | 'children'> & {
   label: string
   children: React.ReactNode
-  iconSize?: keyof typeof ICON_BUTTON_SIZE
+  iconSize?: keyof typeof ICON_BUTTON_INNER_SIZE
 }
 
 type ButtonProps = React.ComponentProps<typeof Button>
@@ -34,14 +28,12 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
   return (
     <Button
       ref={ref}
-      size="icon"
+      size="refIcon"
       variant={effectiveVariant}
       aria-label={label}
       title={label}
       className={cn(
-        ICON_BUTTON_SIZE[iconSize],
-        'rounded-full p-1',
-        'hover:scale-[1.08]',
+        'p-1',
         className
       )}
       {...props}

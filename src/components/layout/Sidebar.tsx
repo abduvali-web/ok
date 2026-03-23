@@ -123,7 +123,7 @@ export function Sidebar({
 
             <Button
               variant="ghost"
-              size="icon"
+              size="refIcon"
               className="text-muted-foreground/50 hover:text-foreground hover:bg-black/5 dark:text-white/70 dark:hover:text-white dark:hover:bg-white/10 rounded-xl"
               onClick={onClose}
             >
@@ -204,7 +204,7 @@ export function Sidebar({
                           {warehouseSubItems.map((sub) => {
                             const SubIcon = sub.icon
                             return (
-                              <button
+                              <Button
                                 key={sub.id}
                                 type="button"
                                 onClick={() => {
@@ -219,11 +219,13 @@ export function Sidebar({
                                   onTabChange('warehouse')
                                   onClose()
                                 }}
-                                className="w-full flex items-center gap-2 rounded-2xl px-3 py-2 text-left text-xs font-black uppercase tracking-widest transition-colors hover:bg-primary/10"
+                                variant="ghost"
+                                size="refSm"
+                                className="w-full justify-start gap-2 rounded-2xl text-left text-xs uppercase tracking-widest hover:bg-primary/10"
                               >
                                 <SubIcon className="h-4 w-4 opacity-70" />
                                 <span className="truncate">{sub.label}</span>
-                              </button>
+                              </Button>
                             )
                           })}
                         </div>
@@ -236,7 +238,7 @@ export function Sidebar({
                           {adminSubItems.map((sub) => {
                             const SubIcon = sub.icon
                             return (
-                              <button
+                              <Button
                                 key={sub.id}
                                 type="button"
                                 onClick={() => {
@@ -245,11 +247,13 @@ export function Sidebar({
                                   if (sub.id === 'settings') openModalParam('settings')
                                   onClose()
                                 }}
-                                className="w-full flex items-center gap-2 rounded-2xl px-3 py-2 text-left text-xs font-black uppercase tracking-widest transition-colors hover:bg-primary/10"
+                                variant="ghost"
+                                size="refSm"
+                                className="w-full justify-start gap-2 rounded-2xl text-left text-xs uppercase tracking-widest hover:bg-primary/10"
                               >
                                 <SubIcon className="h-4 w-4 opacity-70" />
                                 <span className="truncate">{sub.label}</span>
-                              </button>
+                              </Button>
                             )
                           })}
                         </div>

@@ -927,9 +927,9 @@ export default function CourierPage() {
             <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="relative bg-card rounded-[32px] shadow-2xl border-2 border-border p-8 z-[1000] w-full max-w-[400px] mx-auto"
             >
-              <button type="button" onClick={() => setIsWithdrawOpen(false)} className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
+              <Button type="button" variant="ghost" size="refIconSm" onClick={() => setIsWithdrawOpen(false)} className="absolute top-4 right-4">
                 <X className="w-5 h-5 text-foreground" />
-              </button>
+              </Button>
               <h3 className="text-2xl font-black text-foreground mb-1">{uiText.withdrawFunds}</h3>
               <p className="text-sm text-muted-foreground font-medium mb-6">{uiText.balance}: <strong className="text-foreground">{courierBalance.toLocaleString()} UZS</strong></p>
               <div className="space-y-4">

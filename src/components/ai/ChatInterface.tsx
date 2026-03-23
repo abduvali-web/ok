@@ -189,7 +189,7 @@ export function AIChatInterface({ adminId, websiteId, onTaskExecute }: AIChatInt
           >
             <Button
               onClick={() => setIsOpen(true)}
-              size="icon"
+              size="refIcon"
               className="h-14 w-14 rounded-full shadow-[0_20px_45px_-24px_rgba(0,0,0,0.65)]"
             >
               <Sparkles className="h-6 w-6" />
@@ -219,7 +219,7 @@ export function AIChatInterface({ adminId, websiteId, onTaskExecute }: AIChatInt
                   </div>
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="refIcon"
                     onClick={() => setIsOpen(false)}
                     className="h-8 w-8 rounded-full text-slate-200 hover:bg-white/10 hover:text-white"
                   >

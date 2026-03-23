@@ -155,14 +155,16 @@ function SortableOrderItem({
       style={style}
       className={`flex items-start gap-2 rounded-md border bg-background p-2 ${isDragging ? 'opacity-70' : ''}`}
     >
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="refIconSm"
         className="mt-1 cursor-grab text-muted-foreground/70 hover:text-muted-foreground active:cursor-grabbing"
         {...attributes}
         {...listeners}
       >
         <GripVertical className="w-4 h-4" />
-      </button>
+      </Button>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">

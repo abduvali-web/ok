@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { SearchPanel } from '@/components/ui/search-panel'
@@ -361,7 +361,7 @@ export function ChatUnifiedTab() {
               aria-label={ui?.chat?.newConversation ?? 'New conversation'}
               title={ui?.chat?.newConversation ?? 'New conversation'}
               variant="outline"
-              size="icon"
+              size="refIcon"
               className="h-9 w-9"
               onClick={() => {
                 setShowUserList((prev) => !prev)
@@ -399,29 +399,28 @@ export function ChatUnifiedTab() {
                 </div>
               ) : (
                 filteredUsers.map((user) => (
-                  <div
+                  <button
                     key={user.id}
-                    className="flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left"
+                    type="button"
+                    onClick={() => (user.id === TAMBO_AI_AGENT.id ? selectAiAgent(user) : void startConversation(user.id))}
+                    className={cn(
+                      buttonVariants({ variant: 'ghost', size: 'ref' }),
+                      'w-full min-w-0 justify-start gap-3 border-b border-border/50 px-4 text-left transition-colors hover:text-foreground'
+                    )}
                   >
-                    <button
-                      type="button"
-                      onClick={() => (user.id === TAMBO_AI_AGENT.id ? selectAiAgent(user) : void startConversation(user.id))}
-                      className="flex min-w-0 flex-1 items-center gap-3 text-left transition-colors hover:text-foreground"
-                    >
-                      <Avatar>
-                        <AvatarFallback>{user.id === TAMBO_AI_AGENT.id ? 'AI' : user.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate font-medium">{user.name}</div>
-                        <div className="truncate text-xs text-muted-foreground">
-                          {user.id === TAMBO_AI_AGENT.id ? (ui?.chat?.aiHint ?? 'AI agent via Tambo') : user.email}
-                        </div>
+                    <Avatar>
+                      <AvatarFallback>{user.id === TAMBO_AI_AGENT.id ? 'AI' : user.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-medium">{user.name}</div>
+                      <div className="truncate text-xs text-muted-foreground">
+                        {user.id === TAMBO_AI_AGENT.id ? (ui?.chat?.aiHint ?? 'AI agent via Tambo') : user.email}
                       </div>
-                      <Badge className={cn(getRoleColor(user.role), 'shrink-0 max-w-[140px] truncate')}>
-                        {getRoleLabel(user.role)}
-                      </Badge>
-                    </button>
-                  </div>
+                    </div>
+                    <Badge className={cn(getRoleColor(user.role), 'shrink-0 max-w-[140px] truncate')}>
+                      {getRoleLabel(user.role)}
+                    </Badge>
+                  </button>
                 ))
               )}
             </div>
@@ -432,7 +431,8 @@ export function ChatUnifiedTab() {
                   type="button"
                   onClick={() => selectAiAgent(selectedAiAgent!)}
                   className={cn(
-                    'flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors hover:bg-muted/40',
+                    buttonVariants({ variant: 'ghost', size: 'ref' }),
+                    'w-full justify-start gap-3 border-b border-border/50 px-4 text-left transition-colors hover:bg-muted/40',
                     selectedThread?.kind === 'ai' ? 'bg-muted/50' : ''
                   )}
                 >
@@ -462,7 +462,8 @@ export function ChatUnifiedTab() {
                     type="button"
                     onClick={() => selectConversation(conversation.id)}
                     className={cn(
-                      'flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors hover:bg-muted/40',
+                      buttonVariants({ variant: 'ghost', size: 'ref' }),
+                      'w-full justify-start gap-3 border-b border-border/50 px-4 text-left transition-colors hover:bg-muted/40',
                       selectedConversationId === conversation.id ? 'bg-muted/50' : ''
                     )}
                   >
@@ -509,7 +510,7 @@ export function ChatUnifiedTab() {
                     aria-label={ui?.chat?.newConversation ?? 'Select people'}
                     title={ui?.chat?.newConversation ?? 'Select people'}
                     variant="outline"
-                    size="icon"
+                    size="refIcon"
                     className="h-9 w-9"
                     onClick={() => {
                       setShowUserList(true)
@@ -546,7 +547,7 @@ export function ChatUnifiedTab() {
                     aria-label={ui?.chat?.newConversation ?? 'Select people'}
                     title={ui?.chat?.newConversation ?? 'Select people'}
                     variant="outline"
-                    size="icon"
+                    size="refIcon"
                     className="h-9 w-9"
                     onClick={() => {
                       setShowUserList(true)
@@ -600,7 +601,7 @@ export function ChatUnifiedTab() {
                   placeholder={ui?.chat?.writeMessage ?? 'Write a message...'}
                   className="flex-1"
                 />
-                <Button onClick={() => void sendMessage()} disabled={!newMessage.trim()} size="icon">
+                <Button onClick={() => void sendMessage()} disabled={!newMessage.trim()} size="refIcon">
                   <Send className="h-4 w-4" />
                 </Button>
               </div>

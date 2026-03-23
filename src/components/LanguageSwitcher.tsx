@@ -20,13 +20,13 @@ export function LanguageSwitcher() {
     const current = LANGUAGES.find((l) => l.code === language) ?? LANGUAGES[0]
 
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 gap-2 rounded-full px-3 text-xs">
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="refSm" className="gap-2">
                     <span className="font-semibold">{current.short}</span>
                     <span className="hidden sm:inline text-muted-foreground">{current.label}</span>
                 </Button>
-            </DropdownMenuTrigger>
+                </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-36">
                 {LANGUAGES.map(({ code, label, short }) => (
                     <DropdownMenuItem
@@ -59,7 +59,8 @@ export function LanguageSwitcherCompact({
         <Button
             type="button"
             variant="ghost"
-            className={cn('rounded-full p-0', className)}
+            size="refIcon"
+            className={cn('p-0', className)}
             aria-label={`Language: ${current.label}. Switch to ${next.label}`}
             title={`Switch language to ${next.label}`}
             onClick={() => setLanguage(nextLanguage)}

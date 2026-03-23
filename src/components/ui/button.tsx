@@ -9,20 +9,25 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        success: "bg-success text-white hover:bg-success/90",
-        warning: "bg-warning text-white hover:bg-warning/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        default: "!bg-primary !text-primary-foreground !shadow-xl shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30",
+        success: "!bg-success !text-white !shadow-xl shadow-black/10 hover:bg-success/90",
+        warning: "!bg-warning !text-white !shadow-xl shadow-black/10 hover:bg-warning/90",
+        destructive: "!bg-destructive !text-destructive-foreground !shadow-xl shadow-black/10 hover:bg-destructive/90",
+        outline: "!border !border-input !bg-background !shadow-xl shadow-black/5 hover:bg-accent hover:text-accent-foreground",
+        secondary: "!bg-secondary !text-secondary-foreground !shadow-xl shadow-black/5 hover:bg-secondary/80",
+        ghost: "shadow-none hover:bg-accent hover:text-accent-foreground",
+        link: "shadow-none text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2",
         sm: "h-8 px-3 text-[13px]",
         lg: "h-11 px-6 text-base",
         icon: "size-9",
+        ref: "!h-[50px] !px-8 md:!px-10 !rounded-full !text-sm md:!text-base !font-bold !transition-all !duration-300 hover:!scale-105 active:!scale-95",
+        refSm: "!h-10 !px-6 !rounded-full !text-[13px] md:!text-sm !font-bold !transition-all !duration-300 hover:!scale-105 active:!scale-95",
+        refLg: "!h-14 !px-12 !rounded-full !text-base md:!text-lg !font-bold !transition-all !duration-300 hover:!scale-105 active:!scale-95",
+        refIcon: "!h-[50px] !w-[50px] !p-0 !rounded-full !transition-all !duration-300 hover:!scale-105 active:!scale-95",
+        refIconSm: "!h-10 !w-10 !p-0 !rounded-full !transition-all !duration-300 hover:!scale-105 active:!scale-95",
       },
     },
     defaultVariants: {
@@ -35,7 +40,7 @@ const buttonVariants = cva(
 function Button({
   className,
   variant,
-  size,
+  size = "ref",
   asChild = false,
   ...props
 }: React.ComponentProps<"button"> &

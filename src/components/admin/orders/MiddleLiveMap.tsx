@@ -631,9 +631,9 @@ export default function MiddleLiveMap({
                   <div className="space-y-2 text-xs">
                     <label className="block">Lat<input className="mt-1 w-full rounded border px-2 py-1" value={warehouseDraft.lat} onChange={(e) => setWarehouseDraft((p) => ({ ...p, lat: e.target.value }))} /></label>
                     <label className="block">Lng<input className="mt-1 w-full rounded border px-2 py-1" value={warehouseDraft.lng} onChange={(e) => setWarehouseDraft((p) => ({ ...p, lng: e.target.value }))} /></label>
-                    <button type="button" className="w-full rounded bg-slate-900 px-2 py-1.5 font-semibold text-white disabled:opacity-60" onClick={() => void saveWarehouse()} disabled={savingEntityId === 'warehouse'}>
-                      {savingEntityId === 'warehouse' ? 'Saving...' : 'Save warehouse'}
-                    </button>
+                      <Button type="button" size="refSm" className="w-full" onClick={() => void saveWarehouse()} disabled={savingEntityId === 'warehouse'}>
+                        {savingEntityId === 'warehouse' ? 'Saving...' : 'Save warehouse'}
+                      </Button>
                   </div>
                 </Popup>
               </Marker>
@@ -660,9 +660,9 @@ export default function MiddleLiveMap({
                         <label>Lat<input className="mt-1 w-full rounded border px-2 py-1" value={draft.lat} onChange={(e) => setOrderDraftField(order, 'lat', e.target.value)} /></label>
                         <label>Lng<input className="mt-1 w-full rounded border px-2 py-1" value={draft.lng} onChange={(e) => setOrderDraftField(order, 'lng', e.target.value)} /></label>
                       </div>
-                      <button type="button" className="w-full rounded bg-slate-900 px-2 py-1.5 font-semibold text-white disabled:opacity-60" onClick={() => void saveOrder(order.id)} disabled={savingEntityId === `order-${order.id}`}>
+                      <Button type="button" size="refSm" className="w-full" onClick={() => void saveOrder(order.id)} disabled={savingEntityId === `order-${order.id}`}>
                         {savingEntityId === `order-${order.id}` ? 'Saving...' : 'Save order'}
-                      </button>
+                      </Button>
                     </div>
                   </Popup>
                 </CircleMarker>
@@ -684,9 +684,9 @@ export default function MiddleLiveMap({
                         <label>Lng<input className="mt-1 w-full rounded border px-2 py-1" value={draft.lng} onChange={(e) => setCourierDraftField(courier, 'lng', e.target.value)} /></label>
                       </div>
                       {state && <div className={`rounded border px-2 py-1 text-[11px] ${offRoute ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>{offRoute ? `Route deviation: ${Math.round(state.deviationMeters)} m` : 'Courier is within planned route'}</div>}
-                      <button type="button" className="w-full rounded bg-slate-900 px-2 py-1.5 font-semibold text-white disabled:opacity-60" onClick={() => void saveCourier(courier.id)} disabled={savingEntityId === `courier-${courier.id}`}>
+                      <Button type="button" size="refSm" className="w-full" onClick={() => void saveCourier(courier.id)} disabled={savingEntityId === `courier-${courier.id}`}>
                         {savingEntityId === `courier-${courier.id}` ? 'Saving...' : 'Save courier'}
-                      </button>
+                      </Button>
                     </div>
                   </Popup>
                 </Marker>

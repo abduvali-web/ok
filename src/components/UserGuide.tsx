@@ -27,7 +27,7 @@ export function UserGuide({ guides, title = "Yo'riqnoma" }: UserGuideProps) {
         <>
             <Button
                 variant="outline"
-                size="sm"
+                size="refSm"
                 onClick={() => setIsOpen(true)}
                 className="gap-2"
             >
@@ -56,7 +56,7 @@ export function UserGuide({ guides, title = "Yo'riqnoma" }: UserGuideProps) {
                                 >
                                     <Button
                                         variant="ghost"
-                                        size="sm"
+                                        size="refSm"
                                         onClick={() => setSelectedGuide(null)}
                                         className="gap-2"
                                     >

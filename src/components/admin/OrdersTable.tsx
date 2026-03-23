@@ -162,7 +162,7 @@ export function OrdersTable({
                             <TableCell className={cn('text-right pr-10', cellBorder)}>
                                 <Button
                                     variant="ghost"
-                                    size="icon"
+                                    size="refIcon"
                                     onClick={() => onEditOrder?.(order)}
                                     className="hover:bg-muted/20 dark:hover:bg-muted/40 rounded-full transition-colors"
                                 >

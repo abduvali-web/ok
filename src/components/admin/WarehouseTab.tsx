@@ -769,33 +769,39 @@ export function WarehouseTab({ className, initialSubTab = 'cooking' }: Warehouse
                             aria-modal="true"
                             aria-label="Calendar"
                         >
-                            <button
+                            <Button
                                 type="button"
+                                variant="ghost"
+                                size="refIconSm"
                                 onClick={closeDatePicker}
-                                className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted dark:hover:bg-muted transition-colors"
+                                className="absolute top-4 right-4 hover:bg-muted"
                                 aria-label="Close"
                             >
                                 <X className="w-6 h-6 text-foreground dark:text-foreground" />
-                            </button>
+                            </Button>
 
                             <div className="flex items-center justify-between mb-6 md:mb-8">
-                                <button
+                                <Button
                                     type="button"
+                                    variant="ghost"
+                                    size="refIconSm"
                                     onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-muted dark:hover:bg-muted rounded-full transition-colors"
+                                    className="hover:bg-muted"
                                 >
                                     <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-foreground dark:text-foreground" />
-                                </button>
+                                </Button>
                                 <h3 className="text-xl md:text-2xl font-black text-foreground dark:text-foreground">
                                     {format(currentMonth, 'MMMM yyyy')}
                                 </h3>
-                                <button
+                                <Button
                                     type="button"
+                                    variant="ghost"
+                                    size="refIconSm"
                                     onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-muted dark:hover:bg-muted rounded-full transition-colors"
+                                    className="hover:bg-muted"
                                 >
                                     <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-foreground dark:text-foreground" />
-                                </button>
+                                </Button>
                             </div>
 
                             <div className="grid grid-cols-7 gap-1 md:gap-2 mb-4">
@@ -812,28 +818,16 @@ export function WarehouseTab({ className, initialSubTab = 'cooking' }: Warehouse
                             <div className="text-base md:text-lg">{renderCalendar()}</div>
 
                             <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-dashed border-border">
-                                <button
-                                    type="button"
-                                    onClick={resetDraftRange}
-                                    className="text-sm md:text-base font-bold text-foreground dark:text-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
-                                >
+                                <Button type="button" variant="link" size="refSm" onClick={resetDraftRange}>
                                     Reset
-                                </button>
+                                </Button>
                                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full sm:w-auto">
-                                    <button
-                                        type="button"
-                                        onClick={closeDatePicker}
-                                        className="px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-sm md:text-base text-foreground dark:text-foreground hover:bg-muted dark:hover:bg-muted transition-all border border-border sm:border-none"
-                                    >
+                                    <Button type="button" variant="outline" size="ref" onClick={closeDatePicker} className="hover:bg-muted">
                                         Cancel
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={applyDraftRange}
-                                        className="bg-primary dark:bg-primary text-foreground dark:text-foreground px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all transition-colors duration-300"
-                                    >
+                                    </Button>
+                                    <Button type="button" size="ref" onClick={applyDraftRange}>
                                         Apply
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         </motion.div>

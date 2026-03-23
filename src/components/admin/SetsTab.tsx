@@ -1265,14 +1265,16 @@ export function SetsTab() {
                             {visibleSets.map((set) => {
                                 const isSelected = selectedSet?.id === set.id;
                                 return (
-                                    <button
+                                    <Button
                                         key={set.id}
                                         type="button"
                                         onClick={() => setSelectedSet(set)}
-                                        className={[
-                                            "h-10 min-w-[140px] max-w-[220px] px-4 rounded-full flex items-center justify-between gap-3 transition-all border-2",
-                                            isSelected ? "bg-primary border-primary text-white shadow-lg scale-105 font-bold" : "bg-white/40 dark:bg-muted/40 border-dashed border-border/50 hover:border-primary/40 hover:bg-muted/60 font-medium text-foreground",
-                                        ].join(" ")}
+                                        size="refSm"
+                                        variant={isSelected ? "default" : "ghost"}
+                                        className={cn(
+                                            "min-w-[140px] max-w-[220px] justify-between gap-3 !border-2",
+                                            isSelected ? "border-primary text-white shadow-lg scale-105" : "bg-white/40 dark:bg-muted/40 border-dashed border-border/50 hover:border-primary/40 hover:bg-muted/60 text-foreground",
+                                        )}
                                         title={set.name}
                                     >
                                         <span className="truncate text-sm flex-1 text-left">{set.name}</span>
@@ -1282,7 +1284,7 @@ export function SetsTab() {
                                                 set.isActive ? "bg-emerald-500 shadow-emerald-500/40" : "bg-slate-300 dark:bg-slate-600",
                                             ].join(" ")}
                                         />
-                                    </button>
+                                    </Button>
                                 );
                             })}
 
@@ -1387,17 +1389,19 @@ export function SetsTab() {
                             <CardContent className="p-4">
                                 <div className="grid grid-cols-6 sm:grid-cols-8 xl:grid-cols-2 gap-2">
                                     {dayKeys.map((day) => (
-                                        <button
+                                        <Button
                                             key={day}
                                             type="button"
                                             onClick={() => setActiveDay(day.toString())}
+                                            size="refIcon"
+                                            variant={activeDay === String(day) ? "default" : "ghost"}
                                             className={cn(
-                                                'h-[50px] rounded-full flex items-center justify-center text-sm font-black transition-all border-2 border-dashed border-border/60 bg-white/40 dark:bg-muted/40 hover:border-primary/40',
-                                                activeDay === String(day) ? 'bg-primary border-primary text-white shadow-lg scale-[1.02]' : 'text-foreground'
+                                                '!border-2 border-dashed border-border/60 bg-white/40 dark:bg-muted/40 hover:border-primary/40 text-sm font-black',
+                                                activeDay === String(day) ? 'border-primary text-white shadow-lg scale-[1.02]' : 'text-foreground'
                                             )}
                                         >
                                             {day}
-                                        </button>
+                                        </Button>
                                     ))}
                                 </div>
                             </CardContent>
@@ -1774,21 +1778,22 @@ export function SetsTab() {
                                                 .map((d) => {
                                                     const isSelected = String((d as any).id) === selectedDishToAdd;
                                                     return (
-                                                        <button
+                                                        <Button
                                                             key={String((d as any).id)}
                                                             type="button"
                                                             onClick={() => selectDishForAdd(d)}
-                                                            className={[
-                                                                'w-full text-left rounded-md px-2 py-2 flex items-center justify-between gap-2',
-                                                                'hover:bg-muted/60 transition-colors',
-                                                                isSelected ? 'bg-muted' : '',
-                                                            ].join(' ')}
+                                                            variant="ghost"
+                                                            size="refSm"
+                                                            className={cn(
+                                                                'w-full justify-between gap-2 text-left hover:bg-muted/60',
+                                                                isSelected && 'bg-muted'
+                                                            )}
                                                         >
                                                             <span className="truncate">{String((d as any).name || '')}</span>
                                                             {isSelected ? (
                                                                 <Badge variant="secondary" className="text-[10px] shrink-0">Selected</Badge>
                                                             ) : null}
-                                                        </button>
+                                                        </Button>
                                                     );
                                                 })}
                                             {availableDishes.filter((d) => normalizeName(String((d as any).name || '')).includes(normalizeName(mealNameToAdd))).length === 0 ? (

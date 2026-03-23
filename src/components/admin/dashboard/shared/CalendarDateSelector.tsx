@@ -73,7 +73,7 @@ export function CalendarDateSelector({
           <Button
             type="button"
             variant="outline"
-            size="icon"
+            size="refIcon"
             className="h-9 w-9"
             onClick={() => shiftSelectedDate(-1)}
             title={profileUiText.yesterday}
@@ -83,7 +83,7 @@ export function CalendarDateSelector({
           <Button
             type="button"
             variant="outline"
-            size="icon"
+            size="refIcon"
             className="h-9 w-9"
             onClick={() => shiftSelectedDate(1)}
             title={profileUiText.tomorrow}

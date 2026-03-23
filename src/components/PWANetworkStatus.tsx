@@ -83,9 +83,8 @@ export function PWANetworkStatus() {
 
             {isError ? (
               <Button
-                size="sm"
+                size="refSm"
                 variant="secondary"
-                className="h-7 px-2 text-xs"
                 onClick={() => window.location.reload()}
               >
                 {t.retry}
@@ -97,4 +96,3 @@ export function PWANetworkStatus() {
     </AnimatePresence>
   )
 }
-

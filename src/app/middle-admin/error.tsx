@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { AlertTriangle, RotateCcw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export default function Error({
   error,
@@ -39,14 +40,16 @@ export default function Error({
             </p>
           </div>
 
-          <button
+          <Button
+            type="button"
             onClick={reset}
-            className="w-[50px] h-[50px] bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 hover:scale-110"
+            size="refIcon"
+            className="border-b-4 border-black/20 hover:scale-110"
           >
             <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
               <RotateCcw className="w-6 h-6 text-foreground" />
             </div>
-          </button>
+          </Button>
 
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">
             Click to retry

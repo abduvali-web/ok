@@ -65,19 +65,19 @@ export function SiteContent({ content, subdomain, siteName, styleVariant = 'orga
             className="flex items-center gap-2 rounded-lg border px-2 py-1"
             style={{ borderColor: 'var(--site-border)', backgroundColor: 'color-mix(in srgb, var(--site-panel) 96%, white)' }}
           >
-            {(['uz', 'ru', 'en'] as const).map((language) => (
-              <Button
-                key={language}
-                variant={lang === language ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setLang(language)}
-                className="h-8 rounded-md px-3 uppercase"
-              >
-                {language}
-              </Button>
-            ))}
-          </div>
-        }
+              {(['uz', 'ru', 'en'] as const).map((language) => (
+                <Button
+                  key={language}
+                  variant={lang === language ? 'default' : 'ghost'}
+                  size="refSm"
+                  onClick={() => setLang(language)}
+                  className="uppercase"
+                >
+                  {language}
+                </Button>
+              ))}
+            </div>
+          }
       />
 
       <SiteHero
@@ -89,19 +89,19 @@ export function SiteContent({ content, subdomain, siteName, styleVariant = 'orga
         actions={
           <>
             <Link href={href('/client')}>
-              <Button size="lg" className="px-7">
+              <Button size="refLg">
                 {t(content.hero.cta)}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <Link href={href('/login')}>
-              <Button size="lg" variant="outline" className="px-6">
+              <Button size="refLg" variant="outline">
                 <LogIn className="h-4 w-4" />
                 Login
               </Button>
             </Link>
             <Link href={href('/register')}>
-              <Button size="lg" variant="outline" className="px-6">
+              <Button size="refLg" variant="outline">
                 <UserPlus className="h-4 w-4" />
                 Register
               </Button>

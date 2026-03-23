@@ -132,18 +132,18 @@ export function CalendarRangeSelector({
         />
         <div className="flex flex-wrap items-center justify-between gap-2 border-t px-3 py-2">
           <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" size="sm" variant="outline" className="h-8" onClick={applyToday}>
+            <Button type="button" size="refSm" variant="outline" onClick={applyToday}>
               {uiText.today}
             </Button>
-            <Button type="button" size="sm" variant="outline" className="h-8" onClick={applyWeek}>
+            <Button type="button" size="refSm" variant="outline" onClick={applyWeek}>
               {uiText.thisWeek}
             </Button>
-            <Button type="button" size="sm" variant="outline" className="h-8" onClick={applyMonth}>
+            <Button type="button" size="refSm" variant="outline" onClick={applyMonth}>
               {uiText.thisMonth}
             </Button>
           </div>
           {hasRange ? (
-            <Button type="button" size="sm" variant="ghost" className="h-8" onClick={() => onChange(undefined)}>
+            <Button type="button" size="refSm" variant="ghost" onClick={() => onChange(undefined)}>
               {uiText.clearRange}
             </Button>
           ) : (

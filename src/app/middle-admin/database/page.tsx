@@ -1410,58 +1410,62 @@ export default function DatabasePage() {
                 }}
               />
 
-              <button
+              <Button
                 type="button"
+                size="refIcon"
                 onClick={() => void loadSnapshot(true)}
                 disabled={isRefreshing}
-                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
+                className="border-b-4 border-black/20"
                 aria-label={uiText.refresh}
                 title={uiText.refresh}
               >
                 <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
                   <RefreshCw className={`w-5 h-5 text-foreground dark:text-foreground ${isRefreshing ? 'animate-spin' : ''}`} />
                 </div>
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                size="refIcon"
                 onClick={handleDownloadUnifiedSnapshotClick}
-                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
+                className="border-b-4 border-black/20"
                 aria-label={uiText.downloadAllSheets}
                 title={uiText.downloadAllSheets}
               >
                 <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
                   <Download className="w-5 h-5 text-foreground dark:text-foreground" />
                 </div>
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                size="refIcon"
                 onClick={handleImportAllSheetsClick}
                 disabled={isImportingAllSheets}
-                className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
+                className="border-b-4 border-black/20"
                 aria-label={isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}
                 title={isImportingAllSheets ? uiText.importingAllSheets : uiText.importAllSheets}
               >
                 <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
                   {isImportingAllSheets ? <Loader2 className="w-5 h-5 text-foreground dark:text-foreground animate-spin" /> : <Upload className="w-5 h-5 text-foreground dark:text-foreground" />}
                 </div>
-              </button>
+              </Button>
 
               <LanguageSwitcher />
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button
+                  <Button
                     type="button"
-                    className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300"
+                    size="refIcon"
+                    className="border-b-4 border-black/20"
                     aria-label="Profile"
                     title="Profile"
                   >
                     <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
                       <CircleUser className="w-5 h-5 text-foreground dark:text-foreground" />
                     </div>
-                  </button>
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-[240px] rounded-3xl border-none shadow-2xl p-2 bg-white/90 backdrop-blur-3xl animate-in fade-in zoom-in-95">
                   <DropdownMenuItem onSelect={() => setIsChatOpen(true)} className="h-12 rounded-2xl gap-3 font-bold hover:bg-primary/10 cursor-pointer">
@@ -1558,9 +1562,10 @@ export default function DatabasePage() {
                       <div className="text-xs tabular-nums text-muted-foreground">
                         {filteredRows.length} / {table.rowCount} {uiText.rowsCount}
                       </div>
-                      <button
+                      <Button
                         type="button"
-                        className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300"
+                        size="refIcon"
+                        className="border-b-4 border-black/20"
                         title={uiText.downloadSheet}
                         aria-label={uiText.downloadSheet}
                         onClick={handleDownloadCurrentTableClick}
@@ -1568,10 +1573,11 @@ export default function DatabasePage() {
                         <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
                           <Download className="w-5 h-5 text-foreground dark:text-foreground" />
                         </div>
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className="w-[50px] h-[50px] bg-primary dark:bg-primary rounded-full shadow-xl flex items-center justify-center border-b-4 border-black/20 group transition-colors duration-300 disabled:opacity-50"
+                        size="refIcon"
+                        className="border-b-4 border-black/20"
                         title={isImportingSheet ? uiText.importingSheet : uiText.importSheet}
                         aria-label={isImportingSheet ? uiText.importingSheet : uiText.importSheet}
                         onClick={() => handleImportSheetClick(table.id)}
@@ -1580,7 +1586,7 @@ export default function DatabasePage() {
                         <div className="w-[42px] h-[42px] rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
                           {isImportingSheet ? <Loader2 className="w-5 h-5 text-foreground dark:text-foreground animate-spin" /> : <Upload className="w-5 h-5 text-foreground dark:text-foreground" />}
                         </div>
-                      </button>
+                      </Button>
                     </div>
                   </div>
 

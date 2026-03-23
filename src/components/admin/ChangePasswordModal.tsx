@@ -106,9 +106,9 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
             <DialogContent className="max-w-md rounded-[40px] border-none bg-white/90 backdrop-blur-3xl p-0 overflow-hidden shadow-2xl transition-all duration-500">
                 <div className="relative p-10">
                     <div className="absolute top-6 right-6">
-                        <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 transition-colors">
+                        <Button type="button" variant="ghost" size="refIconSm" onClick={onClose} className="hover:bg-slate-100">
                             <X className="w-5 h-5 text-slate-400" />
-                        </button>
+                        </Button>
                     </div>
 
                     <DialogHeader className="mb-8">

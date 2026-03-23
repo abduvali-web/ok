@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Loader2, MessageSquarePlus, Send, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { getJsonFromLocalStorage } from '@/lib/browser-storage'
 import { SearchPanel } from '@/components/ui/search-panel'
+import { cn } from '@/lib/utils'
 
 interface User {
   id: string
@@ -267,7 +268,7 @@ export function ChatTab() {
               <CardTitle className="text-lg">Team chat</CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">Direct communication across admin and courier roles.</p>
             </div>
-            <Button size="sm" variant="outline" className="rounded-full" onClick={() => setShowUserList((prev) => !prev)}>
+            <Button size="refSm" variant="outline" onClick={() => setShowUserList((prev) => !prev)}>
               <MessageSquarePlus className="h-4 w-4" />
               New
             </Button>
@@ -296,7 +297,10 @@ export function ChatTab() {
                   <button
                     key={user.id}
                     onClick={() => void startConversation(user.id)}
-                    className="flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+                    className={cn(
+                      buttonVariants({ variant: 'ghost', size: 'ref' }),
+                      'w-full min-w-0 justify-start gap-3 border-b border-border/50 px-4 text-left transition-colors hover:bg-muted/40'
+                    )}
                   >
                     <Avatar>
                       <AvatarFallback>{user.name[0]}</AvatarFallback>
@@ -322,9 +326,11 @@ export function ChatTab() {
                       setSelectedConversation(conversation.id)
                       void fetchMessages(conversation.id)
                     }}
-                    className={`flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors hover:bg-muted/40 ${
-                      selectedConversation === conversation.id ? 'bg-muted/50' : ''
-                    }`}
+                    className={cn(
+                      buttonVariants({ variant: 'ghost', size: 'ref' }),
+                      'w-full min-w-0 justify-start gap-3 border-b border-border/50 px-4 text-left transition-colors hover:bg-muted/40',
+                      selectedConversation === conversation.id && 'bg-muted/50'
+                    )}
                   >
                     <Avatar>
                       <AvatarFallback>{conversation.otherParticipant.name[0]}</AvatarFallback>

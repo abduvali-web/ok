@@ -8,7 +8,7 @@ import {
   X,
 } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { cn } from '@/lib/utils'
 import { DASHBOARD_TAB_META, DASHBOARD_TAB_ORDER, getDashboardTabLabels } from '@/components/admin/dashboard/tabMeta'
@@ -124,9 +124,8 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
                 </div>
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size="refIconSm"
                   onClick={() => setIsOpen(false)}
-                  className="h-8 w-8 rounded-lg"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -154,7 +153,8 @@ export function MobileSidebar({ activeTab, onTabChange, visibleTabs }: MobileSid
                       setIsOpen(false)
                     }}
                     className={cn(
-                      'flex w-full items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors duration-150',
+                      buttonVariants({ variant: 'ghost', size: 'ref' }),
+                      'w-full justify-start gap-3 border text-left transition-colors duration-150',
                       isActive
                         ? 'border-border bg-muted text-foreground'
                         : 'border-transparent text-muted-foreground hover:border-border hover:bg-muted/40 hover:text-foreground'

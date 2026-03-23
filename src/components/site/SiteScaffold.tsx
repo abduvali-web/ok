@@ -117,17 +117,17 @@ export function SitePublicHeader({ site, rightSlot }: { site: SiteConfig; rightS
           {showAuthButtons ? (
             <>
               <Link href={makeClientSiteHref(site.subdomain, '/login')}>
-                <Button variant="outline" size="sm" className="gap-1">
+                <Button variant="outline" size="refSm" className="gap-1">
                   <LogIn className="h-4 w-4" /> Login
                 </Button>
               </Link>
               <Link href={makeClientSiteHref(site.subdomain, '/register')}>
-                <Button variant="outline" size="sm" className="gap-1">
+                <Button variant="outline" size="refSm" className="gap-1">
                   <UserPlus className="h-4 w-4" /> Register
                 </Button>
               </Link>
               <Link href={makeClientSiteHref(site.subdomain, '/client')}>
-                <Button size="sm" className="gap-1">
+                <Button size="refSm" className="gap-1">
                   <UserRound className="h-4 w-4" /> Client
                 </Button>
               </Link>
@@ -250,7 +250,7 @@ export function SiteClientNav({ subdomain, currentPath }: { subdomain: string; c
         <Link key={item.href} href={item.href}>
           <Button
             variant={currentPath === item.href ? 'default' : 'outline'}
-            size="sm"
+            size="refSm"
             className={currentPath === item.href ? 'shadow-sm' : ''}
           >
             {item.label}

@@ -975,10 +975,12 @@ export function TamboAgentWidget({ embedded = false }: { embedded?: boolean } = 
                       <div className={styles.historyEmpty}>{tamboT.historyEmpty}</div>
                     ) : null}
                     {historyItems.map((item) => (
-                      <button
+                      <Button
                         key={item.id}
                         type="button"
-                        className={styles.historyItem}
+                        variant="outline"
+                        size="ref"
+                        className={cn(styles.historyItem)}
                         onClick={() => scrollToMessage(item.id)}
                       >
                         <div className={styles.historyItemHeader}>
@@ -995,7 +997,7 @@ export function TamboAgentWidget({ embedded = false }: { embedded?: boolean } = 
                           </div>
                         </div>
                         <p className={styles.historyPreview}>{item.preview}</p>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </ScrollArea>
@@ -1102,10 +1104,12 @@ export function TamboAgentWidget({ embedded = false }: { embedded?: boolean } = 
                     {images.length > 0 || textAttachments.length > 0 || attachmentError ? (
                       <div className={styles.attachmentList}>
                         {images.map((image) => (
-                          <button
+                          <Button
                             key={image.id}
                             type="button"
-                            className={styles.attachmentChip}
+                            variant="outline"
+                            size="refSm"
+                            className={cn(styles.attachmentChip)}
                             onClick={() => removeImage(image.id)}
                             title={tamboT.removeImageAttachment}
                           >
@@ -1113,13 +1117,15 @@ export function TamboAgentWidget({ embedded = false }: { embedded?: boolean } = 
                             <span className={styles.attachmentChipMeta}>
                               {formatFileSize(image.size)}
                             </span>
-                          </button>
+                          </Button>
                         ))}
                         {textAttachments.map((attachment) => (
-                          <button
+                          <Button
                             key={attachment.id}
                             type="button"
-                            className={styles.attachmentChip}
+                            variant="outline"
+                            size="refSm"
+                            className={cn(styles.attachmentChip)}
                             onClick={() => removeTextAttachment(attachment.id)}
                             title={tamboT.removeTextAttachment}
                           >
@@ -1127,7 +1133,7 @@ export function TamboAgentWidget({ embedded = false }: { embedded?: boolean } = 
                             <span className={styles.attachmentChipMeta}>
                               {formatFileSize(attachment.size)}
                             </span>
-                          </button>
+                          </Button>
                         ))}
                         {attachmentError ? (
                           <p className={styles.attachmentError}>{attachmentError}</p>
@@ -1139,7 +1145,7 @@ export function TamboAgentWidget({ embedded = false }: { embedded?: boolean } = 
                       <Button
                         type="button"
                         variant="ghost"
-                        size="icon"
+                        size="refIconSm"
                         onClick={openFilePicker}
                         disabled={isDisabled || isPending}
                         aria-label={tamboT.ariaAttachFile}
