@@ -1394,18 +1394,14 @@ export default function DatabasePage() {
                     : uiText.allTime
 
                   return (
-                    <button
-                      type="button"
-                      onClick={open}
-                      className="w-[50px] h-[50px] md:w-auto md:h-[50px] flex items-center gap-4 bg-primary dark:bg-primary rounded-full shadow-xl border-b-4 border-black/20 p-1 group cursor-pointer transition-colors duration-300"
-                    >
+                    <Button type="button" onClick={open} size="ref" className="p-1 border-b-4 border-black/20 gap-4 md:w-auto">
                       <div className="w-[42px] h-[42px] md:w-full md:h-full rounded-full border-2 border-dashed border-white/10 flex items-center justify-center md:px-6">
                         <CalendarDays className="w-5 h-5 md:w-6 md:h-6 text-foreground dark:text-foreground md:mr-3" />
                         <span className="hidden md:inline font-bold text-sm md:text-lg text-foreground dark:text-foreground whitespace-nowrap">
                           {label}
                         </span>
                       </div>
-                    </button>
+                    </Button>
                   )
                 }}
               />

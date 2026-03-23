@@ -6,6 +6,8 @@ import {
   BarChart3,
   ChefHat,
   CookingPot,
+  DollarSign,
+  History,
   Database,
   LogOut,
   MessageSquare,
@@ -14,13 +16,9 @@ import {
   ShoppingCart,
   Sun,
   Users,
-  Utensils,
   LayoutDashboard,
   ShieldCheck,
-  Zap,
-  Activity,
   Archive,
-  Menu,
 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
@@ -28,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { useAdminSettingsContext } from '@/contexts/AdminSettingsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageSwitcherCompact } from '@/components/LanguageSwitcher';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,7 +35,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Sidebar } from './Sidebar';
 import { ChatSheet } from '@/components/chat/ChatSheet';
@@ -52,12 +50,11 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, userName: _userName }: AdminLayoutProps) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { settings: adminSettings, updateSettings: updateAdminSettings } = useAdminSettingsContext();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   const systemPrefersDark =
@@ -105,15 +102,6 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
         className="h-24 md:h-32 bg-primary flex items-center justify-between px-6 md:px-16 rounded-b-[60px] shadow-2xl z-50 transition-all duration-300 relative border-b-8 border-black/10"
       >
         <div className="flex items-center gap-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden text-white h-12 w-12 rounded-full hover:bg-white/10"
-            onClick={() => setIsSidebarOpen(true)}
-          >
-            <Menu className="w-8 h-8" />
-          </Button>
-
           <motion.div
             whileHover={{ scale: 1.05, rotate: -2 }}
             className="flex items-center gap-4 cursor-pointer group"
@@ -218,11 +206,11 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
         <Sidebar
           activeTab={activeTab}
           onTabChange={onTabChange}
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
+          isOpen={false}
+          onClose={() => {}}
           onLogout={onLogout}
           showDatabase={showDatabase}
-          className="z-[60]"
+          className="hidden md:block z-[60]"
         />
 
         <main className="flex-1 relative min-w-0 flex flex-col min-h-0 z-10">
@@ -242,37 +230,54 @@ export function AdminLayout({ children, mode, activeTab, onTabChange, onLogout, 
       </div>
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex flex-row justify-around gap-2 bg-primary/95 backdrop-blur-2xl p-4 rounded-t-[40px] shadow-[0_-20px_50px_rgba(0,0,0,0.2)] border-t-2 border-white/10 md:hidden">
-        {[
-          { key: 'orders', label: 'Orders', icon: ShoppingCart },
-          { key: 'statistics', label: 'Stats', icon: BarChart3 },
-          { key: 'cooking', label: 'Chef', icon: ChefHat },
-          { key: 'warehouse', label: 'Stock', icon: CookingPot },
-          { key: 'bin', label: 'Bin', icon: Archive },
-        ].map((item) => (
-          <button
-            key={item.key}
-            onClick={() => onTabChange(item.key)}
-            className="flex flex-col items-center gap-1 group relative p-2"
-          >
-            {activeTab === item.key && (
-              <motion.div
-                layoutId="active-nav-bg-mobile"
-                className="absolute inset-0 bg-white/10 rounded-2xl z-0"
-                transition={{ type: 'spring', stiffness: 200, damping: 30 }}
-              />
-            )}
-            <div className={cn(
-              "p-3 rounded-full transition-all duration-300 relative z-10",
-              activeTab === item.key ? "bg-white text-primary scale-110 shadow-xl" : "text-white/40"
-            )}>
-              <item.icon className="w-6 h-6" />
-            </div>
-            <span className={cn(
-              "text-[9px] font-black uppercase tracking-widest relative z-10",
-              activeTab === item.key ? "text-white" : "text-white/20"
-            )}>{item.label}</span>
-          </button>
-        ))}
+        <div className="flex w-full gap-2 overflow-x-auto no-scrollbar px-1">
+          {[
+            { key: 'statistics', label: t.admin?.statistics ?? 'Stats', icon: BarChart3 },
+            { key: 'orders', label: t.admin?.orders ?? 'Orders', icon: ShoppingCart },
+            { key: 'clients', label: t.admin?.clients ?? 'Clients', icon: Users },
+            { key: 'admins', label: t.admin?.admins ?? 'Admins', icon: ShieldCheck },
+            { key: 'warehouse', label: t.warehouse?.title ?? 'Warehouse', icon: CookingPot },
+            { key: 'finance', label: t.finance?.title ?? 'Finance', icon: DollarSign },
+            { key: 'history', label: t.admin?.history ?? 'History', icon: History },
+            { key: 'bin', label: t.admin?.bin ?? 'Bin', icon: Archive },
+          ].map((item) => (
+            <Button
+              key={item.key}
+              type="button"
+              variant="ghost"
+              size="refSm"
+              onClick={() => onTabChange(item.key)}
+              className={cn(
+                'flex flex-col items-center gap-1 group relative flex-shrink-0',
+                '!h-auto !px-3 !py-2 !rounded-2xl !text-white hover:!bg-white/10'
+              )}
+            >
+              {activeTab === item.key && (
+                <motion.div
+                  layoutId="active-nav-bg-mobile"
+                  className="absolute inset-0 bg-white/10 rounded-2xl z-0"
+                  transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+                />
+              )}
+              <div
+                className={cn(
+                  'p-3 rounded-full transition-all duration-300 relative z-10',
+                  activeTab === item.key ? 'bg-white text-primary scale-110 shadow-xl' : 'text-white/40'
+                )}
+              >
+                <item.icon className="w-6 h-6" />
+              </div>
+              <span
+                className={cn(
+                  'text-[9px] font-black uppercase tracking-widest relative z-10',
+                  activeTab === item.key ? 'text-white' : 'text-white/20'
+                  )}
+                >
+                  {item.label}
+                </span>
+            </Button>
+          ))}
+        </div>
       </nav>
 
       <ChatSheet

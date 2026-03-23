@@ -148,14 +148,17 @@ export function Sidebar({
 
                 return (
                   <div key={item.id} className="w-full flex flex-col items-center">
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="refSm"
                       onClick={() => {
                         onTabChange(item.id)
                         onClose()
                       }}
                       className={cn(
-                        'flex flex-col items-center gap-2 group relative py-3 md:py-4 transition-all duration-300 w-full md:w-[100px] rounded-[30px] md:rounded-[40px] overflow-hidden'
+                        'flex flex-col items-center gap-2 group relative transition-all duration-300 w-full md:w-[100px] rounded-[30px] md:rounded-[40px] overflow-hidden',
+                        '!h-auto !py-3 md:!py-4 !px-0 hover:!bg-primary/5 dark:hover:!bg-white/10'
                       )}
                     >
                       {isActive ? (
@@ -196,7 +199,7 @@ export function Sidebar({
                       >
                         {item.label}
                       </span>
-                    </button>
+                    </Button>
 
                     {item.id === 'warehouse' && (isActive || isOpen) ? (
                       <div className="relative z-10 mt-2 w-full px-2">
