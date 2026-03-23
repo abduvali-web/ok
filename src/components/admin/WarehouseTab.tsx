@@ -547,9 +547,10 @@ export function WarehouseTab({ className, initialSubTab = 'cooking' }: Warehouse
                         {/* Sidebar (PC) / Bottom Panel (Mobile) */}
                         <TabsList className="
                             fixed bottom-4 left-4 right-4 z-50 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto
-                            flex flex-row md:flex-col justify-around md:justify-start
-                            bg-card/80 dark:bg-muted/40 backdrop-blur-2xl border-2 border-dashed border-border p-2 md:p-4 rounded-[32px] md:rounded-[40px]
-                            md:w-64 h-20 md:h-auto shadow-2xl md:shadow-xl shrink-0 gap-2 overflow-x-auto md:overflow-visible no-scrollbar
+                            !flex flex-row md:flex-col justify-around md:justify-start
+                            bg-card/80 dark:bg-muted/40 backdrop-blur-2xl border-2 border-dashed border-border
+                            !w-full md:!w-64 !h-20 md:!h-auto !p-2 md:!p-4 !rounded-[32px] md:!rounded-[40px] !gap-2
+                            shadow-2xl md:shadow-xl shrink-0 overflow-x-auto md:overflow-visible no-scrollbar
                         ">
                             <TabsTrigger value="cooking" className="flex-1 md:flex-none justify-center md:justify-start h-[50px] rounded-full px-6 data-[state=active]:bg-primary dark:data-[state=active]:bg-primary font-black uppercase tracking-widest text-[10px] md:text-sm data-[state=active]:text-white transition-all duration-300 gap-2 md:gap-3 border-b-4 border-black/10 dark:border-black/20 bg-white/40 dark:bg-white/5 hover:bg-white/60">
                                 <CookingPot className="w-5 h-5 hidden md:block" /> {t.warehouse.cooking}
