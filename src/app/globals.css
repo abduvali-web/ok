@@ -63,6 +63,9 @@
   --reverse-box-shadow-x: -4px;
   --reverse-box-shadow-y: -4px;
   --shadow: var(--box-shadow-x) var(--box-shadow-y) 0 0 #000;
+  --app-bg-grid: linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  --app-bg-grid-size: 18px 18px;
 
   --background: #fafbfc;
   --foreground: #0a0a0f;
@@ -127,27 +130,27 @@
 .dark {
   --color-brand: var(--primary);
   --shadow: var(--box-shadow-x) var(--box-shadow-y) 0 0 #000;
-  --background: #06060a;
-  --foreground: #eeeef0;
-  --main: #fef08a;
+  --background: #111112;
+  --foreground: #fff7cc;
+  --main: #ffe44d;
   --main-foreground: #0a0a0f;
-  --secondary-background: #0c0c12;
-  --card: #0c0c12;
-  --card-foreground: #eeeef0;
-  --popover: #0c0c12;
-  --popover-foreground: #eeeef0;
+  --secondary-background: #1a1a1c;
+  --card: #1a1a1c;
+  --card-foreground: #fff3b0;
+  --popover: #1a1a1c;
+  --popover-foreground: #fff3b0;
 
-  --primary: #eeeef0;
-  --primary-foreground: #06060a;
-  --secondary: #12121a;
-  --secondary-foreground: #eeeef0;
-  --muted: #12121a;
-  --muted-foreground: #8b8b9e;
-  --accent: #12121a;
-  --accent-foreground: #eeeef0;
-  --border: #1a1a24;
-  --input: #1a1a24;
-  --ring: #2a2a3e;
+  --primary: #ffe44d;
+  --primary-foreground: #0a0a0f;
+  --secondary: #262629;
+  --secondary-foreground: #fff3b0;
+  --muted: #262629;
+  --muted-foreground: #d8cf9a;
+  --accent: #262629;
+  --accent-foreground: #fff3b0;
+  --border: #4b4b50;
+  --input: #4b4b50;
+  --ring: #ffe44d;
 
   --destructive: #7f1d1d;
   --destructive-foreground: #fca5a5;
@@ -161,14 +164,18 @@
   --chart-4: #34d399;
   --chart-5: #fb7185;
 
-  --sidebar: #08080e;
-  --sidebar-foreground: #eeeef0;
-  --sidebar-primary: #eeeef0;
+  --sidebar: #141416;
+  --sidebar-foreground: #fff3b0;
+  --sidebar-primary: #ffe44d;
   --sidebar-primary-foreground: #06060a;
-  --sidebar-accent: #12121a;
-  --sidebar-accent-foreground: #eeeef0;
-  --sidebar-border: #1a1a24;
-  --sidebar-ring: #2a2a3e;
+  --sidebar-accent: #262629;
+  --sidebar-accent-foreground: #fff3b0;
+  --sidebar-border: #4b4b50;
+  --sidebar-ring: #ffe44d;
+
+  --app-bg-grid: linear-gradient(90deg, rgba(255, 228, 77, 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(255, 228, 77, 0.08) 1px, transparent 1px);
+  --app-bg-grid-size: 18px 18px;
 }
 
 @layer base {
@@ -196,7 +203,8 @@
     @apply bg-background text-foreground;
     font-family: var(--font-geist-sans), sans-serif;
     position: relative;
-    background-image: none;
+    background-image: var(--app-bg-grid);
+    background-size: var(--app-bg-grid-size);
   }
 
   ::selection {

@@ -1081,12 +1081,22 @@ export function SetsTab() {
             price: typeof g.price === 'number' ? g.price : (g.price ?? null),
         }));
     }, [currentDayDataRaw]);
-    const hasDataForDay = currentDayData.length > 0;
+    const visibleDayGroups = useMemo(() => {
+        return currentDayData.filter((g) => {
+            const rawName = String(g?.name || '').trim();
+            const isNumericLabel = /^\d+$/.test(rawName);
+            const hasPrice = typeof g?.price === 'number' && Number.isFinite(g.price);
+            const hasDishes = Array.isArray(g?.dishes) && g.dishes.length > 0;
+            // Ignore day-like placeholders from legacy structures (e.g. 1..22 with no dishes/price).
+            return !isNumericLabel || hasPrice || hasDishes;
+        });
+    }, [currentDayData]);
+    const hasDataForDay = visibleDayGroups.length > 0;
 
     const activeDayGroup = useMemo(() => {
         if (!activeGroupTab) return null;
-        return currentDayData.find((g) => String(g.id) === String(activeGroupTab)) ?? null;
-    }, [activeGroupTab, currentDayData]);
+        return visibleDayGroups.find((g) => String(g.id) === String(activeGroupTab)) ?? null;
+    }, [activeGroupTab, visibleDayGroups]);
 
     const dayKeys = useMemo(() => {
         if (!selectedSet || !selectedSet.calorieGroups || Array.isArray(selectedSet.calorieGroups)) {
@@ -1209,10 +1219,10 @@ export function SetsTab() {
 
     useEffect(() => {
         if (!hasDataForDay) return;
-        if (currentDayData.some((g) => g.id === activeGroupTab)) return;
-        setActiveGroupTab(currentDayData[0]?.id || '');
+        if (visibleDayGroups.some((g) => g.id === activeGroupTab)) return;
+        setActiveGroupTab(visibleDayGroups[0]?.id || '');
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeDay, hasDataForDay, currentDayData]);
+    }, [activeDay, hasDataForDay, visibleDayGroups]);
 
     useEffect(() => {
         if (!dayKeys.includes(activeDay)) {
@@ -1351,16 +1361,19 @@ export function SetsTab() {
                                         </div>
                                     ) : (
                                         <Tabs value={activeGroupTab} onValueChange={setActiveGroupTab} className="h-full flex flex-col">
-                                            <div className="px-6 py-2 border-b flex items-center gap-2 bg-slate-900 text-white">
+                                            <div className="px-6 py-2 border-b-2 border-black flex items-center gap-2 bg-yellow-300 text-black">
                                                 <TabsList className="flex flex-wrap w-full justify-start gap-1 bg-transparent">
-                                                    {currentDayData.map((g, idx) => (
+                                                    {visibleDayGroups.map((g, idx) => (
                                                         <TabsTrigger
                                                             key={g.id}
                                                             value={g.id as string}
-                                                            className="px-3 data-[state=active]:bg-white data-[state=active]:text-slate-900"
+                                                            className="px-3 border-2 border-black bg-yellow-100 text-black data-[state=active]:bg-black data-[state=active]:text-yellow-200"
                                                         >
                                                             <span className="max-w-[160px] truncate">
-                                                                {getGroupDisplayName(g, idx)}
+                                                                {(() => {
+                                                                    const groupLabel = getGroupDisplayName(g, idx);
+                                                                    return /^\d+$/.test(groupLabel) ? `${uiText.group} ${groupLabel}` : groupLabel;
+                                                                })()}
                                                             </span>
                                                             {typeof g.price === 'number' && Number.isFinite(g.price) ? (
                                                                 <span className="ml-1 text-[10px] tabular-nums opacity-80">
@@ -1375,7 +1388,7 @@ export function SetsTab() {
                                                     label={uiText.newGroup}
                                                     variant="outline"
                                                     iconSize="md"
-                                                    className={`${rowIconBtnClass} bg-white text-slate-900 hover:bg-slate-100`}
+                                                    className={`${rowIconBtnClass} border-black bg-yellow-100 text-black hover:bg-yellow-200`}
                                                     onClick={() => {
                                                         setEditingGroup(null)
                                                         setIsGroupModalOpen(true)
@@ -1388,7 +1401,7 @@ export function SetsTab() {
                                                     label={uiText.delete}
                                                     variant="outline"
                                                     iconSize="md"
-                                                    className={`${rowIconBtnClass} border-red-300/30 text-red-100 hover:bg-red-600/30`}
+                                                    className={`${rowIconBtnClass} border-black bg-yellow-100 text-black hover:bg-yellow-200`}
                                                     disabled={!activeGroupTab}
                                                     onClick={() => void deleteGroupById(activeGroupTab)}
                                                 >
@@ -1399,11 +1412,11 @@ export function SetsTab() {
                                                     label={uiText.group}
                                                     variant="outline"
                                                     iconSize="md"
-                                                    className={`${rowIconBtnClass} border-slate-300/30 text-slate-100 hover:bg-slate-700`}
+                                                    className={`${rowIconBtnClass} border-black bg-yellow-100 text-black hover:bg-yellow-200`}
                                                     disabled={!activeDayGroup}
                                                     onClick={() => {
                                                         if (!activeDayGroup) return;
-                                                        const idx = currentDayData.findIndex((g) => String(g.id) === String(activeGroupTab));
+                                                        const idx = visibleDayGroups.findIndex((g) => String(g.id) === String(activeGroupTab));
                                                         if (idx < 0) return;
                                                         setEditingGroup({ groupIndex: idx, group: activeDayGroup });
                                                         setIsGroupModalOpen(true);
@@ -1413,8 +1426,8 @@ export function SetsTab() {
                                                 </IconButton>
                                             </div>
 
-                                            {currentDayData.map((group) => {
-                                                    const groupIdx = currentDayData.findIndex((g) => g.id === group.id)
+                                            {visibleDayGroups.map((group) => {
+                                                    const groupIdx = visibleDayGroups.findIndex((g) => g.id === group.id)
 
                                                     const dishesSorted = (group.dishes || [])
                                                         .slice()
