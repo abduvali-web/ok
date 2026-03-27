@@ -1,35 +1,49 @@
-import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
+
+import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring/30 aria-invalid:border-destructive active:scale-[0.97]",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-base text-sm font-base ring-offset-white transition-all gap-2 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "border border-transparent dark:border-white/20 bg-zinc-900 dark:bg-white text-white dark:text-black shadow-md dark:shadow-[0_1px_12px_rgba(255,255,255,0.15)] hover:shadow-lg dark:hover:shadow-[0_2px_20px_rgba(255,255,255,0.25)] hover:bg-zinc-800 dark:hover:bg-white/95",
-        success: "border border-emerald-500/30 dark:border-emerald-500/30 bg-emerald-500 dark:bg-emerald-600 text-white shadow-[0_1px_12px_rgba(52,211,153,0.25)] hover:shadow-[0_2px_20px_rgba(52,211,153,0.35)] hover:bg-emerald-600 dark:hover:bg-emerald-500",
-        warning: "border border-amber-500/30 dark:border-amber-500/30 bg-amber-500 dark:bg-amber-500 text-white dark:text-black shadow-[0_1px_12px_rgba(251,191,36,0.25)] hover:shadow-[0_2px_20px_rgba(251,191,36,0.35)] hover:bg-amber-600 dark:hover:bg-amber-400",
-        destructive: "border border-red-500/30 dark:border-red-500/30 bg-red-500 dark:bg-red-600 text-white shadow-[0_1px_12px_rgba(239,68,68,0.25)] hover:shadow-[0_2px_20px_rgba(239,68,68,0.35)] hover:bg-red-600 dark:hover:bg-red-500",
-        outline: "border border-black/10 dark:border-white/10 bg-white/50 dark:bg-white/[0.03] text-zinc-900 dark:text-white backdrop-blur-md hover:bg-black/5 dark:hover:bg-white/[0.08] hover:border-black/20 dark:hover:border-white/20 shadow-sm",
-        secondary: "border border-black/5 dark:border-white/10 bg-black/5 dark:bg-white/[0.06] text-zinc-900 dark:text-white backdrop-blur-md hover:bg-black/10 dark:hover:bg-white/[0.12] dark:hover:border-white/15 shadow-sm",
-        ghost: "border border-transparent text-zinc-600 dark:text-white/70 hover:bg-black/5 dark:hover:bg-white/[0.06] hover:text-zinc-900 dark:hover:text-white",
-        link: "text-primary underline-offset-4 hover:underline",
+        default:
+          "text-main-foreground bg-main border-2 border-border shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none",
+        outline:
+          "bg-background text-foreground border-2 border-border shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none",
+        secondary:
+          "bg-secondary-background text-foreground border-2 border-border shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none",
+        ghost:
+          "bg-transparent text-foreground border-2 border-transparent shadow-none hover:border-border hover:bg-secondary-background",
+        destructive:
+          "bg-rose-300 text-black border-2 border-border shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none",
+        success:
+          "bg-emerald-300 text-black border-2 border-border shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none",
+        warning:
+          "bg-orange-300 text-black border-2 border-border shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none",
+        link:
+          "border-0 bg-transparent text-foreground underline-offset-4 hover:underline shadow-none px-0 h-auto",
+        noShadow: "text-main-foreground bg-main border-2 border-border",
+        neutral:
+          "bg-secondary-background text-foreground border-2 border-border shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none",
+        reverse:
+          "text-main-foreground bg-main border-2 border-border hover:translate-x-reverseBoxShadowX hover:translate-y-reverseBoxShadowY hover:shadow-shadow",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 px-3 text-[13px]",
-        lg: "h-11 px-6 text-base",
-        icon: "size-9",
+        default: "h-10 px-4 py-2",
+        sm: "h-9 px-3",
+        lg: "h-11 px-8",
+        icon: "size-10",
       },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
     },
-  }
+  },
 )
 
 function Button({

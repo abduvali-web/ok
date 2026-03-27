@@ -377,22 +377,51 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   }, [availableSets, clientFormData.assignedSetId])
 
   const clientGroupOptions = useMemo(() => {
-    const groupsByDay = (clientAssignedSet as any)?.calorieGroups
-    if (!groupsByDay || typeof groupsByDay !== 'object') return [] as Array<{ id: string; name: string; price: number | null }>
+    const groupsByDay = (clientAssignedSet as any)?.calorieGroups ?? (clientAssignedSet as any)?.groups
+    if (!groupsByDay) return [] as Array<{ id: string; name: string; price: number | null }>
+
+    const toGroupsArray = (value: any): any[] => {
+      if (Array.isArray(value)) return value
+      if (value && typeof value === 'object') return Object.values(value)
+      return []
+    }
+
+    const parsePrice = (value: any): number | null => {
+      const num = typeof value === 'number' ? value : Number(value)
+      return Number.isFinite(num) ? num : null
+    }
+
+    const mapOptions = (groups: any[]) => {
+      const used = new Set<string>()
+      return groups.map((g: any, index: number) => {
+        const rawId = String(g?.id ?? g?.name ?? `group-${index + 1}`)
+        const id = used.has(rawId) ? `${rawId}-${index + 1}` : rawId
+        used.add(id)
+        return {
+          id,
+          name: String(g?.name ?? '').trim() || String(index + 1),
+          price: parsePrice(g?.price),
+        }
+      })
+    }
+
+    if (Array.isArray(groupsByDay)) {
+      return mapOptions(groupsByDay)
+    }
+
+    if (typeof groupsByDay !== 'object') return [] as Array<{ id: string; name: string; price: number | null }>
 
     const dayKeys = Object.keys(groupsByDay)
-      .filter((k) => Array.isArray((groupsByDay as any)[k]))
+      .filter((k) => /^\d+$/.test(k) && Number(k) > 0)
       .sort((a, b) => Number(a) - Number(b))
+    const firstDayWithGroups = dayKeys.find((k) => toGroupsArray((groupsByDay as any)[k]).length > 0)
 
-    const firstDayKey = dayKeys[0]
-    const groups = firstDayKey ? (groupsByDay as any)[firstDayKey] : []
-    if (!Array.isArray(groups)) return []
+    if (firstDayWithGroups) {
+      return mapOptions(toGroupsArray((groupsByDay as any)[firstDayWithGroups]))
+    }
 
-    return groups.map((g: any) => ({
-      id: String(g?.id ?? g?.name ?? 'group'),
-      name: String(g?.name ?? '').trim() || 'Group',
-      price: typeof g?.price === 'number' && Number.isFinite(g.price) ? g.price : null,
-    }))
+    const fallbackKey = Object.keys(groupsByDay).find((k) => toGroupsArray((groupsByDay as any)[k]).length > 0)
+    return fallbackKey ? mapOptions(toGroupsArray((groupsByDay as any)[fallbackKey])) : []
   }, [clientAssignedSet])
 
   const clientSelectedGroup = useMemo(() => {

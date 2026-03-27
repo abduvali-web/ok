@@ -38,6 +38,17 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-main: var(--main);
+  --color-main-foreground: var(--main-foreground);
+  --color-secondary-background: var(--secondary-background);
+  --font-base: var(--font-geist-sans);
+  --font-heading: var(--font-geist-sans);
+  --radius-base: var(--radius);
+  --spacing-boxShadowX: var(--box-shadow-x);
+  --spacing-boxShadowY: var(--box-shadow-y);
+  --spacing-reverseBoxShadowX: var(--reverse-box-shadow-x);
+  --spacing-reverseBoxShadowY: var(--reverse-box-shadow-y);
+  --shadow-shadow: var(--shadow);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -47,9 +58,17 @@
 :root {
   --radius: 0.75rem;
   --color-brand: var(--primary);
+  --box-shadow-x: 4px;
+  --box-shadow-y: 4px;
+  --reverse-box-shadow-x: -4px;
+  --reverse-box-shadow-y: -4px;
+  --shadow: var(--box-shadow-x) var(--box-shadow-y) 0 0 #000;
 
   --background: #fafbfc;
   --foreground: #0a0a0f;
+  --main: #fde047;
+  --main-foreground: #0a0a0f;
+  --secondary-background: #ffffff;
   --card: #ffffff;
   --card-foreground: #0a0a0f;
   --popover: #ffffff;
@@ -107,8 +126,12 @@
 
 .dark {
   --color-brand: var(--primary);
+  --shadow: var(--box-shadow-x) var(--box-shadow-y) 0 0 #000;
   --background: #06060a;
   --foreground: #eeeef0;
+  --main: #fef08a;
+  --main-foreground: #0a0a0f;
+  --secondary-background: #0c0c12;
   --card: #0c0c12;
   --card-foreground: #eeeef0;
   --popover: #0c0c12;

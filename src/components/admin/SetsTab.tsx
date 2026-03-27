@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,7 +32,6 @@ import {
     Flame,
     Copy,
     Scale,
-    Calendar,
     ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -410,9 +409,7 @@ export function SetsTab() {
                 } else {
                     setSets(data);
                     if (!selectedSet) {
-                        // Prefer active set, otherwise first
-                        const active = data.find((s: MenuSet) => s.isActive);
-                        setSelectedSet(active || data[0]);
+                        setSelectedSet(data[0]);
                     }
                 }
             }
@@ -919,32 +916,6 @@ export function SetsTab() {
         toast.success(uiText.addMeal);
     };
 
-    const toggleSetStatus = async (set: MenuSet) => {
-        try {
-            const response = await fetch(`/api/admin/sets/${set.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ isActive: !set.isActive })
-            });
-
-            if (response.ok) {
-                const updated = await response.json();
-                // Update local list - set only this one active, others inactive
-                setSets(prev => prev.map(s => {
-                    if (s.id === updated.id) return { ...s, isActive: updated.isActive }; // Update target
-                    if (updated.isActive) return { ...s, isActive: false }; // Deactivate others if target became active
-                    return s;
-                }));
-
-                if (selectedSet?.id === updated.id) {
-                    setSelectedSet({ ...selectedSet, ...updated });
-                }
-
-                toast.success(uiText.saveChanges);
-            }
-        } catch { toast.error(uiText.saveError); }
-    };
-
     const deleteSet = async (id: string) => {
         if (!confirm(uiText.confirmDeleteSet)) return;
         await fetch(`/api/admin/sets/${id}`, { method: 'DELETE' });
@@ -1067,6 +1038,16 @@ export function SetsTab() {
         return Number.isFinite(total) ? total : 0;
     };
 
+    const getDishPrice = (dish: SetDish) => {
+        const ingredients = dish.customIngredients ? dish.customIngredients : getOriginalIngredients(dish.dishId);
+        let total = 0;
+        for (const ing of ingredients || []) {
+            const cost = getDraftIngredientCost(ing);
+            if (cost !== null && Number.isFinite(cost)) total += cost;
+        }
+        return Number.isFinite(total) ? total : 0;
+    };
+
     const visibleSets = useMemo(() => {
         const q = setSearch.trim().toLowerCase();
         const filtered = !q ? sets : sets.filter((s) => (s.name || '').toLowerCase().includes(q));
@@ -1119,6 +1100,45 @@ export function SetsTab() {
         return next;
     }, [selectedSet]);
 
+    const selectedSummaryDayKeys = useMemo(() => {
+        if (dayKeys.length === 0) return [] as string[];
+        if (!periodRange?.from) return [activeDay];
+        const start = new Date(periodRange.from);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(periodRange.to ?? periodRange.from);
+        end.setHours(0, 0, 0, 0);
+        const span = Math.max(1, Math.floor((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1);
+        return dayKeys.slice(0, Math.min(dayKeys.length, span));
+    }, [dayKeys, periodRange, activeDay]);
+
+    const selectedDaysSummary = useMemo(() => {
+        if (!selectedSet) {
+            return { days: 0, dishes: 0, calories: 0, price: 0 };
+        }
+        const baseGroups = getBaseGroups(selectedSet);
+        let dishes = 0;
+        let calories = 0;
+        let price = 0;
+
+        for (const dayKey of selectedSummaryDayKeys) {
+            const dayGroups: CalorieGroup[] = Array.isArray((baseGroups as any)[dayKey]) ? (baseGroups as any)[dayKey] : [];
+            for (const group of dayGroups) {
+                for (const dish of group?.dishes || []) {
+                    dishes += 1;
+                    calories += getDishCalories(dish as SetDish);
+                    price += getDishPrice(dish as SetDish);
+                }
+            }
+        }
+
+        return {
+            days: selectedSummaryDayKeys.length,
+            dishes,
+            calories: Math.round(calories),
+            price: Math.round(price),
+        };
+    }, [selectedSet, selectedSummaryDayKeys, warehouseItemByName, kcalPerGramByName, availableDishes]);
+
     const calendarUiText = useMemo(() => {
         if (language === 'ru') {
             return { calendar: 'Период', today: 'Сегодня', thisWeek: 'Неделя', thisMonth: 'Месяц', clearRange: 'Сброс', allTime: 'Выбрать период' };
@@ -1128,35 +1148,6 @@ export function SetsTab() {
         }
         return { calendar: 'Period', today: 'Today', thisWeek: 'Week', thisMonth: 'Month', clearRange: 'Clear', allTime: 'Select period' };
     }, [language]);
-
-    const periodDayEntries = useMemo(() => {
-        if (!periodRange?.from) {
-            return dayKeys.map((day, idx) => ({ dayKey: day, label: `#${idx + 1}`, iso: `day-${day}`, isFirst: idx === 0 }));
-        }
-        const start = new Date(periodRange.from);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date(periodRange.to ?? periodRange.from);
-        end.setHours(0, 0, 0, 0);
-
-        const entries: Array<{ dayKey: string; label: string; iso: string; isFirst: boolean }> = [];
-        const cursor = new Date(start);
-        let idx = 0;
-        while (cursor.getTime() <= end.getTime() && idx < dayKeys.length) {
-            const iso = cursor.toISOString().slice(0, 10);
-            entries.push({
-                dayKey: dayKeys[idx],
-                label: cursor.toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US', { day: '2-digit', month: 'short' }),
-                iso,
-                isFirst: idx === 0,
-            });
-            cursor.setDate(cursor.getDate() + 1);
-            idx += 1;
-        }
-        if (entries.length === 0) {
-            return dayKeys.map((day, i) => ({ dayKey: day, label: `#${i + 1}`, iso: `day-${day}`, isFirst: i === 0 }));
-        }
-        return entries;
-    }, [periodRange, dayKeys, language]);
 
     const deleteGroupById = async (groupId: string) => {
         if (!selectedSet) return;
@@ -1283,18 +1274,12 @@ export function SetsTab() {
                                         onClick={() => setSelectedSet(set)}
                                         variant="ghost"
                                         className={[
-                                            "h-9 min-w-[140px] max-w-[220px] px-3 rounded-full flex items-center gap-2 transition-all justify-start",
+                                            "h-9 min-w-[140px] max-w-[220px] px-3 rounded-full flex items-center transition-all justify-start",
                                             isSelected ? "bg-primary text-white shadow-lg" : "hover:bg-slate-700 text-slate-200",
                                         ].join(" ")}
                                         title={set.name}
                                     >
                                         <span className="truncate text-sm font-medium flex-1 text-left">{set.name}</span>
-                                        <span
-                                            className={[
-                                                "w-2 h-2 rounded-full shrink-0",
-                                                set.isActive ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-slate-400",
-                                            ].join(" ")}
-                                        />
                                     </Button>
                                 );
                             })}
@@ -1325,66 +1310,29 @@ export function SetsTab() {
 
                 {selectedSet ? (
                     <div className="space-y-4">
-                        <Card className="border-none shadow-sm bg-slate-900 text-white overflow-hidden">
-                            <div className="p-2 overflow-x-auto">
-                                <div className="flex items-center gap-1 min-w-max">
-                                    <span className="text-xs font-medium px-2 text-slate-400 mr-2 flex items-center gap-1">
-                                        <Calendar className="w-4 h-4" />
-                                        {uiText.days}:
-                                    </span>
-                                    {periodDayEntries.map((entry) => (
-                                        <Button
-                                            key={entry.iso}
-                                            onClick={() => setActiveDay(entry.dayKey)}
-                                            variant="ghost"
-                                            className={[
-                                                'h-9 px-3 rounded-full flex items-center justify-center text-sm font-medium transition-all border',
-                                                activeDay === String(entry.dayKey)
-                                                    ? 'bg-primary text-white border-primary shadow-lg'
-                                                    : entry.isFirst
-                                                        ? 'bg-slate-800 text-slate-100 border-slate-600 hover:bg-slate-700'
-                                                        : 'bg-pink-600/20 text-pink-100 border-pink-400/40 hover:bg-pink-600/35',
-                                            ].join(' ')}
-                                        >
-                                            {entry.label}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </div>
-                        </Card>
-
+                            <Card className="border border-border/70">
+                                <CardContent className="px-4 py-3">
+                                    <div className="grid gap-2 text-sm sm:grid-cols-4">
+                                        <div className="rounded-md border bg-muted/30 px-3 py-2">
+                                            <p className="text-[11px] text-muted-foreground">Selected days</p>
+                                            <p className="font-semibold tabular-nums">{selectedDaysSummary.days}</p>
+                                        </div>
+                                        <div className="rounded-md border bg-muted/30 px-3 py-2">
+                                            <p className="text-[11px] text-muted-foreground">Dishes</p>
+                                            <p className="font-semibold tabular-nums">{selectedDaysSummary.dishes}</p>
+                                        </div>
+                                        <div className="rounded-md border bg-muted/30 px-3 py-2">
+                                            <p className="text-[11px] text-muted-foreground">Calories</p>
+                                            <p className="font-semibold tabular-nums">{new Intl.NumberFormat('ru-RU').format(selectedDaysSummary.calories)}</p>
+                                        </div>
+                                        <div className="rounded-md border bg-muted/30 px-3 py-2">
+                                            <p className="text-[11px] text-muted-foreground">Price (UZS)</p>
+                                            <p className="font-semibold tabular-nums">{formatUzs(selectedDaysSummary.price)}</p>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
                             <Card className="min-h-[600px] flex flex-col">
-                                <CardHeader className="border-b border-border bg-muted/30 flex flex-row items-center justify-between py-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary font-bold text-lg">
-                                            {activeDay}
-                                        </div>
-                                        <div>
-                                            <CardTitle>{uiText.dayMenuTitle(activeDay)}</CardTitle>
-                                            <CardDescription className="truncate">{selectedSet.name}</CardDescription>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-2">
-                                        {activeDayGroup && typeof activeDayGroup.price === 'number' && Number.isFinite(activeDayGroup.price) ? (
-                                            <div className="hidden sm:flex items-center gap-2">
-                                                <Badge variant="secondary" className="text-[10px] tabular-nums">
-                                                    {formatUzs(activeDayGroup.price)} UZS
-                                                </Badge>
-                                            </div>
-                                        ) : null}
-                                        <IconButton
-                                            label={selectedSet.isActive ? 'Active' : 'Activate'}
-                                            onClick={() => toggleSetStatus(selectedSet)}
-                                            variant={selectedSet.isActive ? "default" : "outline"}
-                                            iconSize="md"
-                                            className={selectedSet.isActive ? "bg-green-600 hover:bg-green-700" : ""}
-                                        >
-                                            <Flame className="h-4 w-4" />
-                                        </IconButton>
-                                    </div>
-                                </CardHeader>
-
                                 {/* Day Content */}
                                 <CardContent className="flex-1 p-0">
                                     {!hasDataForDay ? (
