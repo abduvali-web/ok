@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Package,
     Calculator,
@@ -162,6 +163,10 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     // Calculation state
     const [calculatedIngredients, setCalculatedIngredients] = useState<Map<string, { amount: number; unit: string }>>(new Map());
     const [shoppingList, setShoppingList] = useState<Map<string, { amount: number; unit: string }>>(new Map());
+    const [selectedShoppingItems, setSelectedShoppingItems] = useState<Set<string>>(new Set());
+    const [boughtShoppingItems, setBoughtShoppingItems] = useState<Set<string>>(new Set());
+    const [isBuyingSelected, setIsBuyingSelected] = useState(false);
+    const [inventoryPriceMeta, setInventoryPriceMeta] = useState<Record<string, { pricePerUnit: number | null; priceUnit: string }>>({});
     const [calcRange, setCalcRange] = useState<DateRange | undefined>(undefined)
 
     // Cooking audit state (period + per-day drilldown)
@@ -494,6 +499,16 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                     invRecord[item.name] = item.amount;
                 });
                 setInventory(invRecord);
+                const priceMeta: Record<string, { pricePerUnit: number | null; priceUnit: string }> = {};
+                data.forEach((item: any) => {
+                    const key = String(item?.name || '').trim().toLowerCase();
+                    if (!key) return;
+                    priceMeta[key] = {
+                        pricePerUnit: typeof item?.pricePerUnit === 'number' && Number.isFinite(item.pricePerUnit) ? item.pricePerUnit : null,
+                        priceUnit: String(item?.priceUnit || 'kg').trim() || 'kg',
+                    };
+                });
+                setInventoryPriceMeta(priceMeta);
             }
         } catch (error) {
             console.error('Error fetching inventory:', error);
@@ -777,6 +792,8 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
 
         const shopping = calculateShoppingList(totalIngredients, inventory);
         setShoppingList(shopping);
+        setSelectedShoppingItems(new Set());
+        setBoughtShoppingItems(new Set());
 
         toast.success(auditUiText.menuCalcDone(tomorrowMenuNumber));
     };
@@ -816,8 +833,78 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         setCalculatedIngredients(totalIngredients);
         const shopping = calculateShoppingList(totalIngredients, inventory);
         setShoppingList(shopping);
+        setSelectedShoppingItems(new Set());
+        setBoughtShoppingItems(new Set());
 
         toast.success(auditUiText.periodCalcDone(dates.length));
+    };
+
+    const convertToUnit = (amount: number, fromUnit: string, toUnit: string): number | null => {
+        const from = (fromUnit || '').toLowerCase().trim();
+        const to = (toUnit || '').toLowerCase().trim();
+        if (!Number.isFinite(amount)) return null;
+        if (from === to) return amount;
+        const mass: Record<string, number> = { kg: 1000, g: 1, gr: 1, mg: 0.001 };
+        const volume: Record<string, number> = { l: 1000, ml: 1 };
+        const pcs: Record<string, number> = { pcs: 1, pc: 1, sht: 1, dona: 1 };
+        if (mass[from] && mass[to]) return (amount * mass[from]) / mass[to];
+        if (volume[from] && volume[to]) return (amount * volume[from]) / volume[to];
+        if (pcs[from] && pcs[to]) return amount;
+        return null;
+    };
+
+    const visibleShoppingEntries = useMemo(
+        () => Array.from(shoppingList.entries()).filter(([name]) => !boughtShoppingItems.has(name)),
+        [shoppingList, boughtShoppingItems]
+    );
+
+    const selectedVisibleCount = useMemo(
+        () => visibleShoppingEntries.filter(([name]) => selectedShoppingItems.has(name)).length,
+        [visibleShoppingEntries, selectedShoppingItems]
+    );
+
+    const handleBuySelectedIngredients = async () => {
+        const toBuy = visibleShoppingEntries.filter(([name]) => selectedShoppingItems.has(name));
+        if (toBuy.length === 0) return;
+        setIsBuyingSelected(true);
+        try {
+            const items = toBuy.map(([name, { amount, unit }]) => {
+                const meta = inventoryPriceMeta[name.toLowerCase()] || { pricePerUnit: null, priceUnit: 'kg' };
+                const targetUnit = meta.priceUnit || unit || 'kg';
+                const converted = convertToUnit(amount, unit, targetUnit);
+                return {
+                    name,
+                    amount: converted !== null ? converted : amount,
+                    costPerUnit: meta.pricePerUnit ?? 0,
+                    unit: targetUnit,
+                };
+            });
+
+            const response = await fetch('/api/admin/finance/buy-ingredients', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items }),
+            });
+
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data?.error || 'Failed to buy selected ingredients');
+            }
+
+            const boughtNames = new Set(toBuy.map(([name]) => name));
+            setBoughtShoppingItems((prev) => new Set([...prev, ...boughtNames]));
+            setSelectedShoppingItems((prev) => {
+                const next = new Set(prev);
+                for (const name of boughtNames) next.delete(name);
+                return next;
+            });
+            toast.success(language === 'ru' ? 'Ингредиенты куплены' : language === 'uz' ? 'Ingredientlar sotib olindi' : 'Ingredients purchased');
+            await fetchInventory();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : (language === 'ru' ? 'Ошибка покупки' : language === 'uz' ? "Sotib olishda xatolik" : 'Purchase failed'));
+        } finally {
+            setIsBuyingSelected(false);
+        }
     };
 
     const _mealTypeIcons: Record<keyof typeof MEAL_TYPES, string> = {
@@ -1132,11 +1219,24 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                     {t.warehouse.shoppingListTitle}
                                                 </h4>
                                                 <div className="bg-orange-50 rounded-lg border border-orange-200 max-h-48 overflow-y-auto">
-                                                    {shoppingList.size > 0 ? (
-                                                        Array.from(shoppingList.entries()).map(([name, { amount, unit }]) => (
-                                                            <div key={name} className="flex justify-between w-full p-2 border-b border-orange-100 last:border-0 text-sm">
-                                                                <span className="text-orange-800">{name}</span>
-                                                                <span className="font-medium text-orange-900">{amount} {unit}</span>
+                                                    {visibleShoppingEntries.length > 0 ? (
+                                                        visibleShoppingEntries.map(([name, { amount, unit }]) => (
+                                                            <div key={name} className="flex items-center gap-2 justify-between w-full p-2 border-b border-orange-100 last:border-0 text-sm">
+                                                                <div className="flex items-center gap-2 min-w-0">
+                                                                    <Checkbox
+                                                                        checked={selectedShoppingItems.has(name)}
+                                                                        onCheckedChange={(checked) => {
+                                                                            setSelectedShoppingItems((prev) => {
+                                                                                const next = new Set(prev);
+                                                                                if (checked) next.add(name);
+                                                                                else next.delete(name);
+                                                                                return next;
+                                                                            });
+                                                                        }}
+                                                                    />
+                                                                    <span className="text-orange-800 truncate">{name}</span>
+                                                                </div>
+                                                                <span className="font-medium text-orange-900 shrink-0">{amount} {unit}</span>
                                                             </div>
                                                         ))
                                                     ) : (
@@ -1145,6 +1245,21 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                         </div>
                                                     )}
                                                 </div>
+                                                {visibleShoppingEntries.length > 0 ? (
+                                                    <Button
+                                                        className="mt-3 w-full"
+                                                        onClick={() => void handleBuySelectedIngredients()}
+                                                        disabled={selectedVisibleCount === 0 || isBuyingSelected}
+                                                    >
+                                                        {isBuyingSelected
+                                                            ? (language === 'ru' ? 'Покупка...' : language === 'uz' ? 'Sotib olinmoqda...' : 'Buying...')
+                                                            : (language === 'ru'
+                                                                ? `Купить выбранные (${selectedVisibleCount})`
+                                                                : language === 'uz'
+                                                                    ? `Tanlanganlarni sotib olish (${selectedVisibleCount})`
+                                                                    : `Buy selected (${selectedVisibleCount})`)}
+                                                    </Button>
+                                                ) : null}
                                             </div>
                                         </>
                                     )}

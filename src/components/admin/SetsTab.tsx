@@ -40,6 +40,8 @@ import { SearchPanel } from '@/components/ui/search-panel';
 import { IconButton } from '@/components/ui/icon-button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MENUS, MEAL_TYPES, type Dish, type Ingredient } from '@/lib/menuData';
+import type { DateRange } from 'react-day-picker';
+import { CalendarRangeSelector } from '@/components/admin/dashboard/shared/CalendarRangeSelector';
 
 // Types for custom sets
 // Types for custom sets
@@ -73,8 +75,7 @@ interface MenuSet {
     updatedAt: string;
 }
 
-const CALORIE_OPTIONS = [1200, 1600, 2000, 2500, 3000];
-const DEFAULT_MAX_DAYS = 60;
+const DEFAULT_GROUP_COUNT = 5;
 const MEAL_TYPE_ORDER: Array<keyof typeof MEAL_TYPES> = [
     'BREAKFAST',
     'SECOND_BREAKFAST',
@@ -292,8 +293,9 @@ export function SetsTab() {
     const [selectedSet, setSelectedSet] = useState<MenuSet | null>(null);
     const [activeDay, setActiveDay] = useState<string>("1"); // Current day being edited (1-21)
     const [availableDishes, setAvailableDishes] = useState<Dish[]>([]);
-    const [warehouseItems, setWarehouseItems] = useState<Array<{ name: string; unit?: string; kcalPerGram?: number | null }>>([]);
+    const [warehouseItems, setWarehouseItems] = useState<Array<{ name: string; unit?: string; kcalPerGram?: number | null; pricePerUnit?: number | null; priceUnit?: string }>>([]);
     const [setSearch, setSetSearch] = useState('');
+    const [periodRange, setPeriodRange] = useState<DateRange | undefined>(undefined);
 
     // UI State
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -580,10 +582,10 @@ export function SetsTab() {
         const menuData = MENUS.find(m => m.menuNumber === menuNumber);
         if (!menuData) return null;
 
-        return CALORIE_OPTIONS.map((calories) => ({
-            id: String(calories),
-            calories,
-            name: `${calories} kcal`,
+        return Array.from({ length: DEFAULT_GROUP_COUNT }, (_, index) => ({
+            id: `group-${index + 1}`,
+            calories: 0,
+            name: String(index + 1),
             price: null,
             dishes: menuData.dishes.map((dish) => ({
                 dishId: dish.id,
@@ -664,7 +666,9 @@ export function SetsTab() {
         const baseGroups = getBaseGroups(selectedSet);
         const meta = getMeta(selectedSet);
 
-        const name = (groupForm.name || '').trim();
+        const dayGroups = Array.isArray(baseGroups[String(activeDay)]) ? baseGroups[String(activeDay)] : [];
+        const defaultNumberName = editingGroup ? String(editingGroup.groupIndex + 1) : String(dayGroups.length + 1);
+        const name = (groupForm.name || '').trim() || defaultNumberName;
         const price = groupForm.price.trim() === '' ? null : Number(groupForm.price);
         const calories =
             typeof editingGroup?.group?.calories === 'number' && Number.isFinite(editingGroup.group.calories)
@@ -877,7 +881,7 @@ export function SetsTab() {
         if (updatedDayData.length === 0) {
             // Edge case: empty day, user clicks add manually without copying
             // Initialize structure
-            updatedDayData.push(...CALORIE_OPTIONS.map(c => ({ id: String(c), calories: c, name: `${c} kcal`, price: null, dishes: [] })));
+            updatedDayData.push(...Array.from({ length: DEFAULT_GROUP_COUNT }, (_, idx) => ({ id: `group-${idx + 1}`, calories: 0, name: String(idx + 1), price: null, dishes: [] })));
         }
 
         updatedDayData[addDishTarget.calorieIndex] = {
@@ -1010,6 +1014,51 @@ export function SetsTab() {
         return String(Math.round(v));
     };
 
+    const getGroupDisplayName = (group: CalorieGroup, index: number) => {
+        const raw = String(group?.name || '').trim();
+        if (!raw) return String(index + 1);
+        if (/^\d+\s*kcal$/i.test(raw)) return String(index + 1);
+        return raw;
+    };
+
+    const warehouseItemByName = useMemo(() => {
+        const map = new Map<string, { kcalPerGram: number | null; pricePerUnit: number | null; priceUnit: string }>();
+        for (const item of warehouseItems) {
+            const key = String(item?.name || '').trim().toLowerCase();
+            if (!key) continue;
+            map.set(key, {
+                kcalPerGram: typeof item?.kcalPerGram === 'number' && Number.isFinite(item.kcalPerGram) ? item.kcalPerGram : null,
+                pricePerUnit: typeof item?.pricePerUnit === 'number' && Number.isFinite(item.pricePerUnit) ? item.pricePerUnit : null,
+                priceUnit: String(item?.priceUnit || item?.unit || 'kg').trim() || 'kg',
+            });
+        }
+        return map;
+    }, [warehouseItems]);
+
+    const convertUnitAmount = (amount: number, fromUnit: string, toUnit: string): number | null => {
+        const from = (fromUnit || '').toLowerCase().trim();
+        const to = (toUnit || '').toLowerCase().trim();
+        if (!Number.isFinite(amount)) return null;
+        if (from === to) return amount;
+
+        const mass: Record<string, number> = { kg: 1000, g: 1, gr: 1, mg: 0.001 };
+        const volume: Record<string, number> = { l: 1000, ml: 1 };
+        const pcs: Record<string, number> = { pcs: 1, pc: 1, sht: 1, dona: 1 };
+
+        if (mass[from] && mass[to]) return (amount * mass[from]) / mass[to];
+        if (volume[from] && volume[to]) return (amount * volume[from]) / volume[to];
+        if (pcs[from] && pcs[to]) return amount;
+        return null;
+    };
+
+    const getDraftIngredientCost = (ing: Ingredient) => {
+        const item = warehouseItemByName.get(String(ing.name || '').trim().toLowerCase());
+        if (!item || item.pricePerUnit === null) return null;
+        const converted = convertUnitAmount(Number(ing.amount) || 0, String(ing.unit || 'gr'), item.priceUnit);
+        if (converted === null) return null;
+        return converted * item.pricePerUnit;
+    };
+
     const getDishCalories = (dish: SetDish) => {
         const ingredients = dish.customIngredients ? dish.customIngredients : getOriginalIngredients(dish.dishId);
         let total = 0;
@@ -1018,13 +1067,6 @@ export function SetsTab() {
             const kcalPerGram = kcalPerGramByName.get(nameKey) ?? 0;
             total += toGrams(Number(ing.amount), String(ing.unit)) * kcalPerGram;
         }
-        return Number.isFinite(total) ? total : 0;
-    };
-
-    const getGroupCaloriesTotal = (group: CalorieGroup | null | undefined) => {
-        if (!group || !Array.isArray(group.dishes)) return 0;
-        let total = 0;
-        for (const d of group.dishes) total += getDishCalories(d);
         return Number.isFinite(total) ? total : 0;
     };
 
@@ -1080,37 +1122,44 @@ export function SetsTab() {
         return next;
     }, [selectedSet]);
 
-    const deleteDay = async (dayKey: string) => {
-        if (!selectedSet) return;
-        if (dayKeys.length <= 1) {
-            toast.error(uiText.cantDeleteLastDay);
-            return;
+    const calendarUiText = useMemo(() => {
+        if (language === 'ru') {
+            return { calendar: 'Период', today: 'Сегодня', thisWeek: 'Неделя', thisMonth: 'Месяц', clearRange: 'Сброс', allTime: 'Выбрать период' };
         }
-        if (!confirm(uiText.confirmDeleteDay(dayKey))) return;
+        if (language === 'uz') {
+            return { calendar: 'Davr', today: 'Bugun', thisWeek: 'Hafta', thisMonth: 'Oy', clearRange: 'Tozalash', allTime: 'Davr tanlang' };
+        }
+        return { calendar: 'Period', today: 'Today', thisWeek: 'Week', thisMonth: 'Month', clearRange: 'Clear', allTime: 'Select period' };
+    }, [language]);
 
-        const baseGroups = getBaseGroups(selectedSet);
-        const meta = getMeta(selectedSet);
+    const periodDayEntries = useMemo(() => {
+        if (!periodRange?.from) {
+            return dayKeys.map((day, idx) => ({ dayKey: day, label: `#${idx + 1}`, iso: `day-${day}`, isFirst: idx === 0 }));
+        }
+        const start = new Date(periodRange.from);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(periodRange.to ?? periodRange.from);
+        end.setHours(0, 0, 0, 0);
 
-        const nextGroups = { ...baseGroups };
-        delete nextGroups[String(dayKey)];
-        // Keep meta consistent.
-        const nextMeta: CalorieGroupsMeta = {
-            ...meta,
-            dayOrder: Array.isArray(meta.dayOrder) ? meta.dayOrder.filter((k) => String(k) !== String(dayKey)) : undefined,
-        };
-        nextGroups._meta = nextMeta;
-
-        const updatedSet = { ...selectedSet, calorieGroups: nextGroups };
-        setSelectedSet(updatedSet);
-        setSets((prev) => prev.map((s) => (s.id === updatedSet.id ? updatedSet : s)));
-
-        const remainingDays = dayKeys.filter((d) => String(d) !== String(dayKey));
-        const nextActive = remainingDays.length > 0 ? String(remainingDays[0]) : '1';
-        setActiveDay(nextActive);
-
-        await saveSet(updatedSet);
-        toast.success(uiText.deleted);
-    };
+        const entries: Array<{ dayKey: string; label: string; iso: string; isFirst: boolean }> = [];
+        const cursor = new Date(start);
+        let idx = 0;
+        while (cursor.getTime() <= end.getTime() && idx < dayKeys.length) {
+            const iso = cursor.toISOString().slice(0, 10);
+            entries.push({
+                dayKey: dayKeys[idx],
+                label: cursor.toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US', { day: '2-digit', month: 'short' }),
+                iso,
+                isFirst: idx === 0,
+            });
+            cursor.setDate(cursor.getDate() + 1);
+            idx += 1;
+        }
+        if (entries.length === 0) {
+            return dayKeys.map((day, i) => ({ dayKey: day, label: `#${i + 1}`, iso: `day-${day}`, isFirst: i === 0 }));
+        }
+        return entries;
+    }, [periodRange, dayKeys, language]);
 
     const deleteGroupById = async (groupId: string) => {
         if (!selectedSet) return;
@@ -1161,70 +1210,18 @@ export function SetsTab() {
         });
     };
 
-    const moveSelectedDay = async (dir: -1 | 1) => {
-        if (!selectedSet) return;
-        const baseGroups = getBaseGroups(selectedSet);
-        const meta = getMeta(selectedSet);
-        const existing = getDayKeysFromGroups(baseGroups);
-        const order = Array.isArray(meta.dayOrder) && meta.dayOrder.length > 0 ? meta.dayOrder.map(String) : dayKeys.slice();
-        const cleaned = order.filter((k) => existing.includes(String(k)));
-        const idx = cleaned.indexOf(String(activeDay));
-        if (idx === -1) return;
-        const nextOrder = moveInArray(cleaned, idx, idx + dir);
-
-        const nextGroups = { ...baseGroups, _meta: { ...meta, dayOrder: nextOrder } };
-        const updatedSet = { ...selectedSet, calorieGroups: nextGroups as any };
-        setSelectedSet(updatedSet);
-        setSets((prev) => prev.map((s) => (s.id === updatedSet.id ? updatedSet : s)));
-        await saveSet(updatedSet);
-    };
-
-    const moveSelectedGroup = async (dir: -1 | 1) => {
-        if (!selectedSet) return;
-        if (!activeGroupTab) return;
-        const baseGroups = getBaseGroups(selectedSet);
-        const meta = getMeta(selectedSet);
-
-        const existingDayKeys = getDayKeysFromGroups(baseGroups);
-        const current = currentDayData.map((g) => String(g.id));
-        const order = Array.isArray(meta.groupOrder) && meta.groupOrder.length > 0 ? meta.groupOrder.map(String) : current;
-        const cleaned = order.filter((id) => current.includes(String(id)));
-        const idx = cleaned.indexOf(String(activeGroupTab));
-        if (idx === -1) return;
-        const nextOrder = moveInArray(cleaned, idx, idx + dir);
-
-        const reorderDay = (arr: CalorieGroup[]) => {
-            const withIds = (arr || []).map((g, idx) => ({ ...g, id: g.id || String(g.calories ?? idx) }));
-            const map = new Map(withIds.map((g) => [String(g.id), g]));
-            const next: CalorieGroup[] = [];
-            for (const id of nextOrder) {
-                const g = map.get(String(id));
-                if (g) next.push(g);
-            }
-            for (const g of withIds) {
-                if (!next.find((x) => String((x as any).id) === String((g as any).id))) next.push(g);
-            }
-            return next;
-        };
-
-        const nextGroups: any = {};
-        for (const dayKey of existingDayKeys) {
-            nextGroups[dayKey] = reorderDay(Array.isArray(baseGroups[dayKey]) ? baseGroups[dayKey] : []);
-        }
-        nextGroups._meta = { ...meta, groupOrder: nextOrder };
-
-        const updatedSet = { ...selectedSet, calorieGroups: nextGroups };
-        setSelectedSet(updatedSet);
-        setSets((prev) => prev.map((s) => (s.id === updatedSet.id ? updatedSet : s)));
-        await saveSet(updatedSet);
-    };
-
     useEffect(() => {
         if (!hasDataForDay) return;
         if (currentDayData.some((g) => g.id === activeGroupTab)) return;
         setActiveGroupTab(currentDayData[0]?.id || '');
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeDay, hasDataForDay, currentDayData]);
+
+    useEffect(() => {
+        if (!dayKeys.includes(activeDay)) {
+            setActiveDay(dayKeys[0] || '1');
+        }
+    }, [dayKeys, activeDay]);
 
     if (isLoading) return <div className="p-8"><div className="animate-spin h-8 w-8 border-2 border-primary rounded-full border-t-transparent mx-auto"></div></div>;
 
@@ -1239,6 +1236,28 @@ export function SetsTab() {
 
                 {/* Orders-tab style: wrap on mobile so actions never disappear off-screen. */}
                 <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+                    <CalendarRangeSelector
+                        value={periodRange}
+                        onChange={(next) => {
+                            if (!next?.from) {
+                                setPeriodRange(undefined);
+                                setActiveDay(dayKeys[0] || '1');
+                                return;
+                            }
+                            const start = new Date(next.from);
+                            start.setHours(0, 0, 0, 0);
+                            const end = new Date(next.to ?? next.from);
+                            end.setHours(0, 0, 0, 0);
+                            if (end.getTime() === start.getTime()) {
+                                end.setDate(end.getDate() + Math.max(0, dayKeys.length - 1));
+                            }
+                            setPeriodRange({ from: start, to: end });
+                            setActiveDay(dayKeys[0] || '1');
+                        }}
+                        uiText={calendarUiText}
+                        locale={language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'}
+                        className="w-full sm:w-[280px] md:w-[320px] flex-none basis-full sm:basis-auto"
+                    />
                     <SearchPanel
                         value={setSearch}
                         onChange={setSetSearch}
@@ -1308,7 +1327,6 @@ export function SetsTab() {
 
                 {selectedSet ? (
                     <div className="space-y-4">
-                        {/* Day Selector Row */}
                         <Card className="border-none shadow-sm bg-slate-900 text-white overflow-hidden">
                             <div className="p-2 overflow-x-auto">
                                 <div className="flex items-center gap-1 min-w-max">
@@ -1316,76 +1334,22 @@ export function SetsTab() {
                                         <Calendar className="w-4 h-4" />
                                         {uiText.days}:
                                     </span>
-                                    {dayKeys.map((day) => (
+                                    {periodDayEntries.map((entry) => (
                                         <button
-                                            key={day}
-                                            onClick={() => setActiveDay(day.toString())}
-                                            className={`
-                                                w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-all
-                                                ${activeDay === String(day)
-                                                    ? 'bg-primary text-white shadow-lg scale-110'
-                                                    : 'hover:bg-slate-700 text-slate-300'}
-                                            `}
+                                            key={entry.iso}
+                                            onClick={() => setActiveDay(entry.dayKey)}
+                                            className={[
+                                                'h-9 px-3 rounded-full flex items-center justify-center text-sm font-medium transition-all border',
+                                                activeDay === String(entry.dayKey)
+                                                    ? 'bg-primary text-white border-primary shadow-lg'
+                                                    : entry.isFirst
+                                                        ? 'bg-slate-800 text-slate-100 border-slate-600 hover:bg-slate-700'
+                                                        : 'bg-pink-600/20 text-pink-100 border-pink-400/40 hover:bg-pink-600/35',
+                                            ].join(' ')}
                                         >
-                                            {day}
+                                            {entry.label}
                                         </button>
                                     ))}
-                                    <IconButton
-                                        label={uiText.addDay}
-                                        variant="ghost"
-                                        iconSize="md"
-                                        className={`${rowIconBtnClass} bg-primary text-white hover:bg-primary/90`}
-                                        onClick={() => void (async () => {
-                                            if (!selectedSet) return
-                                            const maxDay = Math.max(...dayKeys.map((d) => Number(d)).filter((n) => Number.isFinite(n) && n > 0))
-                                            const nextDay = maxDay + 1
-                                            if (nextDay > DEFAULT_MAX_DAYS) {
-                                                toast.error(uiText.maxDaysReached(DEFAULT_MAX_DAYS))
-                                                return
-                                            }
-
-                                            const baseGroups = getBaseGroups(selectedSet)
-                                            const meta = getMeta(selectedSet)
-
-                                            const nextDayData =
-                                                buildStandardDayData(nextDay) ??
-                                                (baseGroups[String(maxDay)]
-                                                    ? JSON.parse(JSON.stringify(baseGroups[String(maxDay)]))
-                                                    : CALORIE_OPTIONS.map((cal) => ({ id: String(cal), calories: cal, name: `${cal} kcal`, price: null, dishes: [] })))
-
-                                            const updatedGroups = {
-                                                ...baseGroups,
-                                                [String(nextDay)]: nextDayData,
-                                                _meta: {
-                                                    ...meta,
-                                                    dayOrder: (() => {
-                                                        const existing = Array.isArray(meta.dayOrder) ? meta.dayOrder.map(String) : dayKeys.slice();
-                                                        if (existing.includes(String(nextDay))) return existing;
-                                                        return [...existing, String(nextDay)];
-                                                    })(),
-                                                },
-                                            }
-
-                                            const updatedSet = { ...selectedSet, calorieGroups: updatedGroups }
-                                            setSelectedSet(updatedSet)
-                                            setSets((prev) => prev.map((s) => (s.id === updatedSet.id ? updatedSet : s)))
-                                            setActiveDay(String(nextDay))
-                                            await saveSet(updatedSet)
-                                        })()}
-                                    >
-                                        <Plus className="h-4 w-4" />
-                                    </IconButton>
-
-                                    <IconButton
-                                        label={uiText.delete}
-                                        variant="ghost"
-                                        iconSize="md"
-                                        className={rowIconBtnDeleteClass}
-                                        disabled={dayKeys.length <= 1}
-                                        onClick={() => void deleteDay(activeDay)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </IconButton>
                                 </div>
                             </div>
                         </Card>
@@ -1403,16 +1367,11 @@ export function SetsTab() {
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        {activeDayGroup ? (
+                                        {activeDayGroup && typeof activeDayGroup.price === 'number' && Number.isFinite(activeDayGroup.price) ? (
                                             <div className="hidden sm:flex items-center gap-2">
-                                                <Badge variant="outline" className="text-[10px] tabular-nums">
-                                                    {activeDayGroup.calories} kcal
+                                                <Badge variant="secondary" className="text-[10px] tabular-nums">
+                                                    {formatUzs(activeDayGroup.price)} UZS
                                                 </Badge>
-                                                {typeof activeDayGroup.price === 'number' && Number.isFinite(activeDayGroup.price) ? (
-                                                    <Badge variant="secondary" className="text-[10px] tabular-nums">
-                                                        {formatUzs(activeDayGroup.price)} UZS
-                                                    </Badge>
-                                                ) : null}
                                             </div>
                                         ) : null}
                                         <IconButton
@@ -1449,7 +1408,7 @@ export function SetsTab() {
                                                             className="px-3 data-[state=active]:bg-white data-[state=active]:text-slate-900"
                                                         >
                                                             <span className="max-w-[160px] truncate">
-                                                                {(g.name || '').trim() || `${uiText.group} ${idx + 1}`}
+                                                                {getGroupDisplayName(g, idx)}
                                                             </span>
                                                             {typeof g.price === 'number' && Number.isFinite(g.price) ? (
                                                                 <span className="ml-1 text-[10px] tabular-nums opacity-80">
@@ -1483,11 +1442,27 @@ export function SetsTab() {
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </IconButton>
+
+                                                <IconButton
+                                                    label={uiText.group}
+                                                    variant="outline"
+                                                    iconSize="md"
+                                                    className={`${rowIconBtnClass} border-slate-300/30 text-slate-100 hover:bg-slate-700`}
+                                                    disabled={!activeDayGroup}
+                                                    onClick={() => {
+                                                        if (!activeDayGroup) return;
+                                                        const idx = currentDayData.findIndex((g) => String(g.id) === String(activeGroupTab));
+                                                        if (idx < 0) return;
+                                                        setEditingGroup({ groupIndex: idx, group: activeDayGroup });
+                                                        setIsGroupModalOpen(true);
+                                                    }}
+                                                >
+                                                    <Edit className="h-4 w-4" />
+                                                </IconButton>
                                             </div>
 
                                             {currentDayData.map((group) => {
                                                     const groupIdx = currentDayData.findIndex((g) => g.id === group.id)
-                                                    const totalKcal = getGroupCaloriesTotal(group)
 
                                                     const dishesSorted = (group.dishes || [])
                                                         .slice()
@@ -1504,19 +1479,13 @@ export function SetsTab() {
                                                                     <div className="flex items-center gap-2">
                                                                         <Flame className="w-5 h-5 text-orange-500" />
                                                                         <span className="font-semibold text-lg truncate">
-                                                                            {group.name || `${group.calories} kcal`}
+                                                                            {getGroupDisplayName(group, groupIdx)}
                                                                         </span>
-                                                                        <Badge variant="outline" className="text-[10px] tabular-nums">
-                                                                            {group.calories} kcal
-                                                                        </Badge>
                                                                         {typeof group.price === 'number' && Number.isFinite(group.price) ? (
                                                                             <Badge variant="secondary" className="text-[10px] tabular-nums">
                                                                                 {formatUzs(group.price)} UZS
                                                                             </Badge>
                                                                         ) : null}
-                                                                        <Badge variant="outline" className="text-[10px]">
-                                                                            {Math.round(totalKcal)} kcal
-                                                                        </Badge>
                                                                     </div>
                                                                 </div>
 
@@ -1795,6 +1764,19 @@ export function SetsTab() {
                                     <div className="text-sm font-semibold">{uiText.ingredients}</div>
                                     <div className="text-xs text-muted-foreground truncate">{uiText.ingredientsDesc}</div>
                                 </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                    <Badge variant="outline" className="text-[10px]">
+                                        {selectedSet?.name || uiText.setName}
+                                    </Badge>
+                                    <Badge variant="secondary" className="text-[10px]">
+                                        {(() => {
+                                            const idx = addDishTarget?.calorieIndex ?? -1;
+                                            if (idx < 0) return uiText.group;
+                                            const targetGroup = currentDayData[idx];
+                                            return targetGroup ? `${uiText.group}: ${getGroupDisplayName(targetGroup, idx)}` : uiText.group;
+                                        })()}
+                                    </Badge>
+                                </div>
                             </div>
 
                             <Table>
@@ -1803,6 +1785,8 @@ export function SetsTab() {
                                         <TableHead className="pl-4">{uiText.tableName}</TableHead>
                                         <TableHead className="w-[110px]">{uiText.tableAmount}</TableHead>
                                         <TableHead className="w-[90px]">{uiText.tableUnit}</TableHead>
+                                        <TableHead className="w-[120px] text-right">kcal</TableHead>
+                                        <TableHead className="w-[150px] text-right">UZS</TableHead>
                                         <TableHead className="w-[48px]" />
                                     </TableRow>
                                 </TableHeader>
@@ -1824,6 +1808,20 @@ export function SetsTab() {
                                                 />
                                             </TableCell>
                                             <TableCell className="text-muted-foreground text-sm">{ing.unit}</TableCell>
+                                            <TableCell className="text-right text-xs text-muted-foreground tabular-nums">
+                                                {(() => {
+                                                    const meta = warehouseItemByName.get(String(ing.name || '').trim().toLowerCase());
+                                                    if (!meta || meta.kcalPerGram === null) return '-';
+                                                    const kcal = toGrams(Number(ing.amount), String(ing.unit)) * meta.kcalPerGram;
+                                                    return Math.round(kcal).toLocaleString('ru-RU');
+                                                })()}
+                                            </TableCell>
+                                            <TableCell className="text-right text-xs text-muted-foreground tabular-nums">
+                                                {(() => {
+                                                    const total = getDraftIngredientCost(ing);
+                                                    return total === null ? '-' : `${Math.round(total).toLocaleString('ru-RU')}`;
+                                                })()}
+                                            </TableCell>
                                             <TableCell>
                                                 <Button
                                                     variant="ghost"
@@ -1838,7 +1836,7 @@ export function SetsTab() {
                                     ))}
                                     {draftMealIngredients.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={4} className="h-24 text-center text-slate-400">
+                                            <TableCell colSpan={6} className="h-24 text-center text-slate-400">
                                                 {uiText.noIngredients}
                                             </TableCell>
                                         </TableRow>
