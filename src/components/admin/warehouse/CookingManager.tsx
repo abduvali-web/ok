@@ -500,6 +500,20 @@ export function CookingManager({
         return cookingPlan?.cookedStats?.[dishId]?.[calorie] || 0;
     };
 
+    const getClientCountForGroupCalories = (groupCalories: number) => {
+        const keys = Object.keys(clientsByCalorie)
+            .map((k) => Number(k))
+            .filter((n) => Number.isFinite(n));
+        if (keys.length === 0) return 0;
+        if (typeof clientsByCalorie[groupCalories] === 'number') return clientsByCalorie[groupCalories] || 0;
+
+        let closest = keys[0];
+        for (const k of keys) {
+            if (Math.abs(k - groupCalories) < Math.abs(closest - groupCalories)) closest = k;
+        }
+        return clientsByCalorie[closest] || 0;
+    };
+
     const isDishInGroup = (dishId: string | number, calorie: number) => {
         // Custom Set Logic
         if (activeSet) {
@@ -554,7 +568,7 @@ export function CookingManager({
 
             // Check if this dish is in this calorie group
             const hasDish = group.dishes.some(d => d.dishId == dishId); // loose equality
-            return hasDish ? (clientsByCalorie[calorie] || 0) : 0;
+            return hasDish ? getClientCountForGroupCalories(calorie) : 0;
         }
 
         // Fallback to standard logic
@@ -569,7 +583,7 @@ export function CookingManager({
             }
         }
 
-        return clientsByCalorie[calorie] || 0;
+        return getClientCountForGroupCalories(calorie);
     };
 
     const filteredCalorieGroups = selectedCalorieGroup === 'all'

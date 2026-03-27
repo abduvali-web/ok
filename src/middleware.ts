@@ -35,6 +35,18 @@ function shouldSkipPath(pathname: string) {
   )
 }
 
+function withSecurityHeaders(response: NextResponse) {
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  response.headers.set('X-DNS-Prefetch-Control', 'off')
+  if (process.env.NODE_ENV === 'production') {
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
+  }
+  return response
+}
+
 export default auth((request: NextRequest) => {
   const { nextUrl } = request
   const requiredRole = requiredRoleForPath(nextUrl.pathname)
@@ -42,33 +54,33 @@ export default auth((request: NextRequest) => {
 
   if (requiredRole) {
     if (!authUser) {
-      return NextResponse.redirect(new URL('/login', request.url))
+      return withSecurityHeaders(NextResponse.redirect(new URL('/login', request.url)))
     }
 
     if (authUser.role !== requiredRole) {
       const fallbackPath = ROLE_HOME[authUser.role || ''] || '/login'
-      return NextResponse.redirect(new URL(fallbackPath, request.url))
+      return withSecurityHeaders(NextResponse.redirect(new URL(fallbackPath, request.url)))
     }
   }
 
   if (shouldSkipPath(nextUrl.pathname)) {
-    return NextResponse.next()
+    return withSecurityHeaders(NextResponse.next())
   }
 
   const rawSubdomain = extractSubdomainFromHost(request.headers.get('host'), ROOT_DOMAIN)
   if (!rawSubdomain) {
-    return NextResponse.next()
+    return withSecurityHeaders(NextResponse.next())
   }
 
   const normalizedSubdomain = normalizeSubdomain(rawSubdomain)
   if (!normalizedSubdomain || RESERVED_SUBDOMAINS.has(normalizedSubdomain)) {
-    return NextResponse.next()
+    return withSecurityHeaders(NextResponse.next())
   }
 
   const rewrittenUrl = nextUrl.clone()
   rewrittenUrl.pathname = `/sites/${normalizedSubdomain}${nextUrl.pathname === '/' ? '' : nextUrl.pathname}`
 
-  return NextResponse.rewrite(rewrittenUrl)
+  return withSecurityHeaders(NextResponse.rewrite(rewrittenUrl))
 })
 
 export const config = {

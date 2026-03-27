@@ -6,19 +6,33 @@ import { getOwnerAdminId } from '@/lib/admin-scope';
 
 const BuyIngredientsSchema = z.object({
     items: z.array(z.object({
-        name: z.string(),
-        amount: z.number().positive(), // in kg usually, but system stores in gr? Let's clarify.
-        // User asked for "write how many kgs buyed", so input is likely KG.
-        // System in menuData uses 'gr'. We need to convert or be consistent.
-        // Assuming input amount is in the unit specified or we convert to 'gr' if it's 'kg'.
-        // Let's expect the frontend to send grams or specific unit, but user prompt said "kgs".
-        // Let's add a unit field to be safe, or default input to KG and convert to GR for storage if standard is GR.
-        // Standard in DB seems to be 'gr' (default).
-        // we'll handle conversion in API or Frontend. Let's do it in API if we receive unit.
-        costPerUnit: z.number().nonnegative(), // cost per this amount unit (e.g. per kg)
-        unit: z.string().default('kg')
+        name: z.string().trim().min(1),
+        amount: z.number().positive(),
+        costPerUnit: z.number().nonnegative(),
+        unit: z.string().trim().min(1).default('kg')
     }))
 });
+
+const normalizeUnit = (unit: string): string => {
+    const value = unit.trim().toLowerCase();
+    if (value === 'g') return 'gr';
+    if (value === 'pc' || value === 'sht' || value === 'don' || value === "bo'lak") return 'pcs';
+    return value;
+};
+
+const massUnits: Record<string, number> = { mg: 0.001, gr: 1, kg: 1000 };
+const volumeUnits: Record<string, number> = { ml: 1, l: 1000 };
+const countUnits: Record<string, number> = { pcs: 1, dona: 1 };
+
+const convertAmount = (amount: number, fromUnit: string, toUnit: string): number | null => {
+    const from = normalizeUnit(fromUnit);
+    const to = normalizeUnit(toUnit);
+    if (from === to) return amount;
+    if (massUnits[from] && massUnits[to]) return (amount * massUnits[from]) / massUnits[to];
+    if (volumeUnits[from] && volumeUnits[to]) return (amount * volumeUnits[from]) / volumeUnits[to];
+    if (countUnits[from] && countUnits[to]) return amount;
+    return null;
+};
 
 export async function POST(request: Request) {
     try {
@@ -41,32 +55,27 @@ export async function POST(request: Request) {
                 : session.user.id;
         const adminId = effectiveAdminId;
 
-        let totalCost = 0;
-        const inventoryUpdates: Record<string, number> = {};
-
-        // Calculate totals and prepare updates
-        for (const item of items) {
-            const cost = item.amount * item.costPerUnit;
-            totalCost += cost;
-
-            // Convert to grams if unit is kg (assuming DB stores grams)
-            // If unit is 'gr', amount is as is.
-            let amountInDbUnit = item.amount;
-            if (item.unit.toLowerCase() === 'kg') {
-                amountInDbUnit = item.amount * 1000;
-            }
-
-            inventoryUpdates[item.name] = (inventoryUpdates[item.name] || 0) + amountInDbUnit;
-        }
+        const totalCost = items.reduce((sum, item) => sum + (item.amount * item.costPerUnit), 0);
 
         const result = await db.$transaction(async (tx) => {
+            const admin = await tx.admin.findUnique({
+                where: { id: adminId },
+                select: { companyBalance: true }
+            });
+            if (!admin) {
+                throw new Error('ADMIN_NOT_FOUND');
+            }
+            if (admin.companyBalance < totalCost) {
+                throw new Error('INSUFFICIENT_BALANCE');
+            }
+
             // 1. Create Transaction (Expense)
             const transaction = await tx.transaction.create({
                 data: {
                     amount: totalCost,
                     type: 'EXPENSE',
                     category: 'INGREDIENT_PURCHASE',
-                    description: `Закупка ингредиентов: ${items.map(i => `${i.name} (${i.amount}${i.unit})`).join(', ')}`,
+                    description: `Ingredient purchase: ${items.map(i => `${i.name} (${i.amount}${i.unit})`).join(', ')}`,
                     adminId: adminId
                 }
             });
@@ -80,22 +89,36 @@ export async function POST(request: Request) {
             });
 
             // 3. Update Warehouse Stock
-            for (const [name, amountToAdd] of Object.entries(inventoryUpdates)) {
-                const purchased = items.find((item) => item.name === name)
-                await tx.warehouseItem.upsert({
-                    where: { name },
-                    update: {
-                        amount: { increment: amountToAdd },
-                        pricePerUnit: purchased ? purchased.costPerUnit : undefined,
-                        priceUnit: purchased ? purchased.unit : undefined,
+            for (const purchased of items) {
+                const existing = await tx.warehouseItem.findUnique({
+                    where: { name: purchased.name }
+                });
+
+                if (!existing) {
+                    await tx.warehouseItem.create({
+                        data: {
+                            name: purchased.name,
+                            amount: purchased.amount,
+                            unit: normalizeUnit(purchased.unit),
+                            pricePerUnit: purchased.costPerUnit,
+                            priceUnit: normalizeUnit(purchased.unit),
+                        }
+                    });
+                    continue;
+                }
+
+                const convertedAmount = convertAmount(purchased.amount, purchased.unit, existing.unit);
+                if (convertedAmount === null) {
+                    throw new Error(`UNIT_MISMATCH:${purchased.name}:${existing.unit}:${purchased.unit}`);
+                }
+
+                await tx.warehouseItem.update({
+                    where: { name: purchased.name },
+                    data: {
+                        amount: { increment: convertedAmount },
+                        pricePerUnit: purchased.costPerUnit,
+                        priceUnit: normalizeUnit(purchased.unit),
                         updatedAt: new Date()
-                    },
-                    create: {
-                        name,
-                        amount: amountToAdd,
-                        pricePerUnit: purchased ? purchased.costPerUnit : null,
-                        priceUnit: purchased ? purchased.unit : 'kg',
-                        unit: 'gr' // Default storing unit
                     }
                 });
             }
@@ -120,6 +143,22 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, transaction: result });
 
     } catch (error) {
+        if (error instanceof Error) {
+            if (error.message === 'INSUFFICIENT_BALANCE') {
+                return NextResponse.json({ error: 'Insufficient company balance' }, { status: 400 });
+            }
+            if (error.message === 'ADMIN_NOT_FOUND') {
+                return NextResponse.json({ error: 'Admin not found' }, { status: 404 });
+            }
+            if (error.message.startsWith('UNIT_MISMATCH:')) {
+                const [, name, existingUnit, newUnit] = error.message.split(':');
+                return NextResponse.json(
+                    { error: `Unit mismatch for ${name}: warehouse uses ${existingUnit}, attempted to buy in ${newUnit}` },
+                    { status: 400 }
+                );
+            }
+        }
+
         console.error('Error buying ingredients:', error);
         return NextResponse.json({ error: 'Failed to process purchase' }, { status: 500 });
     }

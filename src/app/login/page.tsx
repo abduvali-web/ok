@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
@@ -11,6 +11,7 @@ import { AuthShell } from '@/components/auth/AuthShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { AnimatedInput } from '@/components/smoothui'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 const roleRoutes: Record<string, string> = {
@@ -167,37 +168,37 @@ export default function LoginPage() {
             </Link>
           </p>
           <p>
-            <button type="button" className="hover:underline" onClick={() => toast.info(uiText.policiesSoon)}>
+            <Button type="button" variant="link" className="h-auto p-0 text-xs" onClick={() => toast.info(uiText.policiesSoon)}>
               {t.auth.privacyPolicy}
-            </button>
+            </Button>
             {' · '}
-            <button type="button" className="hover:underline" onClick={() => toast.info(uiText.policiesSoon)}>
+            <Button type="button" variant="link" className="h-auto p-0 text-xs" onClick={() => toast.info(uiText.policiesSoon)}>
               {t.auth.termsOfUse}
-            </button>
+            </Button>
           </p>
         </div>
       }
     >
       <form onSubmit={handleLogin} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">{t.auth.email}</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="admin@autofood.uz"
+          <AnimatedInput
+            label={t.auth.email}
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
+            placeholder="admin@autofood.uz"
+            onChange={setEmail}
+            type="email"
             autoComplete="email"
+            required
+            inputClassName="h-10"
           />
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">{t.auth.password}</Label>
-            <button type="button" className="text-xs text-muted-foreground hover:underline" onClick={() => toast.info(uiText.passwordRecoverySoon)}>
+            <Button type="button" variant="link" className="h-auto p-0 text-xs text-muted-foreground" onClick={() => toast.info(uiText.passwordRecoverySoon)}>
               {t.auth.forgotPassword}
-            </button>
+            </Button>
           </div>
           <div className="relative">
             <Input
@@ -209,14 +210,16 @@ export default function LoginPage() {
               required
               autoComplete="current-password"
             />
-            <button
+            <Button
               type="button"
-              className="absolute right-2 top-1 inline-flex h-7 w-7 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground"
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1 h-7 w-7 text-muted-foreground hover:text-foreground"
               onClick={() => setShowPassword((prev) => !prev)}
               aria-label={showPassword ? uiText.hidePassword : uiText.showPassword}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+            </Button>
           </div>
         </div>
 

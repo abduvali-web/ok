@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
 
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { TypewriterText } from '@/components/smoothui'
 
 type AuthHighlight = {
   icon: LucideIcon
@@ -82,7 +83,7 @@ export function AuthShell({
               {headline}
             </h1>
             <p className="text-base text-zinc-500 dark:text-white/40 font-medium leading-relaxed max-w-md">
-              {description}
+              <TypewriterText speed={18}>{description}</TypewriterText>
             </p>
           </div>
 

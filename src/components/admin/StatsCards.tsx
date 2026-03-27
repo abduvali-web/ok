@@ -1,7 +1,7 @@
 'use client'
 
 import { Users, TrendingUp, Clock, Truck } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, type Variants } from 'framer-motion'
 
 interface Stats {
     successfulOrders: number
@@ -25,7 +25,6 @@ const cardMeta = [
         iconGradient: 'from-emerald-400 to-emerald-600',
         accentColor: 'text-emerald-600 dark:text-emerald-400',
         glowColor: 'rgba(52, 211, 153, 0.15)',
-        ring: 'ring-emerald-500/20',
     },
     {
         title: 'В доставке',
@@ -36,7 +35,6 @@ const cardMeta = [
         iconGradient: 'from-blue-400 to-blue-600',
         accentColor: 'text-blue-600 dark:text-blue-400',
         glowColor: 'rgba(96, 165, 250, 0.15)',
-        ring: 'ring-blue-500/20',
     },
     {
         title: 'Клиенты',
@@ -47,7 +45,6 @@ const cardMeta = [
         iconGradient: 'from-violet-400 to-violet-600',
         accentColor: 'text-violet-600 dark:text-violet-400',
         glowColor: 'rgba(167, 139, 250, 0.15)',
-        ring: 'ring-violet-500/20',
     },
     {
         title: 'Ожидают',
@@ -58,11 +55,10 @@ const cardMeta = [
         iconGradient: 'from-amber-400 to-amber-600',
         accentColor: 'text-amber-600 dark:text-amber-400',
         glowColor: 'rgba(251, 191, 36, 0.15)',
-        ring: 'ring-amber-500/20',
     },
 ] as const
 
-const container = {
+const container: Variants = {
     hidden: { opacity: 0 },
     show: {
         opacity: 1,
@@ -70,7 +66,7 @@ const container = {
     }
 }
 
-const item = {
+const item: Variants = {
     hidden: { opacity: 0, y: 16, scale: 0.95 },
     show: { 
         opacity: 1, y: 0, scale: 1,
@@ -86,7 +82,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
             initial="hidden"
             animate="show"
         >
-            {cardMeta.map(({ title, key, description, Icon, gradient, iconGradient, accentColor, glowColor, ring }) => (
+            {cardMeta.map(({ title, key, description, Icon, gradient, iconGradient, accentColor, glowColor }) => (
                 <motion.div
                     key={title}
                     variants={item}

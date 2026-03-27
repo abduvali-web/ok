@@ -293,10 +293,12 @@ export function ChatTab() {
                 <div className="p-6 text-center text-sm text-muted-foreground">No users available.</div>
               ) : (
                 filteredUsers.map((user) => (
-                  <button
+                  <Button
                     key={user.id}
+                    type="button"
                     onClick={() => void startConversation(user.id)}
-                    className="flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+                    variant="ghost"
+                    className="flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 justify-start text-left transition-colors hover:bg-muted/40"
                   >
                     <Avatar>
                       <AvatarFallback>{user.name[0]}</AvatarFallback>
@@ -306,7 +308,7 @@ export function ChatTab() {
                       <div className="truncate text-xs text-muted-foreground">{user.email}</div>
                     </div>
                     <Badge className={getRoleColor(user.role)}>{getRoleLabel(user.role)}</Badge>
-                  </button>
+                  </Button>
                 ))
               )}
             </div>
@@ -316,13 +318,15 @@ export function ChatTab() {
                 <div className="p-6 text-center text-sm text-muted-foreground">No conversations yet.</div>
               ) : (
                 filteredConversations.map((conversation) => (
-                  <button
+                  <Button
                     key={conversation.id}
+                    type="button"
                     onClick={() => {
                       setSelectedConversation(conversation.id)
                       void fetchMessages(conversation.id)
                     }}
-                    className={`flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors hover:bg-muted/40 ${
+                    variant="ghost"
+                    className={`flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 justify-start text-left transition-colors hover:bg-muted/40 ${
                       selectedConversation === conversation.id ? 'bg-muted/50' : ''
                     }`}
                   >
@@ -340,7 +344,7 @@ export function ChatTab() {
                         {conversation.lastMessage?.content || 'No messages yet.'}
                       </div>
                     </div>
-                  </button>
+                  </Button>
                 ))
               )}
             </div>

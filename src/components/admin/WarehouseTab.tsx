@@ -4,17 +4,18 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import {
     Package,
     Calculator,
     ShoppingCart,
     ChefHat,
     Loader2,
-    Users,
-    UtensilsCrossed
+    UtensilsCrossed,
+    Plus,
+    Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -153,7 +154,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         2500: 0,
         3000: 0,
     });
-    const [isLoadingClients, setIsLoadingClients] = useState(false);
+    const [, setIsLoadingClients] = useState(false);
     const [activeSet, setActiveSet] = useState<any>(null);
     const [allClients, setAllClients] = useState<any[]>([]);
 
@@ -167,6 +168,10 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     const [boughtShoppingItems, setBoughtShoppingItems] = useState<Set<string>>(new Set());
     const [isBuyingSelected, setIsBuyingSelected] = useState(false);
     const [inventoryPriceMeta, setInventoryPriceMeta] = useState<Record<string, { pricePerUnit: number | null; priceUnit: string }>>({});
+    const [shoppingEdits, setShoppingEdits] = useState<Record<string, { amount: string; unit: string; costPerUnit: string }>>({});
+    const [customBuyItems, setCustomBuyItems] = useState<Array<{ id: string; name: string; amount: string; unit: string; costPerUnit: string }>>([]);
+    const [selectedCustomBuyItems, setSelectedCustomBuyItems] = useState<Set<string>>(new Set());
+    const [newBuyItem, setNewBuyItem] = useState({ name: '', amount: '', unit: 'kg', costPerUnit: '' });
     const [calcRange, setCalcRange] = useState<DateRange | undefined>(undefined)
 
     // Cooking audit state (period + per-day drilldown)
@@ -665,15 +670,6 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             }
         };
 
-        // Calculate for Standard/Global Active
-        const globalIngredients = calculateIngredientsForMenu(
-            tomorrowMenuNumber,
-            standardStats,
-            dishQuantities,
-            activeSet // Use the Global Active Set for unassigned clients
-        );
-        mergeIngredients(globalIngredients);
-
         // Calculate for Assigned Sets
         for (const set of availableSets) {
             // Skip if this is the active set (already handled in global?)
@@ -780,13 +776,13 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         // So I will pass undefined to global too.
 
         // Re-do Global Call Logic inside this block
-        const globalIngredients2 = calculateIngredientsForMenu(
+        const globalIngredients = calculateIngredientsForMenu(
             tomorrowMenuNumber,
             standardStats,
             undefined,
             activeSet
         );
-        mergeIngredients(globalIngredients2);
+        mergeIngredients(globalIngredients);
 
         setCalculatedIngredients(totalIngredients);
 
@@ -857,56 +853,112 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         () => Array.from(shoppingList.entries()).filter(([name]) => !boughtShoppingItems.has(name)),
         [shoppingList, boughtShoppingItems]
     );
-
+    useEffect(() => {
+        if (visibleShoppingEntries.length === 0) return;
+        setShoppingEdits((prev) => {
+            const next = { ...prev };
+            for (const [name, { amount, unit }] of visibleShoppingEntries) {
+                const key = name.toLowerCase();
+                if (next[key]) continue;
+                const meta = inventoryPriceMeta[key] || { pricePerUnit: null, priceUnit: unit || 'kg' };
+                next[key] = {
+                    amount: String(amount),
+                    unit: meta.priceUnit || unit || 'kg',
+                    costPerUnit: String(meta.pricePerUnit ?? 0),
+                };
+            }
+            return next;
+        });
+    }, [visibleShoppingEntries, inventoryPriceMeta]);
     const selectedVisibleCount = useMemo(
         () => visibleShoppingEntries.filter(([name]) => selectedShoppingItems.has(name)).length,
         [visibleShoppingEntries, selectedShoppingItems]
     );
-
+    const selectedCustomCount = useMemo(
+        () => customBuyItems.filter((item) => selectedCustomBuyItems.has(item.id)).length,
+        [customBuyItems, selectedCustomBuyItems]
+    );
     const handleBuySelectedIngredients = async () => {
-        const toBuy = visibleShoppingEntries.filter(([name]) => selectedShoppingItems.has(name));
-        if (toBuy.length === 0) return;
+        const calcToBuy = visibleShoppingEntries.filter(([name]) => selectedShoppingItems.has(name));
+        const customToBuy = customBuyItems.filter((item) => selectedCustomBuyItems.has(item.id));
+        if (calcToBuy.length === 0 && customToBuy.length === 0) return;
         setIsBuyingSelected(true);
         try {
-            const items = toBuy.map(([name, { amount, unit }]) => {
-                const meta = inventoryPriceMeta[name.toLowerCase()] || { pricePerUnit: null, priceUnit: 'kg' };
-                const targetUnit = meta.priceUnit || unit || 'kg';
-                const converted = convertToUnit(amount, unit, targetUnit);
+            const calcItems = calcToBuy.map(([name, fallback]) => {
+                const key = name.toLowerCase();
+                const edit = shoppingEdits[key];
                 return {
                     name,
-                    amount: converted !== null ? converted : amount,
-                    costPerUnit: meta.pricePerUnit ?? 0,
+                    amount: Number(edit?.amount ?? fallback.amount),
+                    unit: String(edit?.unit ?? fallback.unit ?? 'kg'),
+                    costPerUnit: Number(edit?.costPerUnit ?? 0),
+                };
+            });
+            const customItems = customToBuy.map((item) => ({
+                name: item.name.trim(),
+                amount: Number(item.amount),
+                unit: item.unit || 'kg',
+                costPerUnit: Number(item.costPerUnit),
+            }));
+            const allItems = [...calcItems, ...customItems].filter(
+                (item) =>
+                    item.name &&
+                    Number.isFinite(item.amount) &&
+                    item.amount > 0 &&
+                    Number.isFinite(item.costPerUnit) &&
+                    item.costPerUnit >= 0
+            );
+            if (allItems.length === 0) {
+                throw new Error('Check amount and price');
+            }
+            const items = allItems.map((item) => {
+                const targetUnit = item.unit || 'kg';
+                const converted = convertToUnit(item.amount, item.unit, targetUnit);
+                return {
+                    name: item.name,
+                    amount: converted !== null ? converted : item.amount,
+                    costPerUnit: item.costPerUnit,
                     unit: targetUnit,
                 };
             });
-
             const response = await fetch('/api/admin/finance/buy-ingredients', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ items }),
             });
-
             if (!response.ok) {
                 const data = await response.json().catch(() => ({}));
                 throw new Error(data?.error || 'Failed to buy selected ingredients');
             }
-
-            const boughtNames = new Set(toBuy.map(([name]) => name));
+            const boughtNames = new Set(calcToBuy.map(([name]) => name));
             setBoughtShoppingItems((prev) => new Set([...prev, ...boughtNames]));
             setSelectedShoppingItems((prev) => {
                 const next = new Set(prev);
                 for (const name of boughtNames) next.delete(name);
                 return next;
             });
-            toast.success(language === 'ru' ? 'Ингредиенты куплены' : language === 'uz' ? 'Ingredientlar sotib olindi' : 'Ingredients purchased');
+            setCustomBuyItems((prev) => prev.filter((item) => !selectedCustomBuyItems.has(item.id)));
+            setSelectedCustomBuyItems(new Set());
+            toast.success(language === 'ru' ? '??????????? ???????' : language === 'uz' ? 'Ingredientlar sotib olindi' : 'Ingredients purchased');
             await fetchInventory();
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : (language === 'ru' ? 'Ошибка покупки' : language === 'uz' ? "Sotib olishda xatolik" : 'Purchase failed'));
+            toast.error(error instanceof Error ? error.message : (language === 'ru' ? '?????? ???????' : language === 'uz' ? "Sotib olishda xatolik" : 'Purchase failed'));
         } finally {
             setIsBuyingSelected(false);
         }
     };
-
+    const addCustomBuyItem = () => {
+        const name = newBuyItem.name.trim();
+        const amount = Number(newBuyItem.amount);
+        const costPerUnit = Number(newBuyItem.costPerUnit);
+        if (!name || !Number.isFinite(amount) || amount <= 0 || !Number.isFinite(costPerUnit) || costPerUnit < 0) {
+            toast.error(language === 'ru' ? '????????? ????????, ?????????? ? ????' : language === 'uz' ? "Nomi, miqdori va narxini to\'ldiring" : 'Fill name, amount, and price');
+            return;
+        }
+        const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        setCustomBuyItems((prev) => [...prev, { id, name, amount: String(amount), unit: newBuyItem.unit || 'kg', costPerUnit: String(costPerUnit) }]);
+        setNewBuyItem({ name: '', amount: '', unit: 'kg', costPerUnit: '' });
+    };
     const _mealTypeIcons: Record<keyof typeof MEAL_TYPES, string> = {
         BREAKFAST: '🌅',
         SECOND_BREAKFAST: '🥐',
@@ -974,11 +1026,6 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     // const insufficientIngredients = useMemo(() => { ... }, []);
     // const hasEnoughStock = true;
     const _totalDishesToCook = Object.values(dishQuantities).reduce((sum, qty) => sum + qty, 0);
-
-    const totalPlannedPortions = useMemo(
-        () => Object.values(clientsByCalorie).reduce((sum, qty) => sum + qty, 0),
-        [clientsByCalorie]
-    );
 
     return (
         <div className={`space-y-6 ${className}`}>
@@ -1088,19 +1135,16 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                             {cookingRangeDays.length > 1 ? (
                                 <div className="flex gap-2 overflow-x-auto rounded-lg border bg-card p-2">
                                     {cookingRangeDays.map((iso) => (
-                                        <button
+                                        <Button
                                             key={iso}
                                             type="button"
                                             onClick={() => setSelectedCookingDateISO(iso)}
-                                            className={[
-                                                'shrink-0 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors',
-                                                iso === selectedCookingDateISO
-                                                    ? 'bg-primary text-primary-foreground border-primary'
-                                                    : 'bg-background hover:bg-muted/30 border-border',
-                                            ].join(' ')}
+                                            size="sm"
+                                            variant={iso === selectedCookingDateISO ? 'default' : 'outline'}
+                                            className="h-8 shrink-0 px-2.5 text-xs"
                                         >
                                             {iso}
-                                        </button>
+                                        </Button>
                                     ))}
                                 </div>
                             ) : null}
@@ -1173,20 +1217,9 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                         }}
                                         className="w-full justify-center"
                                         variant="default"
-                                        size="icon"
-                                        aria-label={
-                                            calcRangeDays.length > 0
-                                                ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
-                                                : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())
-                                        }
-                                        title={
-                                            calcRangeDays.length > 0
-                                                ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
-                                                : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())
-                                        }
                                     >
                                         <Calculator className="w-4 h-4" />
-                                        <span className="sr-only">
+                                        <span>
                                             {calcRangeDays.length > 0
                                                 ? t.warehouse.calcForDays.replace('{count}', calcRangeDays.length.toString())
                                                 : t.warehouse.calcTomorrow.replace('{number}', tomorrowMenuNumber.toString())}
@@ -1220,9 +1253,16 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                 </h4>
                                                 <div className="bg-orange-50 rounded-lg border border-orange-200 max-h-48 overflow-y-auto">
                                                     {visibleShoppingEntries.length > 0 ? (
-                                                        visibleShoppingEntries.map(([name, { amount, unit }]) => (
-                                                            <div key={name} className="flex items-center gap-2 justify-between w-full p-2 border-b border-orange-100 last:border-0 text-sm">
-                                                                <div className="flex items-center gap-2 min-w-0">
+                                                        visibleShoppingEntries.map(([name, fallback]) => {
+                                                            const key = name.toLowerCase()
+                                                            const edit = shoppingEdits[key] || {
+                                                                amount: String(fallback.amount),
+                                                                unit: fallback.unit || 'kg',
+                                                                costPerUnit: '0',
+                                                            }
+                                                            return (
+                                                            <div key={name} className="grid grid-cols-12 items-center gap-2 w-full p-2 border-b border-orange-100 last:border-0 text-sm">
+                                                                <div className="col-span-4 flex items-center gap-2 min-w-0">
                                                                     <Checkbox
                                                                         checked={selectedShoppingItems.has(name)}
                                                                         onCheckedChange={(checked) => {
@@ -1236,34 +1276,132 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                                     />
                                                                     <span className="text-orange-800 truncate">{name}</span>
                                                                 </div>
-                                                                <span className="font-medium text-orange-900 shrink-0">{amount} {unit}</span>
+                                                                <Input
+                                                                    className="col-span-3 h-8"
+                                                                    type="number"
+                                                                    value={edit.amount}
+                                                                    onChange={(e) =>
+                                                                        setShoppingEdits((prev) => ({
+                                                                            ...prev,
+                                                                            [key]: { ...edit, amount: e.target.value },
+                                                                        }))
+                                                                    }
+                                                                />
+                                                                <Select
+                                                                    value={edit.unit}
+                                                                    onValueChange={(value) =>
+                                                                        setShoppingEdits((prev) => ({
+                                                                            ...prev,
+                                                                            [key]: { ...edit, unit: value },
+                                                                        }))
+                                                                    }
+                                                                >
+                                                                    <SelectTrigger className="col-span-2 h-8">
+                                                                        <SelectValue />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem value="kg">kg</SelectItem>
+                                                                        <SelectItem value="gr">gr</SelectItem>
+                                                                        <SelectItem value="ml">ml</SelectItem>
+                                                                        <SelectItem value="l">l</SelectItem>
+                                                                        <SelectItem value="pcs">pcs</SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
+                                                                <Input
+                                                                    className="col-span-3 h-8"
+                                                                    type="number"
+                                                                    value={edit.costPerUnit}
+                                                                    onChange={(e) =>
+                                                                        setShoppingEdits((prev) => ({
+                                                                            ...prev,
+                                                                            [key]: { ...edit, costPerUnit: e.target.value },
+                                                                        }))
+                                                                    }
+                                                                    placeholder="price/unit"
+                                                                />
                                                             </div>
-                                                        ))
+                                                        )})
                                                     ) : (
                                                         <div className="p-4 text-center text-green-600 text-sm">
                                                             {t.warehouse.allGood}
                                                         </div>
                                                     )}
+                                                    {customBuyItems.map((item) => (
+                                                        <div key={item.id} className="grid grid-cols-12 items-center gap-2 w-full p-2 border-b border-orange-100 text-sm">
+                                                            <div className="col-span-4 flex items-center gap-2 min-w-0">
+                                                                <Checkbox
+                                                                    checked={selectedCustomBuyItems.has(item.id)}
+                                                                    onCheckedChange={(checked) => {
+                                                                        setSelectedCustomBuyItems((prev) => {
+                                                                            const next = new Set(prev);
+                                                                            if (checked) next.add(item.id);
+                                                                            else next.delete(item.id);
+                                                                            return next;
+                                                                        });
+                                                                    }}
+                                                                />
+                                                                <Input
+                                                                  className="h-8"
+                                                                  value={item.name}
+                                                                  onChange={(e) => setCustomBuyItems((prev) => prev.map((x) => x.id === item.id ? { ...x, name: e.target.value } : x))}
+                                                                />
+                                                            </div>
+                                                            <Input className="col-span-3 h-8" type="number" value={item.amount} onChange={(e) => setCustomBuyItems((prev) => prev.map((x) => x.id === item.id ? { ...x, amount: e.target.value } : x))} />
+                                                            <Select value={item.unit} onValueChange={(value) => setCustomBuyItems((prev) => prev.map((x) => x.id === item.id ? { ...x, unit: value } : x))}>
+                                                                <SelectTrigger className="col-span-2 h-8"><SelectValue /></SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="kg">kg</SelectItem>
+                                                                    <SelectItem value="gr">gr</SelectItem>
+                                                                    <SelectItem value="ml">ml</SelectItem>
+                                                                    <SelectItem value="l">l</SelectItem>
+                                                                    <SelectItem value="pcs">pcs</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                            <div className="col-span-2">
+                                                                <Input className="h-8" type="number" value={item.costPerUnit} onChange={(e) => setCustomBuyItems((prev) => prev.map((x) => x.id === item.id ? { ...x, costPerUnit: e.target.value } : x))} />
+                                                            </div>
+                                                            <Button variant="ghost" size="icon" className="col-span-1 h-8 w-8" onClick={() => setCustomBuyItems((prev) => prev.filter((x) => x.id !== item.id))}>
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                                {visibleShoppingEntries.length > 0 ? (
+                                                <div className="mt-2 grid grid-cols-12 items-center gap-2">
+                                                    <Input className="col-span-4 h-8" placeholder="Ingredient name" value={newBuyItem.name} onChange={(e) => setNewBuyItem((prev) => ({ ...prev, name: e.target.value }))} />
+                                                    <Input className="col-span-3 h-8" type="number" placeholder="Amount" value={newBuyItem.amount} onChange={(e) => setNewBuyItem((prev) => ({ ...prev, amount: e.target.value }))} />
+                                                    <Select value={newBuyItem.unit} onValueChange={(value) => setNewBuyItem((prev) => ({ ...prev, unit: value }))}>
+                                                        <SelectTrigger className="col-span-2 h-8"><SelectValue /></SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="kg">kg</SelectItem>
+                                                            <SelectItem value="gr">gr</SelectItem>
+                                                            <SelectItem value="ml">ml</SelectItem>
+                                                            <SelectItem value="l">l</SelectItem>
+                                                            <SelectItem value="pcs">pcs</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <Input className="col-span-2 h-8" type="number" placeholder="Price/unit" value={newBuyItem.costPerUnit} onChange={(e) => setNewBuyItem((prev) => ({ ...prev, costPerUnit: e.target.value }))} />
+                                                    <Button type="button" variant="outline" className="col-span-1 h-8 w-8 p-0" onClick={addCustomBuyItem}>
+                                                        <Plus className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                                {(visibleShoppingEntries.length > 0 || customBuyItems.length > 0) ? (
                                                     <Button
                                                         className="mt-3 w-full"
                                                         onClick={() => void handleBuySelectedIngredients()}
-                                                        disabled={selectedVisibleCount === 0 || isBuyingSelected}
+                                                        disabled={(selectedVisibleCount + selectedCustomCount) === 0 || isBuyingSelected}
                                                     >
                                                         {isBuyingSelected
-                                                            ? (language === 'ru' ? 'Покупка...' : language === 'uz' ? 'Sotib olinmoqda...' : 'Buying...')
+                                                            ? (language === 'ru' ? '???????...' : language === 'uz' ? 'Sotib olinmoqda...' : 'Buying...')
                                                             : (language === 'ru'
-                                                                ? `Купить выбранные (${selectedVisibleCount})`
+                                                                ? `?????? ????????? (${selectedVisibleCount + selectedCustomCount})`
                                                                 : language === 'uz'
-                                                                    ? `Tanlanganlarni sotib olish (${selectedVisibleCount})`
-                                                                    : `Buy selected (${selectedVisibleCount})`)}
+                                                                    ? `Tanlanganlarni sotib olish (${selectedVisibleCount + selectedCustomCount})`
+                                                                    : `Buy selected (${selectedVisibleCount + selectedCustomCount})`)}
                                                     </Button>
                                                 ) : null}
                                             </div>
                                         </>
                                     )}
-
                                     {calculatedIngredients.size === 0 && (
                                         <TabEmptyState
                                             title={t.warehouse.clickToCalc}
@@ -1283,4 +1421,5 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         </div>
     );
 }
+
 

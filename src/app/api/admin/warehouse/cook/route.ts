@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/auth';
-import { scaleIngredients, MEAL_TYPES } from '@/lib/menuData';
 
 // Helper to manually scale ingredients since we might need more control here or reuse existing
 // Reusing scaleIngredients from lib is fine, but we need to fetch specific Dish content from DB
@@ -106,10 +105,11 @@ export async function POST(request: Request) {
                 }
             }
 
-            const mealType = dish.mealType as keyof typeof MEAL_TYPES;
-
-            // Scale ingredients
-            const scaled = scaleIngredients(ingredientsToUse, calorie, mealType, amount);
+            // Use real ingredient grams from set/DB dish; no calorie-tier multiplier.
+            const scaled = (Array.isArray(ingredientsToUse) ? ingredientsToUse : []).map((ing: any) => ({
+                ...ing,
+                amount: (Number(ing?.amount) || 0) * amount,
+            }));
 
             // Accumulate deductions
             for (const ing of scaled) {

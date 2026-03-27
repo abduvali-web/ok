@@ -2,6 +2,7 @@
 
 import type React from 'react'
 import dynamic from 'next/dynamic'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -127,7 +128,7 @@ export function OrderModal({
     ? availableSets.find((s: any) => s?.id === orderFormData.assignedSetId)
     : null
 
-  const groupOptions: Array<{ id: string; name: string; calories: number; price: number | null }> = (() => {
+  const groupOptions: Array<{ id: string; name: string; price: number | null }> = useMemo(() => {
     const groupsByDay = selectedSet?.calorieGroups
     if (!groupsByDay || typeof groupsByDay !== 'object') return []
 
@@ -140,15 +141,21 @@ export function OrderModal({
     if (!Array.isArray(groups)) return []
 
     return groups.map((g: any) => ({
-      id: String(g?.id ?? g?.calories ?? g?.name ?? 'group'),
-      name: String(g?.name ?? `${g?.calories ?? ''} kcal`).trim() || `${g?.calories ?? ''} kcal`,
-      calories: typeof g?.calories === 'number' ? g.calories : Number(g?.calories) || 0,
+      id: String(g?.id ?? g?.name ?? 'group'),
+      name: String(g?.name ?? '').trim() || 'Group',
       price: typeof g?.price === 'number' && Number.isFinite(g.price) ? g.price : null,
     }))
-  })()
+  }, [selectedSet?.calorieGroups])
 
-  const selectedGroup =
-    groupOptions.find((g) => g.calories === orderFormData.calories) ?? null
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('')
+  const selectedGroup = useMemo(
+    () => groupOptions.find((g) => g.id === selectedGroupId) ?? null,
+    [groupOptions, selectedGroupId]
+  )
+
+  useEffect(() => {
+    setSelectedGroupId('')
+  }, [orderFormData.assignedSetId])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -287,12 +294,13 @@ export function OrderModal({
                   <Label className={labelClass}>Group</Label>
                   <div className={fieldSpanClass}>
                     <Select
-                      value={selectedGroup?.id ?? 'none'}
+                      value={selectedGroupId || 'none'}
                       onValueChange={(value) => {
-                        if (value === 'none') return
-                        const g = groupOptions.find((x) => x.id === value)
-                        if (!g) return
-                        setOrderFormData((prev) => ({ ...prev, calories: g.calories }))
+                        if (value === 'none') {
+                          setSelectedGroupId('')
+                          return
+                        }
+                        setSelectedGroupId(value)
                       }}
                     >
                       <SelectTrigger className="w-full">
@@ -318,18 +326,25 @@ export function OrderModal({
                     Калории
                     {orderFormData.selectedClientId && <span className="text-xs text-green-600 ml-1">✓</span>}
                   </Label>
-                  <select
-                    id="calories"
-                    value={orderFormData.calories}
-                    onChange={(e) => setOrderFormData((prev) => ({ ...prev, calories: parseInt(e.target.value) }))}
-                    className={`${fieldSpanClass} flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}`}
-                  >
-                    <option value="1200">1200 ккал</option>
-                    <option value="1600">1600 ккал</option>
-                    <option value="2000">2000 ккал</option>
-                    <option value="2500">2500 ккал</option>
-                    <option value="3000">3000 ккал</option>
-                  </select>
+                  <div className={fieldSpanClass}>
+                    <Select
+                      value={String(orderFormData.calories)}
+                      onValueChange={(value) =>
+                        setOrderFormData((prev) => ({ ...prev, calories: Number.parseInt(value, 10) || 1200 }))
+                      }
+                    >
+                      <SelectTrigger className={orderFormData.selectedClientId ? 'border-green-200 bg-green-50' : ''}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1200">1200 kcal</SelectItem>
+                        <SelectItem value="1600">1600 kcal</SelectItem>
+                        <SelectItem value="2000">2000 kcal</SelectItem>
+                        <SelectItem value="2500">2500 kcal</SelectItem>
+                        <SelectItem value="3000">3000 kcal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               )}
 
@@ -337,15 +352,20 @@ export function OrderModal({
                 <Label htmlFor="paymentMethod" className={labelClass}>
                   Оплата
                 </Label>
-                <select
-                  id="paymentMethod"
-                  value={orderFormData.paymentMethod}
-                  onChange={(e) => setOrderFormData((prev) => ({ ...prev, paymentMethod: e.target.value }))}
-                  className={`${fieldSpanClass} flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
-                >
-                  <option value="CASH">Наличные</option>
-                  <option value="CARD">Карта</option>
-                </select>
+                <div className={fieldSpanClass}>
+                  <Select
+                    value={orderFormData.paymentMethod}
+                    onValueChange={(value) => setOrderFormData((prev) => ({ ...prev, paymentMethod: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CASH">Cash</SelectItem>
+                      <SelectItem value="CARD">Card</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {isCashLike && (
@@ -398,19 +418,26 @@ export function OrderModal({
                 <Label htmlFor="courier" className={labelClass}>
                   Курьер
                 </Label>
-                <select
-                  id="courier"
-                  value={orderFormData.courierId}
-                  onChange={(e) => setOrderFormData((prev) => ({ ...prev, courierId: e.target.value }))}
-                  className={`${fieldSpanClass} flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
-                >
-                  <option value="">Автоматически (если есть у клиента)</option>
-                  {couriers.map((courier) => (
-                    <option key={courier.id} value={courier.id}>
-                      {courier.name}
-                    </option>
-                  ))}
-                </select>
+                <div className={fieldSpanClass}>
+                  <Select
+                    value={orderFormData.courierId || '__auto__'}
+                    onValueChange={(value) =>
+                      setOrderFormData((prev) => ({ ...prev, courierId: value === '__auto__' ? '' : value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__auto__">Automatic (if assigned to client)</SelectItem>
+                      {couriers.map((courier) => (
+                        <SelectItem key={courier.id} value={courier.id}>
+                          {courier.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div>
@@ -480,3 +507,4 @@ export function OrderModal({
     </Dialog>
   )
 }
+

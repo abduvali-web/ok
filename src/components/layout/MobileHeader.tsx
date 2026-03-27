@@ -2,14 +2,9 @@
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Bell, LogOut, Menu, Settings, User } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { BasicDropdown, type DropdownItem } from '@/components/smoothui';
 
 interface MobileHeaderProps {
   onMenuClick: () => void;
@@ -26,14 +21,24 @@ export function MobileHeader({
   userName,
   onLogout,
 }: MobileHeaderProps) {
-  const { t, language } = useLanguage();
-  const defaultUserName = language === 'ru' ? 'Пользователь' : language === 'uz' ? 'Foydalanuvchi' : 'User';
-  const resolvedUserName = userName ?? defaultUserName;
+  const { t } = useLanguage();
+  const resolvedUserName = userName ?? 'User';
+
+  const actionItems: DropdownItem[] = [
+    { id: 'profile', label: t.common.profile, icon: <User className="h-4 w-4" /> },
+    { id: 'settings', label: t.admin.settings, icon: <Settings className="h-4 w-4" /> },
+    { id: 'logout', label: t.common.logout, icon: <LogOut className="h-4 w-4" /> },
+  ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-[#06060a]/80 backdrop-blur-2xl lg:hidden accent-line">
+    <header className="sticky top-0 z-40 w-full border-b border-zinc-200/80 bg-white/80 accent-line backdrop-blur-2xl dark:border-white/[0.06] dark:bg-[#06060a]/80 lg:hidden">
       <div className="flex h-14 items-center justify-between px-4">
-        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-zinc-500 dark:text-white/50 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.06]" onClick={onMenuClick}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 rounded-xl text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:text-white/50 dark:hover:bg-white/[0.06] dark:hover:text-white"
+          onClick={onMenuClick}
+        >
           <Menu className="h-5 w-5" />
         </Button>
 
@@ -44,38 +49,34 @@ export function MobileHeader({
         </div>
 
         <div className="flex items-center gap-1.5">
-          <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-xl text-zinc-500 dark:text-white/50 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.06]">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative h-9 w-9 rounded-xl text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:text-white/50 dark:hover:bg-white/[0.06] dark:hover:text-white"
+          >
             <Bell className="h-4 w-4" />
             <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 px-1 text-[9px] font-bold text-white shadow-lg shadow-indigo-500/30">
               3
             </span>
           </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl">
-                <Avatar className="h-7 w-7 border border-zinc-200 dark:border-white/[0.1] shadow-sm">
-                  <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-500/15 dark:to-violet-500/15 text-[11px] font-bold text-indigo-700 dark:text-indigo-400">
-                    {resolvedUserName.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                {t.common.profile}
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                {t.admin.settings}
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-rose-500 focus:text-rose-500" onClick={onLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                {t.common.logout}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="relative h-9 w-9">
+            <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl">
+              <Avatar className="h-7 w-7 border border-zinc-200 shadow-sm dark:border-white/[0.1]">
+                <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-violet-100 text-[11px] font-bold text-indigo-700 dark:from-indigo-500/15 dark:to-violet-500/15 dark:text-indigo-400">
+                  {resolvedUserName.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+            <BasicDropdown
+              className="h-9 w-9 opacity-0"
+              label={t.common.profile}
+              items={actionItems}
+              onChange={(item) => {
+                if (item.id === 'logout') onLogout();
+              }}
+            />
+          </div>
         </div>
       </div>
     </header>

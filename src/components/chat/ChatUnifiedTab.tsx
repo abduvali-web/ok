@@ -403,10 +403,11 @@ export function ChatUnifiedTab() {
                     key={user.id}
                     className="flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left"
                   >
-                    <button
+                    <Button
                       type="button"
                       onClick={() => (user.id === TAMBO_AI_AGENT.id ? selectAiAgent(user) : void startConversation(user.id))}
-                      className="flex min-w-0 flex-1 items-center gap-3 text-left transition-colors hover:text-foreground"
+                      variant="ghost"
+                      className="flex min-w-0 flex-1 items-center gap-3 justify-start text-left transition-colors hover:text-foreground"
                     >
                       <Avatar>
                         <AvatarFallback>{user.id === TAMBO_AI_AGENT.id ? 'AI' : user.name[0]}</AvatarFallback>
@@ -420,7 +421,7 @@ export function ChatUnifiedTab() {
                       <Badge className={cn(getRoleColor(user.role), 'shrink-0 max-w-[140px] truncate')}>
                         {getRoleLabel(user.role)}
                       </Badge>
-                    </button>
+                    </Button>
                   </div>
                 ))
               )}
@@ -428,11 +429,12 @@ export function ChatUnifiedTab() {
           ) : (
             <div className="min-h-0 flex-1 overflow-y-auto">
               {aiConversationLabel ? (
-                <button
+                <Button
                   type="button"
                   onClick={() => selectAiAgent(selectedAiAgent!)}
+                  variant="ghost"
                   className={cn(
-                    'flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors hover:bg-muted/40',
+                    'flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 justify-start text-left transition-colors hover:bg-muted/40',
                     selectedThread?.kind === 'ai' ? 'bg-muted/50' : ''
                   )}
                 >
@@ -448,7 +450,7 @@ export function ChatUnifiedTab() {
                   <Badge className="shrink-0 bg-slate-100 text-slate-800 dark:bg-white/10 dark:text-slate-100">
                     {ui?.common?.ai ?? 'AI'}
                   </Badge>
-                </button>
+                </Button>
               ) : null}
 
               {filteredConversations.length === 0 ? (
@@ -457,12 +459,13 @@ export function ChatUnifiedTab() {
                 </div>
               ) : (
                 filteredConversations.map((conversation) => (
-                  <button
+                  <Button
                     key={conversation.id}
                     type="button"
                     onClick={() => selectConversation(conversation.id)}
+                    variant="ghost"
                     className={cn(
-                      'flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors hover:bg-muted/40',
+                      'flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 justify-start text-left transition-colors hover:bg-muted/40',
                       selectedConversationId === conversation.id ? 'bg-muted/50' : ''
                     )}
                   >
@@ -480,7 +483,7 @@ export function ChatUnifiedTab() {
                         {conversation.lastMessage?.content || (ui?.chat?.noMessagesYet ?? 'No messages yet.')}
                       </div>
                     </div>
-                  </button>
+                  </Button>
                 ))
               )}
             </div>

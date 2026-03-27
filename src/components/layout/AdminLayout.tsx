@@ -173,7 +173,9 @@ function MobileNavItem({
   icon: ComponentType<{ className?: string }>;
 }) {
   return (
-    <button
+    <Button
+      type="button"
+      variant="ghost"
       onClick={onClick}
       className={cn(
         'relative flex min-w-[60px] flex-col items-center justify-center rounded-xl px-3 py-2 transition-all duration-300',
@@ -191,6 +193,6 @@ function MobileNavItem({
       )}
       <Icon className="relative z-10 h-[18px] w-[18px]" />
       <span className="relative z-10 mt-1 text-[10px] font-bold tracking-wide">{label}</span>
-    </button>
+    </Button>
   );
 }

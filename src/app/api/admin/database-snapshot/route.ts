@@ -62,6 +62,18 @@ function createSnapshotTable({
   }
 }
 
+function renameRecordKey(records: SnapshotRecord[], fromKey: string, toKey: string): SnapshotRecord[] {
+  return records.map((record) => {
+    if (!(fromKey in record)) return record
+    const next: SnapshotRecord = { ...record }
+    if (!(toKey in next)) {
+      next[toKey] = next[fromKey]
+    }
+    delete next[fromKey]
+    return next
+  })
+}
+
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
@@ -194,7 +206,7 @@ export async function GET(request: NextRequest) {
         id: 'orders',
         title: 'Orders',
         description: 'Full order rows from Neon in your current access scope.',
-        records: orders as SnapshotRecord[],
+        records: renameRecordKey(orders as SnapshotRecord[], 'calorieGroups', 'groups'),
       }),
       createSnapshotTable({
         id: 'transactions',
@@ -212,7 +224,7 @@ export async function GET(request: NextRequest) {
         id: 'menuSets',
         title: 'Menu Sets',
         description: 'Full menu set rows from Neon in your current access scope.',
-        records: menuSets as SnapshotRecord[],
+        records: renameRecordKey(menuSets as SnapshotRecord[], 'calorieGroups', 'groups'),
       }),
       createSnapshotTable({
         id: 'menus',

@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import {
   AlertCircle,
   CheckCircle,
@@ -1072,12 +1073,12 @@ export default function CourierPage() {
                   <div className="mb-2 rounded-md border border-border bg-card p-3 shadow-sm">
                     <label className="mb-1 block text-sm font-medium text-slate-700">{uiText.amountReceived}</label>
                     <div className="relative">
-                      <input
+                      <Input
                         type="number"
                         value={amountReceived}
                         onChange={(e) => setAmountReceived(e.target.value)}
                         placeholder="0"
-                        className="h-10 w-full rounded-md border border-border bg-background px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        className="h-10 w-full pr-10"
                       />
                       <span className="absolute right-3 top-2.5 text-slate-400 text-sm">UZS</span>
                     </div>

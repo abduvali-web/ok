@@ -111,7 +111,9 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                 const isActive = activeTab === item.id;
 
                 return (
-                  <button
+                  <Button
+                    type="button"
+                    variant="ghost"
                     key={item.id}
                     className={cn(
                       'flex h-10 w-full items-center gap-3.5 rounded-xl px-3.5 text-[13.5px] font-semibold transition-all duration-300 relative overflow-hidden',
@@ -133,7 +135,7 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
                     {item.badge !== null && item.badge > 0 && (
                       <Badge className="h-5 min-w-5 bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-400 border-transparent px-1.5 text-[10px] shadow-none font-bold">{item.badge}</Badge>
                     )}
-                  </button>
+                  </Button>
                 );
               })}
             </nav>
@@ -142,13 +144,15 @@ export function Sidebar({ className, activeTab, onTabChange, isOpen, onClose, on
           {/* Footer - Logout */}
           <div className="mx-5 h-[1px] bg-gradient-to-r from-transparent via-zinc-200 dark:via-white/[0.06] to-transparent" />
           <div className="p-3">
-            <button 
+            <Button
+              type="button"
+              variant="ghost"
               className="flex h-10 w-full items-center gap-3.5 rounded-xl px-3.5 text-[13.5px] font-semibold text-rose-500 dark:text-rose-400/80 hover:bg-rose-50 dark:hover:bg-rose-500/[0.08] hover:text-rose-600 dark:hover:text-rose-400 transition-all duration-300" 
               onClick={onLogout}
             >
               <LogOut className="h-[18px] w-[18px]" />
               {t.common.logout}
-            </button>
+            </Button>
           </div>
         </div>
       </aside>

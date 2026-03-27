@@ -46,6 +46,7 @@
 
 :root {
   --radius: 0.75rem;
+  --color-brand: var(--primary);
 
   --background: #fafbfc;
   --foreground: #0a0a0f;
@@ -105,6 +106,7 @@
 }
 
 .dark {
+  --color-brand: var(--primary);
   --background: #06060a;
   --foreground: #eeeef0;
   --card: #0c0c12;

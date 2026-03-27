@@ -15,14 +15,6 @@ type CalorieGroup = {
   dishes?: SetDish[]
 }
 
-const CALORIE_TIERS = [1200, 1600, 2000, 2500, 3000]
-
-function closestTier(calories: number) {
-  return CALORIE_TIERS.reduce((closest, current) => {
-    return Math.abs(current - calories) < Math.abs(closest - calories) ? current : closest
-  }, CALORIE_TIERS[0])
-}
-
 function normalizeMealType(value?: string) {
   const upper = String(value || 'UNKNOWN').toUpperCase()
   if (upper === 'BREAKFAST' || upper === 'SECOND_BREAKFAST' || upper === 'LUNCH' || upper === 'SNACK' || upper === 'DINNER' || upper === 'SIXTH_MEAL') {
@@ -39,7 +31,7 @@ export async function GET(request: NextRequest) {
     }
 
     const menuNumber = getTodaysMenuNumber()
-    const tier = closestTier(customer.calories || 2000)
+    const tier = customer.calories || 0
 
     const ownerAdminId = await getOwnerAdminIdForCustomer(customer.createdBy)
 
@@ -64,14 +56,8 @@ export async function GET(request: NextRequest) {
         const dayGroups = Array.isArray(groups?.[menuNumber.toString()]) ? groups[menuNumber.toString()] : []
 
         if (dayGroups.length > 0) {
-          const exact = dayGroups.find((group) => group.calories === tier)
           const selectedGroup =
-            exact ||
-            dayGroups.reduce<CalorieGroup | null>((best, current) => {
-              if (!best || typeof best.calories !== 'number') return current
-              if (typeof current.calories !== 'number') return best
-              return Math.abs(current.calories - tier) < Math.abs(best.calories - tier) ? current : best
-            }, null)
+            dayGroups.find((group) => Array.isArray(group?.dishes) && group.dishes.length > 0) || null
 
           if (selectedGroup && Array.isArray(selectedGroup.dishes)) {
             const fallbackMenu = getMenu(menuNumber)

@@ -57,7 +57,7 @@ interface CalorieGroup {
     id?: string; // stable key inside JSON
     name?: string;
     price?: number | null;
-    calories: number;
+    calories?: number;
     dishes: SetDish[];
 }
 
@@ -75,7 +75,7 @@ interface MenuSet {
     updatedAt: string;
 }
 
-const DEFAULT_GROUP_COUNT = 5;
+const DEFAULT_GROUP_COUNT = 1;
 const MEAL_TYPE_ORDER: Array<keyof typeof MEAL_TYPES> = [
     'BREAKFAST',
     'SECOND_BREAKFAST',
@@ -582,18 +582,20 @@ export function SetsTab() {
         const menuData = MENUS.find(m => m.menuNumber === menuNumber);
         if (!menuData) return null;
 
-        return Array.from({ length: DEFAULT_GROUP_COUNT }, (_, index) => ({
-            id: `group-${index + 1}`,
-            calories: 0,
-            name: String(index + 1),
-            price: null,
-            dishes: menuData.dishes.map((dish) => ({
-                dishId: dish.id,
-                dishName: dish.name,
-                mealType: dish.mealType,
-                customIngredients: undefined,
-            })),
-        }));
+        return [
+            {
+                id: 'group-1',
+                calories: 0,
+                name: '1',
+                price: null,
+                dishes: menuData.dishes.map((dish) => ({
+                    dishId: dish.id,
+                    dishName: dish.name,
+                    mealType: dish.mealType,
+                    customIngredients: undefined,
+                })),
+            },
+        ];
     };
 
     const copyStandardMenuToDay = async () => {
@@ -670,10 +672,6 @@ export function SetsTab() {
         const defaultNumberName = editingGroup ? String(editingGroup.groupIndex + 1) : String(dayGroups.length + 1);
         const name = (groupForm.name || '').trim() || defaultNumberName;
         const price = groupForm.price.trim() === '' ? null : Number(groupForm.price);
-        const calories =
-            typeof editingGroup?.group?.calories === 'number' && Number.isFinite(editingGroup.group.calories)
-                ? editingGroup.group.calories
-                : 0;
 
         const nextId = editingGroup?.group?.id || makeGroupId();
 
@@ -685,11 +683,11 @@ export function SetsTab() {
             const dayArr: CalorieGroup[] = Array.isArray(baseGroups[dayKey]) ? baseGroups[dayKey] : [];
 
             if (editingGroup) {
-                nextGroups[dayKey] = dayArr.map((g) => (g.id === nextId ? { ...g, id: nextId, name, calories, price, dishes: g.dishes || [] } : g));
+                nextGroups[dayKey] = dayArr.map((g) => (g.id === nextId ? { ...g, id: nextId, name, price, dishes: g.dishes || [] } : g));
             } else {
                 nextGroups[dayKey] = [
                     ...dayArr,
-                    { id: nextId, name, calories, price, dishes: [] },
+                    { id: nextId, name, price, dishes: [] },
                 ];
             }
         }
@@ -881,7 +879,7 @@ export function SetsTab() {
         if (updatedDayData.length === 0) {
             // Edge case: empty day, user clicks add manually without copying
             // Initialize structure
-            updatedDayData.push(...Array.from({ length: DEFAULT_GROUP_COUNT }, (_, idx) => ({ id: `group-${idx + 1}`, calories: 0, name: String(idx + 1), price: null, dishes: [] })));
+            updatedDayData.push({ id: 'group-1', calories: 0, name: '1', price: null, dishes: [] });
         }
 
         updatedDayData[addDishTarget.calorieIndex] = {
@@ -1017,7 +1015,6 @@ export function SetsTab() {
     const getGroupDisplayName = (group: CalorieGroup, index: number) => {
         const raw = String(group?.name || '').trim();
         if (!raw) return String(index + 1);
-        if (/^\d+\s*kcal$/i.test(raw)) return String(index + 1);
         return raw;
     };
 
@@ -1090,7 +1087,7 @@ export function SetsTab() {
     const currentDayData = useMemo(() => {
         return (currentDayDataRaw || []).map((g, idx) => ({
             ...g,
-            id: g.id || String(g.calories ?? idx),
+            id: g.id || `group-${idx + 1}`,
             price: typeof g.price === 'number' ? g.price : (g.price ?? null),
         }));
     }, [currentDayDataRaw]);
@@ -1172,7 +1169,7 @@ export function SetsTab() {
         const nextGroups: Record<string, CalorieGroup[]> = {};
         for (const dayKey of getDayKeysFromGroups(baseGroups)) {
             const dayArr: CalorieGroup[] = Array.isArray(baseGroups[dayKey]) ? baseGroups[dayKey] : [];
-            nextGroups[dayKey] = dayArr.filter((g) => (g.id || String(g.calories ?? '')) !== groupId);
+            nextGroups[dayKey] = dayArr.filter((g) => String(g.id || '') !== String(groupId));
         }
         nextGroups._meta = {
             ...meta,
@@ -1186,7 +1183,7 @@ export function SetsTab() {
         setActiveGroupTab((prev) => {
             if (prev !== groupId) return prev;
             const forActiveDay = nextGroups[String(activeDay)] || [];
-            const ensured = forActiveDay.map((g, idx) => ({ ...g, id: g.id || String(g.calories ?? idx) }));
+            const ensured = forActiveDay.map((g, idx) => ({ ...g, id: g.id || `group-${idx + 1}` }));
             return ensured[0]?.id || '';
         });
 
@@ -1280,12 +1277,13 @@ export function SetsTab() {
                             {visibleSets.map((set) => {
                                 const isSelected = selectedSet?.id === set.id;
                                 return (
-                                    <button
+                                    <Button
                                         key={set.id}
                                         type="button"
                                         onClick={() => setSelectedSet(set)}
+                                        variant="ghost"
                                         className={[
-                                            "h-9 min-w-[140px] max-w-[220px] px-3 rounded-full flex items-center gap-2 transition-all",
+                                            "h-9 min-w-[140px] max-w-[220px] px-3 rounded-full flex items-center gap-2 transition-all justify-start",
                                             isSelected ? "bg-primary text-white shadow-lg" : "hover:bg-slate-700 text-slate-200",
                                         ].join(" ")}
                                         title={set.name}
@@ -1297,7 +1295,7 @@ export function SetsTab() {
                                                 set.isActive ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-slate-400",
                                             ].join(" ")}
                                         />
-                                    </button>
+                                    </Button>
                                 );
                             })}
 
@@ -1335,9 +1333,10 @@ export function SetsTab() {
                                         {uiText.days}:
                                     </span>
                                     {periodDayEntries.map((entry) => (
-                                        <button
+                                        <Button
                                             key={entry.iso}
                                             onClick={() => setActiveDay(entry.dayKey)}
+                                            variant="ghost"
                                             className={[
                                                 'h-9 px-3 rounded-full flex items-center justify-center text-sm font-medium transition-all border',
                                                 activeDay === String(entry.dayKey)
@@ -1348,7 +1347,7 @@ export function SetsTab() {
                                             ].join(' ')}
                                         >
                                             {entry.label}
-                                        </button>
+                                        </Button>
                                     ))}
                                 </div>
                             </div>
@@ -1730,10 +1729,11 @@ export function SetsTab() {
                                                 .map((d) => {
                                                     const isSelected = String((d as any).id) === selectedDishToAdd;
                                                     return (
-                                                        <button
+                                                        <Button
                                                             key={String((d as any).id)}
                                                             type="button"
                                                             onClick={() => selectDishForAdd(d)}
+                                                            variant="ghost"
                                                             className={[
                                                                 'w-full text-left rounded-md px-2 py-2 flex items-center justify-between gap-2',
                                                                 'hover:bg-muted/60 transition-colors',
@@ -1744,7 +1744,7 @@ export function SetsTab() {
                                                             {isSelected ? (
                                                                 <Badge variant="secondary" className="text-[10px] shrink-0">Selected</Badge>
                                                             ) : null}
-                                                        </button>
+                                                        </Button>
                                                     );
                                                 })}
                                             {availableDishes.filter((d) => normalizeName(String((d as any).name || '')).includes(normalizeName(mealNameToAdd))).length === 0 ? (

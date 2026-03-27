@@ -1511,6 +1511,22 @@ export function calculateIngredientsForMenu(
   activeSet?: any
 ): Map<string, { amount: number; unit: string }> {
   const totalIngredients = new Map<string, { amount: number; unit: string }>();
+  const clientTierKeys = Object.keys(clientsByCalorie)
+    .map((k) => Number(k))
+    .filter((n) => Number.isFinite(n));
+  const getClientCountForGroupCalories = (groupCalories: number) => {
+    if (clientTierKeys.length === 0) return 0;
+    const exact = clientsByCalorie[groupCalories];
+    if (typeof exact === 'number') return exact;
+
+    let closest = clientTierKeys[0];
+    for (const tier of clientTierKeys) {
+      if (Math.abs(tier - groupCalories) < Math.abs((closest as number) - groupCalories)) {
+        closest = tier;
+      }
+    }
+    return clientsByCalorie[closest] || 0;
+  };
 
   const totalClients = Object.values(clientsByCalorie).reduce((sum, c) => sum + c, 0);
   if (totalClients === 0) return totalIngredients;
@@ -1521,8 +1537,11 @@ export function calculateIngredientsForMenu(
     if (dayData && Array.isArray(dayData)) {
       // Process each calorie group defined in the set
       for (const group of dayData) {
-        const calories = group.calories;
-        const clientCount = clientsByCalorie[calories] || 0;
+        const calories =
+          typeof group?.calories === 'number' && Number.isFinite(group.calories)
+            ? group.calories
+            : Number(group?.calories) || 0;
+        const clientCount = getClientCountForGroupCalories(calories);
         if (clientCount === 0) continue;
 
         for (const setDish of group.dishes) {
@@ -1548,19 +1567,17 @@ export function calculateIngredientsForMenu(
           }
 
           if (ingredientsToUse) {
-            const scaled = scaleIngredients(
-              ingredientsToUse,
-              calories,
-              setDish.mealType as any,
-              portionsForTier
-            );
-
-            for (const ing of scaled) {
+            // Set-based groups now use real ingredient grams directly (no calorie multiplier).
+            for (const ing of ingredientsToUse) {
+              const scaledAmount = (Number(ing.amount) || 0) * portionsForTier;
               const existing = totalIngredients.get(ing.name);
               if (existing) {
-                existing.amount = Math.round((existing.amount + ing.amount) * 10) / 10;
+                existing.amount = Math.round((existing.amount + scaledAmount) * 10) / 10;
               } else {
-                totalIngredients.set(ing.name, { amount: Math.round(ing.amount * 10) / 10, unit: ing.unit });
+                totalIngredients.set(ing.name, {
+                  amount: Math.round(scaledAmount * 10) / 10,
+                  unit: ing.unit,
+                });
               }
             }
           }
@@ -1578,35 +1595,13 @@ export function calculateIngredientsForMenu(
     const dishQty = dishQuantities?.[dish.id] ?? totalClients;
     if (dishQty === 0) continue;
 
-    for (const [calorieStr, clientCount] of Object.entries(clientsByCalorie)) {
-      const calories = parseInt(calorieStr);
-      if (clientCount === 0) continue;
-
-      // Check calorie mappings if they exist
-      if (dish.calorieMappings) {
-        const allowedGroups = dish.calorieMappings[menuNumber.toString()] || [];
-        if (!allowedGroups.includes(calorieStr)) {
-          continue; // Dish not assigned to this calorie group for this day
-        }
-      }
-
-      // Distribute dishQty proportionally across calorie tiers
-      const portionsForTier = (dishQty / totalClients) * clientCount;
-
-      const scaledIngredients = scaleIngredients(
-        dish.ingredients,
-        calories,
-        dish.mealType as any,
-        portionsForTier
-      );
-
-      for (const ing of scaledIngredients) {
-        const existing = totalIngredients.get(ing.name);
-        if (existing) {
-          existing.amount = Math.round((existing.amount + ing.amount) * 10) / 10;
-        } else {
-          totalIngredients.set(ing.name, { amount: ing.amount, unit: ing.unit });
-        }
+    for (const ing of dish.ingredients) {
+      const scaledAmount = (Number(ing.amount) || 0) * dishQty;
+      const existing = totalIngredients.get(ing.name);
+      if (existing) {
+        existing.amount = Math.round((existing.amount + scaledAmount) * 10) / 10;
+      } else {
+        totalIngredients.set(ing.name, { amount: Math.round(scaledAmount * 10) / 10, unit: ing.unit });
       }
     }
   }

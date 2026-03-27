@@ -729,7 +729,8 @@ export default function DatabasePage() {
         'notes': 'примечания',
         'deletedAt': 'удалено',
         'menuNumber': 'номер меню',
-        'calorieGroups': 'группы калорий',
+        'calorieGroups': '??????',
+        'groups': '??????',
         'ingredients': 'ингредиенты',
         'imageUrl': 'изображение',
         'calorieMappings': 'сопоставления калорий',
@@ -856,7 +857,8 @@ export default function DatabasePage() {
         'content': 'kontent',
         'chatEnabled': 'chat yoqilgan',
         'menuNumber': 'menyu raqami',
-        'calorieGroups': 'kaloriya guruhlari',
+        'calorieGroups': 'guruhlar',
+        'groups': 'guruhlar',
         'ingredients': 'ingredientlar',
         'imageUrl': 'rasm',
         'calorieMappings': 'kaloriya moslash',
@@ -1325,7 +1327,7 @@ export default function DatabasePage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6">
-      <input
+      <Input
         ref={fileInputRef}
         type="file"
         accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -1333,7 +1335,7 @@ export default function DatabasePage() {
         onChange={(event) => void handleImportFileChosen(event.target.files?.[0] ?? null)}
         aria-hidden
       />
-      <input
+      <Input
         ref={allSheetsFileInputRef}
         type="file"
         accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -1772,3 +1774,4 @@ export default function DatabasePage() {
     </div>
   )
 }
+

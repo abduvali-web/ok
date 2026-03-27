@@ -65,48 +65,27 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Name is required' }, { status: 400 })
         }
 
-        // We initialize with empty calorieGroups structure
-        // Structure: { "1": [...], "2": [...] } where keys are day numbers
+        // Initialize days with a single neutral group (no hardcoded calorie tiers).
+        // Structure: { "1": [{ id, name, calories, dishes }], "2": [...] }
         const initialCalorieGroups: Record<string, any[]> = {}
-        const CALORIE_TIERS = [1200, 1600, 2000, 2500, 3000]
 
         // Populate with Standard Menu data
         MENUS.forEach((menu: any) => {
-            const dayGroups: any[] = []
+            const groupDishes: any[] = menu.dishes.map((dish: any) => ({
+                dishId: dish.id,
+                dishName: dish.name,
+                mealType: dish.mealType
+            }))
 
-            CALORIE_TIERS.forEach(calories => {
-                const groupDishes: any[] = []
-                const calStr = calories.toString()
-
-                menu.dishes.forEach((dish: any) => {
-                    let included = true
-                    // Filter by calorie mappings if available
-                    if (dish.calorieMappings) {
-                        const mapping = dish.calorieMappings[menu.menuNumber.toString()]
-                        if (!mapping || !mapping.includes(calStr)) {
-                            included = false
-                        }
-                    }
-
-                    if (included) {
-                        groupDishes.push({
-                            dishId: dish.id,
-                            dishName: dish.name,
-                            mealType: dish.mealType
-                        })
-                    }
-                })
-
-                if (groupDishes.length > 0) {
-                    dayGroups.push({
-                        calories: calories,
+            if (groupDishes.length > 0) {
+                initialCalorieGroups[menu.menuNumber.toString()] = [
+                    {
+                        id: 'group-1',
+                        name: '1',
+                        calories: 0,
                         dishes: groupDishes
-                    })
-                }
-            })
-
-            if (dayGroups.length > 0) {
-                initialCalorieGroups[menu.menuNumber.toString()] = dayGroups
+                    }
+                ]
             }
         })
 

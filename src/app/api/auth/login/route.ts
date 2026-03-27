@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 const JWT_SECRET = process.env.JWT_SECRET
+const LOGIN_RATE_LIMIT = 10
+const LOGIN_WINDOW_MS = 10 * 60 * 1000
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,11 +15,20 @@ export async function POST(request: NextRequest) {
     }
 
     const { email, password } = await request.json()
+    const ip = getClientIp(request.headers)
 
     if (!email || !password) {
       return NextResponse.json(
         { error: 'Email и пароль обязательны' },
         { status: 400 }
+      )
+    }
+
+    const limit = checkRateLimit(`admin-login:${ip}:${String(email).toLowerCase()}`, LOGIN_RATE_LIMIT, LOGIN_WINDOW_MS)
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many login attempts. Please try again later.', retryAfterSec: limit.retryAfterSec },
+        { status: 429 }
       )
     }
 

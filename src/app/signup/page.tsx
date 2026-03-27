@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { AnimatedInput } from '@/components/smoothui'
 
 export default function SignUpPage() {
   const router = useRouter()
@@ -147,26 +148,27 @@ export default function SignUpPage() {
 
       <form onSubmit={handleSignup} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="name">Full name</Label>
-          <Input
-            id="name"
-            type="text"
-            placeholder="John Doe"
+          <AnimatedInput
+            label="Full name"
             value={signupData.name}
-            onChange={(event) => setSignupData((prev) => ({ ...prev, name: event.target.value }))}
+            placeholder="John Doe"
+            onChange={(value) => setSignupData((prev) => ({ ...prev, name: value }))}
+            autoComplete="name"
             required
+            inputClassName="h-10"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="you@example.com"
+          <AnimatedInput
+            label="Email"
             value={signupData.email}
-            onChange={(event) => setSignupData((prev) => ({ ...prev, email: event.target.value }))}
+            placeholder="you@example.com"
+            onChange={(value) => setSignupData((prev) => ({ ...prev, email: value }))}
+            type="email"
+            autoComplete="email"
             required
+            inputClassName="h-10"
           />
         </div>
 
@@ -181,13 +183,15 @@ export default function SignUpPage() {
               onChange={(event) => setSignupData((prev) => ({ ...prev, password: event.target.value }))}
               required
             />
-            <button
+            <Button
               type="button"
-              className="absolute right-2 top-1 inline-flex h-7 w-7 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground"
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1 h-7 w-7 text-muted-foreground hover:text-foreground"
               onClick={() => setShowPassword((prev) => !prev)}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+            </Button>
           </div>
 
           {signupData.password ? (
@@ -216,13 +220,15 @@ export default function SignUpPage() {
               onChange={(event) => setSignupData((prev) => ({ ...prev, confirmPassword: event.target.value }))}
               required
             />
-            <button
+            <Button
               type="button"
-              className="absolute right-2 top-1 inline-flex h-7 w-7 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground"
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1 h-7 w-7 text-muted-foreground hover:text-foreground"
               onClick={() => setShowConfirmPassword((prev) => !prev)}
             >
               {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+            </Button>
           </div>
         </div>
 

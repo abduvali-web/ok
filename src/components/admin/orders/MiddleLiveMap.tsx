@@ -4,6 +4,8 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { Admin, Client, Order } from '@/components/admin/dashboard/types'
 import type { LatLng } from '@/lib/geo'
 import { extractCoordsFromText } from '@/lib/geo'
@@ -629,11 +631,11 @@ export default function MiddleLiveMap({
                 </Tooltip>
                 <Popup minWidth={230}>
                   <div className="space-y-2 text-xs">
-                    <label className="block">Lat<input className="mt-1 w-full rounded border px-2 py-1" value={warehouseDraft.lat} onChange={(e) => setWarehouseDraft((p) => ({ ...p, lat: e.target.value }))} /></label>
-                    <label className="block">Lng<input className="mt-1 w-full rounded border px-2 py-1" value={warehouseDraft.lng} onChange={(e) => setWarehouseDraft((p) => ({ ...p, lng: e.target.value }))} /></label>
-                    <button type="button" className="w-full rounded bg-slate-900 px-2 py-1.5 font-semibold text-white disabled:opacity-60" onClick={() => void saveWarehouse()} disabled={savingEntityId === 'warehouse'}>
+                    <label className="block">Lat<Input className="mt-1 h-8" value={warehouseDraft.lat} onChange={(e) => setWarehouseDraft((p) => ({ ...p, lat: e.target.value }))} /></label>
+                    <label className="block">Lng<Input className="mt-1 h-8" value={warehouseDraft.lng} onChange={(e) => setWarehouseDraft((p) => ({ ...p, lng: e.target.value }))} /></label>
+                    <Button type="button" className="h-8 w-full" onClick={() => void saveWarehouse()} disabled={savingEntityId === 'warehouse'}>
                       {savingEntityId === 'warehouse' ? 'Saving...' : 'Save warehouse'}
-                    </button>
+                    </Button>
                   </div>
                 </Popup>
               </Marker>
@@ -652,17 +654,34 @@ export default function MiddleLiveMap({
                   <Tooltip direction="top" offset={[0, -10]} opacity={0.95} sticky><div><div className="text-[10px] uppercase tracking-[0.1em] text-amber-700">Order #{order.orderNumber}</div><div className="text-xs font-semibold">{order.customerName}</div><div className="text-[11px] text-slate-600">{order.status}</div></div></Tooltip>
                   <Popup minWidth={270}>
                     <div className="space-y-2 text-xs">
-                      <label className="block">Status<select className="mt-1 w-full rounded border px-2 py-1" value={draft.status} onChange={(e) => setOrderDraftField(order, 'status', e.target.value)}>{ORDER_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}</select></label>
-                      <label className="block">Courier<select className="mt-1 w-full rounded border px-2 py-1" value={draft.courierId} onChange={(e) => setOrderDraftField(order, 'courierId', e.target.value)}><option value="">Unassigned</option>{liveCouriers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
-                      <label className="block">Time<input className="mt-1 w-full rounded border px-2 py-1" value={draft.deliveryTime} onChange={(e) => setOrderDraftField(order, 'deliveryTime', e.target.value)} /></label>
-                      <label className="block">Address<input className="mt-1 w-full rounded border px-2 py-1" value={draft.deliveryAddress} onChange={(e) => setOrderDraftField(order, 'deliveryAddress', e.target.value)} /></label>
+                      <label className="block">
+                        Status
+                        <Select value={draft.status} onValueChange={(value) => setOrderDraftField(order, 'status', value)}>
+                          <SelectTrigger className="mt-1 h-8"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {ORDER_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </label>
+                      <label className="block">
+                        Courier
+                        <Select value={draft.courierId || '__none__'} onValueChange={(value) => setOrderDraftField(order, 'courierId', value === '__none__' ? '' : value)}>
+                          <SelectTrigger className="mt-1 h-8"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">Unassigned</SelectItem>
+                            {liveCouriers.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </label>
+                      <label className="block">Time<Input className="mt-1 h-8" value={draft.deliveryTime} onChange={(e) => setOrderDraftField(order, 'deliveryTime', e.target.value)} /></label>
+                      <label className="block">Address<Input className="mt-1 h-8" value={draft.deliveryAddress} onChange={(e) => setOrderDraftField(order, 'deliveryAddress', e.target.value)} /></label>
                       <div className="grid grid-cols-2 gap-2">
-                        <label>Lat<input className="mt-1 w-full rounded border px-2 py-1" value={draft.lat} onChange={(e) => setOrderDraftField(order, 'lat', e.target.value)} /></label>
-                        <label>Lng<input className="mt-1 w-full rounded border px-2 py-1" value={draft.lng} onChange={(e) => setOrderDraftField(order, 'lng', e.target.value)} /></label>
+                        <label>Lat<Input className="mt-1 h-8" value={draft.lat} onChange={(e) => setOrderDraftField(order, 'lat', e.target.value)} /></label>
+                        <label>Lng<Input className="mt-1 h-8" value={draft.lng} onChange={(e) => setOrderDraftField(order, 'lng', e.target.value)} /></label>
                       </div>
-                      <button type="button" className="w-full rounded bg-slate-900 px-2 py-1.5 font-semibold text-white disabled:opacity-60" onClick={() => void saveOrder(order.id)} disabled={savingEntityId === `order-${order.id}`}>
+                      <Button type="button" className="h-8 w-full" onClick={() => void saveOrder(order.id)} disabled={savingEntityId === `order-${order.id}`}>
                         {savingEntityId === `order-${order.id}` ? 'Saving...' : 'Save order'}
-                      </button>
+                      </Button>
                     </div>
                   </Popup>
                 </CircleMarker>
@@ -678,15 +697,15 @@ export default function MiddleLiveMap({
                   <Tooltip direction="top" offset={[0, -16]} opacity={0.97} sticky><div><div className="text-[10px] uppercase tracking-[0.1em] text-slate-600">Courier</div><div className="text-xs font-semibold">{courier.name}</div>{state && <div className={`text-[11px] ${offRoute ? 'text-rose-600' : 'text-emerald-600'}`}>{offRoute ? `Off route ${Math.round(state.deviationMeters)}m` : 'On route'}</div>}</div></Tooltip>
                   <Popup minWidth={250}>
                     <div className="space-y-2 text-xs">
-                      <label className="block">Name<input className="mt-1 w-full rounded border px-2 py-1" value={draft.name} onChange={(e) => setCourierDraftField(courier, 'name', e.target.value)} /></label>
+                      <label className="block">Name<Input className="mt-1 h-8" value={draft.name} onChange={(e) => setCourierDraftField(courier, 'name', e.target.value)} /></label>
                       <div className="grid grid-cols-2 gap-2">
-                        <label>Lat<input className="mt-1 w-full rounded border px-2 py-1" value={draft.lat} onChange={(e) => setCourierDraftField(courier, 'lat', e.target.value)} /></label>
-                        <label>Lng<input className="mt-1 w-full rounded border px-2 py-1" value={draft.lng} onChange={(e) => setCourierDraftField(courier, 'lng', e.target.value)} /></label>
+                        <label>Lat<Input className="mt-1 h-8" value={draft.lat} onChange={(e) => setCourierDraftField(courier, 'lat', e.target.value)} /></label>
+                        <label>Lng<Input className="mt-1 h-8" value={draft.lng} onChange={(e) => setCourierDraftField(courier, 'lng', e.target.value)} /></label>
                       </div>
                       {state && <div className={`rounded border px-2 py-1 text-[11px] ${offRoute ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>{offRoute ? `Route deviation: ${Math.round(state.deviationMeters)} m` : 'Courier is within planned route'}</div>}
-                      <button type="button" className="w-full rounded bg-slate-900 px-2 py-1.5 font-semibold text-white disabled:opacity-60" onClick={() => void saveCourier(courier.id)} disabled={savingEntityId === `courier-${courier.id}`}>
+                      <Button type="button" className="h-8 w-full" onClick={() => void saveCourier(courier.id)} disabled={savingEntityId === `courier-${courier.id}`}>
                         {savingEntityId === `courier-${courier.id}` ? 'Saving...' : 'Save courier'}
-                      </button>
+                      </Button>
                     </div>
                   </Popup>
                 </Marker>

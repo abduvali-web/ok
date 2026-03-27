@@ -3,6 +3,10 @@ import { db } from '@/lib/db'
 import { createCustomerToken } from '@/lib/customer-auth'
 import { getSiteBySubdomain, getSiteGroupAdminIds } from '@/lib/site-access'
 import { cookieDomainFromRootHost } from '@/lib/subdomain-host'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+
+const LOGIN_RATE_LIMIT = 15
+const LOGIN_WINDOW_MS = 10 * 60 * 1000
 
 function normalizePhone(input: string) {
   const trimmed = input.trim()
@@ -26,9 +30,18 @@ export async function POST(
 
     const body = await request.json().catch(() => ({}))
     const phone = normalizePhone(typeof body.phone === 'string' ? body.phone : '')
+    const ip = getClientIp(request.headers)
 
     if (!phone || phone.length < 10 || phone.length > 16) {
       return NextResponse.json({ error: 'Invalid phone format' }, { status: 400 })
+    }
+
+    const limit = checkRateLimit(`site-login:${subdomain}:${ip}:${phone}`, LOGIN_RATE_LIMIT, LOGIN_WINDOW_MS)
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many login attempts. Please try again later.', retryAfterSec: limit.retryAfterSec },
+        { status: 429 }
+      )
     }
 
     const groupAdminIds = await getSiteGroupAdminIds(site.adminId)

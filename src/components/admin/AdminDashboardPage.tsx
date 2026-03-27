@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
@@ -295,6 +295,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     longitude: null as number | null,
     assignedSetId: ''
   })
+  const [clientSelectedGroupId, setClientSelectedGroupId] = useState<string>('')
   const [orderFormData, setOrderFormData] = useState({
     customerName: '',
     customerPhone: '',
@@ -377,7 +378,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   const clientGroupOptions = useMemo(() => {
     const groupsByDay = (clientAssignedSet as any)?.calorieGroups
-    if (!groupsByDay || typeof groupsByDay !== 'object') return [] as Array<{ id: string; name: string; calories: number; price: number | null }>
+    if (!groupsByDay || typeof groupsByDay !== 'object') return [] as Array<{ id: string; name: string; price: number | null }>
 
     const dayKeys = Object.keys(groupsByDay)
       .filter((k) => Array.isArray((groupsByDay as any)[k]))
@@ -388,16 +389,21 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
     if (!Array.isArray(groups)) return []
 
     return groups.map((g: any) => ({
-      id: String(g?.id ?? g?.calories ?? g?.name ?? 'group'),
-      name: String(g?.name ?? `${g?.calories ?? ''} kcal`).trim() || `${g?.calories ?? ''} kcal`,
-      calories: typeof g?.calories === 'number' ? g.calories : Number(g?.calories) || 0,
+      id: String(g?.id ?? g?.name ?? 'group'),
+      name: String(g?.name ?? '').trim() || 'Group',
       price: typeof g?.price === 'number' && Number.isFinite(g.price) ? g.price : null,
     }))
   }, [clientAssignedSet])
 
   const clientSelectedGroup = useMemo(() => {
-    return clientGroupOptions.find((g) => g.calories === clientFormData.calories) ?? null
-  }, [clientGroupOptions, clientFormData.calories])
+    return clientGroupOptions.find((g) => g.id === clientSelectedGroupId) ?? null
+  }, [clientGroupOptions, clientSelectedGroupId])
+
+  useEffect(() => {
+    if (!clientSelectedGroupId) return
+    if (clientGroupOptions.some((g) => g.id === clientSelectedGroupId)) return
+    setClientSelectedGroupId('')
+  }, [clientGroupOptions, clientSelectedGroupId])
 
   const [isDashboardRefreshing, setIsDashboardRefreshing] = useState(false)
   const handleRefreshAll = useCallback(async () => {
@@ -1736,6 +1742,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
       if (response.ok) {
         setIsCreateClientModalOpen(false)
+        setClientSelectedGroupId('')
         setClientFormData({
           name: '',
           nickName: '',
@@ -1795,6 +1802,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
 
   const handleEditClient = (client: Client) => {
+    setClientSelectedGroupId('')
     setClientFormData({
       name: client.name,
       nickName: client.nickName || '',
@@ -2711,39 +2719,19 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           <h4 className="text-sm font-semibold mb-2 text-slate-700">{t.admin.filterGroups.deliveryStatus}</h4>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.pending}
-                                onChange={(e) => setFilters({ ...filters, pending: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.pending} onCheckedChange={(checked) => setFilters({ ...filters, pending: checked === true })} />
                               <span className="text-sm">{t.admin.filterGroups.pending} (#facc15)</span>
                             </label>
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.inDelivery}
-                                onChange={(e) => setFilters({ ...filters, inDelivery: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.inDelivery} onCheckedChange={(checked) => setFilters({ ...filters, inDelivery: checked === true })} />
                               <span className="text-sm">{t.admin.filterGroups.inDelivery} (#3b82f6)</span>
                             </label>
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.successful}
-                                onChange={(e) => setFilters({ ...filters, successful: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.successful} onCheckedChange={(checked) => setFilters({ ...filters, successful: checked === true })} />
                               <span className="text-sm">{t.admin.filterGroups.delivered} (#22c55e)</span>
                             </label>
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.failed}
-                                onChange={(e) => setFilters({ ...filters, failed: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.failed} onCheckedChange={(checked) => setFilters({ ...filters, failed: checked === true })} />
                               <span className="text-sm">{t.admin.filterGroups.failed} (#ef4444)</span>
                             </label>
                           </div>
@@ -2754,49 +2742,24 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           <h4 className="text-sm font-semibold mb-2 text-slate-700">{t.admin.filterGroups.payment}</h4>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.paid}
-                                onChange={(e) => setFilters({ ...filters, paid: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.paid} onCheckedChange={(checked) => setFilters({ ...filters, paid: checked === true })} />
                               <span className="text-sm">{t.admin.filterGroups.paid}</span>
                             </label>
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.unpaid}
-                                onChange={(e) => setFilters({ ...filters, unpaid: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.unpaid} onCheckedChange={(checked) => setFilters({ ...filters, unpaid: checked === true })} />
                               <span className="text-sm">{t.admin.filterGroups.unpaid}</span>
                             </label>
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.prepaid}
-                                onChange={(e) => setFilters({ ...filters, prepaid: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.prepaid} onCheckedChange={(checked) => setFilters({ ...filters, prepaid: checked === true })} />
                               <span className="text-sm">{t.admin.filterGroups.prepaid} (Ã¢Â­Â)</span>
                             </label>
                             <div className="hidden md:block"></div>
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.cash}
-                                onChange={(e) => setFilters({ ...filters, cash: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.cash} onCheckedChange={(checked) => setFilters({ ...filters, cash: checked === true })} />
                               <span className="text-sm">{t.admin.filterGroups.cash}</span>
                             </label>
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.card}
-                                onChange={(e) => setFilters({ ...filters, card: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.card} onCheckedChange={(checked) => setFilters({ ...filters, card: checked === true })} />
                               <span className="text-sm">{t.admin.filterGroups.card}</span>
                             </label>
                           </div>
@@ -2807,48 +2770,23 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           <h4 className="text-sm font-semibold mb-2 text-slate-700">{t.admin.filterGroups.calories}</h4>
                           <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.calories1200}
-                                onChange={(e) => setFilters({ ...filters, calories1200: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.calories1200} onCheckedChange={(checked) => setFilters({ ...filters, calories1200: checked === true })} />
                               <span className="text-sm">1200</span>
                             </label>
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.calories1600}
-                                onChange={(e) => setFilters({ ...filters, calories1600: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.calories1600} onCheckedChange={(checked) => setFilters({ ...filters, calories1600: checked === true })} />
                               <span className="text-sm">1600</span>
                             </label>
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.calories2000}
-                                onChange={(e) => setFilters({ ...filters, calories2000: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.calories2000} onCheckedChange={(checked) => setFilters({ ...filters, calories2000: checked === true })} />
                               <span className="text-sm">2000</span>
                             </label>
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.calories2500}
-                                onChange={(e) => setFilters({ ...filters, calories2500: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.calories2500} onCheckedChange={(checked) => setFilters({ ...filters, calories2500: checked === true })} />
                               <span className="text-sm">2500</span>
                             </label>
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.calories3000}
-                                onChange={(e) => setFilters({ ...filters, calories3000: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.calories3000} onCheckedChange={(checked) => setFilters({ ...filters, calories3000: checked === true })} />
                               <span className="text-sm">3000</span>
                             </label>
                           </div>
@@ -2859,39 +2797,19 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                           <h4 className="text-sm font-semibold mb-2 text-slate-700">{t.admin.filterGroups.other}</h4>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.autoOrders}
-                                onChange={(e) => setFilters({ ...filters, autoOrders: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.autoOrders} onCheckedChange={(checked) => setFilters({ ...filters, autoOrders: checked === true })} />
                               <span className="text-sm">{t.admin.filterGroups.auto}</span>
                             </label>
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.manualOrders}
-                                onChange={(e) => setFilters({ ...filters, manualOrders: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.manualOrders} onCheckedChange={(checked) => setFilters({ ...filters, manualOrders: checked === true })} />
                               <span className="text-sm">{t.admin.filterGroups.manual}</span>
                             </label>
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.singleItem}
-                                onChange={(e) => setFilters({ ...filters, singleItem: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.singleItem} onCheckedChange={(checked) => setFilters({ ...filters, singleItem: checked === true })} />
                               <span className="text-sm">{t.admin.filterGroups.singlePortion}</span>
                             </label>
                             <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={filters.multiItem}
-                                onChange={(e) => setFilters({ ...filters, multiItem: e.target.checked })}
-                                className="rounded"
-                              />
+                              <Checkbox checked={filters.multiItem} onCheckedChange={(checked) => setFilters({ ...filters, multiItem: checked === true })} />
                               <span className="text-sm">{t.admin.filterGroups.multiPortion}</span>
                             </label>
                           </div>
@@ -2959,6 +2877,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                       className="h-9 w-9"
                       onClick={() => {
                         setEditingClientId(null)
+                        setClientSelectedGroupId('')
                         setClientFormData({
                           name: '',
                           nickName: '',
@@ -3138,79 +3057,93 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                               <Label htmlFor="clientPlanType" className="text-right">
                                 Plan
                               </Label>
-                              <select
-                                id="clientPlanType"
-                                value={clientFormData.planType}
-                                onChange={(e) => {
-                                  const val = e.target.value as any
-                                  setClientFormData(prev => ({
-                                    ...prev,
-                                    planType: val,
-                                    dailyPrice: prev.assignedSetId ? prev.dailyPrice : getDailyPrice(val, prev.calories)
-                                  }))
-                                }}
-                                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                              >
-                                {Object.entries(PLAN_TYPES).map(([key, label]) => (
-                                  <option key={key} value={key}>{label}</option>
-                                ))}
-                              </select>
+                              <div className="col-span-3">
+                                <Select
+                                  value={clientFormData.planType}
+                                  onValueChange={(value) => {
+                                    const val = value as any
+                                    setClientFormData(prev => ({
+                                      ...prev,
+                                      planType: val,
+                                      dailyPrice: prev.assignedSetId ? prev.dailyPrice : getDailyPrice(val, prev.calories)
+                                    }))
+                                  }}
+                                >
+                                  <SelectTrigger id="clientPlanType" className="w-full">
+                                    <SelectValue placeholder="Plan" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Object.entries(PLAN_TYPES).map(([key, label]) => (
+                                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             </div>
 
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientSet" className="text-right">
                                 Set
                               </Label>
-                              <select
-                                id="clientSet"
-                                value={clientFormData.assignedSetId}
-                                onChange={(e) =>
-                                  setClientFormData((prev) => ({
-                                    ...prev,
-                                    assignedSetId: e.target.value,
-                                  }))
-                                }
-                                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                              >
-                                <option value="">{profileUiText.autoSet}</option>
-                                {availableSets.map((set) => (
-                                  <option key={set.id} value={set.id}>
-                                    {set.name} {set.isActive ? profileUiText.active : ''}
-                                  </option>
-                                ))}
-                              </select>
+                              <div className="col-span-3">
+                                <Select
+                                  value={clientFormData.assignedSetId || '__auto__'}
+                                  onValueChange={(value) => {
+                                    setClientSelectedGroupId('')
+                                    setClientFormData((prev) => ({
+                                      ...prev,
+                                      assignedSetId: value === '__auto__' ? '' : value,
+                                    }))
+                                  }}
+                                >
+                                  <SelectTrigger id="clientSet" className="w-full">
+                                    <SelectValue placeholder={profileUiText.autoSet} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="__auto__">{profileUiText.autoSet}</SelectItem>
+                                    {availableSets.map((set) => (
+                                      <SelectItem key={set.id} value={set.id}>
+                                        {set.name} {set.isActive ? profileUiText.active : ''}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             </div>
 
                             <div className="grid grid-cols-4 items-center gap-2">
                               <Label htmlFor="clientGroup" className="text-right">
                                 Group
                               </Label>
-                              <select
-                                id="clientGroup"
-                                value={clientSelectedGroup?.id ?? ''}
-                                onChange={(e) => {
-                                  const id = e.target.value
-                                  const g = clientGroupOptions.find((x) => x.id === id)
-                                  if (!g) return
-                                  setClientFormData((prev) => ({
-                                    ...prev,
-                                    calories: g.calories,
-                                    dailyPrice:
-                                      typeof g.price === 'number' && Number.isFinite(g.price) ? g.price : prev.dailyPrice,
-                                  }))
-                                }}
-                                disabled={!clientAssignedSet || clientGroupOptions.length === 0}
-                                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                              >
-                                <option value="">
-                                  {clientAssignedSet ? 'Select group' : 'Select set first'}
-                                </option>
-                                {clientGroupOptions.map((g) => (
-                                  <option key={g.id} value={g.id}>
-                                    {g.name}
-                                  </option>
-                                ))}
-                              </select>
+                              <div className="col-span-3">
+                                <Select
+                                  value={clientSelectedGroupId || '__none__'}
+                                  onValueChange={(value) => {
+                                    if (value === '__none__') return
+                                    const g = clientGroupOptions.find((x) => x.id === value)
+                                    if (!g) return
+                                    setClientSelectedGroupId(g.id)
+                                    setClientFormData((prev) => ({
+                                      ...prev,
+                                      dailyPrice:
+                                        typeof g.price === 'number' && Number.isFinite(g.price) ? g.price : prev.dailyPrice,
+                                    }))
+                                  }}
+                                  disabled={!clientAssignedSet || clientGroupOptions.length === 0}
+                                >
+                                  <SelectTrigger id="clientGroup" className="w-full">
+                                    <SelectValue placeholder={clientAssignedSet ? 'Select group' : 'Select set first'} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="__none__">{clientAssignedSet ? 'Select group' : 'Select set first'}</SelectItem>
+                                    {clientGroupOptions.map((g) => (
+                                      <SelectItem key={g.id} value={g.id}>
+                                        {g.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             </div>
 
                             <div className="grid grid-cols-4 items-center gap-2">
@@ -3321,19 +3254,22 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                                 <div className="flex items-center space-x-2 pt-2">
                                   <Label htmlFor="defaultCourier" className="text-sm w-full">
                                     Default courier:
-                                    <select
-                                      id="defaultCourier"
-                                      value={clientFormData.defaultCourierId}
-                                      onChange={(e) => setClientFormData(prev => ({ ...prev, defaultCourierId: e.target.value }))}
-                                      className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    <Select
+                                      value={clientFormData.defaultCourierId || '__none__'}
+                                      onValueChange={(value) => setClientFormData(prev => ({ ...prev, defaultCourierId: value === '__none__' ? '' : value }))}
                                     >
-                                      <option value="">None</option>
-                                      {couriers.map((courier) => (
-                                        <option key={courier.id} value={courier.id}>
-                                          {courier.name}
-                                        </option>
-                                      ))}
-                                    </select>
+                                      <SelectTrigger id="defaultCourier" className="mt-1 w-full">
+                                        <SelectValue placeholder="None" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="__none__">None</SelectItem>
+                                        {couriers.map((courier) => (
+                                          <SelectItem key={courier.id} value={courier.id}>
+                                            {courier.name}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
                                   </Label>
                                 </div>
                                 <div className="flex items-center space-x-2 pt-2">
