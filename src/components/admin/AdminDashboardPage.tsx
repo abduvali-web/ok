@@ -2303,7 +2303,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background bg-[linear-gradient(90deg,rgba(0,0,0,0.06)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.06)_1px,transparent_1px)] bg-[size:18px_18px] flex items-center justify-center">
         <div className="text-center animate-fade-in">
           <div className="flex items-center justify-center gap-1.5 mb-3">
             <span className="h-2 w-2 rounded-md bg-foreground/60 animate-pulse" style={{ animationDelay: '0ms' }} />
@@ -2317,9 +2317,9 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-[linear-gradient(90deg,rgba(0,0,0,0.05)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.05)_1px,transparent_1px)] bg-[size:18px_18px]">
       {/* Header */}
-      <header className="border-b border-border bg-background">
+      <header className="border-b-2 border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14">
             <div className="flex items-center gap-4">

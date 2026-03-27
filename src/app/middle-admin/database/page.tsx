@@ -1326,7 +1326,7 @@ export default function DatabasePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6">
+    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 bg-[linear-gradient(90deg,rgba(0,0,0,0.05)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.05)_1px,transparent_1px)] bg-[size:18px_18px]">
       <Input
         ref={fileInputRef}
         type="file"
@@ -1343,8 +1343,8 @@ export default function DatabasePage() {
         onChange={(event) => void handleImportAllSheetsFileChosen(event.target.files?.[0] ?? null)}
         aria-hidden
       />
-      <Card className="overflow-hidden">
-        <CardHeader className="border-b">
+      <Card className="overflow-hidden border-2">
+        <CardHeader className="border-b-2">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <CardTitle className="flex items-center gap-2">

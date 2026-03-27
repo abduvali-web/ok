@@ -148,6 +148,9 @@ export function SetsTab() {
                 groupName: 'Guruh nomi',
                 groupCalories: 'Kaloriya (kcal)',
                 groupPrice: 'Narx',
+                dishesLabel: 'Taomlar',
+                caloriesLabel: 'Kaloriya',
+                priceLabel: 'Narx (UZS)',
                 mealLabel: (n: number) => `${n}-taom`,
                 menuDay: (day: string) => `Menyu ${day}`,
                 addDay: 'Kun qo‘shish',
@@ -210,6 +213,9 @@ export function SetsTab() {
                 groupName: 'Название группы',
                 groupCalories: 'Калории (kcal)',
                 groupPrice: 'Цена',
+                dishesLabel: 'Блюда',
+                caloriesLabel: 'Калории',
+                priceLabel: 'Цена (UZS)',
                 mealLabel: (n: number) => `Приём ${n}`,
                 menuDay: (day: string) => `Меню ${day}`,
                 addDay: 'Добавить день',
@@ -271,6 +277,9 @@ export function SetsTab() {
             groupName: 'Group name',
             groupCalories: 'Calories (kcal)',
             groupPrice: 'Price',
+            dishesLabel: 'Dishes',
+            caloriesLabel: 'Calories',
+            priceLabel: 'Price (UZS)',
             mealLabel: (n: number) => `Meal ${n}`,
             menuDay: (day: string) => `Menu ${day}`,
             addDay: 'Add day',
@@ -1312,21 +1321,17 @@ export function SetsTab() {
                     <div className="space-y-4">
                             <Card className="border border-border/70">
                                 <CardContent className="px-4 py-3">
-                                    <div className="grid gap-2 text-sm sm:grid-cols-4">
+                                    <div className="grid gap-2 text-sm sm:grid-cols-3">
                                         <div className="rounded-md border bg-muted/30 px-3 py-2">
-                                            <p className="text-[11px] text-muted-foreground">Selected days</p>
-                                            <p className="font-semibold tabular-nums">{selectedDaysSummary.days}</p>
-                                        </div>
-                                        <div className="rounded-md border bg-muted/30 px-3 py-2">
-                                            <p className="text-[11px] text-muted-foreground">Dishes</p>
+                                            <p className="text-[11px] text-muted-foreground">{uiText.dishesLabel}</p>
                                             <p className="font-semibold tabular-nums">{selectedDaysSummary.dishes}</p>
                                         </div>
                                         <div className="rounded-md border bg-muted/30 px-3 py-2">
-                                            <p className="text-[11px] text-muted-foreground">Calories</p>
+                                            <p className="text-[11px] text-muted-foreground">{uiText.caloriesLabel}</p>
                                             <p className="font-semibold tabular-nums">{new Intl.NumberFormat('ru-RU').format(selectedDaysSummary.calories)}</p>
                                         </div>
                                         <div className="rounded-md border bg-muted/30 px-3 py-2">
-                                            <p className="text-[11px] text-muted-foreground">Price (UZS)</p>
+                                            <p className="text-[11px] text-muted-foreground">{uiText.priceLabel}</p>
                                             <p className="font-semibold tabular-nums">{formatUzs(selectedDaysSummary.price)}</p>
                                         </div>
                                     </div>
