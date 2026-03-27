@@ -1326,7 +1326,8 @@ export default function DatabasePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 bg-[linear-gradient(90deg,rgba(0,0,0,0.05)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.05)_1px,transparent_1px)] bg-[size:18px_18px]">
+    <div className="min-h-screen bg-background bg-app-paper">
+      <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6">
       <Input
         ref={fileInputRef}
         type="file"
@@ -1468,8 +1469,8 @@ export default function DatabasePage() {
             </TabsList>
 
             <TabsContent value="summary" className="space-y-4">
-              <div className="rounded-lg border">
-                <div className="border-b p-4">
+              <div className="rounded-base border-2 border-border shadow-shadow">
+                <div className="border-b-2 border-border p-4">
                   <p className="text-sm font-semibold">{uiText.allNeonSheets}</p>
                   <p className="text-xs text-muted-foreground">{uiText.allNeonSheetsDescription}</p>
                 </div>
@@ -1498,7 +1499,7 @@ export default function DatabasePage() {
 
             {tables.map((table) => (
               <TabsContent key={table.id} value={table.id} className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-base border-2 border-border bg-card p-4 shadow-shadow">
                   <div>
                     <p className="text-lg font-semibold">{tDb(table.title)}</p>
                     <p className="text-sm text-muted-foreground">{table.description}</p>
@@ -1533,7 +1534,7 @@ export default function DatabasePage() {
                   </div>
                 </div>
 
-                <div className="overflow-hidden rounded-lg border">
+                <div className="overflow-hidden rounded-base border-2 border-border shadow-shadow">
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
@@ -1658,7 +1659,7 @@ export default function DatabasePage() {
                     </Table>
                   </div>
 
-                  <div className="border-t bg-muted/5 p-4">
+                  <div className="border-t-2 border-border bg-muted/15 p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex flex-wrap items-center gap-3">
                         <div className="text-xs tabular-nums text-muted-foreground">
@@ -1771,6 +1772,7 @@ export default function DatabasePage() {
           </Tabs>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

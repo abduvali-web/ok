@@ -3,7 +3,7 @@
 import { Search } from 'lucide-react'
 import type { Ref } from 'react'
 
-import { AnimatedInput } from '@/components/smoothui'
+import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
 export function SearchPanel({
@@ -27,18 +27,18 @@ export function SearchPanel({
 }) {
   return (
     <div className={cn('min-w-0 w-full max-w-[360px]', className)}>
-      <AnimatedInput
-        inputRef={inputRef}
-        value={value}
-        onChange={onChange}
-        label={ariaLabel || placeholder}
-        placeholder={placeholder}
-        disabled={disabled}
-        icon={<Search className="size-4 text-muted-foreground" />}
-        className="h-9"
-        inputClassName={cn('h-9 border-border bg-background', inputClassName)}
-        labelClassName="text-muted-foreground"
-      />
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          ref={inputRef}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          aria-label={ariaLabel || placeholder}
+          disabled={disabled}
+          className={cn('h-9 border-border bg-background pl-9', inputClassName)}
+        />
+      </div>
     </div>
   )
 }

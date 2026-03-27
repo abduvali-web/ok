@@ -271,115 +271,85 @@ export default function LandingPage() {
     visible: { opacity: 1, transition: { staggerChildren: 0.12, delayChildren: 0.1 } }
   }
 
-  const iconColors = ['text-blue-500', 'text-violet-500', 'text-emerald-500']
-  const iconBgColors = [
-    'bg-blue-500/10 dark:bg-blue-500/15',
-    'bg-violet-500/10 dark:bg-violet-500/15',
-    'bg-emerald-500/10 dark:bg-emerald-500/15'
-  ]
-  const cardGlows = [
-    'hover:shadow-glow-blue',
-    'hover:shadow-glow-violet',
-    'hover:shadow-glow-emerald'
+  const trustItems = [
+    { icon: ShieldCheck, text: 'Secure & encrypted' },
+    { icon: Zap, text: 'Real-time sync' },
+    { icon: Star, text: 'PWA ready' },
   ]
 
   return (
-    <div className="min-h-screen bg-[#fafbfc] dark:bg-[#06060a] text-foreground selection:bg-indigo-500/20 relative overflow-hidden">
-      {/* ═══ Background Layers ═══ */}
-      <div className="fixed inset-0 z-0 bg-dot-grid pointer-events-none opacity-60" />
-      <div className="fixed inset-0 z-0 bg-aurora pointer-events-none" />
-      
-      {/* Hero gradient wash */}
-      <div className="fixed top-0 left-0 right-0 h-[900px] bg-gradient-to-b from-indigo-500/[0.07] via-violet-500/[0.04] to-transparent pointer-events-none" />
-      
-      {/* Animated mesh orbs */}
-      <div className="fixed top-[-15%] left-[-8%] w-[45%] h-[45%] rounded-full bg-blue-500/[0.08] dark:bg-blue-500/[0.04] blur-[120px] pointer-events-none animate-pulse-glow" />
-      <div className="fixed top-[15%] right-[-8%] w-[35%] h-[50%] rounded-full bg-violet-500/[0.07] dark:bg-violet-500/[0.04] blur-[140px] pointer-events-none animate-pulse-glow" style={{ animationDelay: '1.5s', animationDuration: '8s' }} />
-      <div className="fixed bottom-[-5%] left-[25%] w-[50%] h-[35%] rounded-full bg-indigo-500/[0.06] dark:bg-indigo-500/[0.03] blur-[120px] pointer-events-none animate-pulse-glow" style={{ animationDelay: '3s', animationDuration: '10s' }} />
+    <div className="relative min-h-screen overflow-hidden bg-background bg-app-paper text-foreground">
+      <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-50" />
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[26rem] bg-gradient-to-b from-main/20 via-main/10 to-transparent" />
 
-      {/* ═══ Floating Header ═══ */}
-      <motion.header 
+      <motion.header
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        className="fixed left-0 right-0 top-0 z-50 flex justify-center pt-5 px-4 pointer-events-none"
+        className="pointer-events-none fixed left-0 right-0 top-0 z-50 flex justify-center px-4 pt-5"
       >
-        <div className={`pointer-events-auto flex w-full max-w-5xl items-center justify-between rounded-2xl px-5 py-2.5 transition-all duration-500 ${
-          scrolled 
-            ? 'bg-white/80 dark:bg-black/60 border border-black/8 dark:border-white/[0.08] backdrop-blur-2xl shadow-lg dark:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)]' 
-            : 'bg-transparent border border-transparent'
-        }`}>
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white text-xs font-bold transition-all duration-300 group-hover:scale-110 shadow-lg shadow-indigo-500/25">
-              <span className="relative z-10">AF</span>
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div
+          className={`pointer-events-auto flex w-full max-w-5xl items-center justify-between rounded-base border-2 border-border px-4 py-2.5 transition-all duration-300 ${
+            scrolled ? 'bg-background shadow-shadow' : 'bg-background/90 shadow-shadow'
+          }`}
+        >
+          <Link href="/" className="group flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-base border-2 border-border bg-main text-xs font-heading text-main-foreground shadow-shadow transition-transform group-hover:-translate-y-0.5">
+              AF
             </div>
-            <span className="font-bold tracking-tight text-zinc-900 dark:text-white/90 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">AutoFood</span>
+            <span className="text-base font-heading font-bold tracking-tight">AutoFood</span>
           </Link>
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
             <Link href="/login" className="hidden sm:block">
-              <span className="text-[13px] font-semibold text-zinc-500 dark:text-white/50 hover:text-zinc-900 dark:hover:text-white transition-colors px-2 relative after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-[2px] after:bg-indigo-500 after:transition-all after:duration-300 hover:after:w-full">{copy.adminLogin}</span>
+              <span className="text-sm font-base text-muted-foreground transition-colors hover:text-foreground">{copy.adminLogin}</span>
             </Link>
             <Link href="/login">
-              <Button className="rounded-xl h-9 bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-300 hover:scale-105 active:scale-95 group border-none text-[13px] font-semibold">
-                {copy.openDashboard} <ChevronRight className="ml-1 h-3.5 w-3.5 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+              <Button size="sm" className="h-9">
+                {copy.openDashboard} <ChevronRight className="h-3.5 w-3.5" />
               </Button>
             </Link>
           </div>
         </div>
       </motion.header>
 
-      <main className="relative z-10 mx-auto max-w-6xl px-4 pt-40 pb-12 space-y-28">
-        {/* ═══ HERO SECTION ═══ */}
-        <motion.section 
+      <main className="relative z-10 mx-auto max-w-6xl space-y-20 px-4 pb-14 pt-36">
+        <motion.section
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="flex flex-col items-center text-center max-w-4xl mx-auto"
+          className="mx-auto flex max-w-4xl flex-col items-center text-center"
         >
-          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-500/20 dark:border-indigo-500/15 bg-indigo-50 dark:bg-indigo-500/[0.06] backdrop-blur-md text-[13px] font-semibold text-indigo-600 dark:text-indigo-400 mb-8 shadow-sm relative overflow-hidden group cursor-default">
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-violet-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <Sparkles className="h-3.5 w-3.5 relative z-10" />
-            <span className="relative z-10 tracking-wide">{copy.heroTag}</span>
+          <motion.div variants={fadeUp} className="mb-7 inline-flex items-center gap-2 rounded-base border-2 border-border bg-main px-4 py-1.5 text-xs font-heading text-main-foreground shadow-shadow">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>{copy.heroTag}</span>
           </motion.div>
 
-          <motion.h1 
-            variants={fadeUp}
-            className="text-[2.75rem] sm:text-6xl md:text-[4.5rem] font-bold tracking-[-0.03em] text-gradient-hero mb-7 leading-[1.08]"
-          >
+          <motion.h1 variants={fadeUp} className="mb-5 text-balance text-4xl font-heading font-bold leading-tight tracking-tight sm:text-6xl">
             {copy.heroTitle}
           </motion.h1>
 
-          <motion.p 
-            variants={fadeUp}
-            className="text-lg md:text-xl text-zinc-500 dark:text-white/45 max-w-2xl font-medium leading-relaxed mb-10"
-          >
+          <motion.p variants={fadeUp} className="mb-9 max-w-2xl text-balance text-base text-muted-foreground sm:text-lg">
             {copy.heroDescription}
           </motion.p>
 
-          <motion.div variants={fadeUp} className="flex flex-wrap justify-center gap-4">
+          <motion.div variants={fadeUp} className="flex flex-wrap justify-center gap-3">
             <Link href="/login">
-              <Button className="h-13 px-8 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[15px] font-bold hover:from-indigo-500 hover:to-violet-500 hover:scale-[1.03] transition-all duration-300 active:scale-95 shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 group border-none">
-                {(t.common as any)?.login || copy.adminLogin} <ArrowRight className="ml-2 h-4 w-4 opacity-70 group-hover:translate-x-1 group-hover:opacity-100 transition-all duration-300" />
+              <Button size="lg" className="h-11 px-7">
+                {(t.common as any)?.login || copy.adminLogin} <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <Link href="tel:+998977087373">
-              <Button variant="outline" className="h-13 px-8 rounded-2xl border-zinc-200 dark:border-white/[0.1] bg-white/70 dark:bg-white/[0.04] text-zinc-700 dark:text-white/80 hover:bg-white dark:hover:bg-white/[0.08] text-[15px] font-bold backdrop-blur-md transition-all duration-300 hover:border-zinc-300 dark:hover:border-white/[0.18]">
-                <Phone className="mr-2.5 h-4 w-4 text-zinc-400 dark:text-white/40" />
-                <span className="tracking-wide">+998 97 708 73 73</span>
+              <Button variant="outline" size="lg" className="h-11 px-7">
+                <Phone className="h-4 w-4" />
+                +998 97 708 73 73
               </Button>
             </Link>
           </motion.div>
 
-          {/* Trust indicators */}
-          <motion.div variants={fadeUp} className="mt-14 flex flex-wrap items-center justify-center gap-6 text-zinc-400 dark:text-white/30">
-            {[
-              { icon: ShieldCheck, text: 'Secure & encrypted' },
-              { icon: Zap, text: 'Real-time sync' },
-              { icon: Star, text: 'PWA ready' },
-            ].map((item) => (
-              <div key={item.text} className="flex items-center gap-2 text-xs font-medium">
+          <motion.div variants={fadeUp} className="mt-11 flex flex-wrap items-center justify-center gap-2">
+            {trustItems.map((item) => (
+              <div key={item.text} className="flex items-center gap-2 rounded-base border-2 border-border bg-card px-3 py-1.5 text-xs shadow-shadow">
                 <item.icon className="h-3.5 w-3.5" />
                 <span>{item.text}</span>
               </div>
@@ -387,184 +357,145 @@ export default function LandingPage() {
           </motion.div>
         </motion.section>
 
-        {/* ═══ FEATURE BENTO GRID ═══ */}
-        <motion.section 
+        <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: true, margin: '-80px' }}
           variants={staggerContainer}
           className="grid gap-5 md:grid-cols-3"
         >
-          {copy.points.map((item, i) => {
+          {copy.points.map((item) => {
             const Icon = item.icon
-            
             return (
-              <motion.div 
-                key={item.title} 
+              <motion.div
+                key={item.title}
                 variants={fadeUp}
-                className={`group relative overflow-hidden rounded-[1.75rem] border border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-white/[0.02] p-7 hover:bg-white dark:hover:bg-white/[0.04] transition-all duration-500 hover:border-zinc-300 dark:hover:border-white/[0.1] shadow-sm hover:shadow-xl dark:hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.4)] backdrop-blur-xl ${cardGlows[i % 3]}`}
+                className="group rounded-base border-2 border-border bg-card p-6 shadow-shadow transition-all hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none"
               >
-                {/* Hover glow effect */}
-                <div className={`absolute -top-20 -right-20 h-[200px] w-[200px] rounded-full ${iconBgColors[i % 3]} opacity-0 group-hover:opacity-60 transition-all duration-700 blur-[60px] pointer-events-none`} />
-                
-                <div className="relative z-10">
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${iconBgColors[i % 3]} border border-transparent mb-6 group-hover:scale-110 transition-all duration-500`}>
-                    <Icon className={`h-5 w-5 ${iconColors[i % 3]}`} />
-                  </div>
-                  <h3 className="text-lg font-bold text-zinc-900 dark:text-white/95 mb-2.5 tracking-tight">{item.title}</h3>
-                  <p className="text-zinc-500 dark:text-white/40 leading-relaxed text-[14.5px]">{item.detail}</p>
+                <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-base border-2 border-border bg-main text-main-foreground shadow-shadow">
+                  <Icon className="h-5 w-5" />
                 </div>
+                <h3 className="mb-2 text-lg font-heading font-bold">{item.title}</h3>
+                <p className="text-sm text-muted-foreground">{item.detail}</p>
               </motion.div>
             )
           })}
         </motion.section>
 
-        {/* ═══ PORTAL & STATS GRID ═══ */}
-        <motion.section 
+        <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: true, margin: '-80px' }}
           variants={staggerContainer}
           className="grid gap-5 lg:grid-cols-[1.2fr_1fr]"
         >
-          {/* Portal card */}
-          <motion.div variants={fadeUp} className="relative overflow-hidden rounded-[1.75rem] border border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-white/[0.02] p-8 md:p-10 shadow-sm dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.4)] backdrop-blur-xl group hover:border-zinc-300 dark:hover:border-white/[0.1] transition-all duration-500">
-            {/* Decorative glow */}
-            <div className="absolute top-0 right-0 -mr-16 -mt-16 h-[300px] w-[300px] rounded-full bg-indigo-500/[0.06] dark:bg-indigo-500/[0.04] blur-[80px] opacity-60 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-            
-            <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/[0.06] font-semibold text-indigo-600 dark:text-indigo-400 mb-7 text-xs">
-                <Globe2 className="h-3.5 w-3.5" />
-                <span className="tracking-wide">{copy.portalLabel}</span>
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white/95 mb-4 tracking-tight leading-[1.15] max-w-[90%]">{copy.portalTitle}</h2>
-              <p className="text-[15px] text-zinc-500 dark:text-white/40 leading-relaxed font-medium max-w-md mb-8">{copy.portalDescription}</p>
-              
-              <div className="space-y-3">
-                {copy.promises.slice(0, 3).map((item) => (
-                  <div key={item} className="flex items-center gap-3.5 group/item">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/[0.1] border border-emerald-200 dark:border-emerald-500/20 group-hover/item:scale-110 transition-transform">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                    </div>
-                    <span className="text-zinc-600 dark:text-white/55 font-medium text-[14px] group-hover/item:text-zinc-900 dark:group-hover/item:text-white/80 transition-colors">{item}</span>
+          <motion.div variants={fadeUp} className="rounded-base border-2 border-border bg-card p-8 shadow-shadow">
+            <div className="inline-flex items-center gap-2 rounded-base border-2 border-border bg-main px-3 py-1 text-xs font-heading text-main-foreground">
+              <Globe2 className="h-3.5 w-3.5" />
+              <span>{copy.portalLabel}</span>
+            </div>
+            <h2 className="mt-5 max-w-[90%] text-2xl font-heading font-bold leading-tight md:text-3xl">{copy.portalTitle}</h2>
+            <p className="mb-7 mt-3 max-w-xl text-sm text-muted-foreground md:text-base">{copy.portalDescription}</p>
+            <div className="space-y-3">
+              {copy.promises.slice(0, 3).map((item) => (
+                <div key={item} className="flex items-center gap-3">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-base border-2 border-border bg-main text-main-foreground">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
                   </div>
-                ))}
-              </div>
+                  <span className="text-sm text-foreground">{item}</span>
+                </div>
+              ))}
             </div>
           </motion.div>
 
-          {/* Stats grid */}
           <motion.div variants={fadeUp} className="grid grid-cols-2 gap-4">
-            {copy.stats.map((stat, i) => (
-              <div key={stat.label} className="group flex flex-col justify-center rounded-[1.75rem] border border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-white/[0.02] p-7 hover:bg-white dark:hover:bg-white/[0.04] hover:border-zinc-300 dark:hover:border-white/[0.1] transition-all duration-500 shadow-sm hover:shadow-lg dark:hover:shadow-[0_12px_40px_-8px_rgba(0,0,0,0.4)] relative overflow-hidden backdrop-blur-xl">
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-50 dark:from-white/[0.01] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative z-10">
-                  <AnimatedNumber value={stat.value} className="text-3xl md:text-4xl font-bold tracking-tight text-zinc-900 dark:text-white mb-1.5 block" />
-                  <p className="text-[12px] text-zinc-400 dark:text-white/35 font-semibold tracking-wider uppercase">{stat.label}</p>
-                </div>
+            {copy.stats.map((stat) => (
+              <div key={stat.label} className="flex flex-col justify-center rounded-base border-2 border-border bg-card p-6 shadow-shadow">
+                <AnimatedNumber value={stat.value} className="mb-1 block text-3xl font-heading font-bold md:text-4xl" />
+                <p className="text-xs font-base uppercase tracking-wide text-muted-foreground">{stat.label}</p>
               </div>
             ))}
           </motion.div>
         </motion.section>
 
-        {/* ═══ ROLES & PRICING GRID ═══ */}
-        <motion.section 
+        <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: true, margin: '-80px' }}
           variants={staggerContainer}
           className="grid gap-5 lg:grid-cols-[1fr_1fr]"
         >
-          {/* Roles Card */}
-          <motion.div variants={fadeUp} className="rounded-[1.75rem] border border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-white/[0.02] p-8 md:p-10 flex flex-col shadow-sm dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.4)] backdrop-blur-xl relative overflow-hidden group">
-            <div className="absolute top-[-80px] left-[-80px] h-[250px] w-[250px] rounded-full bg-emerald-500/[0.06] blur-[80px] opacity-50 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-            <div className="relative z-10 flex flex-col h-full">
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/[0.06] text-emerald-600 dark:text-emerald-400 text-[11px] font-semibold tracking-wider uppercase mb-3">
-                    <ShieldCheck className="h-3 w-3" />
-                    {copy.roleBadge}
-                  </div>
-                  <h2 className="text-2xl font-bold text-zinc-900 dark:text-white/95 tracking-tight">{copy.roleTitle}</h2>
+          <motion.div variants={fadeUp} className="flex flex-col rounded-base border-2 border-border bg-card p-8 shadow-shadow">
+            <div className="mb-7 flex items-center justify-between">
+              <div>
+                <div className="mb-3 inline-flex items-center gap-2 rounded-base border-2 border-border bg-main px-3 py-1 text-[11px] font-heading uppercase tracking-wide text-main-foreground">
+                  <ShieldCheck className="h-3 w-3" />
+                  {copy.roleBadge}
                 </div>
+                <h2 className="text-2xl font-heading font-bold">{copy.roleTitle}</h2>
               </div>
-              <div className="grid gap-3 flex-1">
-                {copy.roles.map((role, i) => (
-                  <div key={role.title} className="rounded-2xl border border-zinc-100 dark:border-white/[0.05] bg-zinc-50/50 dark:bg-white/[0.015] p-4 hover:bg-white dark:hover:bg-white/[0.04] hover:border-zinc-200 dark:hover:border-white/[0.08] transition-all duration-400 group/role">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500/10 to-violet-500/10 dark:from-indigo-500/15 dark:to-violet-500/15 text-indigo-500 dark:text-indigo-400 text-xs font-bold">
-                        {i + 1}
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-zinc-800 dark:text-white/90 tracking-tight">{role.title}</h4>
-                        <p className="text-[13px] text-zinc-400 dark:text-white/35 font-medium leading-relaxed mt-0.5">{role.detail}</p>
-                      </div>
+            </div>
+            <div className="grid flex-1 gap-3">
+              {copy.roles.map((role, i) => (
+                <div key={role.title} className="rounded-base border-2 border-border bg-secondary-background p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-base border-2 border-border bg-main text-xs font-heading text-main-foreground">
+                      {i + 1}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-heading font-bold">{role.title}</h4>
+                      <p className="mt-0.5 text-[13px] text-muted-foreground">{role.detail}</p>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </motion.div>
 
-          {/* Pricing Card */}
-          <motion.div variants={fadeUp} className="rounded-[1.75rem] border border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-white/[0.02] p-8 md:p-10 flex flex-col justify-between shadow-sm dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.4)] backdrop-blur-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 h-[250px] w-[250px] rounded-full bg-violet-500/[0.06] blur-[80px] opacity-50 pointer-events-none" />
-            <div className="relative z-10">
-              <h2 className="text-2xl font-bold text-zinc-900 dark:text-white/95 mb-4 tracking-tight max-w-[80%] leading-[1.15]">{copy.pricingTitle}</h2>
-              <p className="text-[15px] text-zinc-500 dark:text-white/40 font-medium leading-relaxed mb-8 max-w-sm">{copy.pricingDescription}</p>
+          <motion.div variants={fadeUp} className="flex flex-col justify-between rounded-base border-2 border-border bg-card p-8 shadow-shadow">
+            <div>
+              <h2 className="max-w-[85%] text-2xl font-heading font-bold leading-tight">{copy.pricingTitle}</h2>
+              <p className="mb-8 mt-3 max-w-sm text-sm text-muted-foreground md:text-base">{copy.pricingDescription}</p>
             </div>
-            
-            <div className="space-y-3.5 relative z-10">
-              {/* Monthly */}
-              <div className="group rounded-2xl border border-zinc-200/80 dark:border-white/[0.06] bg-zinc-50/50 dark:bg-white/[0.02] p-6 flex items-center justify-between hover:bg-white dark:hover:bg-white/[0.04] hover:border-zinc-300 dark:hover:border-white/[0.1] transition-all duration-400 hover:shadow-md">
+            <div className="space-y-3.5">
+              <div className="flex items-center justify-between rounded-base border-2 border-border bg-secondary-background p-5">
                 <div className="min-w-0 pr-4">
-                  <h4 className="text-base font-bold text-zinc-800 dark:text-white/90 tracking-tight">{copy.monthly}</h4>
-                  <p className="text-[13px] text-zinc-400 dark:text-white/35 font-medium mt-1">{copy.monthlyNote}</p>
+                  <h4 className="text-base font-heading font-bold">{copy.monthly}</h4>
+                  <p className="mt-1 text-[13px] text-muted-foreground">{copy.monthlyNote}</p>
                 </div>
-                <div className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white shrink-0">$100</div>
+                <div className="shrink-0 text-2xl font-heading font-bold">$100</div>
               </div>
-              
-              {/* Quarterly - Featured */}
-              <div className="group rounded-2xl border-2 border-indigo-500/30 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-500/[0.06] dark:to-violet-500/[0.04] p-6 flex items-center justify-between transition-all duration-400 relative overflow-hidden shadow-lg shadow-indigo-500/10 dark:shadow-indigo-500/5 hover:shadow-xl hover:shadow-indigo-500/20">
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/[0.03] to-violet-500/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative z-10 min-w-0 pr-4">
-                  <h4 className="text-base font-bold text-zinc-900 dark:text-white/95 tracking-tight flex items-center gap-2.5">
+              <div className="flex items-center justify-between rounded-base border-2 border-border bg-main p-5 text-main-foreground shadow-shadow">
+                <div className="min-w-0 pr-4">
+                  <h4 className="flex items-center gap-2 text-base font-heading font-bold">
                     {copy.quarterly}
-                    <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 text-[10px] text-white font-bold uppercase tracking-widest">Popular</span>
+                    <span className="rounded-base border-2 border-border bg-background px-2 py-0.5 text-[10px] uppercase tracking-wide text-foreground">Popular</span>
                   </h4>
-                  <p className="text-[13px] text-zinc-500 dark:text-white/40 font-medium mt-1">{copy.quarterlyNote}</p>
+                  <p className="mt-1 text-[13px] text-main-foreground/80">{copy.quarterlyNote}</p>
                 </div>
-                <div className="text-2xl font-bold tracking-tight relative z-10 text-zinc-900 dark:text-white shrink-0">$200</div>
+                <div className="shrink-0 text-2xl font-heading font-bold">$200</div>
               </div>
             </div>
           </motion.div>
         </motion.section>
 
-        {/* ═══ FOOTER CTA ═══ */}
         <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: true, margin: '-80px' }}
           variants={staggerContainer}
           className="relative"
         >
-          <motion.div variants={fadeUp} className="rounded-[2rem] border border-zinc-200/80 dark:border-white/[0.06] bg-gradient-to-br from-indigo-50 via-white to-violet-50 dark:from-indigo-500/[0.06] dark:via-white/[0.02] dark:to-violet-500/[0.04] p-10 md:p-14 text-center relative overflow-hidden backdrop-blur-xl">
-            <div className="absolute top-[-100px] left-[20%] w-[300px] h-[300px] rounded-full bg-indigo-500/[0.08] blur-[100px] pointer-events-none animate-pulse-glow" />
-            <div className="absolute bottom-[-100px] right-[20%] w-[300px] h-[300px] rounded-full bg-violet-500/[0.08] blur-[100px] pointer-events-none animate-pulse-glow" style={{ animationDelay: '2s' }} />
-            
-            <div className="relative z-10">
-              <h2 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white/95 mb-4 tracking-tight">{copy.footerCta}</h2>
-              <Link href="/login">
-                <Button className="h-12 px-8 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[15px] font-bold hover:from-indigo-500 hover:to-violet-500 shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-300 hover:scale-105 active:scale-95 group border-none mt-2">
-                  {copy.footerCtaButton} <ArrowRight className="ml-2 h-4 w-4 opacity-70 group-hover:translate-x-1 group-hover:opacity-100 transition-all duration-300" />
-                </Button>
-              </Link>
-            </div>
+          <motion.div variants={fadeUp} className="rounded-base border-2 border-border bg-main p-10 text-center text-main-foreground shadow-shadow md:p-14">
+            <h2 className="mb-4 text-2xl font-heading font-bold md:text-3xl">{copy.footerCta}</h2>
+            <Link href="/login">
+              <Button variant="outline" className="mt-2 h-11 bg-background px-7 text-foreground">
+                {copy.footerCtaButton} <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </motion.div>
-
-          {/* Footer */}
-          <div className="mt-12 text-center text-xs text-zinc-400 dark:text-white/25 font-medium">
-            <p>© {new Date().getFullYear()} AutoFood. All rights reserved.</p>
+          <div className="mt-10 text-center text-xs text-muted-foreground">
+            <p>&copy; {new Date().getFullYear()} AutoFood. All rights reserved.</p>
           </div>
         </motion.section>
       </main>

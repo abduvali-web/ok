@@ -66,6 +66,10 @@
   --app-bg-grid: linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
     linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
   --app-bg-grid-size: 18px 18px;
+  --app-bg-paper:
+    radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 38%),
+    radial-gradient(circle at 84% 8%, rgba(0, 0, 0, 0.03) 0%, rgba(0, 0, 0, 0) 35%),
+    linear-gradient(180deg, #fdfcf8 0%, #f6f7f9 100%);
 
   --background: #fafbfc;
   --foreground: #0a0a0f;
@@ -176,6 +180,10 @@
   --app-bg-grid: linear-gradient(90deg, rgba(255, 228, 77, 0.08) 1px, transparent 1px),
     linear-gradient(rgba(255, 228, 77, 0.08) 1px, transparent 1px);
   --app-bg-grid-size: 18px 18px;
+  --app-bg-paper:
+    radial-gradient(circle at 16% 12%, rgba(255, 228, 77, 0.08) 0%, rgba(255, 228, 77, 0) 40%),
+    radial-gradient(circle at 86% 10%, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 32%),
+    linear-gradient(180deg, #161617 0%, #111113 100%);
 }
 
 @layer base {
@@ -362,6 +370,12 @@
    ═════════════════════════════════════════════ */
 
 @layer utilities {
+  .bg-app-paper {
+    background-image: var(--app-bg-paper), var(--app-bg-grid);
+    background-size: cover, var(--app-bg-grid-size);
+    background-position: center, center;
+  }
+
   .font-display {
     font-family: var(--font-display), var(--font-geist-sans), sans-serif;
   }

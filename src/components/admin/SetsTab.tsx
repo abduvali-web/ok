@@ -289,8 +289,8 @@ export function SetsTab() {
 
     // Keep Sets + Days selector rows visually consistent.
     const rowIconBtnClass = "h-9 w-9";
-    const rowIconBtnGhostClass = `${rowIconBtnClass} text-slate-200 hover:text-white hover:bg-slate-700`;
-    const rowIconBtnDeleteClass = `${rowIconBtnClass} text-red-200 hover:text-white hover:bg-red-600/30`;
+    const rowIconBtnGhostClass = `${rowIconBtnClass} border-2 border-transparent text-main-foreground hover:border-border hover:bg-secondary-background`;
+    const rowIconBtnDeleteClass = `${rowIconBtnClass} border-2 border-border bg-secondary-background text-foreground hover:bg-main`;
 
     type CalorieGroupsMeta = {
         dayOrder?: string[];
@@ -1276,10 +1276,10 @@ export function SetsTab() {
 
             <div className="space-y-4">
                 {/* Sets Selector Row (replaces sidebar) */}
-                <Card className="border-none shadow-sm bg-slate-900 text-white overflow-hidden">
+                <Card className="border-2 border-border bg-main text-main-foreground shadow-shadow overflow-hidden">
                     <div className="p-2 overflow-x-auto">
                         <div className="flex items-center gap-1 min-w-max">
-                            <span className="text-xs font-medium px-2 text-slate-400 mr-2 flex items-center gap-1">
+                            <span className="text-xs font-medium px-2 text-main-foreground/80 mr-2 flex items-center gap-1">
                                 <Scale className="w-4 h-4" />
                                 {uiText.setsList}:
                             </span>
@@ -1293,8 +1293,10 @@ export function SetsTab() {
                                         onClick={() => setSelectedSet(set)}
                                         variant="ghost"
                                         className={[
-                                            "h-9 min-w-[140px] max-w-[220px] px-3 rounded-full flex items-center transition-all justify-start",
-                                            isSelected ? "bg-primary text-white shadow-lg" : "hover:bg-slate-700 text-slate-200",
+                                            "h-9 min-w-[140px] max-w-[220px] px-3 rounded-base flex items-center border-2 transition-all justify-start",
+                                            isSelected
+                                                ? "border-border bg-background text-foreground shadow-shadow"
+                                                : "border-transparent bg-transparent text-main-foreground hover:border-border hover:bg-secondary-background",
                                         ].join(" ")}
                                         title={set.name}
                                     >
@@ -1307,7 +1309,7 @@ export function SetsTab() {
                                 label={uiText.newSet}
                                 variant="ghost"
                                 iconSize="md"
-                                className={`${rowIconBtnClass} bg-white text-slate-900 hover:bg-slate-100`}
+                                className={rowIconBtnGhostClass}
                                 onClick={() => setIsCreateModalOpen(true)}
                             >
                                 <Plus className="h-4 w-4" />
@@ -1351,9 +1353,9 @@ export function SetsTab() {
                                 {/* Day Content */}
                                 <CardContent className="flex-1 p-0">
                                     {!hasDataForDay ? (
-                                            <div className="h-full flex flex-col items-center justify-center p-12 text-center text-slate-500">
-                                                <UtensilsCrossed className="w-16 h-16 text-slate-200 mb-4" />
-                                            <h3 className="text-lg font-medium text-slate-900 mb-2">{uiText.noDayDataTitle}</h3>
+                                            <div className="h-full flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
+                                                <UtensilsCrossed className="w-16 h-16 text-muted-foreground/60 mb-4" />
+                                            <h3 className="text-lg font-medium text-foreground mb-2">{uiText.noDayDataTitle}</h3>
                                             <p className="max-w-md mb-6">{uiText.noDayDataDesc(activeDay)}</p>
                                             <IconButton label={uiText.copyStandard(activeDay)} onClick={copyStandardMenuToDay} iconSize="md">
                                                 <Copy className="h-4 w-4" />
@@ -1518,7 +1520,7 @@ export function SetsTab() {
                                                                                                 setIsEditDishModalOpen(true);
                                                                                             }}
                                                                                         >
-                                                                                            <Edit className="w-3.5 h-3.5 text-slate-500" />
+                                                                                            <Edit className="w-3.5 h-3.5 text-muted-foreground" />
                                                                                         </IconButton>
                                                                                         <IconButton
                                                                                             label="Delete"
@@ -1532,13 +1534,13 @@ export function SetsTab() {
                                                                                     </div>
                                                                                 </div>
 
-                                                                                <div className="mt-2 text-xs text-slate-500">
+                                                                                <div className="mt-2 text-xs text-muted-foreground">
                                                                                     {dish.customIngredients ? (
                                                                                         <span className="text-amber-600 font-medium flex items-center gap-1">
                                                                                             <Scale className="w-3 h-3" /> {uiText.customWeight}
                                                                                         </span>
                                                                                     ) : (
-                                                                                        <span className="text-slate-400 flex items-center gap-1">
+                                                                                        <span className="text-muted-foreground/80 flex items-center gap-1">
                                                                                             <Scale className="w-3 h-3" /> {uiText.standard}
                                                                                         </span>
                                                                                     )}
@@ -1549,7 +1551,7 @@ export function SetsTab() {
                                                                 })}
 
                                                                 {(!group?.dishes || group.dishes.length === 0) && (
-                                                                    <div className="col-span-full py-8 text-center text-slate-400 border-2 border-dashed rounded-lg">
+                                                                    <div className="col-span-full py-8 text-center text-muted-foreground border-2 border-dashed rounded-base">
                                                                         {uiText.noDishes}
                                                                     </div>
                                                                 )}
@@ -1563,9 +1565,9 @@ export function SetsTab() {
                             </Card>
                     </div>
                 ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                            <ArrowRight className="w-8 h-8 text-slate-300" />
+                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
+                        <div className="w-20 h-20 bg-secondary-background border-2 border-border rounded-base flex items-center justify-center mb-4">
+                            <ArrowRight className="w-8 h-8 text-muted-foreground" />
                         </div>
                         <p>{uiText.selectSetHint}</p>
                     </div>
@@ -1793,7 +1795,7 @@ export function SetsTab() {
                                                     variant="ghost"
                                                     size="icon"
                                                     onClick={() => removeDraftIngredient(idx)}
-                                                    className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                                                    className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-main"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
@@ -1802,7 +1804,7 @@ export function SetsTab() {
                                     ))}
                                     {draftMealIngredients.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={6} className="h-24 text-center text-slate-400">
+                                            <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                                                 {uiText.noIngredients}
                                             </TableCell>
                                         </TableRow>
@@ -1886,7 +1888,7 @@ export function SetsTab() {
                                                 <Button
                                                     variant="ghost" size="icon"
                                                     onClick={() => removeIngredient(idx)}
-                                                    className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                                                    className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-main"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
@@ -1895,7 +1897,7 @@ export function SetsTab() {
                                     ))}
                                     {(editingDish.dish.customIngredients || getOriginalIngredients(editingDish.dish.dishId)).length === 0 && (
                                         <TableRow>
-                                            <TableCell colSpan={4} className="h-24 text-center text-slate-400">
+                                            <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                                                 {uiText.noIngredients}
                                             </TableCell>
                                         </TableRow>

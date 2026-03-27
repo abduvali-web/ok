@@ -2303,7 +2303,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background bg-[linear-gradient(90deg,rgba(0,0,0,0.06)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.06)_1px,transparent_1px)] bg-[size:18px_18px] flex items-center justify-center">
+      <div className="min-h-screen bg-background bg-app-paper flex items-center justify-center">
         <div className="text-center animate-fade-in">
           <div className="flex items-center justify-center gap-1.5 mb-3">
             <span className="h-2 w-2 rounded-md bg-foreground/60 animate-pulse" style={{ animationDelay: '0ms' }} />
@@ -2317,7 +2317,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background bg-[linear-gradient(90deg,rgba(0,0,0,0.05)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.05)_1px,transparent_1px)] bg-[size:18px_18px]">
+    <div className="min-h-screen bg-background bg-app-paper">
       {/* Header */}
       <header className="border-b-2 border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -2555,7 +2555,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   { label: t.admin.stats.inDelivery, value: stats?.inDeliveryOrders || 0, sub: 'Ãâ€™ ÃÂ¿Ã‘â‚¬ÃÂ¾Ã‘â€ ÃÂµÃ‘ÂÃ‘ÂÃÂµ', color: 'text-blue-600', dot: 'bg-blue-500' },
                   { label: t.admin.stats.pending, value: stats?.pendingOrders || 0, sub: 'Ãâ€™ ÃÂ¾Ã‘â€¡ÃÂµÃ‘â‚¬ÃÂµÃÂ´ÃÂ¸', color: 'text-amber-600', dot: 'bg-amber-500' },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
+                  <div key={s.label} className="rounded-base border-2 border-border bg-card p-4 shadow-shadow transition-all hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none">
                     <div className="flex items-center gap-2 mb-2">
                       <span className={`inline-block h-2 w-2 rounded-md ${s.dot}`} />
                       <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
@@ -2577,7 +2577,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   { label: t.admin.stats.card, value: stats?.cardOrders || 0, sub: 'ÃÅ¾ÃÂ½ÃÂ»ÃÂ°ÃÂ¹ÃÂ½', color: 'text-blue-600', dot: 'bg-blue-500' },
                   { label: t.admin.stats.cash, value: stats?.cashOrders || 0, sub: 'ÃÂÃÂ°ÃÂ»ÃÂ¸Ã‘â€¡ÃÂ½Ã‘â€¹ÃÂµ', color: 'text-teal-600', dot: 'bg-teal-500' },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
+                  <div key={s.label} className="rounded-base border-2 border-border bg-card p-4 shadow-shadow transition-all hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none">
                     <div className="flex items-center gap-2 mb-2">
                       <span className={`inline-block h-2 w-2 rounded-md ${s.dot}`} />
                       <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
@@ -2599,7 +2599,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   { label: t.admin.stats.oddDay, value: stats?.oddDayCustomers || 0, sub: 'ÃÂÃÂµÃ‘â€¡Ã‘â€˜Ã‘â€šÃÂ½Ã‘â€¹ÃÂµ ÃÂ´ÃÂ½ÃÂ¸', color: 'text-pink-600', dot: 'bg-pink-500' },
                   { label: t.admin.stats.special, value: stats?.specialPreferenceCustomers || 0, sub: 'ÃÂ¡ ÃÂ¾Ã‘ÂÃÂ¾ÃÂ±ÃÂµÃÂ½ÃÂ½ÃÂ¾Ã‘ÂÃ‘â€šÃ‘ÂÃÂ¼ÃÂ¸', color: 'text-orange-600', dot: 'bg-orange-500' },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
+                  <div key={s.label} className="rounded-base border-2 border-border bg-card p-4 shadow-shadow transition-all hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none">
                     <div className="flex items-center gap-2 mb-2">
                       <span className={`inline-block h-2 w-2 rounded-md ${s.dot}`} />
                       <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
@@ -2622,7 +2622,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                   { label: t.admin.stats.high, value: stats?.orders2500 || 0, sub: '2500 ÃÂºÃÂºÃÂ°ÃÂ»', color: 'text-emerald-600', dot: 'bg-emerald-500' },
                   { label: t.admin.stats.max, value: stats?.orders3000 || 0, sub: '3000 ÃÂºÃÂºÃÂ°ÃÂ»', color: 'text-blue-600', dot: 'bg-blue-500' },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
+                  <div key={s.label} className="rounded-base border-2 border-border bg-card p-4 shadow-shadow transition-all hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none">
                     <div className="flex items-center gap-2 mb-2">
                       <span className={`inline-block h-2 w-2 rounded-md ${s.dot}`} />
                       <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
@@ -2640,7 +2640,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
                 { label: t.admin.stats.single, value: stats?.singleItemOrders || 0, sub: '1 ÃÂ¿ÃÂ¾Ã‘â‚¬Ã‘â€ ÃÂ¸Ã‘Â', color: 'text-indigo-600', dot: 'bg-indigo-500' },
                 { label: t.admin.stats.multi, value: stats?.multiItemOrders || 0, sub: 'Ãâ€ÃÂ²ÃÂ° ÃÂ¸ ÃÂ±ÃÂ¾ÃÂ»ÃÂµÃÂµ Ã‘â‚¬ÃÂ°Ã‘â€ ÃÂ¸ÃÂ¾ÃÂ½ÃÂ¾ÃÂ²', color: 'text-violet-600', dot: 'bg-violet-500' },
               ].map((s) => (
-                <div key={s.label} className="rounded-md border border-border bg-card p-4 transition-all duration-300 hover:shadow-elegant hover:border-muted-foreground/30">
+                <div key={s.label} className="rounded-base border-2 border-border bg-card p-4 shadow-shadow transition-all hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none">
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`inline-block h-2 w-2 rounded-md ${s.dot}`} />
                     <span className="text-xs font-medium text-muted-foreground">{s.label}</span>

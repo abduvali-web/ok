@@ -24,17 +24,17 @@ export function LanguageSwitcher() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 gap-1.5 rounded-full px-3 text-xs">
-                    <Globe className="h-3.5 w-3.5" />
+                <Button variant="outline" size="sm" className="h-9 gap-2 px-3">
+                    <Globe className="h-4 w-4" />
                     <span className="hidden sm:inline">{current?.flag}</span>
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-36">
+            <DropdownMenuContent align="end" className="w-40">
                 {LANGUAGES.map(({ code, label, flag }) => (
                     <DropdownMenuItem
                         key={code}
                         onClick={() => setLanguage(code)}
-                        className={`gap-2 text-xs ${language === code ? 'font-medium' : ''}`}
+                        className={`gap-2 ${language === code ? 'font-medium' : ''}`}
                     >
                         <span>{flag}</span>
                         {label}

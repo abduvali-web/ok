@@ -40,7 +40,7 @@ import type { DateRange } from 'react-day-picker'
 const CourierMap = dynamic(() => import('@/components/courier/CourierMap'), {
   ssr: false,
   loading: () => (
-    <div className="h-64 w-full bg-slate-100 animate-pulse rounded-lg flex items-center justify-center text-slate-400">
+    <div className="flex h-64 w-full animate-pulse items-center justify-center rounded-base border-2 border-border bg-secondary-background text-muted-foreground">
       Loading...
     </div>
   ),
@@ -660,40 +660,40 @@ export default function CourierPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#fafbfc] dark:bg-[#06060a] flex flex-col items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-dot-grid pointer-events-none opacity-40" />
-        <div className="absolute top-[-20%] left-[10%] w-[400px] h-[400px] rounded-full bg-indigo-500/[0.06] blur-[100px] pointer-events-none animate-pulse-glow" />
+      <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background bg-app-paper">
+        <div className="pointer-events-none absolute inset-0 [background:var(--app-bg-grid)] opacity-40" />
+        <div className="" />
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="mb-4 relative z-10">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
-            <RefreshCw className="w-5 h-5 text-white" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-base border-2 border-border bg-main text-main-foreground shadow-shadow">
+            <RefreshCw className="h-5 w-5" />
           </div>
         </motion.div>
-        <p className="text-zinc-400 dark:text-white/40 font-medium relative z-10">{t.common.loading}</p>
+        <p className="relative z-10 font-base text-muted-foreground">{t.common.loading}</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#fafbfc] dark:bg-[#06060a] pb-20 relative overflow-hidden">
-      <div className="fixed inset-0 z-0 bg-dot-grid pointer-events-none opacity-30" />
-      <div className="fixed top-[-200px] right-[-50px] w-[400px] h-[400px] rounded-full bg-indigo-500/[0.04] dark:bg-indigo-500/[0.02] blur-[100px] pointer-events-none animate-pulse-glow" />
+    <div className="relative min-h-screen overflow-hidden bg-background bg-app-paper pb-20">
+      <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-35" />
+      <div className="" />
       
-      <header className="sticky top-0 z-50 border-b border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-[#06060a]/80 backdrop-blur-2xl safe-top accent-line">
+      <header className="safe-top sticky top-0 z-50 border-b-2 border-border bg-background/95 backdrop-blur-md">
         <div className="max-w-3xl mx-auto px-4 h-16 flex justify-between items-center">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+            <div className="flex h-9 w-9 items-center justify-center rounded-base border-2 border-border bg-main text-main-foreground shadow-shadow">
               <Package className="w-4.5 h-4.5" />
             </div>
-            <h1 className="font-bold text-lg tracking-tight text-zinc-900 dark:text-white">{t.courier.title}</h1>
+            <h1 className="text-lg font-heading font-bold tracking-tight text-foreground">{t.courier.title}</h1>
           </div>
           <div className="flex items-center space-x-2">
             <LanguageSwitcher />
             {isRefreshing && (
               <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-                <RefreshCw className="w-4 h-4 text-zinc-400 dark:text-white/40" />
+                <RefreshCw className="h-4 w-4 text-muted-foreground" />
               </motion.div>
             )}
-            <Button variant="ghost" size="icon" onClick={handleLogout} className="text-zinc-400 dark:text-white/40 hover:text-rose-500 dark:hover:text-rose-400 rounded-xl">
+            <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-base text-muted-foreground hover:text-rose-500">
               <LogOut className="w-5 h-5" />
             </Button>
           </div>
@@ -702,43 +702,43 @@ export default function CourierPage() {
 
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-6 relative z-10">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid h-auto w-full grid-cols-3 gap-1.5 p-1.5 bg-zinc-100/80 dark:bg-white/[0.04] rounded-xl">
-            <TabsTrigger value="orders" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.08] data-[state=active]:shadow-sm font-semibold text-[13px]">
+          <TabsList className="grid h-auto w-full grid-cols-3 gap-2 rounded-base border-2 border-border bg-background p-1.5">
+            <TabsTrigger value="orders" className="flex items-center gap-2 rounded-base border-2 border-transparent text-[13px] font-heading data-[state=active]:border-border data-[state=active]:bg-main data-[state=active]:text-main-foreground">
               <Package className="w-4 h-4" />
               {t.courier.orders}
             </TabsTrigger>
-            <TabsTrigger value="chat" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.08] data-[state=active]:shadow-sm font-semibold text-[13px]">
+            <TabsTrigger value="chat" className="flex items-center gap-2 rounded-base border-2 border-transparent text-[13px] font-heading data-[state=active]:border-border data-[state=active]:bg-main data-[state=active]:text-main-foreground">
               <MessageSquare className="w-4 h-4" />
               {t.courier.chat}
             </TabsTrigger>
-            <TabsTrigger value="profile" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.08] data-[state=active]:shadow-sm font-semibold text-[13px]">
+            <TabsTrigger value="profile" className="flex items-center gap-2 rounded-base border-2 border-transparent text-[13px] font-heading data-[state=active]:border-border data-[state=active]:bg-main data-[state=active]:text-main-foreground">
               <User className="w-4 h-4" />
               {t.courier.profile}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="orders" className="space-y-4">
-            <Card className="rounded-2xl border-zinc-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-white/[0.02] backdrop-blur-xl shadow-sm">
+            <Card className="rounded-base border-2 border-border bg-card shadow-shadow">
               <CardContent className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-xl bg-indigo-50/50 dark:bg-indigo-500/[0.06] p-3 border border-indigo-100 dark:border-indigo-500/10">
+                <div className="rounded-base border-2 border-border bg-secondary-background p-3">
                   <div className="flex items-center gap-1.5 mb-1">
                     <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
                     <p className="text-[11px] font-semibold text-indigo-600/70 dark:text-indigo-400/60 tracking-wider uppercase">{uiText.active}</p>
                   </div>
                   <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-400">{activeOrdersCount}</p>
                 </div>
-                <div className="rounded-xl bg-amber-50/50 dark:bg-amber-500/[0.06] p-3 border border-amber-100 dark:border-amber-500/10">
+                <div className="rounded-base border-2 border-border bg-secondary-background p-3">
                   <div className="flex items-center gap-1.5 mb-1">
                     <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                     <p className="text-[11px] font-semibold text-amber-600/70 dark:text-amber-400/60 tracking-wider uppercase">{uiText.paused}</p>
                   </div>
                   <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{pausedOrdersCount}</p>
                 </div>
-                <div className="rounded-xl bg-zinc-50/50 dark:bg-white/[0.02] p-3 border border-zinc-100 dark:border-white/[0.04]">
+                <div className="rounded-base border-2 border-border bg-secondary-background p-3">
                   <p className="text-[11px] font-semibold text-zinc-400 dark:text-white/35 tracking-wider uppercase mb-1">{uiText.lastSync}</p>
                   <p className="text-sm font-bold text-zinc-700 dark:text-white/80">{lastSyncLabel}</p>
                 </div>
-                <div className="rounded-xl bg-emerald-50/50 dark:bg-emerald-500/[0.06] p-3 border border-emerald-100 dark:border-emerald-500/10">
+                <div className="rounded-base border-2 border-border bg-secondary-background p-3">
                   <div className="flex items-center gap-1.5 mb-1">
                     <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                     <p className="text-[11px] font-semibold text-emerald-600/70 dark:text-emerald-400/60 tracking-wider uppercase">{uiText.deliveryMomentum}</p>
@@ -748,7 +748,7 @@ export default function CourierPage() {
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden rounded-2xl border-zinc-200/80 dark:border-white/[0.06] shadow-sm">
+            <Card className="overflow-hidden rounded-base border-2 border-border shadow-shadow">
               <CardContent className="p-0 h-[300px] relative z-0">
                 <CourierMap orders={orders} currentLocation={currentLocation} onMarkerClick={handleOpenOrder} />
               </CardContent>
@@ -769,8 +769,8 @@ export default function CourierPage() {
                             variant="secondary"
                             className={
                               nextStopOrder.orderStatus === 'IN_DELIVERY'
-                                ? 'bg-blue-100 text-blue-700 border-blue-200'
-                                : 'bg-amber-100 text-amber-700 border-amber-200'
+                                ? 'border-border bg-main text-main-foreground'
+                                : 'border-border bg-secondary-background text-foreground'
                             }
                           >
                             {nextStopOrder.orderStatus === 'IN_DELIVERY' ? uiText.inRoute : uiText.pending}
@@ -790,10 +790,10 @@ export default function CourierPage() {
                   </div>
                   {nextStopOrder && (
                     <div className="flex flex-wrap items-center gap-2">
-                      <Button variant="outline" size="sm" className="rounded-md" onClick={() => openRouteForOrder(nextStopOrder)}>
+                      <Button variant="outline" size="sm" className="rounded-base" onClick={() => openRouteForOrder(nextStopOrder)}>
                         {uiText.navigate}
                       </Button>
-                      <Button variant="outline" size="sm" className="rounded-md" onClick={() => handleOpenOrder(nextStopOrder)}>
+                      <Button variant="outline" size="sm" className="rounded-base" onClick={() => handleOpenOrder(nextStopOrder)}>
                         {uiText.review}
                       </Button>
                     </div>
@@ -806,7 +806,7 @@ export default function CourierPage() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">
                   <h2 className="text-lg font-semibold flex items-center gap-2">
-                    <Package className="w-5 h-5 text-primary" />
+                    <Package className="w-5 h-5 text-foreground" />
                     {t.courier.todayOrders} ({orderedVisibleOrders.length}
                     {orderStatusFilter !== 'ALL' ? `/${orders.length}` : ''})
                   </h2>
@@ -838,7 +838,7 @@ export default function CourierPage() {
                     locale={language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'}
                     className="min-w-[220px]"
                   />
-                  <Button variant="outline" size="sm" className="rounded-md" onClick={() => fetchOrders(true)} disabled={isRefreshing}>
+                  <Button variant="outline" size="sm" className="rounded-base" onClick={() => fetchOrders(true)} disabled={isRefreshing}>
                     <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                     {uiText.refresh}
                   </Button>
@@ -857,7 +857,7 @@ export default function CourierPage() {
                     type="button"
                     size="sm"
                     variant={orderStatusFilter === option.id ? 'default' : 'outline'}
-                    className="rounded-md"
+                    className="rounded-base"
                     onClick={() => setOrderStatusFilter(option.id)}
                   >
                     {option.label}
@@ -887,14 +887,14 @@ export default function CourierPage() {
 
               <AnimatePresence mode="popLayout">
                 {orderedVisibleOrders.length === 0 ? (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-lg border border-border bg-card py-12 text-center">
-                    <div className="bg-muted w-16 h-16 rounded-md flex items-center justify-center mx-auto mb-4">
-                      <Package className="w-8 h-8 text-slate-400" />
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-base border-2 border-border bg-card py-12 text-center shadow-shadow">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-base border-2 border-border bg-secondary-background">
+                      <Package className="w-8 h-8 text-muted-foreground" />
                     </div>
-                    <h3 className="text-lg font-medium text-slate-900">
+                    <h3 className="text-lg font-medium text-foreground">
                       {orderStatusFilter === 'ALL' ? t.courier.noOrders : uiText.noOrdersInStatus}
                     </h3>
-                    <p className="text-slate-500">
+                    <p className="text-muted-foreground">
                       {orderStatusFilter === 'ALL' ? t.courier.noOrders : uiText.tryAnotherStatus}
                     </p>
                     <Button onClick={() => fetchOrders()} variant="outline" className="mt-4">
@@ -912,8 +912,8 @@ export default function CourierPage() {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                     >
                       <Card
-                        className={`overflow-hidden border transition-colors duration-200 ${
-                          order.orderStatus === 'DELIVERED' ? 'bg-muted/50' : 'bg-card'
+                        className={`overflow-hidden border-2 border-border shadow-shadow transition-colors duration-200 ${
+                          order.orderStatus === 'DELIVERED' ? 'bg-secondary-background' : 'bg-card'
                         }`}
                         onClick={() => handleOpenOrder(order)}
                       >
@@ -935,28 +935,28 @@ export default function CourierPage() {
                                   </Badge>
                                 )}
                                 {order.orderStatus === 'PAUSED' && (
-                                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 border-yellow-200">
+                                  <Badge variant="secondary" className="border-border bg-orange-300 text-black">
                                     <Pause className="w-3 h-3 mr-1" />
                                     {uiText.paused}
                                   </Badge>
                                 )}
                               </div>
-                              <h3 className="font-medium text-slate-900">{order.customer.name}</h3>
-                              <div className="flex items-center text-slate-500 text-sm">
+                              <h3 className="font-medium text-foreground">{order.customer.name}</h3>
+                              <div className="flex items-center text-muted-foreground text-sm">
                                 <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
                                 <span className="line-clamp-1">{order.deliveryAddress}</span>
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="font-mono font-medium text-slate-900">{order.deliveryTime}</div>
-                              <div className="text-xs text-slate-500 mt-1">{order.calories} kcal</div>
+                              <div className="font-mono font-medium text-foreground">{order.deliveryTime}</div>
+                              <div className="text-xs text-muted-foreground mt-1">{order.calories} kcal</div>
                             </div>
                           </div>
 
                           <div className="mt-4 flex items-center justify-between pt-4 border-t border-border">
-                            <div className="flex items-center gap-4 text-sm text-slate-600">
+                            <div className="flex items-center gap-4 text-sm text-foreground">
                               <div className="flex items-center">
-                                <Utensils className="w-4 h-4 mr-1.5 text-slate-400" />
+                                <Utensils className="w-4 h-4 mr-1.5 text-muted-foreground" />
                                 {order.quantity} {uiText.quantityUnit}
                               </div>
                               {order.specialFeatures && order.specialFeatures !== '{}' && (
@@ -966,7 +966,7 @@ export default function CourierPage() {
                                 </div>
                               )}
                             </div>
-                            <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/5 -mr-2">
+                            <Button variant="ghost" size="sm" className="text-foreground hover:text-foreground hover:bg-primary/5 -mr-2">
                               {uiText.details}
                               <ChevronRight className="w-4 h-4 ml-1" />
                             </Button>
@@ -988,7 +988,7 @@ export default function CourierPage() {
       </main>
 
       <Sheet open={isOrderOpen} onOpenChange={setIsOrderOpen}>
-        <SheetContent side="bottom" className="h-[90vh] rounded-t-lg p-0">
+        <SheetContent side="bottom" className="h-[90vh] rounded-t-base p-0">
           {selectedOrder && (
             <div className="h-full flex flex-col">
               <div className="p-6 pb-0">
@@ -998,7 +998,7 @@ export default function CourierPage() {
                       <Badge variant="outline" className="mb-2 border-border text-muted-foreground">
                         #{selectedOrder.orderNumber}
                       </Badge>
-                      <SheetTitle className="text-2xl font-bold text-slate-900">{selectedOrder.customer.name}</SheetTitle>
+                      <SheetTitle className="text-2xl font-bold text-foreground">{selectedOrder.customer.name}</SheetTitle>
                       <SheetDescription className="flex items-center mt-1">
                         <Clock className="w-4 h-4 mr-1" />
                         {selectedOrder.deliveryTime}
@@ -1008,10 +1008,10 @@ export default function CourierPage() {
                       <Badge
                         className={`px-3 py-1 ${
                           isOrderPaused
-                            ? 'bg-yellow-100 text-yellow-700'
+                            ? 'bg-orange-300 text-black'
                             : selectedOrder.orderStatus === 'IN_DELIVERY'
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'bg-green-100 text-green-700'
+                              ? 'bg-main text-main-foreground'
+                              : 'bg-emerald-300 text-black'
                         }`}
                       >
                         {isOrderPaused ? t.courier.pauseDelivery : selectedOrder.orderStatus === 'IN_DELIVERY' ? t.courier.activeOrder : uiText.new}
@@ -1021,43 +1021,43 @@ export default function CourierPage() {
                 </SheetHeader>
 
                 <div className="space-y-4">
-                  <div className="flex items-start rounded-md bg-muted p-3">
-                    <MapPin className="w-5 h-5 text-primary mt-0.5 mr-3 shrink-0" />
+                  <div className="flex items-start rounded-base border-2 border-border bg-secondary-background p-3">
+                    <MapPin className="w-5 h-5 text-foreground mt-0.5 mr-3 shrink-0" />
                     <div>
-                      <p className="text-sm text-slate-500 mb-0.5">{t.courier.deliveryAddress}</p>
-                      <p className="font-medium text-slate-900 leading-snug">{selectedOrder.deliveryAddress}</p>
+                      <p className="text-sm text-muted-foreground mb-0.5">{t.courier.deliveryAddress}</p>
+                      <p className="font-medium text-foreground leading-snug">{selectedOrder.deliveryAddress}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center rounded-md bg-muted p-3">
-                    <Phone className="w-5 h-5 text-primary mr-3 shrink-0" />
+                  <div className="flex items-center rounded-base border-2 border-border bg-secondary-background p-3">
+                    <Phone className="w-5 h-5 text-foreground mr-3 shrink-0" />
                     <div>
-                      <p className="text-sm text-slate-500 mb-0.5">{t.common.phone}</p>
-                      <a href={`tel:${selectedOrder.customer.phone}`} className="font-medium text-slate-900 hover:text-primary">
+                      <p className="text-sm text-muted-foreground mb-0.5">{t.common.phone}</p>
+                      <a href={`tel:${selectedOrder.customer.phone}`} className="font-medium text-foreground hover:text-foreground">
                         {selectedOrder.customer.phone}
                       </a>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-md bg-muted p-3">
+                    <div className="rounded-base border-2 border-border bg-secondary-background p-3">
                       <div className="flex items-center mb-1">
-                        <Package className="w-4 h-4 text-primary mr-2" />
-                        <span className="text-xs text-slate-500">{t.common.quantity}</span>
+                        <Package className="w-4 h-4 text-foreground mr-2" />
+                        <span className="text-xs text-muted-foreground">{t.common.quantity}</span>
                       </div>
-                      <p className="font-semibold text-slate-900">{selectedOrder.quantity} {uiText.quantityUnit}.</p>
+                      <p className="font-semibold text-foreground">{selectedOrder.quantity} {uiText.quantityUnit}.</p>
                     </div>
-                    <div className="rounded-md bg-muted p-3">
+                    <div className="rounded-base border-2 border-border bg-secondary-background p-3">
                       <div className="flex items-center mb-1">
-                        <Utensils className="w-4 h-4 text-primary mr-2" />
-                        <span className="text-xs text-slate-500">{t.common.calories}</span>
+                        <Utensils className="w-4 h-4 text-foreground mr-2" />
+                        <span className="text-xs text-muted-foreground">{t.common.calories}</span>
                       </div>
-                      <p className="font-semibold text-slate-900">{selectedOrder.calories}</p>
+                      <p className="font-semibold text-foreground">{selectedOrder.calories}</p>
                     </div>
                   </div>
 
                   {selectedOrder.specialFeatures && selectedOrder.specialFeatures !== '{}' && (
-                    <div className="rounded-md border border-yellow-200 bg-yellow-50 p-3">
+                    <div className="rounded-base border-2 border-border bg-orange-300 p-3">
                       <div className="flex items-center mb-1 text-yellow-700">
                         <AlertCircle className="w-4 h-4 mr-2" />
                         <span className="text-xs font-medium">{uiText.note}</span>
@@ -1070,8 +1070,8 @@ export default function CourierPage() {
 
               <div className="mt-auto p-6 bg-muted/50 border-t border-border space-y-3">
                 {(selectedOrder.orderStatus === 'IN_DELIVERY' || selectedOrder.orderStatus === 'PAUSED') && (
-                  <div className="mb-2 rounded-md border border-border bg-card p-3 shadow-sm">
-                    <label className="mb-1 block text-sm font-medium text-slate-700">{uiText.amountReceived}</label>
+                  <div className="mb-2 rounded-base border-2 border-border bg-card p-3 shadow-shadow">
+                    <label className="mb-1 block text-sm font-medium text-foreground">{uiText.amountReceived}</label>
                     <div className="relative">
                       <Input
                         type="number"
@@ -1080,7 +1080,7 @@ export default function CourierPage() {
                         placeholder="0"
                         className="h-10 w-full pr-10"
                       />
-                      <span className="absolute right-3 top-2.5 text-slate-400 text-sm">UZS</span>
+                      <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">UZS</span>
                     </div>
                   </div>
                 )}
@@ -1092,7 +1092,7 @@ export default function CourierPage() {
                   </Button>
 
                   {selectedOrder.orderStatus === 'PENDING' && (
-                    <Button className="h-12 text-base font-medium bg-green-600 hover:bg-green-700 text-white" onClick={handleStartDelivery}>
+                    <Button className="h-12 text-base font-medium" onClick={handleStartDelivery}>
                       <Play className="w-5 h-5 mr-2" />
                       {t.courier.apply}
                     </Button>
@@ -1100,14 +1100,14 @@ export default function CourierPage() {
 
                   {(selectedOrder.orderStatus === 'IN_DELIVERY' || selectedOrder.orderStatus === 'PAUSED') &&
                     (isOrderPaused ? (
-                      <Button className="h-12 text-base font-medium bg-blue-600 hover:bg-blue-700 text-white" onClick={handleResumeOrder}>
+                      <Button className="h-12 text-base font-medium" onClick={handleResumeOrder}>
                         <Play className="w-5 h-5 mr-2" />
                         {t.courier.resumeDelivery}
                       </Button>
                     ) : (
                       <Button
                         variant="secondary"
-                        className="h-12 text-base font-medium bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                        className="h-12 text-base font-medium"
                         onClick={handlePauseOrder}
                       >
                         <Pause className="w-5 h-5 mr-2" />
