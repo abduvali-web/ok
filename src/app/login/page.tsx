@@ -11,7 +11,6 @@ import { AuthShell } from '@/components/auth/AuthShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { AnimatedInput } from '@/components/smoothui'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 const roleRoutes: Record<string, string> = {
@@ -168,11 +167,11 @@ export default function LoginPage() {
             </Link>
           </p>
           <p>
-            <Button type="button" variant="link" className="h-auto p-0 text-xs" onClick={() => toast.info(uiText.policiesSoon)}>
+            <Button type="button" variant="link" className="h-auto p-0 text-xs text-muted-foreground" onClick={() => toast.info(uiText.policiesSoon)}>
               {t.auth.privacyPolicy}
             </Button>
             {' · '}
-            <Button type="button" variant="link" className="h-auto p-0 text-xs" onClick={() => toast.info(uiText.policiesSoon)}>
+            <Button type="button" variant="link" className="h-auto p-0 text-xs text-muted-foreground" onClick={() => toast.info(uiText.policiesSoon)}>
               {t.auth.termsOfUse}
             </Button>
           </p>
@@ -181,15 +180,16 @@ export default function LoginPage() {
     >
       <form onSubmit={handleLogin} className="space-y-4">
         <div className="space-y-2">
-          <AnimatedInput
-            label={t.auth.email}
+          <Label htmlFor="email">{t.auth.email}</Label>
+          <Input
+            id="email"
+            type="email"
             value={email}
             placeholder="admin@autofood.uz"
-            onChange={setEmail}
-            type="email"
+            onChange={(event) => setEmail(event.target.value)}
             autoComplete="email"
             required
-            inputClassName="h-10"
+            className="h-10"
           />
         </div>
 
@@ -214,7 +214,7 @@ export default function LoginPage() {
               type="button"
               variant="ghost"
               size="icon"
-              className="absolute right-2 top-1 h-7 w-7 text-muted-foreground hover:text-foreground"
+              className="absolute right-2 top-1 h-7 w-7 rounded-base text-muted-foreground hover:text-foreground"
               onClick={() => setShowPassword((prev) => !prev)}
               aria-label={showPassword ? uiText.hidePassword : uiText.showPassword}
             >
@@ -240,10 +240,10 @@ export default function LoginPage() {
 
       <div className="relative my-5">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
+          <span className="w-full border-t-2 border-border" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-card px-2 text-xs text-muted-foreground">{uiText.or}</span>
+          <span className="rounded-base border-2 border-border bg-background px-2 py-0.5 text-xs text-muted-foreground">{uiText.or}</span>
         </div>
       </div>
 

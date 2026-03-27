@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
 
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
-import { TypewriterText } from '@/components/smoothui'
 
 type AuthHighlight = {
   icon: LucideIcon
@@ -45,16 +44,8 @@ export function AuthShell({
   }
 
   return (
-    <div className="min-h-screen bg-[#fafbfc] dark:bg-[#06060a] text-foreground selection:bg-indigo-500/20 relative flex flex-col items-center justify-center overflow-hidden">
-      {/* Multi-layer Dynamic Background */}
-      <div className="absolute inset-0 z-0 bg-dot-grid pointer-events-none opacity-40" />
-      <div className="absolute inset-0 z-0 bg-aurora pointer-events-none" />
-      <div className="absolute top-0 left-0 right-0 h-[600px] bg-gradient-to-b from-indigo-500/[0.08] dark:from-indigo-500/[0.04] via-violet-500/[0.04] dark:via-violet-500/[0.02] to-transparent pointer-events-none" />
-      
-      {/* Animated glow orbs */}
-      <div className="absolute top-[-120px] right-[8%] w-[400px] h-[400px] rounded-full bg-indigo-500/[0.08] dark:bg-indigo-500/[0.04] blur-[120px] pointer-events-none animate-pulse-glow" />
-      <div className="absolute bottom-[-80px] left-[3%] w-[350px] h-[350px] rounded-full bg-violet-500/[0.08] dark:bg-violet-500/[0.04] blur-[100px] pointer-events-none animate-pulse-glow" style={{ animationDelay: '2s' }} />
-      <div className="absolute top-[35%] right-[-3%] w-[300px] h-[300px] rounded-full bg-emerald-500/[0.06] dark:bg-emerald-500/[0.03] blur-[80px] pointer-events-none animate-pulse-glow" style={{ animationDelay: '4s' }} />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background bg-app-paper text-foreground">
+      <div className="pointer-events-none absolute inset-0 z-0 [background:var(--app-bg-grid)] opacity-30" />
 
       <div className="absolute top-4 right-4 z-50">
         <LanguageSwitcher />
@@ -64,43 +55,37 @@ export function AuthShell({
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="relative z-10 w-full max-w-5xl grid gap-8 px-4 py-12 lg:grid-cols-[1fr_420px]"
+        className="relative z-10 grid w-full max-w-5xl gap-8 px-4 py-12 lg:grid-cols-[1fr_420px]"
       >
-        {/* Left side - branding & info */}
         <motion.aside variants={fadeUp} className="flex flex-col justify-center space-y-8 lg:pr-12">
           <Link href="/" className="inline-flex items-center gap-3 group w-max">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white text-sm font-bold transition-all duration-300 group-hover:scale-110 shadow-lg shadow-indigo-500/25">
+            <div className="flex h-11 w-11 items-center justify-center rounded-base border-2 border-border bg-main text-sm font-heading font-bold text-main-foreground shadow-shadow transition-transform group-hover:-translate-y-0.5">
               AF
             </div>
-            <span className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white/90 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">AutoFood</span>
+            <span className="text-xl font-heading font-bold tracking-tight">AutoFood</span>
           </Link>
 
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-indigo-200 dark:border-indigo-500/15 bg-indigo-50 dark:bg-indigo-500/[0.06] text-xs font-semibold tracking-wide text-indigo-600 dark:text-indigo-400 mb-5 backdrop-blur-md">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-base border-2 border-border bg-main px-3 py-1.5 text-xs font-heading text-main-foreground">
               {badge}
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gradient-hero drop-shadow-sm dark:drop-shadow-none mb-5 leading-[1.12]">
+            <h1 className="mb-5 text-3xl font-heading font-bold leading-[1.12] tracking-tight sm:text-4xl">
               {headline}
             </h1>
-            <p className="text-base text-zinc-500 dark:text-white/40 font-medium leading-relaxed max-w-md">
-              <TypewriterText speed={18}>{description}</TypewriterText>
-            </p>
+            <p className="max-w-md text-base leading-relaxed text-muted-foreground">{description}</p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             {highlights.map((item, i) => {
-              const iconColors = ['text-blue-500', 'text-violet-500', 'text-emerald-500']
-              const iconBgs = ['bg-blue-500/10 dark:bg-blue-500/15', 'bg-violet-500/10 dark:bg-violet-500/15', 'bg-emerald-500/10 dark:bg-emerald-500/15']
-              
               return (
-                <div key={item.label} className="group rounded-2xl border border-zinc-200/80 dark:border-white/[0.06] bg-white/70 dark:bg-white/[0.02] p-4 hover:bg-white dark:hover:bg-white/[0.04] hover:border-zinc-300 dark:hover:border-white/[0.1] transition-all duration-400 shadow-sm backdrop-blur-xl">
+                <div key={item.label} className="group rounded-base border-2 border-border bg-card p-4 shadow-shadow transition-all hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none">
                   <div className="flex items-start gap-3">
-                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconBgs[i % 3]} backdrop-blur-md group-hover:scale-110 transition-all duration-400`}>
-                      <item.icon className={`h-5 w-5 ${iconColors[i % 3]}`} />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-base border-2 border-border bg-main text-main-foreground shadow-shadow">
+                      <item.icon className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-zinc-800 dark:text-white/85 mb-1">{item.label}</p>
-                      <p className="text-xs font-medium text-zinc-400 dark:text-white/35 leading-relaxed">{item.detail}</p>
+                      <p className="mb-1 text-sm font-heading font-bold">{item.label}</p>
+                      <p className="text-xs leading-relaxed text-muted-foreground">{item.detail}</p>
                     </div>
                   </div>
                 </div>
@@ -109,30 +94,22 @@ export function AuthShell({
           </div>
         </motion.aside>
 
-        {/* Right side - form card */}
         <motion.section 
           variants={fadeUp}
-          className="relative overflow-hidden rounded-3xl border border-zinc-200/80 dark:border-white/[0.08] bg-white/90 dark:bg-[#0c0c12]/80 backdrop-blur-2xl shadow-2xl dark:shadow-[0_24px_80px_-12px_rgba(0,0,0,0.6)] p-8"
+          className="relative overflow-hidden rounded-base border-2 border-border bg-card p-8 shadow-shadow"
         >
-          {/* Top shine line */}
-          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent pointer-events-none" />
-          
-          {/* Animated gradient glow */}
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 h-[220px] w-[220px] rounded-full bg-indigo-500/[0.08] dark:bg-indigo-500/[0.05] blur-[80px] opacity-60 pointer-events-none animate-pulse-glow" />
-          <div className="absolute bottom-0 left-0 -ml-14 -mb-14 h-[180px] w-[180px] rounded-full bg-violet-500/[0.06] dark:bg-violet-500/[0.04] blur-[60px] opacity-40 pointer-events-none animate-pulse-glow" style={{ animationDelay: '1.5s' }} />
-          
           <div className="relative z-10">
             <div className="mb-8 text-center">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 text-white text-sm font-bold shadow-lg shadow-indigo-500/20 mb-4">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-base border-2 border-border bg-main text-sm font-heading font-bold text-main-foreground shadow-shadow">
                 AF
               </div>
-              <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white/95">{cardTitle}</h2>
-              <p className="mt-2 text-sm font-medium text-zinc-400 dark:text-white/40">{cardSubtitle}</p>
+              <h2 className="text-xl font-heading font-bold tracking-tight">{cardTitle}</h2>
+              <p className="mt-2 text-sm text-muted-foreground">{cardSubtitle}</p>
             </div>
 
             <div>{children}</div>
 
-            {footer ? <div className="mt-8 border-t border-zinc-100 dark:border-white/[0.06] pt-6">{footer}</div> : null}
+            {footer ? <div className="mt-8 border-t-2 border-border pt-6">{footer}</div> : null}
           </div>
         </motion.section>
       </motion.div>
