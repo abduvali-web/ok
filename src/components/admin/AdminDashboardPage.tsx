@@ -2303,8 +2303,10 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background bg-app-paper flex items-center justify-center">
-        <div className="text-center animate-fade-in">
+      <div className="relative min-h-screen overflow-hidden bg-background bg-app-paper flex items-center justify-center">
+        <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-35" />
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[20rem] bg-gradient-to-b from-main/20 via-main/10 to-transparent" />
+        <div className="relative z-10 text-center animate-fade-in">
           <div className="flex items-center justify-center gap-1.5 mb-3">
             <span className="h-2 w-2 rounded-md bg-foreground/60 animate-pulse" style={{ animationDelay: '0ms' }} />
             <span className="h-2 w-2 rounded-md bg-foreground/40 animate-pulse" style={{ animationDelay: '150ms' }} />
@@ -2317,9 +2319,11 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background bg-app-paper">
+    <div className="relative min-h-screen overflow-hidden bg-background bg-app-paper">
+      <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-35" />
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[20rem] bg-gradient-to-b from-main/20 via-main/10 to-transparent" />
       {/* Header */}
-      <header className="border-b-2 border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+      <header className="relative z-10 border-b-2 border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14">
             <div className="flex items-center gap-4">
@@ -2534,7 +2538,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         </DialogContent>
       </Dialog>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <DesktopTabsNav
             visibleTabs={visibleTabs}
