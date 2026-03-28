@@ -63,14 +63,10 @@
   --reverse-box-shadow-x: -4px;
   --reverse-box-shadow-y: -4px;
   --shadow: var(--box-shadow-x) var(--box-shadow-y) 0 0 #000;
-  --app-bg-grid: linear-gradient(90deg, rgba(15, 23, 42, 0.07) 1px, transparent 1px),
-    linear-gradient(rgba(15, 23, 42, 0.07) 1px, transparent 1px);
-  --app-bg-grid-size: 20px 20px;
-  --app-bg-paper:
-    radial-gradient(circle at 12% 10%, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0) 38%),
-    radial-gradient(circle at 88% 6%, rgba(15, 23, 42, 0.06) 0%, rgba(15, 23, 42, 0) 34%),
-    radial-gradient(circle at 55% 100%, rgba(253, 224, 71, 0.08) 0%, rgba(253, 224, 71, 0) 45%),
-    linear-gradient(180deg, #fefdf9 0%, #f5f7fb 100%);
+  --app-bg-grid: linear-gradient(90deg, rgba(99, 143, 196, 0.2) 1px, transparent 1px),
+    linear-gradient(rgba(99, 143, 196, 0.2) 1px, transparent 1px);
+  --app-bg-grid-size: 24px 24px;
+  --app-bg-paper: linear-gradient(180deg, #fcfdff 0%, #f7faff 100%);
 
   --background: #fafbfc;
   --foreground: #0a0a0f;
@@ -178,14 +174,10 @@
   --sidebar-border: #4b4b50;
   --sidebar-ring: #ffe44d;
 
-  --app-bg-grid: linear-gradient(90deg, rgba(255, 228, 77, 0.12) 1px, transparent 1px),
-    linear-gradient(rgba(255, 228, 77, 0.12) 1px, transparent 1px);
-  --app-bg-grid-size: 20px 20px;
-  --app-bg-paper:
-    radial-gradient(circle at 14% 10%, rgba(255, 228, 77, 0.13) 0%, rgba(255, 228, 77, 0) 40%),
-    radial-gradient(circle at 84% 8%, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 34%),
-    radial-gradient(circle at 50% 100%, rgba(250, 204, 21, 0.07) 0%, rgba(250, 204, 21, 0) 44%),
-    linear-gradient(180deg, #18181b 0%, #101013 100%);
+  --app-bg-grid: linear-gradient(90deg, rgba(116, 154, 201, 0.2) 1px, transparent 1px),
+    linear-gradient(rgba(116, 154, 201, 0.2) 1px, transparent 1px);
+  --app-bg-grid-size: 24px 24px;
+  --app-bg-paper: linear-gradient(180deg, #11151c 0%, #0d1117 100%);
 }
 
 @layer base {
