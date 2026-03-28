@@ -167,11 +167,11 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
     const [selectedShoppingItems, setSelectedShoppingItems] = useState<Set<string>>(new Set());
     const [boughtShoppingItems, setBoughtShoppingItems] = useState<Set<string>>(new Set());
     const [isBuyingSelected, setIsBuyingSelected] = useState(false);
-    const [inventoryPriceMeta, setInventoryPriceMeta] = useState<Record<string, { pricePerUnit: number | null; priceUnit: string }>>({});
-    const [shoppingEdits, setShoppingEdits] = useState<Record<string, { amount: string; unit: string; costPerUnit: string }>>({});
-    const [customBuyItems, setCustomBuyItems] = useState<Array<{ id: string; name: string; amount: string; unit: string; costPerUnit: string }>>([]);
+    const [inventoryPriceMeta, setInventoryPriceMeta] = useState<Record<string, { pricePerUnit: number | null; priceUnit: string; kcalPerGram: number | null }>>({});
+    const [shoppingEdits, setShoppingEdits] = useState<Record<string, { amount: string; unit: string; costPerUnit: string; kcalPerGram: string }>>({});
+    const [customBuyItems, setCustomBuyItems] = useState<Array<{ id: string; name: string; amount: string; unit: string; costPerUnit: string; kcalPerGram: string }>>([]);
     const [selectedCustomBuyItems, setSelectedCustomBuyItems] = useState<Set<string>>(new Set());
-    const [newBuyItem, setNewBuyItem] = useState({ name: '', amount: '', unit: 'kg', costPerUnit: '' });
+    const [newBuyItem, setNewBuyItem] = useState({ name: '', amount: '', unit: 'kg', costPerUnit: '', kcalPerGram: '' });
     const [calcRange, setCalcRange] = useState<DateRange | undefined>(undefined)
 
     // Cooking audit state (period + per-day drilldown)
@@ -504,13 +504,14 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                     invRecord[item.name] = item.amount;
                 });
                 setInventory(invRecord);
-                const priceMeta: Record<string, { pricePerUnit: number | null; priceUnit: string }> = {};
+                const priceMeta: Record<string, { pricePerUnit: number | null; priceUnit: string; kcalPerGram: number | null }> = {};
                 data.forEach((item: any) => {
                     const key = String(item?.name || '').trim().toLowerCase();
                     if (!key) return;
                     priceMeta[key] = {
                         pricePerUnit: typeof item?.pricePerUnit === 'number' && Number.isFinite(item.pricePerUnit) ? item.pricePerUnit : null,
                         priceUnit: String(item?.priceUnit || 'kg').trim() || 'kg',
+                        kcalPerGram: typeof item?.kcalPerGram === 'number' && Number.isFinite(item.kcalPerGram) ? item.kcalPerGram : null,
                     };
                 });
                 setInventoryPriceMeta(priceMeta);
@@ -860,11 +861,12 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
             for (const [name, { amount, unit }] of visibleShoppingEntries) {
                 const key = name.toLowerCase();
                 if (next[key]) continue;
-                const meta = inventoryPriceMeta[key] || { pricePerUnit: null, priceUnit: unit || 'kg' };
+                const meta = inventoryPriceMeta[key] || { pricePerUnit: null, priceUnit: unit || 'kg', kcalPerGram: null };
                 next[key] = {
                     amount: String(amount),
                     unit: meta.priceUnit || unit || 'kg',
                     costPerUnit: String(meta.pricePerUnit ?? 0),
+                    kcalPerGram: String(meta.kcalPerGram ?? ''),
                 };
             }
             return next;
@@ -892,6 +894,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                     amount: Number(edit?.amount ?? fallback.amount),
                     unit: String(edit?.unit ?? fallback.unit ?? 'kg'),
                     costPerUnit: Number(edit?.costPerUnit ?? 0),
+                    kcalPerGram: edit?.kcalPerGram !== '' && Number.isFinite(Number(edit?.kcalPerGram)) ? Number(edit?.kcalPerGram) : undefined,
                 };
             });
             const customItems = customToBuy.map((item) => ({
@@ -899,6 +902,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                 amount: Number(item.amount),
                 unit: item.unit || 'kg',
                 costPerUnit: Number(item.costPerUnit),
+                kcalPerGram: item.kcalPerGram !== '' && Number.isFinite(Number(item.kcalPerGram)) ? Number(item.kcalPerGram) : undefined,
             }));
             const allItems = [...calcItems, ...customItems].filter(
                 (item) =>
@@ -919,6 +923,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                     amount: converted !== null ? converted : item.amount,
                     costPerUnit: item.costPerUnit,
                     unit: targetUnit,
+                    kcalPerGram: typeof item.kcalPerGram === 'number' && Number.isFinite(item.kcalPerGram) ? item.kcalPerGram : undefined,
                 };
             });
             const response = await fetch('/api/admin/finance/buy-ingredients', {
@@ -951,13 +956,14 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         const name = newBuyItem.name.trim();
         const amount = Number(newBuyItem.amount);
         const costPerUnit = Number(newBuyItem.costPerUnit);
+        const kcalPerGram = newBuyItem.kcalPerGram.trim() === '' ? '' : String(Number(newBuyItem.kcalPerGram));
         if (!name || !Number.isFinite(amount) || amount <= 0 || !Number.isFinite(costPerUnit) || costPerUnit < 0) {
             toast.error(language === 'ru' ? '????????? ????????, ?????????? ? ????' : language === 'uz' ? "Nomi, miqdori va narxini to\'ldiring" : 'Fill name, amount, and price');
             return;
         }
         const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        setCustomBuyItems((prev) => [...prev, { id, name, amount: String(amount), unit: newBuyItem.unit || 'kg', costPerUnit: String(costPerUnit) }]);
-        setNewBuyItem({ name: '', amount: '', unit: 'kg', costPerUnit: '' });
+        setCustomBuyItems((prev) => [...prev, { id, name, amount: String(amount), unit: newBuyItem.unit || 'kg', costPerUnit: String(costPerUnit), kcalPerGram }]);
+        setNewBuyItem({ name: '', amount: '', unit: 'kg', costPerUnit: '', kcalPerGram: '' });
     };
     const _mealTypeIcons: Record<keyof typeof MEAL_TYPES, string> = {
         BREAKFAST: '🌅',
@@ -1133,7 +1139,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                             ) : null}
 
                             {cookingRangeDays.length > 1 ? (
-                                <div className="flex gap-2 overflow-x-auto rounded-lg border bg-card p-2">
+                                <div className="glass-card flex gap-2 overflow-x-auto rounded-lg border p-2">
                                     {cookingRangeDays.map((iso) => (
                                         <Button
                                             key={iso}
@@ -1178,7 +1184,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
 
                         {/* Inventory Tab - Managed by IngredientsManager */}
                         <TabsContent value="inventory" className="space-y-4">
-                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+                            <div className="glass-card rounded-lg border p-3 text-sm shadow-shadow">
                                 {t.warehouse.inventoryInfo}
                             </div>
 
@@ -1190,7 +1196,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 {/* Left: Date selection */}
                                 <div className="space-y-4">
-                                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
+                                    <div className="glass-card rounded-lg border p-3 text-sm shadow-shadow">
                                         {t.warehouse.calcDaysInfo}
                                     </div>
 
@@ -1236,10 +1242,10 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                     <Package className="w-4 h-4" />
                                                     {t.warehouse.requiredIngredients}
                                                 </h4>
-                                                <div className="bg-card rounded-lg border border-border max-h-48 overflow-y-auto">
+                                                <div className="glass-card rounded-lg border border-border max-h-48 overflow-y-auto">
                                                     {Array.from(calculatedIngredients.entries()).map(([name, { amount, unit }]) => (
                                                         <div key={name} className="flex justify-between p-2 border-b last:border-0 text-sm">
-                                                            <span className="text-slate-700">{name}</span>
+                                                            <span className="text-foreground">{name}</span>
                                                             <span className="font-medium">{amount} {unit}</span>
                                                         </div>
                                                     ))}
@@ -1251,7 +1257,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                     <ShoppingCart className="w-4 h-4" />
                                                     {t.warehouse.shoppingListTitle}
                                                 </h4>
-                                                <div className="bg-orange-50 rounded-lg border border-orange-200 max-h-48 overflow-y-auto">
+                                                <div className="glass-card rounded-lg border border-border max-h-48 overflow-y-auto">
                                                     {visibleShoppingEntries.length > 0 ? (
                                                         visibleShoppingEntries.map(([name, fallback]) => {
                                                             const key = name.toLowerCase()
@@ -1259,9 +1265,10 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                                 amount: String(fallback.amount),
                                                                 unit: fallback.unit || 'kg',
                                                                 costPerUnit: '0',
+                                                                kcalPerGram: '',
                                                             }
                                                             return (
-                                                            <div key={name} className="grid grid-cols-12 items-center gap-2 w-full p-2 border-b border-orange-100 last:border-0 text-sm">
+                                                            <div key={name} className="grid grid-cols-12 items-center gap-2 w-full p-2 border-b border-border/60 last:border-0 text-sm">
                                                                 <div className="col-span-4 flex items-center gap-2 min-w-0">
                                                                     <Checkbox
                                                                         checked={selectedShoppingItems.has(name)}
@@ -1274,10 +1281,10 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                                             });
                                                                         }}
                                                                     />
-                                                                    <span className="text-orange-800 truncate">{name}</span>
+                                                                    <span className="text-foreground truncate">{name}</span>
                                                                 </div>
                                                                 <Input
-                                                                    className="col-span-3 h-8"
+                                                                    className="col-span-2 h-8"
                                                                     type="number"
                                                                     value={edit.amount}
                                                                     onChange={(e) =>
@@ -1308,7 +1315,19 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                                     </SelectContent>
                                                                 </Select>
                                                                 <Input
-                                                                    className="col-span-3 h-8"
+                                                                    className="col-span-2 h-8"
+                                                                    type="number"
+                                                                    value={edit.kcalPerGram}
+                                                                    onChange={(e) =>
+                                                                        setShoppingEdits((prev) => ({
+                                                                            ...prev,
+                                                                            [key]: { ...edit, kcalPerGram: e.target.value },
+                                                                        }))
+                                                                    }
+                                                                    placeholder="kcal/gr"
+                                                                />
+                                                                <Input
+                                                                    className="col-span-2 h-8"
                                                                     type="number"
                                                                     value={edit.costPerUnit}
                                                                     onChange={(e) =>
@@ -1327,7 +1346,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                         </div>
                                                     )}
                                                     {customBuyItems.map((item) => (
-                                                        <div key={item.id} className="grid grid-cols-12 items-center gap-2 w-full p-2 border-b border-orange-100 text-sm">
+                                                        <div key={item.id} className="grid grid-cols-12 items-center gap-2 w-full p-2 border-b border-border/60 text-sm">
                                                             <div className="col-span-4 flex items-center gap-2 min-w-0">
                                                                 <Checkbox
                                                                     checked={selectedCustomBuyItems.has(item.id)}
@@ -1346,7 +1365,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                                   onChange={(e) => setCustomBuyItems((prev) => prev.map((x) => x.id === item.id ? { ...x, name: e.target.value } : x))}
                                                                 />
                                                             </div>
-                                                            <Input className="col-span-3 h-8" type="number" value={item.amount} onChange={(e) => setCustomBuyItems((prev) => prev.map((x) => x.id === item.id ? { ...x, amount: e.target.value } : x))} />
+                                                            <Input className="col-span-2 h-8" type="number" value={item.amount} onChange={(e) => setCustomBuyItems((prev) => prev.map((x) => x.id === item.id ? { ...x, amount: e.target.value } : x))} />
                                                             <Select value={item.unit} onValueChange={(value) => setCustomBuyItems((prev) => prev.map((x) => x.id === item.id ? { ...x, unit: value } : x))}>
                                                                 <SelectTrigger className="col-span-2 h-8"><SelectValue /></SelectTrigger>
                                                                 <SelectContent>
@@ -1358,6 +1377,9 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                                 </SelectContent>
                                                             </Select>
                                                             <div className="col-span-2">
+                                                                <Input className="h-8" type="number" value={item.kcalPerGram} onChange={(e) => setCustomBuyItems((prev) => prev.map((x) => x.id === item.id ? { ...x, kcalPerGram: e.target.value } : x))} placeholder="kcal/gr" />
+                                                            </div>
+                                                            <div className="col-span-1">
                                                                 <Input className="h-8" type="number" value={item.costPerUnit} onChange={(e) => setCustomBuyItems((prev) => prev.map((x) => x.id === item.id ? { ...x, costPerUnit: e.target.value } : x))} />
                                                             </div>
                                                             <Button variant="ghost" size="icon" className="col-span-1 h-8 w-8" onClick={() => setCustomBuyItems((prev) => prev.filter((x) => x.id !== item.id))}>
@@ -1368,7 +1390,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                 </div>
                                                 <div className="mt-2 grid grid-cols-12 items-center gap-2">
                                                     <Input className="col-span-4 h-8" placeholder="Ingredient name" value={newBuyItem.name} onChange={(e) => setNewBuyItem((prev) => ({ ...prev, name: e.target.value }))} />
-                                                    <Input className="col-span-3 h-8" type="number" placeholder="Amount" value={newBuyItem.amount} onChange={(e) => setNewBuyItem((prev) => ({ ...prev, amount: e.target.value }))} />
+                                                    <Input className="col-span-2 h-8" type="number" placeholder="Amount" value={newBuyItem.amount} onChange={(e) => setNewBuyItem((prev) => ({ ...prev, amount: e.target.value }))} />
                                                     <Select value={newBuyItem.unit} onValueChange={(value) => setNewBuyItem((prev) => ({ ...prev, unit: value }))}>
                                                         <SelectTrigger className="col-span-2 h-8"><SelectValue /></SelectTrigger>
                                                         <SelectContent>
@@ -1379,7 +1401,8 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                             <SelectItem value="pcs">pcs</SelectItem>
                                                         </SelectContent>
                                                     </Select>
-                                                    <Input className="col-span-2 h-8" type="number" placeholder="Price/unit" value={newBuyItem.costPerUnit} onChange={(e) => setNewBuyItem((prev) => ({ ...prev, costPerUnit: e.target.value }))} />
+                                                    <Input className="col-span-2 h-8" type="number" placeholder="kcal/gr" value={newBuyItem.kcalPerGram} onChange={(e) => setNewBuyItem((prev) => ({ ...prev, kcalPerGram: e.target.value }))} />
+                                                    <Input className="col-span-1 h-8" type="number" placeholder="Price/unit" value={newBuyItem.costPerUnit} onChange={(e) => setNewBuyItem((prev) => ({ ...prev, costPerUnit: e.target.value }))} />
                                                     <Button type="button" variant="outline" className="col-span-1 h-8 w-8 p-0" onClick={addCustomBuyItem}>
                                                         <Plus className="h-4 w-4" />
                                                     </Button>

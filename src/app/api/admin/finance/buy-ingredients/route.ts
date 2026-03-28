@@ -9,7 +9,8 @@ const BuyIngredientsSchema = z.object({
         name: z.string().trim().min(1),
         amount: z.number().positive(),
         costPerUnit: z.number().nonnegative(),
-        unit: z.string().trim().min(1).default('kg')
+        unit: z.string().trim().min(1).default('kg'),
+        kcalPerGram: z.number().nonnegative().optional(),
     }))
 });
 
@@ -100,6 +101,7 @@ export async function POST(request: Request) {
                             name: purchased.name,
                             amount: purchased.amount,
                             unit: normalizeUnit(purchased.unit),
+                            kcalPerGram: typeof purchased.kcalPerGram === 'number' && Number.isFinite(purchased.kcalPerGram) ? purchased.kcalPerGram : null,
                             pricePerUnit: purchased.costPerUnit,
                             priceUnit: normalizeUnit(purchased.unit),
                         }
@@ -116,6 +118,9 @@ export async function POST(request: Request) {
                     where: { name: purchased.name },
                     data: {
                         amount: { increment: convertedAmount },
+                        ...(typeof purchased.kcalPerGram === 'number' && Number.isFinite(purchased.kcalPerGram)
+                            ? { kcalPerGram: purchased.kcalPerGram }
+                            : {}),
                         pricePerUnit: purchased.costPerUnit,
                         priceUnit: normalizeUnit(purchased.unit),
                         updatedAt: new Date()

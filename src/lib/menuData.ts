@@ -78,6 +78,9 @@ export interface Ingredient {
   name: string;
   amount: number;
   unit: string;
+  kcalPerGram?: number | null;
+  pricePerUnit?: number | null;
+  priceUnit?: string;
 }
 
 export interface Dish {

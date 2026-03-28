@@ -83,6 +83,7 @@ const MEAL_TYPE_ORDER: Array<keyof typeof MEAL_TYPES> = [
     'DINNER',
     'SIXTH_MEAL',
 ];
+const UNIT_OPTIONS = ['kg', 'gr', 'ml', 'l', 'pcs'];
 
 function getMealIndex(mealType: string) {
     const idx = MEAL_TYPE_ORDER.indexOf(mealType as any);
@@ -322,6 +323,22 @@ export function SetsTab() {
     const [selectedDishToAdd, setSelectedDishToAdd] = useState<string>('');
     const [mealNameToAdd, setMealNameToAdd] = useState('');
     const [draftMealIngredients, setDraftMealIngredients] = useState<Ingredient[]>([]);
+    const [customDraftIngredient, setCustomDraftIngredient] = useState({
+        name: '',
+        amount: '',
+        unit: 'gr',
+        kcalPerGram: '',
+        pricePerUnit: '',
+        priceUnit: 'kg',
+    });
+    const [customEditIngredient, setCustomEditIngredient] = useState({
+        name: '',
+        amount: '',
+        unit: 'gr',
+        kcalPerGram: '',
+        pricePerUnit: '',
+        priceUnit: 'kg',
+    });
     const [editingDish, setEditingDish] = useState<{ setId: string; calorieIndex: number; dishIndex: number; dish: SetDish } | null>(null);
     const [editingGroup, setEditingGroup] = useState<{ groupIndex: number; group: CalorieGroup } | null>(null);
 
@@ -495,11 +512,18 @@ export function SetsTab() {
 
     const normalizeIngredients = (raw: any): Ingredient[] => {
         if (!Array.isArray(raw)) return [];
+        const toOptionalNumber = (value: unknown): number | undefined => {
+            const n = typeof value === 'number' ? value : Number(value);
+            return Number.isFinite(n) ? n : undefined;
+        };
         return raw
             .map((i) => ({
                 name: typeof i?.name === 'string' ? i.name : '',
                 amount: typeof i?.amount === 'number' && Number.isFinite(i.amount) ? i.amount : Number(i?.amount) || 0,
                 unit: typeof i?.unit === 'string' ? i.unit : 'gr',
+                kcalPerGram: toOptionalNumber(i?.kcalPerGram),
+                pricePerUnit: toOptionalNumber(i?.pricePerUnit),
+                priceUnit: typeof i?.priceUnit === 'string' && i.priceUnit.trim().length > 0 ? i.priceUnit : undefined,
             }))
             .filter((i) => i.name.trim().length > 0);
     };
@@ -508,6 +532,7 @@ export function SetsTab() {
         setSelectedDishToAdd('');
         setMealNameToAdd('');
         setDraftMealIngredients([]);
+        setCustomDraftIngredient({ name: '', amount: '', unit: 'gr', kcalPerGram: '', pricePerUnit: '', priceUnit: 'kg' });
     };
 
     const selectDishForAdd = (dish: any) => {
@@ -519,7 +544,7 @@ export function SetsTab() {
     const addDraftIngredient = (name: string) => {
         const trimmed = String(name || '').trim();
         if (!trimmed) return;
-        if (draftMealIngredients.find((i) => i.name === trimmed)) {
+        if (draftMealIngredients.find((i) => normalizeName(i.name) === normalizeName(trimmed))) {
             toast.error(uiText.ingredientAlreadyAdded);
             return;
         }
@@ -530,6 +555,33 @@ export function SetsTab() {
         ]);
     };
 
+    const addCustomDraftIngredient = () => {
+        const name = customDraftIngredient.name.trim();
+        const amount = Number(customDraftIngredient.amount);
+        const kcalPerGram = customDraftIngredient.kcalPerGram.trim() === '' ? undefined : Number(customDraftIngredient.kcalPerGram);
+        const pricePerUnit = customDraftIngredient.pricePerUnit.trim() === '' ? undefined : Number(customDraftIngredient.pricePerUnit);
+        if (!name || !Number.isFinite(amount) || amount <= 0) {
+            toast.error(uiText.addIngredient);
+            return;
+        }
+        if (draftMealIngredients.find((i) => normalizeName(i.name) === normalizeName(name))) {
+            toast.error(uiText.ingredientAlreadyAdded);
+            return;
+        }
+        setDraftMealIngredients((prev) => [
+            ...prev,
+            {
+                name,
+                amount,
+                unit: customDraftIngredient.unit || 'gr',
+                kcalPerGram: Number.isFinite(kcalPerGram as number) ? (kcalPerGram as number) : undefined,
+                pricePerUnit: Number.isFinite(pricePerUnit as number) ? (pricePerUnit as number) : undefined,
+                priceUnit: customDraftIngredient.priceUnit || customDraftIngredient.unit || 'kg',
+            }
+        ]);
+        setCustomDraftIngredient({ name: '', amount: '', unit: 'gr', kcalPerGram: '', pricePerUnit: '', priceUnit: 'kg' });
+    };
+
     const removeDraftIngredient = (index: number) => {
         setDraftMealIngredients((prev) => prev.filter((_, i) => i !== index));
     };
@@ -538,6 +590,10 @@ export function SetsTab() {
         setDraftMealIngredients((prev) =>
             prev.map((ing, i) => (i === index ? { ...ing, amount } : ing))
         );
+    };
+
+    const updateDraftIngredient = (index: number, patch: Partial<Ingredient>) => {
+        setDraftMealIngredients((prev) => prev.map((ing, i) => (i === index ? { ...ing, ...patch } : ing)));
     };
 
     const createSet = async () => {
@@ -756,7 +812,7 @@ export function SetsTab() {
             ? [...editingDish.dish.customIngredients]
             : [...getOriginalIngredients(editingDish.dish.dishId)];
 
-        if (currentIngredients.find(i => i.name === name)) {
+        if (currentIngredients.find(i => normalizeName(i.name) === normalizeName(name))) {
             toast.error(uiText.ingredientAlreadyAdded);
             return;
         }
@@ -774,6 +830,50 @@ export function SetsTab() {
             ...editingDish,
             dish: { ...editingDish.dish, customIngredients: currentIngredients }
         });
+    };
+
+    const updateEditingIngredient = (index: number, patch: Partial<Ingredient>) => {
+        if (!editingDish) return;
+        const currentIngredients = editingDish.dish.customIngredients
+            ? [...editingDish.dish.customIngredients]
+            : [...getOriginalIngredients(editingDish.dish.dishId)];
+        currentIngredients[index] = { ...currentIngredients[index], ...patch };
+        setEditingDish({
+            ...editingDish,
+            dish: { ...editingDish.dish, customIngredients: currentIngredients }
+        });
+    };
+
+    const addCustomIngredientToEditingDish = () => {
+        if (!editingDish) return;
+        const name = customEditIngredient.name.trim();
+        const amount = Number(customEditIngredient.amount);
+        const kcalPerGram = customEditIngredient.kcalPerGram.trim() === '' ? undefined : Number(customEditIngredient.kcalPerGram);
+        const pricePerUnit = customEditIngredient.pricePerUnit.trim() === '' ? undefined : Number(customEditIngredient.pricePerUnit);
+        if (!name || !Number.isFinite(amount) || amount <= 0) {
+            toast.error(uiText.addIngredient);
+            return;
+        }
+        const currentIngredients = editingDish.dish.customIngredients
+            ? [...editingDish.dish.customIngredients]
+            : [...getOriginalIngredients(editingDish.dish.dishId)];
+        if (currentIngredients.find(i => normalizeName(i.name) === normalizeName(name))) {
+            toast.error(uiText.ingredientAlreadyAdded);
+            return;
+        }
+        currentIngredients.push({
+            name,
+            amount,
+            unit: customEditIngredient.unit || 'gr',
+            kcalPerGram: Number.isFinite(kcalPerGram as number) ? (kcalPerGram as number) : undefined,
+            pricePerUnit: Number.isFinite(pricePerUnit as number) ? (pricePerUnit as number) : undefined,
+            priceUnit: customEditIngredient.priceUnit || customEditIngredient.unit || 'kg',
+        });
+        setEditingDish({
+            ...editingDish,
+            dish: { ...editingDish.dish, customIngredients: currentIngredients }
+        });
+        setCustomEditIngredient({ name: '', amount: '', unit: 'gr', kcalPerGram: '', pricePerUnit: '', priceUnit: 'kg' });
     };
 
     const updateEditingDish = async () => {
@@ -1033,6 +1133,11 @@ export function SetsTab() {
     };
 
     const getDraftIngredientCost = (ing: Ingredient) => {
+        if (typeof ing?.pricePerUnit === 'number' && Number.isFinite(ing.pricePerUnit)) {
+            const localPriceUnit = String(ing.priceUnit || ing.unit || 'gr');
+            const convertedLocal = convertUnitAmount(Number(ing.amount) || 0, String(ing.unit || 'gr'), localPriceUnit);
+            if (convertedLocal !== null) return convertedLocal * ing.pricePerUnit;
+        }
         const item = warehouseItemByName.get(String(ing.name || '').trim().toLowerCase());
         if (!item || item.pricePerUnit === null) return null;
         const converted = convertUnitAmount(Number(ing.amount) || 0, String(ing.unit || 'gr'), item.priceUnit);
@@ -1045,7 +1150,9 @@ export function SetsTab() {
         let total = 0;
         for (const ing of ingredients || []) {
             const nameKey = (ing.name || '').trim().toLowerCase();
-            const kcalPerGram = kcalPerGramByName.get(nameKey) ?? 0;
+            const kcalPerGram =
+                (typeof ing?.kcalPerGram === 'number' && Number.isFinite(ing.kcalPerGram) ? ing.kcalPerGram : null)
+                ?? (kcalPerGramByName.get(nameKey) ?? 0);
             total += toGrams(Number(ing.amount), String(ing.unit)) * kcalPerGram;
         }
         return Number.isFinite(total) ? total : 0;
@@ -1329,7 +1436,7 @@ export function SetsTab() {
 
             <div className="space-y-4">
                 {/* Sets Selector Row (replaces sidebar) */}
-                <Card className="border-2 border-border bg-main text-main-foreground shadow-shadow overflow-hidden">
+                <Card className="glass-card border-2 border-border shadow-shadow overflow-hidden">
                     <div className="p-2 overflow-x-auto">
                         <div className="flex items-center gap-1 min-w-max">
                             <span className="text-xs font-medium px-2 text-main-foreground/80 mr-2 flex items-center gap-1">
@@ -1387,15 +1494,15 @@ export function SetsTab() {
                             <Card className="border border-border/70">
                                 <CardContent className="px-4 py-3">
                                     <div className="grid gap-2 text-sm sm:grid-cols-3">
-                                        <div className="rounded-md border bg-muted/30 px-3 py-2">
+                                        <div className="glass-card rounded-md border px-3 py-2">
                                             <p className="text-[11px] text-muted-foreground">{uiText.dishesLabel}</p>
                                             <p className="font-semibold tabular-nums">{selectedDaysSummary.dishes}</p>
                                         </div>
-                                        <div className="rounded-md border bg-muted/30 px-3 py-2">
+                                        <div className="glass-card rounded-md border px-3 py-2">
                                             <p className="text-[11px] text-muted-foreground">{uiText.caloriesLabel}</p>
                                             <p className="font-semibold tabular-nums">{new Intl.NumberFormat('ru-RU').format(selectedDaysSummary.calories)}</p>
                                         </div>
-                                        <div className="rounded-md border bg-muted/30 px-3 py-2">
+                                        <div className="glass-card rounded-md border px-3 py-2">
                                             <p className="text-[11px] text-muted-foreground">{uiText.priceLabel}</p>
                                             <p className="font-semibold tabular-nums">{formatUzs(selectedDaysSummary.price)}</p>
                                         </div>
@@ -1493,7 +1600,7 @@ export function SetsTab() {
                                                         })
 
                                                     return (
-                                                        <TabsContent key={group.id} value={group.id as string} className="flex-1 p-6 m-0 bg-muted/20">
+                                                        <TabsContent key={group.id} value={group.id as string} className="flex-1 p-6 m-0 glass-card">
                                                             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                                                                 <div className="min-w-0">
                                                                     <div className="flex items-center gap-2">
@@ -1545,7 +1652,7 @@ export function SetsTab() {
                                                                     const dishKcal = getDishCalories(dish)
 
                                                                     return (
-                                                                        <div key={`${dish.dishId}-${idx}`} className="bg-card p-3 rounded-xl border border-border hover:shadow-md transition-all flex gap-3 group relative">
+                                                                        <div key={`${dish.dishId}-${idx}`} className="glass-card p-3 rounded-xl border border-border hover:shadow-md transition-all flex gap-3 group relative">
                                                                             <div className="flex-1 min-w-0">
                                                                                 <div className="flex justify-between items-start gap-2">
                                                                                     <div className="min-w-0">
@@ -1741,7 +1848,7 @@ export function SetsTab() {
                             />
 
                             {mealNameToAdd.trim().length > 0 ? (
-                                <div className="rounded-md border border-border bg-card">
+                                <div className="glass-card rounded-md border border-border">
                                     <ScrollArea className="max-h-44">
                                         <div className="p-2 space-y-1">
                                             {availableDishes
@@ -1780,7 +1887,7 @@ export function SetsTab() {
                         </div>
 
                         <div className="rounded-xl border border-border overflow-hidden">
-                            <div className="px-4 py-3 border-b bg-muted/10 flex items-center justify-between gap-3">
+                            <div className="glass-card px-4 py-3 border-b flex items-center justify-between gap-3">
                                 <div className="min-w-0">
                                     <div className="text-sm font-semibold">{uiText.ingredients}</div>
                                     <div className="text-xs text-muted-foreground truncate">{uiText.ingredientsDesc}</div>
@@ -1806,16 +1913,20 @@ export function SetsTab() {
                                         <TableHead className="pl-4">{uiText.tableName}</TableHead>
                                         <TableHead className="w-[110px]">{uiText.tableAmount}</TableHead>
                                         <TableHead className="w-[90px]">{uiText.tableUnit}</TableHead>
-                                        <TableHead className="w-[120px] text-right">kcal</TableHead>
-                                        <TableHead className="w-[150px] text-right">UZS</TableHead>
+                                        <TableHead className="w-[120px] text-right">kcal/gr</TableHead>
+                                        <TableHead className="w-[150px] text-right">UZS/unit</TableHead>
                                         <TableHead className="w-[48px]" />
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {draftMealIngredients.map((ing, idx) => (
                                         <TableRow key={`${ing.name}-${idx}`}>
-                                            <TableCell className="pl-4 font-medium min-w-0">
-                                                <div className="truncate">{ing.name}</div>
+                                            <TableCell className="pl-4 min-w-0">
+                                                <Input
+                                                    className="h-8"
+                                                    value={ing.name}
+                                                    onChange={(e) => updateDraftIngredient(idx, { name: e.target.value })}
+                                                />
                                             </TableCell>
                                             <TableCell>
                                                 <Input
@@ -1828,20 +1939,45 @@ export function SetsTab() {
                                                     }}
                                                 />
                                             </TableCell>
-                                            <TableCell className="text-muted-foreground text-sm">{ing.unit}</TableCell>
-                                            <TableCell className="text-right text-xs text-muted-foreground tabular-nums">
-                                                {(() => {
-                                                    const meta = warehouseItemByName.get(String(ing.name || '').trim().toLowerCase());
-                                                    if (!meta || meta.kcalPerGram === null) return '-';
-                                                    const kcal = toGrams(Number(ing.amount), String(ing.unit)) * meta.kcalPerGram;
-                                                    return Math.round(kcal).toLocaleString('ru-RU');
-                                                })()}
+                                            <TableCell>
+                                                <Select value={String(ing.unit || 'gr')} onValueChange={(val) => updateDraftIngredient(idx, { unit: val })}>
+                                                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {UNIT_OPTIONS.map((unit) => (
+                                                            <SelectItem key={unit} value={unit}>{unit}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
                                             </TableCell>
-                                            <TableCell className="text-right text-xs text-muted-foreground tabular-nums">
-                                                {(() => {
-                                                    const total = getDraftIngredientCost(ing);
-                                                    return total === null ? '-' : `${Math.round(total).toLocaleString('ru-RU')}`;
-                                                })()}
+                                            <TableCell className="text-right">
+                                                <Input
+                                                    type="number"
+                                                    className="h-8 text-right"
+                                                    value={typeof ing.kcalPerGram === 'number' && Number.isFinite(ing.kcalPerGram) ? ing.kcalPerGram : ''}
+                                                    placeholder={(() => {
+                                                        const meta = warehouseItemByName.get(String(ing.name || '').trim().toLowerCase());
+                                                        return typeof meta?.kcalPerGram === 'number' ? String(meta.kcalPerGram) : 'auto';
+                                                    })()}
+                                                    onChange={(e) => {
+                                                        const next = e.target.value.trim() === '' ? undefined : Number(e.target.value);
+                                                        updateDraftIngredient(idx, { kcalPerGram: Number.isFinite(next as number) ? (next as number) : undefined });
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Input
+                                                    type="number"
+                                                    className="h-8 text-right"
+                                                    value={typeof ing.pricePerUnit === 'number' && Number.isFinite(ing.pricePerUnit) ? ing.pricePerUnit : ''}
+                                                    placeholder={(() => {
+                                                        const meta = warehouseItemByName.get(String(ing.name || '').trim().toLowerCase());
+                                                        return typeof meta?.pricePerUnit === 'number' ? String(meta.pricePerUnit) : 'auto';
+                                                    })()}
+                                                    onChange={(e) => {
+                                                        const next = e.target.value.trim() === '' ? undefined : Number(e.target.value);
+                                                        updateDraftIngredient(idx, { pricePerUnit: Number.isFinite(next as number) ? (next as number) : undefined });
+                                                    }}
+                                                />
                                             </TableCell>
                                             <TableCell>
                                                 <Button
@@ -1865,11 +2001,11 @@ export function SetsTab() {
                                 </TableBody>
                             </Table>
 
-                            <div className="p-4 border-t border-border bg-muted/20 space-y-3">
+                            <div className="glass-card p-4 border-t border-border space-y-3">
                                 <div className="space-y-2">
                                     <Label className="text-xs text-muted-foreground uppercase font-bold">{uiText.addIngredient}</Label>
                                     <Select onValueChange={(val) => addDraftIngredient(val)}>
-                                        <SelectTrigger className="bg-card">
+                                        <SelectTrigger>
                                             <SelectValue placeholder={uiText.selectIngredient} />
                                         </SelectTrigger>
                                         <SelectContent className="max-h-60">
@@ -1884,6 +2020,19 @@ export function SetsTab() {
                                         </SelectContent>
                                     </Select>
                                 </div>
+                                <div className="grid grid-cols-12 gap-2">
+                                    <Input className="col-span-4 h-8" placeholder="New ingredient" value={customDraftIngredient.name} onChange={(e) => setCustomDraftIngredient((prev) => ({ ...prev, name: e.target.value }))} />
+                                    <Input className="col-span-2 h-8" type="number" placeholder="Amount" value={customDraftIngredient.amount} onChange={(e) => setCustomDraftIngredient((prev) => ({ ...prev, amount: e.target.value }))} />
+                                    <Select value={customDraftIngredient.unit} onValueChange={(value) => setCustomDraftIngredient((prev) => ({ ...prev, unit: value }))}>
+                                        <SelectTrigger className="col-span-2 h-8"><SelectValue /></SelectTrigger>
+                                        <SelectContent>{UNIT_OPTIONS.map((unit) => <SelectItem key={unit} value={unit}>{unit}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                    <Input className="col-span-2 h-8" type="number" placeholder="kcal/gr" value={customDraftIngredient.kcalPerGram} onChange={(e) => setCustomDraftIngredient((prev) => ({ ...prev, kcalPerGram: e.target.value }))} />
+                                    <Input className="col-span-1 h-8" type="number" placeholder="UZS" value={customDraftIngredient.pricePerUnit} onChange={(e) => setCustomDraftIngredient((prev) => ({ ...prev, pricePerUnit: e.target.value }))} />
+                                    <Button type="button" variant="outline" className="col-span-1 h-8 w-8 p-0" onClick={addCustomDraftIngredient}>
+                                        <Plus className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1897,7 +2046,7 @@ export function SetsTab() {
 
             {/* Edit Ingredients Modal */}
             <Dialog open={isEditDishModalOpen} onOpenChange={setIsEditDishModalOpen}>
-                <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-hidden flex flex-col p-0">
+                <DialogContent className="sm:max-w-[760px] max-h-[85vh] overflow-hidden flex flex-col p-0">
                     <DialogHeader className="px-6 py-4 border-b">
                         <DialogTitle>{uiText.ingredients}: {editingDish?.dish.dishName}</DialogTitle>
                         <DialogDescription>
@@ -1907,36 +2056,66 @@ export function SetsTab() {
                     {editingDish && (
                         <div className="flex-1 overflow-auto">
                             <Table>
-                                <TableHeader className="bg-muted/30 sticky top-0">
+                                <TableHeader className="glass-card sticky top-0">
                                     <TableRow>
                                         <TableHead className="pl-6">{uiText.tableName}</TableHead>
                                         <TableHead>{uiText.tableAmount}</TableHead>
                                         <TableHead>{uiText.tableUnit}</TableHead>
+                                        <TableHead>kcal/gr</TableHead>
+                                        <TableHead>UZS/unit</TableHead>
                                         <TableHead className="w-[50px]"></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {(editingDish.dish.customIngredients || getOriginalIngredients(editingDish.dish.dishId)).map((ing, idx) => (
                                         <TableRow key={`${ing.name}-${idx}`}>
-                                            <TableCell className="pl-6 font-medium">{ing.name}</TableCell>
+                                            <TableCell className="pl-6 font-medium">
+                                                <Input className="h-8" value={ing.name} onChange={(e) => updateEditingIngredient(idx, { name: e.target.value })} />
+                                            </TableCell>
                                             <TableCell>
                                                 <Input
                                                     type="number" className="h-8 w-24"
                                                     value={ing.amount}
                                                     onChange={(e) => {
                                                         const newVal = parseFloat(e.target.value) || 0;
-                                                        const currentIngredients = editingDish.dish.customIngredients
-                                                            ? [...editingDish.dish.customIngredients]
-                                                            : [...getOriginalIngredients(editingDish.dish.dishId)];
-                                                        currentIngredients[idx] = { ...currentIngredients[idx], amount: newVal };
-                                                        setEditingDish({
-                                                            ...editingDish,
-                                                            dish: { ...editingDish.dish, customIngredients: currentIngredients }
-                                                        });
+                                                        updateEditingIngredient(idx, { amount: newVal });
                                                     }}
                                                 />
                                             </TableCell>
-                                            <TableCell className="text-muted-foreground text-sm">{ing.unit}</TableCell>
+                                            <TableCell className="text-muted-foreground text-sm">
+                                                <Select value={String(ing.unit || 'gr')} onValueChange={(val) => updateEditingIngredient(idx, { unit: val })}>
+                                                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {UNIT_OPTIONS.map((unit) => (
+                                                            <SelectItem key={unit} value={unit}>{unit}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    type="number"
+                                                    className="h-8"
+                                                    value={typeof ing.kcalPerGram === 'number' && Number.isFinite(ing.kcalPerGram) ? ing.kcalPerGram : ''}
+                                                    placeholder="auto"
+                                                    onChange={(e) => {
+                                                        const next = e.target.value.trim() === '' ? undefined : Number(e.target.value);
+                                                        updateEditingIngredient(idx, { kcalPerGram: Number.isFinite(next as number) ? (next as number) : undefined });
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    type="number"
+                                                    className="h-8"
+                                                    value={typeof ing.pricePerUnit === 'number' && Number.isFinite(ing.pricePerUnit) ? ing.pricePerUnit : ''}
+                                                    placeholder="auto"
+                                                    onChange={(e) => {
+                                                        const next = e.target.value.trim() === '' ? undefined : Number(e.target.value);
+                                                        updateEditingIngredient(idx, { pricePerUnit: Number.isFinite(next as number) ? (next as number) : undefined });
+                                                    }}
+                                                />
+                                            </TableCell>
                                             <TableCell>
                                                 <Button
                                                     variant="ghost" size="icon"
@@ -1950,7 +2129,7 @@ export function SetsTab() {
                                     ))}
                                     {(editingDish.dish.customIngredients || getOriginalIngredients(editingDish.dish.dishId)).length === 0 && (
                                         <TableRow>
-                                            <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                                            <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                                                 {uiText.noIngredients}
                                             </TableCell>
                                         </TableRow>
@@ -1960,7 +2139,7 @@ export function SetsTab() {
                         </div>
                     )}
 
-                    <div className="p-4 border-t border-border bg-muted/20 space-y-3">
+                    <div className="glass-card p-4 border-t border-border space-y-3">
                         <div className="space-y-2">
                             <Label className="text-xs text-muted-foreground uppercase font-bold">{uiText.addIngredient}</Label>
                             <Select onValueChange={(val) => {
@@ -1968,7 +2147,7 @@ export function SetsTab() {
                                 // Hack to reset select not needed if we want to add multiple? No, value stays.
                                 // It's fine for now.
                             }}>
-                                <SelectTrigger className="bg-card">
+                                <SelectTrigger>
                                     <SelectValue placeholder={uiText.selectIngredient} />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-60">
@@ -1982,6 +2161,19 @@ export function SetsTab() {
                                     ))}
                                 </SelectContent>
                             </Select>
+                        </div>
+                        <div className="grid grid-cols-12 gap-2">
+                            <Input className="col-span-4 h-8" placeholder="New ingredient" value={customEditIngredient.name} onChange={(e) => setCustomEditIngredient((prev) => ({ ...prev, name: e.target.value }))} />
+                            <Input className="col-span-2 h-8" type="number" placeholder="Amount" value={customEditIngredient.amount} onChange={(e) => setCustomEditIngredient((prev) => ({ ...prev, amount: e.target.value }))} />
+                            <Select value={customEditIngredient.unit} onValueChange={(value) => setCustomEditIngredient((prev) => ({ ...prev, unit: value }))}>
+                                <SelectTrigger className="col-span-2 h-8"><SelectValue /></SelectTrigger>
+                                <SelectContent>{UNIT_OPTIONS.map((unit) => <SelectItem key={unit} value={unit}>{unit}</SelectItem>)}</SelectContent>
+                            </Select>
+                            <Input className="col-span-2 h-8" type="number" placeholder="kcal/gr" value={customEditIngredient.kcalPerGram} onChange={(e) => setCustomEditIngredient((prev) => ({ ...prev, kcalPerGram: e.target.value }))} />
+                            <Input className="col-span-1 h-8" type="number" placeholder="UZS" value={customEditIngredient.pricePerUnit} onChange={(e) => setCustomEditIngredient((prev) => ({ ...prev, pricePerUnit: e.target.value }))} />
+                            <Button type="button" variant="outline" className="col-span-1 h-8 w-8 p-0" onClick={addCustomIngredientToEditingDish}>
+                                <Plus className="h-4 w-4" />
+                            </Button>
                         </div>
                         <div className="flex justify-end gap-2 pt-2">
                             <Button variant="outline" onClick={() => setIsEditDishModalOpen(false)}>{uiText.cancel}</Button>

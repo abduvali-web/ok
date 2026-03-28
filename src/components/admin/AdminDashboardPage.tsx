@@ -96,6 +96,7 @@ import { getDailyPrice, PLAN_TYPES } from '@/lib/menuData'
 import { CANONICAL_TABS, deriveVisibleTabs } from '@/components/admin/dashboard/tabs'
 import type { Client, Order } from '@/components/admin/dashboard/types'
 import { DesktopTabsNav } from '@/components/admin/dashboard/DesktopTabsNav'
+import { MobileBottomTabsNav } from '@/components/admin/dashboard/MobileBottomTabsNav'
 import { useDashboardData } from '@/components/admin/dashboard/useDashboardData'
 import { AdminsTab } from '@/components/admin/dashboard/tabs-content/AdminsTab'
 import { OrderModal } from '@/components/admin/dashboard/modals/OrderModal'
@@ -2538,9 +2539,13 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
         </DialogContent>
       </Dialog>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 md:py-6 mobile-bottom-space">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <DesktopTabsNav
+            visibleTabs={visibleTabs}
+            copy={tabsCopy}
+          />
+          <MobileBottomTabsNav
             visibleTabs={visibleTabs}
             copy={tabsCopy}
           />

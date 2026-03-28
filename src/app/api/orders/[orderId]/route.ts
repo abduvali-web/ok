@@ -373,6 +373,25 @@ export async function PATCH(
           }
         }
 
+        const effectiveDailyPrice = (order.customer as any)?.dailyPrice || 84000
+        const effectiveQuantity =
+          typeof parsedQuantity === 'number' && Number.isFinite(parsedQuantity)
+            ? parsedQuantity
+            : (order.quantity || 1)
+        const totalOrderCostForEdit = effectiveDailyPrice * effectiveQuantity
+        const effectiveAmountReceived = hasAmountReceived
+          ? (typeof nextAmountReceivedOverride === 'number' ? nextAmountReceivedOverride : 0)
+          : (typeof order.amountReceived === 'number' ? order.amountReceived : 0)
+        const effectiveIsPrepaid = typeof isPrepaid === 'boolean' ? isPrepaid : order.isPrepaid
+        let computedPaymentStatus: 'PAID' | 'UNPAID' | undefined
+        if (hasAmountReceived) {
+          if (effectiveAmountReceived >= totalOrderCostForEdit && totalOrderCostForEdit > 0) {
+            computedPaymentStatus = 'PAID'
+          } else if (!effectiveIsPrepaid) {
+            computedPaymentStatus = 'UNPAID'
+          }
+        }
+
         updateData = {
           ...updateData,
           deliveryAddress,
@@ -380,7 +399,7 @@ export async function PATCH(
           quantity: parsedQuantity,
           calories: parsedCalories,
           specialFeatures,
-          paymentStatus,
+          paymentStatus: computedPaymentStatus ?? paymentStatus,
           paymentMethod,
           isPrepaid,
           deliveryDate: date ? new Date(date) : undefined,
