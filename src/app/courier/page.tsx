@@ -660,9 +660,8 @@ export default function CourierPage() {
 
   if (loading) {
     return (
-      <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-main">
+      <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background bg-app-paper">
         <div className="pointer-events-none absolute inset-0 [background:var(--app-bg-grid)] opacity-45" />
-        <div className="" />
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="mb-4 relative z-10">
           <div className="flex h-12 w-12 items-center justify-center rounded-base border-2 border-border bg-main text-main-foreground shadow-shadow">
             <RefreshCw className="h-5 w-5" />
@@ -674,9 +673,8 @@ export default function CourierPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-main pb-20">
+    <div className="relative min-h-screen overflow-hidden bg-background bg-app-paper pb-20">
       <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-45" />
-      <div className="" />
       
       <header className="safe-top sticky top-0 z-50 border-b-2 border-border bg-background/95 backdrop-blur-md">
         <div className="max-w-3xl mx-auto px-4 h-16 flex justify-between items-center">
