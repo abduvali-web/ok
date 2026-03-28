@@ -10,6 +10,7 @@ import { Loader2, MessageSquarePlus, Send, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { getJsonFromLocalStorage } from '@/lib/browser-storage'
 import { SearchPanel } from '@/components/ui/search-panel'
+import { TamboAgentWidget } from '@/components/tambo/TamboAgentWidget'
 
 interface User {
   id: string
@@ -42,6 +43,18 @@ interface Conversation {
   unreadCount: number
 }
 
+const TAMBO_AI_AGENT: User = {
+  id: 'tambo-ai',
+  name: 'Tambo AI',
+  email: '',
+  role: 'AI_AGENT',
+}
+
+function openTamboWithPrompt(prompt: string) {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent('tambo:open-chat', { detail: { prompt, newThread: true } }))
+}
+
 function getStoredUserId() {
   if (typeof window === 'undefined') return null
   const user = getJsonFromLocalStorage<{ id?: string }>('user')
@@ -56,6 +69,7 @@ export function ChatTab() {
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [showUserList, setShowUserList] = useState(false)
+  const [selectedAiAgent, setSelectedAiAgent] = useState<User | null>(null)
   const [isBootLoading, setIsBootLoading] = useState(true)
   const [search, setSearch] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -135,7 +149,8 @@ export function ChatTab() {
 
       if (response.ok) {
         const data = await response.json()
-        setAvailableUsers(data.users)
+        const users = Array.isArray(data?.users) ? data.users : []
+        setAvailableUsers([TAMBO_AI_AGENT, ...users])
       }
     } catch {
       // ignore transient loading errors
@@ -199,6 +214,15 @@ export function ChatTab() {
     }
   }
 
+  function selectAiAgent(agent: User) {
+    setSelectedConversation(null)
+    setSelectedAiAgent(agent)
+    setShowUserList(false)
+    openTamboWithPrompt(
+      'You are Tambo AI: a manager assistant for operations and audits. Answer with practical steps.'
+    )
+  }
+
   async function sendMessage() {
     if (!newMessage.trim() || !selectedConversation) return
 
@@ -230,6 +254,8 @@ export function ChatTab() {
 
   function getRoleColor(role: string) {
     switch (role) {
+      case 'AI_AGENT':
+        return 'bg-slate-100 text-slate-800 dark:bg-white/10 dark:text-slate-100'
       case 'SUPER_ADMIN':
         return 'bg-violet-100 text-violet-800'
       case 'MIDDLE_ADMIN':
@@ -245,6 +271,8 @@ export function ChatTab() {
 
   function getRoleLabel(role: string) {
     switch (role) {
+      case 'AI_AGENT':
+        return 'AI'
       case 'SUPER_ADMIN':
         return 'Super Admin'
       case 'MIDDLE_ADMIN':
@@ -296,16 +324,16 @@ export function ChatTab() {
                   <Button
                     key={user.id}
                     type="button"
-                    onClick={() => void startConversation(user.id)}
+                    onClick={() => (user.id === TAMBO_AI_AGENT.id ? selectAiAgent(user) : void startConversation(user.id))}
                     variant="ghost"
                     className="flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 justify-start text-left transition-colors hover:bg-muted/40"
                   >
                     <Avatar>
-                      <AvatarFallback>{user.name[0]}</AvatarFallback>
+                      <AvatarFallback>{user.id === TAMBO_AI_AGENT.id ? 'AI' : user.name[0]}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-medium">{user.name}</div>
-                      <div className="truncate text-xs text-muted-foreground">{user.email}</div>
+                      <div className="truncate text-xs text-muted-foreground">{user.id === TAMBO_AI_AGENT.id ? 'AI agent via Tambo' : user.email}</div>
                     </div>
                     <Badge className={getRoleColor(user.role)}>{getRoleLabel(user.role)}</Badge>
                   </Button>
@@ -314,6 +342,23 @@ export function ChatTab() {
             </div>
           ) : (
             <div className="max-h-[520px] overflow-y-auto">
+              {selectedAiAgent ? (
+                <Button
+                  type="button"
+                  onClick={() => selectAiAgent(selectedAiAgent)}
+                  variant="ghost"
+                  className="flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 justify-start text-left transition-colors bg-muted/50 hover:bg-muted/60"
+                >
+                  <Avatar>
+                    <AvatarFallback>AI</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-medium">{selectedAiAgent.name}</div>
+                    <div className="truncate text-xs text-muted-foreground">AI agent via Tambo</div>
+                  </div>
+                  <Badge className={getRoleColor('AI_AGENT')}>AI</Badge>
+                </Button>
+              ) : null}
               {filteredConversations.length === 0 ? (
                 <div className="p-6 text-center text-sm text-muted-foreground">No conversations yet.</div>
               ) : (
@@ -323,6 +368,7 @@ export function ChatTab() {
                     type="button"
                     onClick={() => {
                       setSelectedConversation(conversation.id)
+                      setSelectedAiAgent(null)
                       void fetchMessages(conversation.id)
                     }}
                     variant="ghost"
@@ -353,7 +399,24 @@ export function ChatTab() {
       </Card>
 
       <Card className="glass-card overflow-hidden">
-        {selectedConversation ? (
+        {selectedAiAgent ? (
+          <>
+            <CardHeader className="border-b border-border/60 pb-4">
+              <div className="flex items-center gap-3">
+                <Avatar>
+                  <AvatarFallback>AI</AvatarFallback>
+                </Avatar>
+                <div>
+                  <CardTitle className="text-lg">{selectedAiAgent.name}</CardTitle>
+                  <p className="text-sm text-muted-foreground">AI agent via Tambo</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="h-[560px] p-0">
+              <TamboAgentWidget embedded />
+            </CardContent>
+          </>
+        ) : selectedConversation ? (
           <>
             <CardHeader className="border-b border-border/60 pb-4">
               <div className="flex items-center gap-3">

@@ -5,6 +5,17 @@ import bcrypt from 'bcryptjs'
 import { passwordSchema } from '@/lib/validations'
 import { z } from 'zod'
 
+function startOfDayUtc(date: Date) {
+    return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
+}
+
+function diffDaysInclusiveUtc(from: Date, to: Date) {
+    const fromDay = startOfDayUtc(from).getTime()
+    const toDay = startOfDayUtc(to).getTime()
+    const diff = Math.floor((toDay - fromDay) / (24 * 60 * 60 * 1000))
+    return Math.max(0, diff + 1)
+}
+
 export async function GET(request: NextRequest) {
     try {
         const user = await getAuthUser(request)
@@ -19,7 +30,9 @@ export async function GET(request: NextRequest) {
                 name: true,
                 email: true,
                 role: true,
-                phone: true
+                phone: true,
+                salary: true,
+                createdAt: true,
             }
         })
 
@@ -27,7 +40,28 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Пользователь не найден' }, { status: 404 })
         }
 
-        return NextResponse.json(admin)
+        const paidSalary = await db.transaction.aggregate({
+            where: {
+                category: 'SALARY',
+                salaryRecipientAdminId: admin.id,
+            },
+            _sum: {
+                amount: true,
+            },
+        })
+
+        const days = diffDaysInclusiveUtc(admin.createdAt, new Date())
+        const accrued = Number(admin.salary ?? 0) * days
+        const paid = Number(paidSalary._sum.amount ?? 0)
+        const balance = accrued - paid
+
+        return NextResponse.json({
+            ...admin,
+            salaryPerDay: Number(admin.salary ?? 0),
+            salaryAccrued: accrued,
+            salaryPaid: paid,
+            balance,
+        })
     } catch (error) {
         console.error('Error fetching profile:', error)
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

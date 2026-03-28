@@ -341,6 +341,7 @@ export function SetsTab() {
     });
     const [editingDish, setEditingDish] = useState<{ setId: string; calorieIndex: number; dishIndex: number; dish: SetDish } | null>(null);
     const [editingGroup, setEditingGroup] = useState<{ groupIndex: number; group: CalorieGroup } | null>(null);
+    const [selectedSetIdForPeriod, setSelectedSetIdForPeriod] = useState<string | null>(null);
 
     // Form state for new set
     const [newSetForm, setNewSetForm] = useState({
@@ -409,6 +410,36 @@ export function SetsTab() {
                 ? (set.calorieGroups as any)
                 : {};
         return base;
+    };
+
+    const getAssignedPeriodRange = (set: MenuSet | null): DateRange | undefined => {
+        const meta = getMeta(set);
+        const fromRaw = meta?.assignedPeriod?.from;
+        if (!fromRaw) return undefined;
+
+        const from = new Date(fromRaw);
+        if (Number.isNaN(from.getTime())) return undefined;
+
+        const to = new Date(meta?.assignedPeriod?.to ?? fromRaw);
+        if (Number.isNaN(to.getTime())) return undefined;
+
+        from.setHours(0, 0, 0, 0);
+        to.setHours(0, 0, 0, 0);
+        return { from, to };
+    };
+
+    const resolveDayKeyForDate = (date: Date, set: MenuSet | null, fallbackDay = '1') => {
+        const assigned = getAssignedPeriodRange(set);
+        const anchor = new Date(assigned?.from ?? date);
+        anchor.setHours(0, 0, 0, 0);
+
+        const target = new Date(date);
+        target.setHours(0, 0, 0, 0);
+
+        const diff = Math.floor((target.getTime() - anchor.getTime()) / (24 * 60 * 60 * 1000));
+        const dayNumber = diff + 1;
+        if (!Number.isFinite(dayNumber) || dayNumber < 1) return fallbackDay;
+        return String(dayNumber);
     };
 
     const getDayKeysFromGroups = (groups: any) => {
@@ -1231,13 +1262,34 @@ export function SetsTab() {
     const selectedSummaryDayKeys = useMemo(() => {
         if (dayKeys.length === 0) return [] as string[];
         if (!periodRange?.from) return [activeDay];
+
         const start = new Date(periodRange.from);
         start.setHours(0, 0, 0, 0);
         const end = new Date(periodRange.to ?? periodRange.from);
         end.setHours(0, 0, 0, 0);
-        const span = Math.max(1, Math.floor((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1);
-        return dayKeys.slice(0, Math.min(dayKeys.length, span));
-    }, [dayKeys, periodRange, activeDay]);
+
+        const assigned = getAssignedPeriodRange(selectedSet);
+        const anchor = new Date(assigned?.from ?? start);
+        anchor.setHours(0, 0, 0, 0);
+
+        const result: string[] = [];
+        const maxSpan = 62;
+        const cursor = new Date(start);
+
+        while (cursor.getTime() <= end.getTime() && result.length < maxSpan) {
+            const dayNumber = Math.floor((cursor.getTime() - anchor.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+            const key = String(dayNumber);
+            if (dayKeys.includes(key)) result.push(key);
+            cursor.setDate(cursor.getDate() + 1);
+        }
+
+        return result.length > 0 ? result : [activeDay];
+    }, [dayKeys, periodRange, activeDay, selectedSet]);
+
+    const selectedDayBadgeLabel = useMemo(() => {
+        if (selectedSummaryDayKeys.length !== 1) return null;
+        return `Day:${selectedSummaryDayKeys[0]}`;
+    }, [selectedSummaryDayKeys]);
 
     const selectedDaysSummary = useMemo(() => {
         if (!selectedSet) {
@@ -1378,6 +1430,26 @@ export function SetsTab() {
         }
     }, [dayKeys, activeDay]);
 
+    useEffect(() => {
+        if (!selectedSet) return;
+        if (selectedSetIdForPeriod === selectedSet.id) return;
+
+        setSelectedSetIdForPeriod(selectedSet.id);
+
+        const assignedRange = getAssignedPeriodRange(selectedSet);
+        setPeriodRange(assignedRange);
+
+        if (assignedRange?.from) {
+            const mappedDay = resolveDayKeyForDate(assignedRange.from, selectedSet, dayKeys[0] || '1');
+            if (dayKeys.includes(mappedDay)) {
+                setActiveDay(mappedDay);
+                return;
+            }
+        }
+
+        setActiveDay(dayKeys[0] || '1');
+    }, [selectedSet, selectedSetIdForPeriod, dayKeys]);
+
     if (isLoading) return <div className="p-8"><div className="animate-spin h-8 w-8 border-2 border-primary rounded-full border-t-transparent mx-auto"></div></div>;
 
     return (
@@ -1403,11 +1475,13 @@ export function SetsTab() {
                             start.setHours(0, 0, 0, 0);
                             const end = new Date(next.to ?? next.from);
                             end.setHours(0, 0, 0, 0);
-                            if (end.getTime() === start.getTime()) {
-                                end.setDate(end.getDate() + Math.max(0, dayKeys.length - 1));
-                            }
                             setPeriodRange({ from: start, to: end });
-                            setActiveDay(dayKeys[0] || '1');
+                            const mappedDay = resolveDayKeyForDate(start, selectedSet, dayKeys[0] || '1');
+                            if (dayKeys.includes(mappedDay)) {
+                                setActiveDay(mappedDay);
+                            } else {
+                                setActiveDay(dayKeys[0] || '1');
+                            }
                         }}
                         uiText={calendarUiText}
                         locale={language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'}
@@ -1491,6 +1565,9 @@ export function SetsTab() {
                     <div className="space-y-4">
                             <Card className="glass-card border border-border/70 shadow-shadow">
                                 <CardContent className="px-4 py-3">
+                                    {selectedDayBadgeLabel ? (
+                                        <div className="mb-2 text-xs font-semibold text-main-foreground/80">{selectedDayBadgeLabel}</div>
+                                    ) : null}
                                     <div className="grid gap-2 text-sm sm:grid-cols-3">
                                         <div className="glass-card rounded-md border px-3 py-2">
                                             <p className="text-[11px] text-muted-foreground">{uiText.dishesLabel}</p>

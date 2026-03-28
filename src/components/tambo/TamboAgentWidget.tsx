@@ -917,16 +917,18 @@ export function TamboAgentWidget({ embedded = false }: { embedded?: boolean } = 
               </div>
 
               <div className="flex items-center gap-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleNewThread}
-                  aria-label={tamboT.ariaNewChat}
-                  className="h-9 w-9 rounded-xl"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
+                {!embedded ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleNewThread}
+                    aria-label={tamboT.ariaNewChat}
+                    className="h-9 w-9 rounded-xl"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                ) : null}
                 {!embedded ? (
                   <>
                     <Button

@@ -14,6 +14,7 @@ interface CourierProfileProps {
         name: string
         email: string
         role: string
+        balance?: number
     }
 }
 

@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import {
   AlertCircle,
   CheckCircle,
+  ChevronDown,
   ChevronRight,
   Clock,
   LogOut,
@@ -21,8 +22,10 @@ import {
   Phone,
   Play,
   RefreshCw,
+  Settings,
   User,
   Utensils,
+  Wallet,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -36,6 +39,21 @@ import { RouteOptimizeButton } from '@/components/admin/RouteOptimizeButton'
 import { extractCoordsFromText } from '@/lib/geo'
 import { CalendarRangeSelector } from '@/components/admin/dashboard/shared/CalendarRangeSelector'
 import type { DateRange } from 'react-day-picker'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 const CourierMap = dynamic(() => import('@/components/courier/CourierMap'), {
   ssr: false,
@@ -90,6 +108,9 @@ export default function CourierPage() {
   const [isCompleting, setIsCompleting] = useState(false)
   const [lastOrdersSyncAt, setLastOrdersSyncAt] = useState<Date | null>(null)
   const [orderStatusFilter, setOrderStatusFilter] = useState<'ALL' | 'PENDING' | 'IN_DELIVERY' | 'PAUSED'>('ALL')
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false)
+  const [withdrawAmount, setWithdrawAmount] = useState('')
+  const [isWithdrawing, setIsWithdrawing] = useState(false)
   const lastSentLocationRef = useRef<{ lat: number; lng: number; at: number } | null>(null)
   const isSendingLocationRef = useRef(false)
   const watchIdRef = useRef<number | null>(null)
@@ -245,6 +266,16 @@ export default function CourierPage() {
     [lastOrdersSyncAt, uiText.notSynced]
   )
 
+  const courierBalance = useMemo(() => {
+    const value = Number(courierData?.balance ?? 0)
+    return Number.isFinite(value) ? value : 0
+  }, [courierData])
+
+  const formattedCourierBalance = useMemo(() => {
+    const locale = language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'
+    return `${Math.round(courierBalance).toLocaleString(locale)} UZS`
+  }, [courierBalance, language])
+
   const visibleOrders = useMemo(() => {
     if (orderStatusFilter === 'ALL') return orders
     return orders.filter((order) => order.orderStatus === orderStatusFilter)
@@ -352,6 +383,7 @@ export default function CourierPage() {
             name: data.name,
             email: data.email,
             role: 'COURIER',
+            balance: Number(data.balance ?? 0),
           }
           setCourierData(payload)
           localStorage.setItem('user', JSON.stringify(payload))
@@ -658,6 +690,46 @@ export default function CourierPage() {
     await signOut({ callbackUrl: '/', redirect: true })
   }
 
+  const handleWithdraw = async () => {
+    const amount = Number(withdrawAmount)
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error('Enter a valid withdrawal amount')
+      return
+    }
+
+    setIsWithdrawing(true)
+    try {
+      const response = await fetch('/api/courier/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount }),
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(data?.error || t.common.error)
+      }
+
+      const nextBalance = Number(data?.balance ?? courierBalance - amount)
+      setCourierData((prev: any) => {
+        const next = { ...(prev || {}), balance: nextBalance }
+        try {
+          localStorage.setItem('user', JSON.stringify(next))
+        } catch {
+          // ignore localStorage failures
+        }
+        return next
+      })
+
+      setWithdrawAmount('')
+      setIsWithdrawOpen(false)
+      toast.success('Withdrawal completed')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t.common.error)
+    } finally {
+      setIsWithdrawing(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background bg-app-paper">
@@ -691,9 +763,34 @@ export default function CourierPage() {
                 <RefreshCw className="h-4 w-4 text-muted-foreground" />
               </motion.div>
             )}
-            <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-base text-muted-foreground hover:text-rose-500">
-              <LogOut className="w-5 h-5" />
+            <Button variant="outline" size="sm" className="rounded-base" onClick={() => setIsWithdrawOpen(true)}>
+              <Wallet className="mr-2 h-4 w-4" />
+              Withdraw
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="rounded-base">
+                  <User className="mr-2 h-4 w-4" />
+                  <span className="max-w-[120px] truncate">{formattedCourierBalance}</span>
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => setActiveTab('chat')} className="gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  <span>{t.courier.chat}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setActiveTab('profile')} className="gap-2">
+                  <Settings className="h-4 w-4" />
+                  <span>{t.admin.settings}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => void handleLogout()} className="gap-2 text-rose-600 focus:text-rose-600">
+                  <LogOut className="h-4 w-4" />
+                  <span>{t.common.logout || 'Logout'}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
@@ -711,7 +808,7 @@ export default function CourierPage() {
             </TabsTrigger>
             <TabsTrigger value="profile" className="flex items-center gap-2 rounded-base border-2 border-transparent text-[13px] font-heading data-[state=active]:border-border data-[state=active]:bg-main data-[state=active]:text-main-foreground">
               <User className="w-4 h-4" />
-              {t.courier.profile}
+              {t.courier.profile} ({formattedCourierBalance})
             </TabsTrigger>
           </TabsList>
 
@@ -1129,6 +1226,33 @@ export default function CourierPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      <Dialog open={isWithdrawOpen} onOpenChange={setIsWithdrawOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Withdraw</DialogTitle>
+            <DialogDescription>Current balance: {formattedCourierBalance}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Input
+              type="number"
+              min={0}
+              step="1"
+              value={withdrawAmount}
+              onChange={(event) => setWithdrawAmount(event.target.value)}
+              placeholder="Amount (UZS)"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsWithdrawOpen(false)} disabled={isWithdrawing}>
+              {t.common.cancel}
+            </Button>
+            <Button onClick={() => void handleWithdraw()} disabled={isWithdrawing}>
+              {isWithdrawing ? t.common.loading : 'Withdraw'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

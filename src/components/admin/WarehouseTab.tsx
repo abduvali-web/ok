@@ -854,6 +854,24 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
         () => Array.from(shoppingList.entries()).filter(([name]) => !boughtShoppingItems.has(name)),
         [shoppingList, boughtShoppingItems]
     );
+    const ingredientNameOptions = useMemo(() => {
+        const names = new Set<string>();
+
+        Object.keys(inventoryPriceMeta).forEach((key) => {
+            if (key) names.add(key);
+        });
+
+        visibleShoppingEntries.forEach(([name]) => {
+            if (name) names.add(name);
+        });
+
+        customBuyItems.forEach((item) => {
+            const name = String(item.name || '').trim();
+            if (name) names.add(name);
+        });
+
+        return Array.from(names).sort((a, b) => a.localeCompare(b));
+    }, [inventoryPriceMeta, visibleShoppingEntries, customBuyItems]);
     useEffect(() => {
         if (visibleShoppingEntries.length === 0) return;
         setShoppingEdits((prev) => {
@@ -1361,6 +1379,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                                 />
                                                                 <Input
                                                                   className="h-8"
+                                                                  list="warehouse-calculator-ingredients"
                                                                   value={item.name}
                                                                   onChange={(e) => setCustomBuyItems((prev) => prev.map((x) => x.id === item.id ? { ...x, name: e.target.value } : x))}
                                                                 />
@@ -1388,8 +1407,13 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                                                         </div>
                                                     ))}
                                                 </div>
+                                                <datalist id="warehouse-calculator-ingredients">
+                                                    {ingredientNameOptions.map((name) => (
+                                                        <option key={name} value={name} />
+                                                    ))}
+                                                </datalist>
                                                 <div className="mt-2 grid grid-cols-12 items-center gap-2">
-                                                    <Input className="col-span-4 h-8" placeholder="Ingredient name" value={newBuyItem.name} onChange={(e) => setNewBuyItem((prev) => ({ ...prev, name: e.target.value }))} />
+                                                    <Input className="col-span-4 h-8" list="warehouse-calculator-ingredients" placeholder="Ingredient name" value={newBuyItem.name} onChange={(e) => setNewBuyItem((prev) => ({ ...prev, name: e.target.value }))} />
                                                     <Input className="col-span-2 h-8" type="number" placeholder="Amount" value={newBuyItem.amount} onChange={(e) => setNewBuyItem((prev) => ({ ...prev, amount: e.target.value }))} />
                                                     <Select value={newBuyItem.unit} onValueChange={(value) => setNewBuyItem((prev) => ({ ...prev, unit: value }))}>
                                                         <SelectTrigger className="col-span-2 h-8"><SelectValue /></SelectTrigger>

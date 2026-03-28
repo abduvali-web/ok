@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
 import {
   currentTimeContextHelper,
   TamboProvider,
   TamboThreadInputProvider,
 } from "@tambo-ai/react";
-import { MessageSquare } from "lucide-react";
 
 import { tamboComponents } from "@/lib/tambo/components";
 import {
@@ -19,10 +17,7 @@ import {
   siteApiRequestTool,
   siteUiCatalogTool,
 } from "@/lib/tambo/tools";
-import { TamboAgentWidget } from "@/components/tambo/TamboAgentWidget";
-import { Button } from "@/components/ui/button";
 import { getJsonFromLocalStorage } from "@/lib/browser-storage";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 function getStableAnonKey(): string {
   if (typeof window === "undefined") return "anonymous";
@@ -44,11 +39,7 @@ function getUserKeyFromStorage(): string {
 
 export function TamboProviderClient({ children }: { children: React.ReactNode }) {
   const apiKey = process.env.NEXT_PUBLIC_TAMBO_API_KEY;
-  const { t } = useLanguage();
-  const tamboT = t.tambo;
   const [userKey, setUserKey] = useState("anonymous");
-  const pathname = usePathname();
-  const shouldRenderFloatingLauncher = !pathname?.startsWith("/middle-admin");
 
   useEffect(() => {
     setUserKey(getUserKeyFromStorage());
@@ -68,21 +59,7 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
   );
 
   if (!apiKey) {
-    return (
-      <>
-        {children}
-        <Button
-          type="button"
-          className="fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full shadow-lg"
-          onClick={() => {
-            window.alert(tamboT.setupHintAlert);
-          }}
-          aria-label={tamboT.setupHintAria}
-        >
-          <MessageSquare className="h-5 w-5" />
-        </Button>
-      </>
-    );
+    return <>{children}</>;
   }
 
   return (
@@ -108,7 +85,6 @@ export function TamboProviderClient({ children }: { children: React.ReactNode })
     >
       <TamboThreadInputProvider>
         {children}
-        {shouldRenderFloatingLauncher ? <TamboAgentWidget /> : null}
       </TamboThreadInputProvider>
     </TamboProvider>
   );
