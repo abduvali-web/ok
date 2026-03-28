@@ -659,11 +659,11 @@ export function CookingManager({
             ) : null}
 
             {showContextInfo ? (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="glass-card border border-border rounded-lg p-3 shadow-shadow">
                     <div className="flex items-center gap-2 mb-2">
                         <Users className="w-4 h-4 text-blue-600" />
-                        <span className="font-medium text-blue-800">{uiText.ordersForTomorrow}</span>
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                        <span className="font-medium text-foreground">{uiText.ordersForTomorrow}</span>
+                        <Badge variant="secondary" className="glass-card text-foreground">
                             {Object.values(clientsByCalorie).reduce((a, b) => a + b, 0)} {uiText.portions}
                         </Badge>
                     </div>
@@ -672,14 +672,14 @@ export function CookingManager({
                             const count = clientsByCalorie[cal] || 0;
                             if (count === 0) return null;
                             return (
-                                <Badge key={cal} variant="outline" className="bg-card">
+                                <Badge key={cal} variant="outline" className="glass-card">
                                     {groupLabelByCalories.get(cal) ?? `${cal} kcal`}:{' '}
                                     <span className="font-bold ml-1">{count}</span>
                                 </Badge>
                             );
                         })}
                         {Object.values(clientsByCalorie).every(v => v === 0) && (
-                            <span className="text-sm text-blue-600">{uiText.noOrdersGlobal}</span>
+                            <span className="text-sm text-muted-foreground">{uiText.noOrdersGlobal}</span>
                         )}
                         {activeSet && selectedSetId !== 'active' && activeSet.id !== selectedSetId && (
                             <div className="w-full text-xs text-amber-600 mt-1 flex items-center">
@@ -691,10 +691,10 @@ export function CookingManager({
                 </div>
             ) : null}
 
-            <div className="bg-card rounded-lg border border-border overflow-x-auto">
-                <Table>
+            <div className="glass-card rounded-lg border border-border overflow-x-auto shadow-shadow">
+                <Table className="[&_tr]:!bg-transparent [&_tr]:text-foreground">
                     <TableHeader>
-                        <TableRow>
+                        <TableRow className="!bg-transparent">
                             <TableHead className="w-[200px]">{uiText.dish}</TableHead>
                             {filteredCalorieGroups.map(cal => (
                                 <TableHead key={cal} className="text-center min-w-[150px]">
@@ -717,7 +717,7 @@ export function CookingManager({
                             // if (!_isNeededAnywhere) return null; 
 
                             return (
-                                <TableRow key={dish.id}>
+                                <TableRow key={dish.id} className="!bg-transparent">
                                     <TableCell className="font-medium">
                                         {dish.name}
                                         <div className="text-xs text-slate-400">
@@ -738,7 +738,7 @@ export function CookingManager({
                                         // If not configured for this column, show greyed out or empty
                                         if (!isAvailable) {
                                             return (
-                                                <TableCell key={cal} className="p-2 bg-muted/20">
+                                                <TableCell key={cal} className="p-2">
                                                     <div className="h-full flex items-center justify-center text-slate-300 text-xs text-center">
                                                         -
                                                     </div>
@@ -748,7 +748,7 @@ export function CookingManager({
 
                                         return (
                                             <TableCell key={cal} className="p-2">
-                                                <div className={`rounded-lg p-2 space-y-2 border ${needed === 0 ? 'bg-muted/20 border-dashed' : 'bg-muted/20 border'}`}>
+                                                <div className={`glass-card rounded-lg p-2 space-y-2 border ${needed === 0 ? 'border-dashed' : ''}`}>
                                                     <div className="flex justify-between text-xs">
                                                         <span className={cooked >= needed && needed > 0 ? "text-green-600 font-medium" : "text-amber-600"}>
                                                             {uiText.ready}: {cooked}
@@ -783,7 +783,7 @@ export function CookingManager({
                 </Table>
             </div>
             {dishes.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg border border-border border-dashed">
+                <div className="glass-card text-center py-12 text-muted-foreground rounded-lg border border-border border-dashed">
                     {uiText.noDishes(menuNumber)}
                 </div>
             )}

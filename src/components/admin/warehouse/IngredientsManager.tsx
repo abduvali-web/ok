@@ -242,7 +242,7 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
 
     return (
         <div className="space-y-4">
-            <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+            <div className="glass-card rounded-xl border border-border p-3 shadow-shadow">
                 <RightActionLine>
                     <IconButton
                         label={uiText.addIngredient}
@@ -267,10 +267,10 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                 </RightActionLine>
             </div>
 
-            <div className="bg-card rounded-lg border border-border max-h-[600px] overflow-y-auto relative">
-                <Table>
-                    <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
-                        <TableRow>
+            <div className="glass-card rounded-lg border border-border max-h-[600px] overflow-y-auto relative shadow-shadow">
+                <Table className="[&_tr]:!bg-transparent [&_tr]:text-foreground">
+                    <TableHeader className="sticky top-0 glass-card z-10 shadow-sm">
+                        <TableRow className="!bg-transparent">
                             <TableHead>{uiText.name}</TableHead>
                             <TableHead>{uiText.amountInStock}</TableHead>
                             <TableHead>{uiText.unit}</TableHead>
@@ -281,20 +281,20 @@ export function IngredientsManager({ onUpdate }: IngredientsManagerProps) {
                     </TableHeader>
                     <TableBody>
                         {loading ? (
-                            <TableRow>
+                            <TableRow className="!bg-transparent">
                                 <TableCell colSpan={6} className="text-center py-8">
                                     <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                                 </TableCell>
                             </TableRow>
                         ) : filteredIngredients.length === 0 ? (
-                            <TableRow>
+                            <TableRow className="!bg-transparent">
                                 <TableCell colSpan={6} className="text-center py-8 text-slate-500">
                                     {uiText.noIngredientsFound}
                                 </TableCell>
                             </TableRow>
                         ) : (
                             filteredIngredients.map((ing) => (
-                                 <TableRow key={ing.id}>
+                                 <TableRow key={ing.id} className="!bg-transparent">
                                      <TableCell className="font-medium">{ing.name}</TableCell>
                                      <TableCell>{ing.amount}</TableCell>
                                      <TableCell>{ing.unit}</TableCell>

@@ -1491,7 +1491,7 @@ export function SetsTab() {
 
                 {selectedSet ? (
                     <div className="space-y-4">
-                            <Card className="border border-border/70">
+                            <Card className="glass-card border border-border/70 shadow-shadow">
                                 <CardContent className="px-4 py-3">
                                     <div className="grid gap-2 text-sm sm:grid-cols-3">
                                         <div className="glass-card rounded-md border px-3 py-2">
@@ -1509,7 +1509,7 @@ export function SetsTab() {
                                     </div>
                                 </CardContent>
                             </Card>
-                            <Card className="min-h-[600px] flex flex-col">
+                            <Card className="glass-card min-h-[600px] flex flex-col shadow-shadow">
                                 {/* Day Content */}
                                 <CardContent className="flex-1 p-0">
                                     {!hasDataForDay ? (
@@ -1907,9 +1907,9 @@ export function SetsTab() {
                                 </div>
                             </div>
 
-                            <Table>
+                            <Table className="[&_tr]:!bg-transparent [&_tr]:text-foreground">
                                 <TableHeader>
-                                    <TableRow>
+                                    <TableRow className="!bg-transparent">
                                         <TableHead className="pl-4">{uiText.tableName}</TableHead>
                                         <TableHead className="w-[110px]">{uiText.tableAmount}</TableHead>
                                         <TableHead className="w-[90px]">{uiText.tableUnit}</TableHead>
@@ -1920,7 +1920,7 @@ export function SetsTab() {
                                 </TableHeader>
                                 <TableBody>
                                     {draftMealIngredients.map((ing, idx) => (
-                                        <TableRow key={`${ing.name}-${idx}`}>
+                                        <TableRow key={`${ing.name}-${idx}`} className="!bg-transparent">
                                             <TableCell className="pl-4 min-w-0">
                                                 <Input
                                                     className="h-8"
@@ -1992,7 +1992,7 @@ export function SetsTab() {
                                         </TableRow>
                                     ))}
                                     {draftMealIngredients.length === 0 ? (
-                                        <TableRow>
+                                        <TableRow className="!bg-transparent">
                                             <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                                                 {uiText.noIngredients}
                                             </TableCell>
@@ -2055,9 +2055,9 @@ export function SetsTab() {
                     </DialogHeader>
                     {editingDish && (
                         <div className="flex-1 overflow-auto">
-                            <Table>
+                            <Table className="[&_tr]:!bg-transparent [&_tr]:text-foreground">
                                 <TableHeader className="glass-card sticky top-0">
-                                    <TableRow>
+                                    <TableRow className="!bg-transparent">
                                         <TableHead className="pl-6">{uiText.tableName}</TableHead>
                                         <TableHead>{uiText.tableAmount}</TableHead>
                                         <TableHead>{uiText.tableUnit}</TableHead>
@@ -2068,7 +2068,7 @@ export function SetsTab() {
                                 </TableHeader>
                                 <TableBody>
                                     {(editingDish.dish.customIngredients || getOriginalIngredients(editingDish.dish.dishId)).map((ing, idx) => (
-                                        <TableRow key={`${ing.name}-${idx}`}>
+                                        <TableRow key={`${ing.name}-${idx}`} className="!bg-transparent">
                                             <TableCell className="pl-6 font-medium">
                                                 <Input className="h-8" value={ing.name} onChange={(e) => updateEditingIngredient(idx, { name: e.target.value })} />
                                             </TableCell>
@@ -2128,7 +2128,7 @@ export function SetsTab() {
                                         </TableRow>
                                     ))}
                                     {(editingDish.dish.customIngredients || getOriginalIngredients(editingDish.dish.dishId)).length === 0 && (
-                                        <TableRow>
+                                        <TableRow className="!bg-transparent">
                                             <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                                                 {uiText.noIngredients}
                                             </TableCell>

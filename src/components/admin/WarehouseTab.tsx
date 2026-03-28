@@ -1057,7 +1057,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                 </CardHeader>
                 <CardContent>
                     <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-                        <TabsList className="grid w-full grid-cols-5 mb-6">
+                        <TabsList className="glass-card grid w-full grid-cols-5 mb-6 border border-border shadow-shadow">
                             <TabsTrigger value="cooking" className="flex items-center gap-2">
                                 <ChefHat className="w-4 h-4" />
                                 <span className="hidden sm:inline">{t.warehouse.cooking}</span>
@@ -1133,7 +1133,7 @@ export function WarehouseTab({ className }: WarehouseTabProps) {
                             </div>
 
                             {cookingPlansError ? (
-                                <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                                <div className="glass-card rounded-lg border border-rose-300/70 p-3 text-sm text-rose-700 dark:text-rose-300 shadow-shadow">
                                     {cookingPlansError}
                                 </div>
                             ) : null}
