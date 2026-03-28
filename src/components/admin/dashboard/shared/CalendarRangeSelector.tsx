@@ -66,15 +66,28 @@ export function CalendarRangeSelector({
   uiText,
   locale = 'en-US',
   className,
+  highlightAfterRange = false,
 }: {
   value: DateRange | undefined
   onChange: (next: DateRange | undefined) => void
   uiText: CalendarRangeSelectorUiText
   locale?: string
   className?: string
+  highlightAfterRange?: boolean
 }) {
   const label = formatRangeLabel(value, locale, uiText.allTime)
   const hasRange = Boolean(value?.from)
+  const rangeEnd = value?.to ?? value?.from
+  const afterRangeModifier =
+    highlightAfterRange && rangeEnd
+      ? (day: Date) => {
+          const d = new Date(day)
+          const end = new Date(rangeEnd)
+          d.setHours(0, 0, 0, 0)
+          end.setHours(0, 0, 0, 0)
+          return d.getTime() > end.getTime()
+        }
+      : undefined
 
   const applyToday = () => {
     const today = new Date()
@@ -121,6 +134,12 @@ export function CalendarRangeSelector({
           onSelect={onChange}
           defaultMonth={value?.from}
           numberOfMonths={typeof window !== 'undefined' && window.innerWidth >= 768 ? 2 : 1}
+          modifiers={{
+            ...(afterRangeModifier ? { after_selected_period: afterRangeModifier } : {}),
+          }}
+          modifiersClassNames={{
+            ...(afterRangeModifier ? { after_selected_period: 'bg-rose-200/40 text-main-foreground' } : {}),
+          }}
         />
         <div className="flex flex-wrap items-center justify-between gap-2 border-t px-3 py-2">
           <div className="flex flex-wrap items-center gap-2">

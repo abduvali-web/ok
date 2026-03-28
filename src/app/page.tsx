@@ -278,7 +278,7 @@ export default function LandingPage() {
   ]
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background bg-app-paper text-foreground">
+    <div className="relative min-h-screen overflow-hidden bg-main text-foreground">
       <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-50" />
       <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[26rem] bg-gradient-to-b from-main/20 via-main/10 to-transparent" />
 

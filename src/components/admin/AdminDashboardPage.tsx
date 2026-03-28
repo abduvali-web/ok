@@ -2303,7 +2303,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   if (isLoading) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-background bg-app-paper flex items-center justify-center">
+      <div className="relative min-h-screen overflow-hidden bg-main flex items-center justify-center">
         <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-35" />
         <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[20rem] bg-gradient-to-b from-main/20 via-main/10 to-transparent" />
         <div className="relative z-10 text-center animate-fade-in">
@@ -2319,7 +2319,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background bg-app-paper">
+    <div className="relative min-h-screen overflow-hidden bg-main">
       <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-35" />
       <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[20rem] bg-gradient-to-b from-main/20 via-main/10 to-transparent" />
       {/* Header */}

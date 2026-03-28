@@ -295,6 +295,10 @@ export function SetsTab() {
     type CalorieGroupsMeta = {
         dayOrder?: string[];
         groupOrder?: string[];
+        assignedPeriod?: {
+            from: string;
+            to: string;
+        };
     };
 
     const [sets, setSets] = useState<MenuSet[]>([]);
@@ -1168,6 +1172,45 @@ export function SetsTab() {
         return { calendar: 'Period', today: 'Today', thisWeek: 'Week', thisMonth: 'Month', clearRange: 'Clear', allTime: 'Select period' };
     }, [language]);
 
+    const setToThisSetLabel = useMemo(() => {
+        if (language === 'ru') return 'Установить на этот сет';
+        if (language === 'uz') return 'Ushbu setga biriktirish';
+        return 'Set to this set';
+    }, [language]);
+
+    const periodAssignedMessage = useMemo(() => {
+        if (language === 'ru') return 'Период привязан к выбранному сету';
+        if (language === 'uz') return 'Davr tanlangan setga biriktirildi';
+        return 'Period assigned to selected set';
+    }, [language]);
+
+    const applySelectedPeriodToSet = async () => {
+        if (!selectedSet || !periodRange?.from) return;
+        const from = new Date(periodRange.from);
+        from.setHours(0, 0, 0, 0);
+        const to = new Date(periodRange.to ?? periodRange.from);
+        to.setHours(0, 0, 0, 0);
+
+        const baseGroups = getBaseGroups(selectedSet);
+        const meta = getMeta(selectedSet);
+        const nextGroups = {
+            ...baseGroups,
+            _meta: {
+                ...meta,
+                assignedPeriod: {
+                    from: from.toISOString(),
+                    to: to.toISOString(),
+                },
+            },
+        } as any;
+
+        const updatedSet = { ...selectedSet, calorieGroups: nextGroups };
+        setSelectedSet(updatedSet);
+        setSets((prev) => prev.map((s) => (s.id === updatedSet.id ? updatedSet : s)));
+        await saveSet(updatedSet);
+        toast.success(periodAssignedMessage);
+    };
+
     const deleteGroupById = async (groupId: string) => {
         if (!selectedSet) return;
         if (!groupId) return;
@@ -1263,8 +1306,18 @@ export function SetsTab() {
                         }}
                         uiText={calendarUiText}
                         locale={language === 'ru' ? 'ru-RU' : language === 'uz' ? 'uz-UZ' : 'en-US'}
+                        highlightAfterRange
                         className="w-full sm:w-[280px] md:w-[320px] flex-none basis-full sm:basis-auto"
                     />
+                    <Button
+                        type="button"
+                        size="sm"
+                        className="h-9 w-full sm:w-auto flex-none basis-full sm:basis-auto"
+                        disabled={!selectedSet || !periodRange?.from}
+                        onClick={() => void applySelectedPeriodToSet()}
+                    >
+                        {setToThisSetLabel}
+                    </Button>
                     <SearchPanel
                         value={setSearch}
                         onChange={setSetSearch}

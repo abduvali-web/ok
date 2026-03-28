@@ -110,8 +110,6 @@ export function OrderModal({
 
   const clientBalance = typeof matchedClient?.balance === 'number' ? matchedClient.balance : 0
   const dailyPrice = typeof matchedClient?.dailyPrice === 'number' ? matchedClient.dailyPrice : 0
-  const qty = Number.isFinite(orderFormData.quantity) && orderFormData.quantity > 0 ? orderFormData.quantity : 1
-  const orderCost = dailyPrice * qty
 
   const isCashLike = orderFormData.paymentMethod === 'CASH' || orderFormData.paymentMethod === 'CARD'
   const draftAmountReceived =
@@ -181,6 +179,13 @@ export function OrderModal({
     () => groupOptions.find((g) => g.id === selectedGroupId) ?? null,
     [groupOptions, selectedGroupId]
   )
+
+  const effectiveDailyPrice =
+    typeof selectedGroup?.price === 'number' && Number.isFinite(selectedGroup.price)
+      ? selectedGroup.price
+      : dailyPrice
+  const qty = Number.isFinite(orderFormData.quantity) && orderFormData.quantity > 0 ? orderFormData.quantity : 1
+  const orderCost = effectiveDailyPrice * qty
 
   useEffect(() => {
     setSelectedGroupId('')
@@ -419,10 +424,11 @@ export function OrderModal({
                       }}
                       placeholder="0"
                     />
-                    {matchedClient ? (
+                    {matchedClient || selectedGroup ? (
                       <p className="mt-1 text-[11px] text-muted-foreground">
-                        Cost: {formatCurrency(orderCost)} | Balance: {formatCurrency(clientBalance)} | Received:{' '}
-                        {formatCurrency(draftAmountReceived)}
+                        Cost: {formatCurrency(orderCost)} ({formatCurrency(effectiveDailyPrice)} x {qty})
+                        {matchedClient ? ` | Balance: ${formatCurrency(clientBalance)}` : ''}
+                        {' | '}Received: {formatCurrency(draftAmountReceived)}
                       </p>
                     ) : null}
                   </div>
