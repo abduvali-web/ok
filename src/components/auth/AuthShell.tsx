@@ -45,7 +45,7 @@ export function AuthShell({
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-main text-foreground">
-      <div className="pointer-events-none absolute inset-0 z-0 [background:var(--app-bg-grid)] opacity-30" />
+      <div className="pointer-events-none absolute inset-0 z-0 [background:var(--app-bg-grid)] opacity-45" />
 
       <div className="absolute top-4 right-4 z-50">
         <LanguageSwitcher />

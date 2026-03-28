@@ -1317,7 +1317,7 @@ export default function DatabasePage() {
   if (isLoading) {
     return (
       <div className="relative min-h-screen overflow-hidden bg-main">
-        <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-35" />
+        <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-45" />
         <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[20rem] bg-gradient-to-b from-main/20 via-main/10 to-transparent" />
         <div className="relative z-10 mx-auto flex min-h-[60vh] w-full max-w-7xl items-center justify-center px-4">
           <div className="text-center">
@@ -1331,7 +1331,7 @@ export default function DatabasePage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-main">
-      <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-35" />
+      <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-45" />
       <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[20rem] bg-gradient-to-b from-main/20 via-main/10 to-transparent" />
       <div className="relative z-10 mx-auto w-full max-w-7xl space-y-6 px-4 py-6">
       <Input

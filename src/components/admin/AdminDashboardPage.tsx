@@ -2304,7 +2304,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
   if (isLoading) {
     return (
       <div className="relative min-h-screen overflow-hidden bg-main flex items-center justify-center">
-        <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-35" />
+        <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-45" />
         <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[20rem] bg-gradient-to-b from-main/20 via-main/10 to-transparent" />
         <div className="relative z-10 text-center animate-fade-in">
           <div className="flex items-center justify-center gap-1.5 mb-3">
@@ -2320,7 +2320,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-main">
-      <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-35" />
+      <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-45" />
       <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[20rem] bg-gradient-to-b from-main/20 via-main/10 to-transparent" />
       {/* Header */}
       <header className="relative z-10 border-b-2 border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
