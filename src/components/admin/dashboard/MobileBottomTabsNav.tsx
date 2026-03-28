@@ -21,7 +21,7 @@ export function MobileBottomTabsNav({ visibleTabs, copy }: { visibleTabs: string
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 md:hidden">
-      <TabsList className="pointer-events-auto flex h-auto w-full flex-nowrap gap-1.5 overflow-x-auto rounded-base border-2 border-border bg-background/95 p-2 shadow-shadow backdrop-blur-md">
+      <TabsList className="glass-card pointer-events-auto flex h-auto w-full flex-nowrap justify-between gap-2 overflow-x-auto rounded-base border-2 border-border p-2 shadow-shadow backdrop-blur-md">
         {DASHBOARD_TAB_ORDER.map((tabId) => {
           if (!has(tabId)) return null
           const meta = DASHBOARD_TAB_META[tabId]
@@ -32,10 +32,11 @@ export function MobileBottomTabsNav({ visibleTabs, copy }: { visibleTabs: string
             <TabsTrigger
               key={tabId}
               value={tabId}
-              className="group min-w-[86px] flex-1 items-center justify-center gap-1 rounded-base border-2 border-transparent px-2 py-1.5 text-[10px] font-heading data-[state=active]:border-border data-[state=active]:bg-main data-[state=active]:text-main-foreground"
+              title={copy[tabId]}
+              aria-label={copy[tabId]}
+              className="group h-11 min-h-11 min-w-11 flex-1 items-center justify-center rounded-base border-2 border-border bg-background/70 p-0 shadow-shadow data-[state=active]:bg-main data-[state=active]:text-main-foreground data-[state=active]:shadow-none"
             >
-              <Icon className="h-3.5 w-3.5" />
-              <span className="truncate">{copy[tabId]}</span>
+              <Icon className="h-4 w-4" />
             </TabsTrigger>
           )
         })}
@@ -43,4 +44,3 @@ export function MobileBottomTabsNav({ visibleTabs, copy }: { visibleTabs: string
     </div>
   )
 }
-

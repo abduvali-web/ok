@@ -693,11 +693,14 @@ export function SetsTab() {
 
     const saveSet = async (setToSave: MenuSet) => {
         try {
-            await fetch(`/api/admin/sets/${setToSave.id}`, {
+            const response = await fetch(`/api/admin/sets/${setToSave.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ calorieGroups: setToSave.calorieGroups })
             });
+            if (!response.ok) {
+                throw new Error(`save_set_failed_${response.status}`);
+            }
         } catch (e) {
             console.error(e);
             toast.error(uiText.saveError);
@@ -737,7 +740,17 @@ export function SetsTab() {
         const dayGroups = Array.isArray(baseGroups[String(activeDay)]) ? baseGroups[String(activeDay)] : [];
         const defaultNumberName = editingGroup ? String(editingGroup.groupIndex + 1) : String(dayGroups.length + 1);
         const name = (groupForm.name || '').trim() || defaultNumberName;
-        const price = groupForm.price.trim() === '' ? null : Number(groupForm.price);
+        const rawPrice = String(groupForm.price || '').trim();
+        let price: number | null = null;
+        if (rawPrice !== '') {
+            const normalized = rawPrice.replace(/\s+/g, '').replace(',', '.');
+            const parsed = Number(normalized);
+            if (!Number.isFinite(parsed) || parsed < 0) {
+                toast.error(uiText.saveError);
+                return;
+            }
+            price = parsed;
+        }
 
         const nextId = editingGroup?.group?.id || makeGroupId();
 
@@ -806,32 +819,6 @@ export function SetsTab() {
         });
     };
 
-    const addIngredient = (name: string) => {
-        if (!editingDish) return;
-        const currentIngredients = editingDish.dish.customIngredients
-            ? [...editingDish.dish.customIngredients]
-            : [...getOriginalIngredients(editingDish.dish.dishId)];
-
-        if (currentIngredients.find(i => normalizeName(i.name) === normalizeName(name))) {
-            toast.error(uiText.ingredientAlreadyAdded);
-            return;
-        }
-
-        const allIngs = getAllUniqueIngredients();
-        const found = allIngs.find(i => i.name === name);
-
-        currentIngredients.push({
-            name,
-            amount: 0,
-            unit: found?.unit || 'gr'
-        });
-
-        setEditingDish({
-            ...editingDish,
-            dish: { ...editingDish.dish, customIngredients: currentIngredients }
-        });
-    };
-
     const updateEditingIngredient = (index: number, patch: Partial<Ingredient>) => {
         if (!editingDish) return;
         const currentIngredients = editingDish.dish.customIngredients
@@ -861,13 +848,24 @@ export function SetsTab() {
             toast.error(uiText.ingredientAlreadyAdded);
             return;
         }
+        const existing = getAllUniqueIngredients().find((i) => normalizeName(i.name) === normalizeName(name));
+        const warehouseMeta = warehouseItemByName.get(normalizeName(name));
+        const resolvedUnit = customEditIngredient.unit || existing?.unit || 'gr';
+        const resolvedKcal =
+            Number.isFinite(kcalPerGram as number)
+                ? (kcalPerGram as number)
+                : (typeof warehouseMeta?.kcalPerGram === 'number' ? warehouseMeta.kcalPerGram : undefined);
+        const resolvedPrice =
+            Number.isFinite(pricePerUnit as number)
+                ? (pricePerUnit as number)
+                : (typeof warehouseMeta?.pricePerUnit === 'number' ? warehouseMeta.pricePerUnit : undefined);
         currentIngredients.push({
             name,
             amount,
-            unit: customEditIngredient.unit || 'gr',
-            kcalPerGram: Number.isFinite(kcalPerGram as number) ? (kcalPerGram as number) : undefined,
-            pricePerUnit: Number.isFinite(pricePerUnit as number) ? (pricePerUnit as number) : undefined,
-            priceUnit: customEditIngredient.priceUnit || customEditIngredient.unit || 'kg',
+            unit: resolvedUnit,
+            kcalPerGram: resolvedKcal,
+            pricePerUnit: resolvedPrice,
+            priceUnit: customEditIngredient.priceUnit || resolvedUnit || 'kg',
         });
         setEditingDish({
             ...editingDish,
@@ -1523,13 +1521,13 @@ export function SetsTab() {
                                         </div>
                                     ) : (
                                         <Tabs value={activeGroupTab} onValueChange={setActiveGroupTab} className="h-full flex flex-col">
-                                            <div className="px-6 py-2 border-b-2 border-black flex items-center gap-2 bg-yellow-300 text-black">
+                                            <div className="px-6 py-2 border-b-2 border-black flex items-center gap-2 bg-yellow-300 text-black dark:border-yellow-300 dark:bg-black/60 dark:text-white">
                                                 <TabsList className="flex flex-wrap w-full justify-start gap-1 bg-transparent">
                                                     {visibleDayGroups.map((g, idx) => (
                                                         <TabsTrigger
                                                             key={g.id}
                                                             value={g.id as string}
-                                                            className="px-3 border-2 border-black bg-yellow-100 text-black data-[state=active]:bg-black data-[state=active]:text-yellow-200"
+                                                            className="px-3 border-2 border-black bg-yellow-100 text-black data-[state=active]:bg-black data-[state=active]:text-yellow-200 dark:border-yellow-300 dark:bg-black/35 dark:text-white dark:data-[state=active]:bg-yellow-300 dark:data-[state=active]:text-black"
                                                         >
                                                             <span className="max-w-[160px] truncate">
                                                                 {(() => {
@@ -1550,7 +1548,7 @@ export function SetsTab() {
                                                     label={uiText.newGroup}
                                                     variant="outline"
                                                     iconSize="md"
-                                                    className={`${rowIconBtnClass} border-black bg-yellow-100 text-black hover:bg-yellow-200`}
+                                                    className={`${rowIconBtnClass} border-black bg-yellow-100 text-black hover:bg-yellow-200 dark:border-yellow-300 dark:bg-black/35 dark:text-white dark:hover:bg-yellow-300 dark:hover:text-black`}
                                                     onClick={() => {
                                                         setEditingGroup(null)
                                                         setIsGroupModalOpen(true)
@@ -1563,7 +1561,7 @@ export function SetsTab() {
                                                     label={uiText.delete}
                                                     variant="outline"
                                                     iconSize="md"
-                                                    className={`${rowIconBtnClass} border-black bg-yellow-100 text-black hover:bg-yellow-200`}
+                                                    className={`${rowIconBtnClass} border-black bg-yellow-100 text-black hover:bg-yellow-200 dark:border-yellow-300 dark:bg-black/35 dark:text-white dark:hover:bg-yellow-300 dark:hover:text-black`}
                                                     disabled={!activeGroupTab}
                                                     onClick={() => void deleteGroupById(activeGroupTab)}
                                                 >
@@ -1574,7 +1572,7 @@ export function SetsTab() {
                                                     label={uiText.group}
                                                     variant="outline"
                                                     iconSize="md"
-                                                    className={`${rowIconBtnClass} border-black bg-yellow-100 text-black hover:bg-yellow-200`}
+                                                    className={`${rowIconBtnClass} border-black bg-yellow-100 text-black hover:bg-yellow-200 dark:border-yellow-300 dark:bg-black/35 dark:text-white dark:hover:bg-yellow-300 dark:hover:text-black`}
                                                     disabled={!activeDayGroup}
                                                     onClick={() => {
                                                         if (!activeDayGroup) return;
@@ -1784,6 +1782,9 @@ export function SetsTab() {
                         <div className="grid gap-2">
                             <Label>{uiText.groupPrice}</Label>
                             <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
                                 inputMode="decimal"
                                 value={groupForm.price}
                                 onChange={(e) => setGroupForm((prev) => ({ ...prev, price: e.target.value }))}
@@ -2140,30 +2141,13 @@ export function SetsTab() {
                     )}
 
                     <div className="glass-card p-4 border-t border-border space-y-3">
-                        <div className="space-y-2">
-                            <Label className="text-xs text-muted-foreground uppercase font-bold">{uiText.addIngredient}</Label>
-                            <Select onValueChange={(val) => {
-                                addIngredient(val);
-                                // Hack to reset select not needed if we want to add multiple? No, value stays.
-                                // It's fine for now.
-                            }}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder={uiText.selectIngredient} />
-                                </SelectTrigger>
-                                <SelectContent className="max-h-60">
-                                    {getAllUniqueIngredients().map((ing) => (
-                                        <SelectItem key={ing.name} value={ing.name}>
-                                            <div className="flex justify-between w-full min-w-[200px]">
-                                                <span>{ing.name}</span>
-                                                <span className="text-muted-foreground text-xs">{ing.unit}</span>
-                                            </div>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
                         <div className="grid grid-cols-12 gap-2">
-                            <Input className="col-span-4 h-8" placeholder="New ingredient" value={customEditIngredient.name} onChange={(e) => setCustomEditIngredient((prev) => ({ ...prev, name: e.target.value }))} />
+                            <Input className="col-span-4 h-8" list="edit-ingredients-list" placeholder="New ingredient" value={customEditIngredient.name} onChange={(e) => setCustomEditIngredient((prev) => ({ ...prev, name: e.target.value }))} />
+                            <datalist id="edit-ingredients-list">
+                                {getAllUniqueIngredients().map((ing) => (
+                                    <option key={ing.name} value={ing.name} />
+                                ))}
+                            </datalist>
                             <Input className="col-span-2 h-8" type="number" placeholder="Amount" value={customEditIngredient.amount} onChange={(e) => setCustomEditIngredient((prev) => ({ ...prev, amount: e.target.value }))} />
                             <Select value={customEditIngredient.unit} onValueChange={(value) => setCustomEditIngredient((prev) => ({ ...prev, unit: value }))}>
                                 <SelectTrigger className="col-span-2 h-8"><SelectValue /></SelectTrigger>

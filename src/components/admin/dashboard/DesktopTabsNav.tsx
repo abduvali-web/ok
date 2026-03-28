@@ -28,7 +28,7 @@ export function DesktopTabsNav({ visibleTabs, copy }: { visibleTabs: string[]; c
       <TabsTrigger
         key={id}
         value={id}
-        className="group h-11 min-w-[52px] justify-center gap-2 rounded-lg border border-transparent px-3 text-xs font-medium transition-colors duration-150 data-[state=active]:border-border data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-background sm:min-w-[116px] sm:justify-start"
+        className="group h-11 min-w-[52px] justify-center gap-2 rounded-base border-2 border-transparent bg-background/55 px-3 text-xs font-medium shadow-shadow transition-colors duration-150 data-[state=active]:border-border data-[state=active]:bg-main data-[state=active]:text-main-foreground data-[state=active]:shadow-none data-[state=inactive]:text-foreground data-[state=inactive]:hover:bg-background/75 sm:min-w-[116px] sm:justify-start"
       >
         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground transition-colors group-data-[state=active]:bg-foreground group-data-[state=active]:text-background">
           <Icon className="h-3.5 w-3.5" />
@@ -39,7 +39,7 @@ export function DesktopTabsNav({ visibleTabs, copy }: { visibleTabs: string[]; c
   }
 
   return (
-    <TabsList className="desktop-tabs-list hidden h-auto w-full flex-nowrap gap-1.5 overflow-x-auto rounded-xl border border-border/80 bg-card p-2 md:flex md:flex-wrap">
+    <TabsList className="desktop-tabs-list glass-card hidden h-auto w-full flex-nowrap gap-2 overflow-x-auto rounded-base border-2 border-border bg-background/30 p-2 shadow-shadow backdrop-blur-md md:flex md:flex-wrap">
       {DASHBOARD_TAB_ORDER.map((tabId) => renderTab(tabId))}
     </TabsList>
   )

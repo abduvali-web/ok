@@ -2324,7 +2324,7 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
       <div className="pointer-events-none fixed inset-0 z-0 [background:var(--app-bg-grid)] opacity-45" />
       <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[20rem] bg-gradient-to-b from-main/20 via-main/10 to-transparent" />
       {/* Header */}
-      <header className="relative z-10 border-b-2 border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+      <header className="relative z-10 border-b-2 border-border/80 bg-background/35 backdrop-blur-md supports-[backdrop-filter]:bg-background/25">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14">
             <div className="flex items-center gap-4">
@@ -3530,19 +3530,21 @@ export function AdminDashboardPage({ mode }: { mode: AdminDashboardMode }) {
           />
 
           {/* History Tab */}
-          <TabsContent value="history" className="space-y-6">
-            <HistoryTable 
-              role={meRole || 'MIDDLE_ADMIN'} 
-              limit={50} 
-              selectedDate={selectedDate}
-              applySelectedDate={applySelectedDate}
-              shiftSelectedDate={shiftSelectedDate}
-              selectedDateLabel={selectedPeriodLabel}
-              selectedPeriod={selectedPeriod}
-              applySelectedPeriod={applySelectedPeriod}
-              selectedPeriodLabel={selectedPeriodLabel}
-              profileUiText={profileUiText}
-            />
+          <TabsContent value="history" className="space-y-5 animate-fade-in">
+            <div className="glass-card rounded-base border-2 border-border bg-background/35 p-3 shadow-shadow backdrop-blur-md sm:p-4">
+              <HistoryTable
+                role={meRole || 'MIDDLE_ADMIN'}
+                limit={50}
+                selectedDate={selectedDate}
+                applySelectedDate={applySelectedDate}
+                shiftSelectedDate={shiftSelectedDate}
+                selectedDateLabel={selectedPeriodLabel}
+                selectedPeriod={selectedPeriod}
+                applySelectedPeriod={applySelectedPeriod}
+                selectedPeriodLabel={selectedPeriodLabel}
+                profileUiText={profileUiText}
+              />
+            </div>
           </TabsContent>
 
           <ChangePasswordModal
